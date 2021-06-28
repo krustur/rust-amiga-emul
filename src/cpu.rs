@@ -2,13 +2,15 @@ use crate::mem;
 use crate::mem::Mem;
 
 pub struct Cpu {
+    reg_pc: u32,
     memory: Mem
 }
 
 impl Cpu {
     pub fn new(mem: Mem) -> Cpu {
-
+        // let reg_pc = mem.get_longword_unsigned(0x4);
         Cpu {
+            reg_pc: 0,
             memory: mem
         }
     }
