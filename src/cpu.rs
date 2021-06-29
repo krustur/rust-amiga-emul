@@ -21,20 +21,45 @@ impl<'a> Cpu<'a> {
         let instr = self.memory.get_word_unsigned(reg_pc_us);
         let is_lea = (instr & 0xf1c0) == 0x41c0;
         if is_lea {
-            println!("I'm executing a LEA!");
-            self.reg_pc = self.reg_pc + 2;
+            let operand_size = 4;
+            let register = (instr >> 9) & 0x0007;
+            let ea_mode = (instr >> 3) & 0x0007;
+            let ea_register = instr & 0x0007;
+            if ea_mode == 0b010
+            {
+                println!("{:#010x} LEA (A{}),A{}", self.reg_pc, ea_register, register);
+                self.reg_pc = self.reg_pc + 2;
+                panic!("LEA");
+            }
+            else if ea_mode == 0b111
+            {
+                if ea_register == 0b000
+                {
+                    let extension_word = self.memory.get_word_unsigned(reg_pc_us + 2);
+                    println!("{:#010x} LEA ({}).W,A{}", self.reg_pc, ea_register, register);
+                    self.reg_pc = self.reg_pc + 4;    
+                }
+                else if ea_register == 0b001
+                {
+                    // (xxx).L
+                }
+                else if ea_register == 0b010
+                {
+                    // (d16,PC)
+                }
+                else if ea_register == 0b011
+                {
+                    // (d8,PC,Xn)
+                }
+
+                panic!("LEA");
+            }
+
+            panic!("Unknown LEA addressing mode {} {}", ea_mode, ea_register);
         }
         else{
-            panic!("I only know LEA!");
+            panic!("Unknown instruction {:#010x}", instr);
         }
 
     }
-    // pub fn get_ray(&self, s: f64, t: f64) -> Ray {
-    //     let rd = self.lens_radius*vec3::random_in_unit_sphere();
-    //     let offset = self.u*rd.x() + self.v*rd.y();
-    //     Ray::new(
-    //         self.origin + offset,
-    //         self.lower_left_corner + s * self.horizontal + t * self.vertical - self.origin - offset,
-    //     )
-    // }
 }

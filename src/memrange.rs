@@ -1,3 +1,5 @@
+use byteorder::{BigEndian, ReadBytesExt};
+
 pub struct MemRange {
     pub start_address: usize,
     pub end_address: usize,
@@ -7,7 +9,7 @@ pub struct MemRange {
 
 impl MemRange {
     pub fn from_file(start_address: usize, length: usize, filename: &str) -> Result<MemRange, std::io::Error> {
-        let bytes = std::fs::read(filename)?;
+        let bytes = std::fs::read(filename)?;        
 
         // TODO: Check vec length against incoming size
         let mem = MemRange {
@@ -28,21 +30,34 @@ impl MemRange {
         return index;
     }
 
-    pub fn get_longword_unsigned(self: &MemRange, address: usize) -> u32 {
+    pub fn get_longword_unsigned(self: &MemRange, address: usize) -> u32 {        
         let index = self.remap_address_to_index(address);
-        let b0 : u32 = self.bytes[index].into();
-        let b1 : u32 = self.bytes[index + 1].into();
-        let b2 : u32 = self.bytes[index + 2].into();
-        let b3 : u32 = self.bytes[index + 3].into();
-        let result = (b0 << 24) + (b1 << 16) + (b2 << 8) + b3;
+        let mut bytes = &self.bytes[index..index+4];
+        let result = bytes.read_u32::<BigEndian>().unwrap();
+        // let b0 : u32 = self.bytes[index].into();
+        // let b1 : u32 = self.bytes[index + 1].into();
+        // let b2 : u32 = self.bytes[index + 2].into();
+        // let b3 : u32 = self.bytes[index + 3].into();
+        // let result = (b0 << 24) + (b1 << 16) + (b2 << 8) + b3;
         result
     }
 
     pub fn get_word_unsigned(self: &MemRange, address: usize) -> u16 {
         let index = self.remap_address_to_index(address);
-        let b0 : u16 = self.bytes[index].into();
-        let b1 : u16 = self.bytes[index + 1].into();
-        let result = (b0 << 8) + b1;
+        let mut bytes = &self.bytes[index..index+2];
+        let result = bytes.read_u16::<BigEndian>().unwrap();
+        // let b0 : u16 = self.bytes[index].into();
+        // let b1 : u16 = self.bytes[index + 1].into();
+        // let result = (b0 << 8) + b1;
         result
     }
+
+    // pub fn get_word_signed(self: &MemRange, address: usize) -> i16 {
+    //     let index = self.remap_address_to_index(address);
+    //     let b0 : u16 = self.bytes[index].into();
+    //     let b1 : u16 = self.bytes[index + 1].into();
+    //     let result = (b0 << 8) + b1;
+    //     result
+    // }
+
 }
