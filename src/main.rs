@@ -43,6 +43,13 @@ fn main() {
     cpu.execute_instruction();
     cpu.execute_instruction();
     cpu.execute_instruction();
+    cpu.print_registers();
+    cpu.execute_instruction();
+    cpu.execute_instruction();
+    cpu.execute_instruction();
+    cpu.execute_instruction();
+    cpu.execute_instruction();
+    cpu.print_registers();
 
     println!("End emulation!")
 }
