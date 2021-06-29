@@ -1,14 +1,15 @@
 use byteorder::{BigEndian, ReadBytesExt};
+use std::convert::TryInto;
 
 pub struct MemRange {
-    pub start_address: usize,
-    pub end_address: usize,
-    pub length: usize,
+    pub start_address: u32,
+    pub end_address: u32,
+    pub length: u32,
     pub bytes: Vec<u8>
 }
 
 impl MemRange {
-    pub fn from_file(start_address: usize, length: usize, filename: &str) -> Result<MemRange, std::io::Error> {
+    pub fn from_file(start_address: u32, length: u32, filename: &str) -> Result<MemRange, std::io::Error> {
         let bytes = std::fs::read(filename)?;        
 
         // TODO: Check vec length against incoming size
@@ -21,16 +22,16 @@ impl MemRange {
         Ok(mem)
     }
 
-    fn remap_address_to_index(self: &MemRange, address: usize) -> usize {
+    fn remap_address_to_index(self: &MemRange, address: u32) -> usize {
         if address < self.start_address || address > self.end_address {
             panic!("Can't remap address to index. Address {:#010x} not in range of {:#010x} to {:#010x}", address, self.start_address, self.end_address)
         }
         let index = address - self.start_address;
 
-        return index;
+        return index.try_into().unwrap();
     }
 
-    pub fn get_longword_unsigned(self: &MemRange, address: usize) -> u32 {        
+    pub fn get_longword_unsigned(self: &MemRange, address: u32) -> u32 {        
         let index = self.remap_address_to_index(address);
         let mut bytes = &self.bytes[index..index+4];
         let result = bytes.read_u32::<BigEndian>().unwrap();
@@ -42,7 +43,7 @@ impl MemRange {
         result
     }
 
-    pub fn get_word_unsigned(self: &MemRange, address: usize) -> u16 {
+    pub fn get_word_unsigned(self: &MemRange, address: u32) -> u16 {
         let index = self.remap_address_to_index(address);
         let mut bytes = &self.bytes[index..index+2];
         let result = bytes.read_u16::<BigEndian>().unwrap();

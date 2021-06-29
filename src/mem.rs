@@ -15,7 +15,7 @@ impl<'a> Mem<'a> {
     }
 
 
-    fn get_range(self: &Mem<'a>, address: usize) -> &memrange::MemRange {
+    fn get_range(self: &Mem<'a>, address: u32) -> &memrange::MemRange {
         // TODO: How to handle addresses not in Ranges?
         // TODO: How to handle custom regs etc.?
         let pos = self.ranges.iter().position(|x| address >= x.start_address && address <= x.end_address);
@@ -26,13 +26,13 @@ impl<'a> Mem<'a> {
         self.ranges[pos]
     }
 
-    pub fn get_longword_unsigned(self: &Mem<'a>, address: usize) -> u32 {
+    pub fn get_longword_unsigned(self: &Mem<'a>, address: u32) -> u32 {
         let range = self.get_range(address);
         let result = range.get_longword_unsigned(address);
         result
     }
 
-    pub fn get_word_unsigned(self: &Mem<'a>, address: usize) -> u16 {
+    pub fn get_word_unsigned(self: &Mem<'a>, address: u32) -> u16 {
         let range = self.get_range(address);
         let result = range.get_word_unsigned(address);
         result

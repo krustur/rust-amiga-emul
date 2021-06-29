@@ -1,6 +1,5 @@
 // use crate::mem;
 use crate::mem::Mem;
-use std::convert::TryFrom;
 
 pub struct Cpu<'a> {
     reg_pc: u32,
@@ -17,8 +16,7 @@ impl<'a> Cpu<'a> {
     }
 
     pub fn execute_instruction(self: &mut Cpu<'a>) {
-        let reg_pc_us = usize::try_from(self.reg_pc).unwrap();
-        let instr = self.memory.get_word_unsigned(reg_pc_us);
+        let instr = self.memory.get_word_unsigned(self.reg_pc);
         let is_lea = (instr & 0xf1c0) == 0x41c0;
         if is_lea {
             let operand_size = 4;
@@ -35,7 +33,7 @@ impl<'a> Cpu<'a> {
             {
                 if ea_register == 0b000
                 {
-                    let extension_word = self.memory.get_word_unsigned(reg_pc_us + 2);
+                    let extension_word = self.memory.get_word_unsigned(self.reg_pc + 2);
                     println!("{:#010x} LEA ({}).W,A{}", self.reg_pc, ea_register, register);
                     self.reg_pc = self.reg_pc + 4;    
                 }
