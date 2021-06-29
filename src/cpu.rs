@@ -10,13 +10,16 @@ pub struct Cpu<'a> {
 
 impl<'a> Cpu<'a> {
     pub fn new(mem: Mem<'a>) -> Cpu {        
-        let reg_pc = mem.get_longword_unsigned(0x4).into();
-        Cpu {
+        let reg_ssp = mem.get_longword_unsigned(0x0); 
+        let reg_pc = mem.get_longword_unsigned(0x4);
+        let mut cpu = Cpu {
             reg_d: [0; 8],
             reg_a: [0; 8],
             reg_pc: reg_pc,
             memory: mem
-        }
+        };
+        cpu.reg_a[7] = reg_ssp;
+        cpu
     }
 
     fn sign_extend_i16(address: i16) -> u32
@@ -61,6 +64,8 @@ impl<'a> Cpu<'a> {
             {
                 if ea_register == 0b000
                 {
+                    // absolute short addressing mode
+                    // (xxx).W
                     let extension_word = self.memory.get_word_signed(self.reg_pc + 2);
                     let extension_word_ptr = Cpu::sign_extend_i16(extension_word);
                     let operand = self.memory.get_longword_unsigned(extension_word_ptr);
@@ -78,8 +83,18 @@ impl<'a> Cpu<'a> {
                 }
                 else if ea_register == 0b010
                 {
+                    // program counter inderict with displacement mode
                     // (d16,PC)
-                    panic!("{:#010x} [not implemented] LEA addressing mode {} {}", self.reg_pc, ea_mode, ea_register);
+                    let extension_word = self.memory.get_word_signed(self.reg_pc + 2);
+                    let extension_word_ptr = Cpu::sign_extend_i16(extension_word);
+                    let pc_with_displacement = self.reg_pc + extension_word_ptr;
+                    let operand = self.memory.get_longword_unsigned(pc_with_displacement);
+                    println!("{:#010x} LEA ({:#06x},PC),A{}", self.reg_pc, extension_word, register);
+                    println!("           moving {:#010x} into A{}", operand, register);
+                    let register_usize : usize = register.try_into().unwrap();
+                    self.reg_a[register_usize] = operand;
+                    self.reg_pc = self.reg_pc + 4;
+                    self.print_registers();
                 }
                 else if ea_register == 0b011
                 {

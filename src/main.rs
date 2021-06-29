@@ -40,6 +40,9 @@ fn main() {
     let mut cpu = cpu::Cpu::new(mem);
     cpu.execute_instruction();
     cpu.execute_instruction();
+    cpu.execute_instruction();
+    cpu.execute_instruction();
+    cpu.execute_instruction();
 
     println!("End emulation!")
 }
