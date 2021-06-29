@@ -47,16 +47,16 @@ impl<'a> Cpu<'a> {
     pub fn print_registers(self: &mut Cpu<'a>)
     {
         for n in 0..8 {
-            print!(" D{} {:#010x}", n, self.reg_d[n]);
+            print!(" D{} {:#010X}", n, self.reg_d[n]);
         }
         println!();
         
         for n in 0..8 {
-            print!(" A{} {:#010x}", n, self.reg_a[n]);
+            print!(" A{} {:#010X}", n, self.reg_a[n]);
         }
         println!();
         
-        print!(" PC {:#010x}", self.reg_pc);
+        print!(" PC {:#010X}", self.reg_pc);
         println!();
     }
 
@@ -66,6 +66,9 @@ impl<'a> Cpu<'a> {
         let instr = self.memory.get_word_unsigned(instr_addr);
         let is_lea = (instr & 0xf1c0) == 0x41c0;
         let is_moveq = (instr & 0xf100) == 0x7000;
+        let is_addx = (instr & 0xf130) == 0xd100;
+        let is_adda = (instr & 0xf000) == 0xd000;
+        let is_add = (instr & 0xf000) == 0xd000;
         if is_lea {
             let operand_size = 4;
             let register = (instr >> 9) & 0x0007;
@@ -147,7 +150,9 @@ impl<'a> Cpu<'a> {
             // pc_increment = 
         }
         else{
-            panic!("{:#010x} Unknown instruction {:#010x}", instr_addr, instr);
+            println!("is_addx {} is_adda {} is_add {}", is_addx, is_adda, is_add);
+
+            panic!("{:#010x} Unknown instruction {:#06x}", instr_addr, instr);
         }
 
         let pc_increment = pc_increment.unwrap_or(2);
