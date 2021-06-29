@@ -38,10 +38,10 @@ impl<'a> Mem<'a> {
         result
     }
 
-    // pub fn get_word_signed(self: &Mem<'a>, address: usize) -> i16 {
-    //     let range = self.get_range(address);
-    //     let result = range.get_word_unsigned(address);
-    //     result
-    // }
+    pub fn get_word_signed(self: &Mem<'a>, address: u32) -> i16 {
+         let range = self.get_range(address);
+         let result = range.get_word_signed(address);
+         result
+     }
 }
 

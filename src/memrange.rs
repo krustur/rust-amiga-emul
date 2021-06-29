@@ -53,12 +53,11 @@ impl MemRange {
         result
     }
 
-    // pub fn get_word_signed(self: &MemRange, address: usize) -> i16 {
-    //     let index = self.remap_address_to_index(address);
-    //     let b0 : u16 = self.bytes[index].into();
-    //     let b1 : u16 = self.bytes[index + 1].into();
-    //     let result = (b0 << 8) + b1;
-    //     result
-    // }
+    pub fn get_word_signed(self: &MemRange, address: u32) -> i16 {
+        let index = self.remap_address_to_index(address);
+        let mut bytes = &self.bytes[index..index+2];
+        let result = bytes.read_i16::<BigEndian>().unwrap();
+        result
+    }
 
 }
