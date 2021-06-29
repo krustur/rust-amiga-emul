@@ -55,7 +55,7 @@ impl<'a> Cpu<'a> {
             {
                 println!("{:#010x} LEA (A{}),A{}", self.reg_pc, ea_register, register);
                 self.reg_pc = self.reg_pc + 2;
-                panic!("LEA");
+                panic!("{:#010x} [not implemented] LEA addressing mode {} {}", self.reg_pc, ea_mode, ea_register);
             }
             else if ea_mode == 0b111
             {
@@ -74,30 +74,30 @@ impl<'a> Cpu<'a> {
                 else if ea_register == 0b001
                 {
                     // (xxx).L
-                    panic!("LEA");
+                    panic!("{:#010x} [not implemented] LEA addressing mode {} {}", self.reg_pc, ea_mode, ea_register);
                 }
                 else if ea_register == 0b010
                 {
                     // (d16,PC)
-                    panic!("LEA");
+                    panic!("{:#010x} [not implemented] LEA addressing mode {} {}", self.reg_pc, ea_mode, ea_register);
                 }
                 else if ea_register == 0b011
                 {
                     // (d8,PC,Xn)
-                    panic!("LEA");
+                    panic!("{:#010x} [not implemented] LEA addressing mode {} {}", self.reg_pc, ea_mode, ea_register);
                 }
                 else
                 {
-                    panic!("Unknown LEA addressing mode {} {}", ea_mode, ea_register);
+                    panic!("{:#010x} Unknown LEA addressing mode {} {}", self.reg_pc, ea_mode, ea_register);
                 }
             }
             else 
             {
-                panic!("Unknown LEA addressing mode {} {}", ea_mode, ea_register);
+                panic!("{:#010x} Unknown LEA addressing mode {} {}", self.reg_pc, ea_mode, ea_register);
             }
         }
         else{
-            panic!("Unknown instruction {:#010x}", instr);
+            panic!("{:#010x} Unknown instruction {:#010x}", self.reg_pc, instr);
         }
 
     }
