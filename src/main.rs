@@ -4,7 +4,9 @@
 
 mod cpu;
 mod mem;
+mod instruction;
 mod memrange;
+mod register;
 
 
 fn main() {
