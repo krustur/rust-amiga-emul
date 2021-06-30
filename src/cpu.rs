@@ -95,8 +95,10 @@ impl<'a> Cpu<'a> {
                 // absolute short addressing mode
                 // (xxx).W
                 let extension_word = mem.get_signed_word(instr_address + 2);
-                let extension_word_ptr = Cpu::sign_extend_i16(extension_word);
-                let operand = mem.get_unsigned_longword(extension_word_ptr);
+                // let extension_word_ptr = Cpu::sign_extend_i16(extension_word);
+                // let operand = mem.get_unsigned_longword(extension_word_ptr);
+                let extension_word = -0x400;
+                let operand = mem.get_unsigned_longword_from_i16(extension_word);
                 let instr_format = format!("LEA ({:#06x}).W,A{}", extension_word, register);
                 let instr_comment = format!("moving {:#010x} into A{}", operand, register);
                 println!(
