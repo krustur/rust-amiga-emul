@@ -5,7 +5,7 @@ pub struct Register {
 }
 
 impl Register {
-    pub fn new() -> Register {        
+    pub fn new() -> Register {
         let register = Register {
             reg_d: [0x00000000; 8],
             reg_a: [0x00000000; 8],

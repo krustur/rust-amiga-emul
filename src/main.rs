@@ -3,18 +3,20 @@
 #![allow(unused_variables)]
 
 mod cpu;
-mod mem;
 mod instruction;
+mod mem;
 mod memrange;
 mod register;
 
-
 fn main() {
     println!("Begin emulation!");
-    
     // Incorrect, but let's load the ROM to address 0x0 for now
-    let rom_cheat = memrange::MemRange::from_file(0x000000, 512*1024, "D:\\Amiga\\ROM\\Kickstart 3.1.rom").unwrap();
-    let rom = memrange::MemRange::from_file(0xF80000, 512*1024, "D:\\Amiga\\ROM\\Kickstart 3.1.rom").unwrap();
+    let rom_cheat =
+        memrange::MemRange::from_file(0x000000, 512 * 1024, "D:\\Amiga\\ROM\\Kickstart 3.1.rom")
+            .unwrap();
+    let rom =
+        memrange::MemRange::from_file(0xF80000, 512 * 1024, "D:\\Amiga\\ROM\\Kickstart 3.1.rom")
+            .unwrap();
 
     let mut mem_ranges = Vec::new();
     mem_ranges.push(&rom_cheat);
@@ -27,7 +29,6 @@ fn main() {
     // // println!("0x01: {:#04x}", rom.memory[1]);
     // // println!("0x02: {:#04x}", rom.memory[2]);
     // // println!("0x03: {:#04x}", rom.memory[3]);
-    
     // println!("Longwords");
     // println!("=========");
     // println!("0x000000: {:#010x}", rom_cheat.get_longword_unsigned(0x000000));
@@ -53,7 +54,6 @@ fn main() {
     cpu.execute_instruction();
     cpu.execute_instruction();
     cpu.print_registers();
-
 
     println!("End emulation!")
 }
