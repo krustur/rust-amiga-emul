@@ -13,8 +13,8 @@ pub struct Cpu<'a> {
 impl<'a> Cpu<'a> {
     
     pub fn new(mem: Mem<'a>) -> Cpu {        
-        let reg_ssp = mem.get_longword_unsigned(0x0); 
-        let reg_pc = mem.get_longword_unsigned(0x4);
+        let reg_ssp = mem.get_unsigned_longword(0x0); 
+        let reg_pc = mem.get_unsigned_longword(0x4);
         let instructions = vec![
             Instruction::new(0xf100, 0x7000, Cpu::execute_moveq),            
             Instruction::new(0xf1c0, 0x41c0, Cpu::execute_lea),
@@ -86,9 +86,9 @@ impl<'a> Cpu<'a> {
             {
                 // absolute short addressing mode
                 // (xxx).W
-                let extension_word = mem.get_word_signed(instr_address + 2);
+                let extension_word = mem.get_signed_word(instr_address + 2);
                 let extension_word_ptr = Cpu::sign_extend_i16(extension_word);
-                let operand = mem.get_longword_unsigned(extension_word_ptr);
+                let operand = mem.get_unsigned_longword(extension_word_ptr);
                 let instr_format = format!("LEA ({:#06x}).W,A{}", extension_word, register);
                 let instr_comment = format!("moving {:#010x} into A{}", operand, register);
                 println!("{:#010x} {: <30} ; {}", instr_address, instr_format, instr_comment);
@@ -105,14 +105,14 @@ impl<'a> Cpu<'a> {
             {
                 // program counter inderict with displacement mode
                 // (d16,PC)
-                let extension_word = mem.get_word_signed(instr_address + 2);                    
+                let extension_word = mem.get_signed_word(instr_address + 2);                    
                 let instr_addr_i64 = i64::from(instr_address);
                 let extension_word_i64 = i64::from(extension_word);
                 let pc_with_displacement = (instr_addr_i64 + extension_word_i64 + 2).try_into().unwrap();
                 // println!("instr_addr {:#010x}", instr_address);
                 // println!("extension_word {:#010x}", extension_word);
                 // println!("pc_with_displacement {:#010x}", pc_with_displacement);
-                let operand = mem.get_longword_unsigned(pc_with_displacement);
+                let operand = mem.get_unsigned_longword(pc_with_displacement);
                 let instr_format = format!("LEA ({:#06x},PC),A{}", extension_word, register);
                 let instr_comment = format!("moving {:#010x} into A{}", operand, register);
                 println!("{:#010x} {: <30} ; {}", instr_address, instr_format, instr_comment);
@@ -163,7 +163,7 @@ impl<'a> Cpu<'a> {
     pub fn execute_instruction(self: &mut Cpu<'a>) {
         let instr_addr = self.register.reg_pc;
         // let mut pc_increment : Option<u32> = None;
-        let instr_word = self.memory.get_word_unsigned(instr_addr);
+        let instr_word = self.memory.get_unsigned_word(instr_addr);
 
         let pos = self.instructions.iter().position(|x| (instr_word & x.mask) == x.opcode);
         let pos = match pos {

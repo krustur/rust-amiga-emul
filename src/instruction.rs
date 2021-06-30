@@ -1,4 +1,3 @@
-use crate::cpu::Cpu;
 use crate::mem::Mem;
 use crate::register::Register;
 

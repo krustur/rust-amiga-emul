@@ -31,19 +31,21 @@ impl MemRange {
         return index.try_into().unwrap();
     }
 
-    pub fn get_longword_unsigned(self: &MemRange, address: u32) -> u32 {        
+    pub fn get_unsigned_longword(self: &MemRange, address: u32) -> u32 {        
         let index = self.remap_address_to_index(address);
         let mut bytes = &self.bytes[index..index+4];
         let result = bytes.read_u32::<BigEndian>().unwrap();
-        // let b0 : u32 = self.bytes[index].into();
-        // let b1 : u32 = self.bytes[index + 1].into();
-        // let b2 : u32 = self.bytes[index + 2].into();
-        // let b3 : u32 = self.bytes[index + 3].into();
-        // let result = (b0 << 24) + (b1 << 16) + (b2 << 8) + b3;
         result
     }
 
-    pub fn get_word_unsigned(self: &MemRange, address: u32) -> u16 {
+    pub fn get_signed_longword(self: &MemRange, address: u32) -> i32 {        
+        let index = self.remap_address_to_index(address);
+        let mut bytes = &self.bytes[index..index+4];
+        let result = bytes.read_i32::<BigEndian>().unwrap();
+        result
+    }
+
+    pub fn get_unsigned_word(self: &MemRange, address: u32) -> u16 {
         let index = self.remap_address_to_index(address);
         let mut bytes = &self.bytes[index..index+2];
         let result = bytes.read_u16::<BigEndian>().unwrap();
@@ -53,18 +55,24 @@ impl MemRange {
         result
     }
 
-    pub fn get_word_signed(self: &MemRange, address: u32) -> i16 {
+    pub fn get_signed_word(self: &MemRange, address: u32) -> i16 {
         let index = self.remap_address_to_index(address);
         let mut bytes = &self.bytes[index..index+2];
         let result = bytes.read_i16::<BigEndian>().unwrap();
         result
     }
 
-    pub fn get_byte_unsigned(self: &MemRange, address: u32) -> u8 {
+    pub fn get_unsigned_byte(self: &MemRange, address: u32) -> u8 {
         let index = self.remap_address_to_index(address);
         let mut bytes = &self.bytes[index..index+1];
         let result = bytes.read_u8().unwrap();
         result
     }
 
+    pub fn get_signed_byte(self: &MemRange, address: u32) -> i8 {
+        let index = self.remap_address_to_index(address);
+        let mut bytes = &self.bytes[index..index+1];
+        let result = bytes.read_i8().unwrap();
+        result
+    }
 }

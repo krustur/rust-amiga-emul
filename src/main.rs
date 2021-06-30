@@ -46,7 +46,7 @@ fn main() {
     cpu.execute_instruction();
     cpu.execute_instruction();
     cpu.print_registers();
-    cpu.memory.print_dump(0x3d0, 0x41f);
+    cpu.memory.print_range(0x3d0, 0x41f);
     cpu.execute_instruction();
     cpu.execute_instruction();
     cpu.execute_instruction();
