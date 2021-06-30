@@ -96,14 +96,16 @@ impl<'a> Cpu<'a> {
                 // (xxx).W
                 let extension_word = mem.get_signed_word(instr_address + 2);
                 let operand = mem.get_unsigned_longword_from_i16(extension_word);
+                let register_usize: usize = register.try_into().unwrap();
+                reg.reg_a[register_usize] = operand;
+
                 let instr_format = format!("LEA ({:#06x}).W,A{}", extension_word, register);
                 let instr_comment = format!("moving {:#010x} into A{}", operand, register);
                 println!(
                     "{:#010x} {: <30} ; {}",
                     instr_address, instr_format, instr_comment
                 );
-                let register_usize: usize = register.try_into().unwrap();
-                reg.reg_a[register_usize] = operand;
+
                 return 4;
             } else if ea_register == 0b001 {
                 // (xxx).L
@@ -124,14 +126,16 @@ impl<'a> Cpu<'a> {
                 // println!("extension_word {:#010x}", extension_word);
                 // println!("pc_with_displacement {:#010x}", pc_with_displacement);
                 let operand = mem.get_unsigned_longword(pc_with_displacement);
+                let register_usize: usize = register.try_into().unwrap();
+                reg.reg_a[register_usize] = operand;
+
                 let instr_format = format!("LEA ({:#06x},PC),A{}", extension_word, register);
                 let instr_comment = format!("moving {:#010x} into A{}", operand, register);
                 println!(
                     "{:#010x} {: <30} ; {}",
                     instr_address, instr_format, instr_comment
                 );
-                let register_usize: usize = register.try_into().unwrap();
-                reg.reg_a[register_usize] = operand;
+
                 4;
             } else if ea_register == 0b011 {
                 // (d8,PC,Xn)

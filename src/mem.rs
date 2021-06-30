@@ -42,9 +42,11 @@ impl<'a> Mem<'a> {
     ///
     /// # Note
     /// 
+    /// Used for absolute short addressing mode
     /// Positive addresses will get from low memory (0x00000000 to 0x00007FFF)
     /// Negative addresses will get from high memory (0xffff8000 to 0xffffffff)
     pub fn get_unsigned_longword_from_i16(self: &Mem<'a>, address: i16) -> u32 {
+        // TODO: Maybe raname to get_unsigned_longword_absolute_short_addressing_mode
         // TODO: Tests please
         // println!("Incoming address {:#06x}", address);
         let address = address as i32;
