@@ -44,17 +44,29 @@ impl<'a> Cpu<'a> {
         res
     }
 
-    fn sign_extend_i16(address: i16) -> u32 {
-        // TODO: Any better way to do this?
-        let address_bytes = address.to_be_bytes();
-        let fixed_bytes: [u8; 4] = if address < 0 {
-            [0xff, 0xff, address_bytes[0], address_bytes[1]]
-        } else {
-            [0x00, 0x00, address_bytes[0], address_bytes[1]]
-        };
-        let mut fixed_bytes_slice = &fixed_bytes[0..4];
-        let res = fixed_bytes_slice.read_u32::<BigEndian>().unwrap();
-        res
+    // fn sign_extend_i16(address: i16) -> u32 {
+    //     // TODO: Any better way to do this?
+    //     let address_bytes = address.to_be_bytes();
+    //     let fixed_bytes: [u8; 4] = if address < 0 {
+    //         [0xff, 0xff, address_bytes[0], address_bytes[1]]
+    //     } else {
+    //         [0x00, 0x00, address_bytes[0], address_bytes[1]]
+    //     };
+    //     let mut fixed_bytes_slice = &fixed_bytes[0..4];
+    //     let res = fixed_bytes_slice.read_u32::<BigEndian>().unwrap();
+    //     res
+    // }
+
+    fn extract_register_index_from_bit_pos(word: u16, bit_pos: u8) -> usize {
+        let register = (word >> bit_pos) & 0x0007;
+        let register = register.try_into().unwrap();
+        register
+    }
+
+    fn extract_register_index_from_bit_pos_0(word: u16) -> usize {
+        let register = word & 0x0007;
+        let register = register.try_into().unwrap();
+        register
     }
 
     pub fn print_registers(self: &mut Cpu<'a>) {
@@ -77,9 +89,9 @@ impl<'a> Cpu<'a> {
         mem: &mut Mem<'a>,
     ) -> u32 {
         let operand_size = 4;
-        let register = (instr_word >> 9) & 0x0007;
+        let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
         let ea_mode = (instr_word >> 3) & 0x0007;
-        let ea_register = instr_word & 0x0007;
+        let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
         if ea_mode == 0b010 {
             println!(
                 "{:#010x} LEA (A{}),A{}",
@@ -245,21 +257,21 @@ mod tests {
         assert_eq!(0xFFFFFFFF, res);
     }
 
-    #[test]
-    fn sign_extend_i16_positive() {
-        let res = Cpu::sign_extend_i16(345);
-        assert_eq!(345, res);
-    }
+    // #[test]
+    // fn sign_extend_i16_positive() {
+    //     let res = Cpu::sign_extend_i16(345);
+    //     assert_eq!(345, res);
+    // }
 
-    #[test]
-    fn sign_extend_i16_negative() {
-        let res = Cpu::sign_extend_i16(-345);
-        assert_eq!(0xFFFFFEA7, res);
-    }
+    // #[test]
+    // fn sign_extend_i16_negative() {
+    //     let res = Cpu::sign_extend_i16(-345);
+    //     assert_eq!(0xFFFFFEA7, res);
+    // }
 
-    #[test]
-    fn sign_extend_i16_negative2() {
-        let res = Cpu::sign_extend_i16(-1);
-        assert_eq!(0xFFFFFFFF, res);
-    }
+    // #[test]
+    // fn sign_extend_i16_negative2() {
+    //     let res = Cpu::sign_extend_i16(-1);
+    //     assert_eq!(0xFFFFFFFF, res);
+    // }
 }
