@@ -128,15 +128,8 @@ impl<'a> Cpu<'a> {
                 // program counter inderict with displacement mode
                 // (d16,PC)
                 let extension_word = mem.get_signed_word(instr_address + 2);
-                let instr_addr_i64 = i64::from(instr_address);
-                let extension_word_i64 = i64::from(extension_word);
-                let pc_with_displacement = (instr_addr_i64 + extension_word_i64 + 2)
-                    .try_into()
-                    .unwrap();
-                // println!("instr_addr {:#010x}", instr_address);
-                // println!("extension_word {:#010x}", extension_word);
-                // println!("pc_with_displacement {:#010x}", pc_with_displacement);
-                let operand = mem.get_unsigned_longword(pc_with_displacement);
+                let operand = mem
+                    .get_unsigned_longword_with_i16_displacement(instr_address + 2, extension_word);
                 reg.reg_a[register] = operand;
 
                 let instr_format = format!("LEA ({:#06x},PC),A{}", extension_word, register);
@@ -210,21 +203,20 @@ impl<'a> Cpu<'a> {
 
     pub fn execute_instruction(self: &mut Cpu<'a>) {
         let instr_addr = self.register.reg_pc;
-        // let mut pc_increment : Option<u32> = None;
         let instr_word = self.memory.get_unsigned_word(instr_addr);
 
-        let pos = self
+        let instruction_pos = self
             .instructions
             .iter()
             .position(|x| (instr_word & x.mask) == x.opcode);
-        let pos = match pos {
+        let instruction_pos = match instruction_pos {
             None => panic!(
                 "{:#010x} Unknown instruction {:#06x}",
                 instr_addr, instr_word
             ),
             Some(i) => i,
         };
-        let instruction = &self.instructions[pos];
+        let instruction = &self.instructions[instruction_pos];
         let execute_func = &instruction.execute_func;
         let pc_increment =
             execute_func(instr_addr, instr_word, &mut self.register, &mut self.memory);
