@@ -108,8 +108,7 @@ impl<'a> Cpu<'a> {
                 // (xxx).W
                 let extension_word = mem.get_signed_word(instr_address + 2);
                 let operand = mem.get_unsigned_longword_from_i16(extension_word);
-                let register_usize: usize = register.try_into().unwrap();
-                reg.reg_a[register_usize] = operand;
+                reg.reg_a[register] = operand;
 
                 let instr_format = format!("LEA ({:#06x}).W,A{}", extension_word, register);
                 let instr_comment = format!("moving {:#010x} into A{}", operand, register);
@@ -138,8 +137,7 @@ impl<'a> Cpu<'a> {
                 // println!("extension_word {:#010x}", extension_word);
                 // println!("pc_with_displacement {:#010x}", pc_with_displacement);
                 let operand = mem.get_unsigned_longword(pc_with_displacement);
-                let register_usize: usize = register.try_into().unwrap();
-                reg.reg_a[register_usize] = operand;
+                reg.reg_a[register] = operand;
 
                 let instr_format = format!("LEA ({:#06x},PC),A{}", extension_word, register);
                 let instr_comment = format!("moving {:#010x} into A{}", operand, register);
@@ -176,7 +174,7 @@ impl<'a> Cpu<'a> {
         reg: &mut Register,
         mem: &mut Mem<'a>,
     ) -> u32 {
-        let register = (instr_word >> 9) & 0x0007;
+        let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
         let mut instr_bytes = &instr_word.to_be_bytes()[1..2];
         let operand = instr_bytes.read_i8().unwrap();
         let operand_ptr = Cpu::sign_extend_i8(operand);
@@ -186,8 +184,7 @@ impl<'a> Cpu<'a> {
             "{:#010x} {: <30} ; {}",
             instr_address, instr_format, instr_comment
         );
-        let register_usize: usize = register.try_into().unwrap();
-        reg.reg_d[register_usize] = operand_ptr;
+        reg.reg_d[register] = operand_ptr;
         2
     }
 
