@@ -14,7 +14,6 @@ impl<'a> Mem<'a> {
         }
     }
 
-
     fn get_range(self: &Mem<'a>, address: u32) -> &memrange::MemRange {
         // TODO: How to handle addresses not in Ranges?
         // TODO: How to handle custom regs etc.?
@@ -42,6 +41,36 @@ impl<'a> Mem<'a> {
          let range = self.get_range(address);
          let result = range.get_word_signed(address);
          result
+     }
+
+     pub fn get_byte_unsigned(self: &Mem<'a>, address: u32) -> u8 {
+        let range = self.get_range(address);
+        let result = range.get_byte_unsigned(address);
+        result
+    }
+
+    
+
+     pub fn print_dump(self: &Mem<'a>, start_address: u32, end_address: u32) {
+         let mut col_cnt = 0;
+         let mut address = start_address;
+         while address <= end_address {
+             if col_cnt == 0 {
+                 print!(" {:010x}", address);
+             }
+             print!(" {:02x}", self.get_byte_unsigned(address));
+             col_cnt = col_cnt + 1;
+             if col_cnt == 16 {
+                col_cnt = 0;
+                println!();
+            }
+            
+             address = address + 1;
+         }
+
+         if col_cnt != 0 {
+            println!();
+         }
      }
 }
 

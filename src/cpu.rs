@@ -6,7 +6,7 @@ use crate::register::Register;
 
 pub struct Cpu<'a> {
     register: Register,
-    memory: Mem<'a>,
+    pub memory: Mem<'a>,
     instructions: Vec<Instruction<'a>>
 }
 

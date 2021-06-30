@@ -21,23 +21,23 @@ fn main() {
     mem_ranges.push(&rom);
     let mem = mem::Mem::new(mem_ranges);
 
-    println!("Bytes");
-    println!("=====");
-    // println!("0x00: {:#04x}", rom.memory[0]);
-    // println!("0x01: {:#04x}", rom.memory[1]);
-    // println!("0x02: {:#04x}", rom.memory[2]);
-    // println!("0x03: {:#04x}", rom.memory[3]);
+    // println!("Bytes");
+    // println!("=====");
+    // // println!("0x00: {:#04x}", rom.memory[0]);
+    // // println!("0x01: {:#04x}", rom.memory[1]);
+    // // println!("0x02: {:#04x}", rom.memory[2]);
+    // // println!("0x03: {:#04x}", rom.memory[3]);
     
-    println!("Longwords");
-    println!("=========");
-    println!("0x000000: {:#010x}", rom_cheat.get_longword_unsigned(0x000000));
-    println!("0x000004: {:#010x}", rom_cheat.get_longword_unsigned(0x000004));
-    println!("0x000008: {:#010x}", rom_cheat.get_longword_unsigned(0x000008));
-    println!("0x00000c: {:#010x}", rom_cheat.get_longword_unsigned(0x00000c));
-    println!("0xf80000: {:#010x}", rom.get_longword_unsigned(0xf80000));
-    println!("0xf80004: {:#010x}", rom.get_longword_unsigned(0xf80004));
-    println!("0xf80008: {:#010x}", rom.get_longword_unsigned(0xf80008));
-    println!("0xf8000c: {:#010x}", rom.get_longword_unsigned(0xf8000c));
+    // println!("Longwords");
+    // println!("=========");
+    // println!("0x000000: {:#010x}", rom_cheat.get_longword_unsigned(0x000000));
+    // println!("0x000004: {:#010x}", rom_cheat.get_longword_unsigned(0x000004));
+    // println!("0x000008: {:#010x}", rom_cheat.get_longword_unsigned(0x000008));
+    // println!("0x00000c: {:#010x}", rom_cheat.get_longword_unsigned(0x00000c));
+    // println!("0xf80000: {:#010x}", rom.get_longword_unsigned(0xf80000));
+    // println!("0xf80004: {:#010x}", rom.get_longword_unsigned(0xf80004));
+    // println!("0xf80008: {:#010x}", rom.get_longword_unsigned(0xf80008));
+    // println!("0xf8000c: {:#010x}", rom.get_longword_unsigned(0xf8000c));
 
     let mut cpu = cpu::Cpu::new(mem);
     cpu.execute_instruction();
@@ -46,12 +46,14 @@ fn main() {
     cpu.execute_instruction();
     cpu.execute_instruction();
     cpu.print_registers();
+    cpu.memory.print_dump(0x3d0, 0x41f);
     cpu.execute_instruction();
     cpu.execute_instruction();
     cpu.execute_instruction();
     cpu.execute_instruction();
     cpu.execute_instruction();
     cpu.print_registers();
+
 
     println!("End emulation!")
 }

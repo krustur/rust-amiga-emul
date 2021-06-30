@@ -60,4 +60,11 @@ impl MemRange {
         result
     }
 
+    pub fn get_byte_unsigned(self: &MemRange, address: u32) -> u8 {
+        let index = self.remap_address_to_index(address);
+        let mut bytes = &self.bytes[index..index+1];
+        let result = bytes.read_u8().unwrap();
+        result
+    }
+
 }
