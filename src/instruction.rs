@@ -3,7 +3,7 @@ use crate::register::Register;
 
 /// Instruction with uncommon layout:
 /// | 15| 14| 13| 12| 11| 10|  9|  8|  7|  6|  5|  4|  3|  2|  1|  0|
-///    -   -   -   -|   register|  -   -   -|ea mode    |ea register|
+///    -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   - 
 /// 
 
 pub struct Instruction<'a> {
