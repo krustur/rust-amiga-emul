@@ -242,24 +242,7 @@ impl<'a> Cpu<'a> {
                 return;
             }
         }
-        // let instruction_pos = self
-        //     .instructions
-        //     .iter()
-        //     .position(|x| (instr_word & x.mask) == x.opcode);
-        // let instruction_pos = match instruction_pos {
-        //     None => panic!(
-        //         "{:#010x} Unknown instruction {:#06x}",
-        //         instr_addr, instr_word
-        //     ),
-        //     Some(i) => {
 
-        //     },
-        // };
-        // let instruction = &self.instructions[instruction_pos];
-        // let execute_func = &instruction.execute_func;
-        // let pc_increment =
-        //     execute_func(instr_addr, instr_word, &mut self.register, &mut self.memory);
-        // self.register.reg_pc = self.register.reg_pc + pc_increment;
         panic!(
             "{:#010x} Unknown instruction {:#06x}",
             instr_addr, instr_word
