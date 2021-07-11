@@ -1,4 +1,4 @@
-use crate::instruction::Instruction;
+use crate::instruction::{EaInstruction, Instruction};
 use crate::mem::Mem;
 use crate::register::Register;
 use byteorder::{BigEndian, ReadBytesExt};
@@ -8,6 +8,7 @@ pub struct Cpu<'a> {
     register: Register,
     pub memory: Mem<'a>,
     instructions: Vec<Instruction<'a>>,
+    ea_instructions: Vec<EaInstruction<'a>>,
 }
 
 impl<'a> Cpu<'a> {
@@ -16,9 +17,15 @@ impl<'a> Cpu<'a> {
         let reg_pc = mem.get_unsigned_longword(0x4);
         let instructions = vec![
             Instruction::new(0xf100, 0x7000, Cpu::execute_moveq),
-            Instruction::new(0xf1c0, 0x41c0, Cpu::execute_lea),
+            // Instruction::new(0xf1c0, 0x41c0, Cpu::execute_lea),
             Instruction::new(0xf130, 0xd100, Cpu::execute_addx),
-            Instruction::new(0xf000, 0xd000, Cpu::execute_add),
+            // Instruction::new(0xf000, 0xd000, Cpu::execute_add),
+        ];
+        let ea_instructions = vec![
+            // EaInstruction::new(0xf100, 0x7000, Cpu::execute_moveq),
+            EaInstruction::new(0xf1c0, 0x41c0, Cpu::execute_lea_ea),
+            // EaInstruction::new(0xf130, 0xd100, Cpu::execute_addx_ea),
+            EaInstruction::new(0xf000, 0xd000, Cpu::execute_add_ea),
         ];
         let mut register = Register::new();
         register.reg_a[7] = reg_ssp;
@@ -27,6 +34,7 @@ impl<'a> Cpu<'a> {
             register: register,
             memory: mem,
             instructions: instructions,
+            ea_instructions: ea_instructions,
         };
         cpu
     }
@@ -82,13 +90,13 @@ impl<'a> Cpu<'a> {
         println!();
     }
 
-    fn execute_lea(
+    fn execute_lea_ea(
         instr_address: u32,
         instr_word: u16,
         reg: &mut Register,
         mem: &mut Mem<'a>,
     ) -> u32 {
-        let operand_size = 4;
+        // let operand_size = 4;
         let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
         let ea_mode = (instr_word >> 3) & 0x0007;
         let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
@@ -167,6 +175,7 @@ impl<'a> Cpu<'a> {
         reg: &mut Register,
         mem: &mut Mem<'a>,
     ) -> u32 {
+        // TODO: Condition codes
         let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
         let mut instr_bytes = &instr_word.to_be_bytes()[1..2];
         let operand = instr_bytes.read_i8().unwrap();
@@ -181,13 +190,24 @@ impl<'a> Cpu<'a> {
         2
     }
 
-    fn execute_add(
+    fn execute_add_ea(
         instr_address: u32,
         instr_word: u16,
         reg: &mut Register,
         mem: &mut Mem<'a>,
     ) -> u32 {
-        println!("Execute add!");
+        // TODO: Condition codes
+        let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
+        let ea_mode = (instr_word >> 3) & 0x0007;
+        let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
+        let op_mode = (instr_word >> 6) & 0x0007;
+        println!("Execute add: {:#010x} {:#06x}", instr_address, instr_word);
+        println!(
+            "register {} ea_mode {:#05b} ea_register {} op_mode {:#05b} ",
+            register, ea_mode, ea_register, op_mode
+        );
+        println!("will be: ADD.L (A0)+,D5");
+        // SWITCH ON EA_MODE FIRST - WILL BE HANDLED OUTSIDE LATER
         2
     }
 
@@ -197,30 +217,81 @@ impl<'a> Cpu<'a> {
         reg: &mut Register,
         mem: &mut Mem<'a>,
     ) -> u32 {
-        println!("Execute addx!");
+        println!("Execute addx: {:#010x} {:#06x}", instr_address, instr_word);
         2
     }
 
-    pub fn execute_instruction(self: &mut Cpu<'a>) {
+    pub fn execute_next_instruction(self: &mut Cpu<'a>) {
         let instr_addr = self.register.reg_pc;
         let instr_word = self.memory.get_unsigned_word(instr_addr);
 
+        let instr_pc_increment = self.execute_instruction(instr_word, instr_addr);
+        match instr_pc_increment {
+            None => (),
+            Some(i) => {
+                self.register.reg_pc = self.register.reg_pc + i;
+                return;
+            }
+        }
+
+        let instr_ea_pc_increment = self.execute_ea_instruction(instr_word, instr_addr);
+        match instr_ea_pc_increment {
+            None => (),
+            Some(i) => {
+                self.register.reg_pc = self.register.reg_pc + i;
+                return;
+            }
+        }
+        // let instruction_pos = self
+        //     .instructions
+        //     .iter()
+        //     .position(|x| (instr_word & x.mask) == x.opcode);
+        // let instruction_pos = match instruction_pos {
+        //     None => panic!(
+        //         "{:#010x} Unknown instruction {:#06x}",
+        //         instr_addr, instr_word
+        //     ),
+        //     Some(i) => {
+
+        //     },
+        // };
+        // let instruction = &self.instructions[instruction_pos];
+        // let execute_func = &instruction.execute_func;
+        // let pc_increment =
+        //     execute_func(instr_addr, instr_word, &mut self.register, &mut self.memory);
+        // self.register.reg_pc = self.register.reg_pc + pc_increment;
+        panic!(
+            "{:#010x} Unknown instruction {:#06x}",
+            instr_addr, instr_word
+        );
+    }
+
+    fn execute_instruction(self: &mut Cpu<'a>, instr_word: u16, instr_addr: u32) -> Option<u32> {
         let instruction_pos = self
             .instructions
             .iter()
-            .position(|x| (instr_word & x.mask) == x.opcode);
-        let instruction_pos = match instruction_pos {
-            None => panic!(
-                "{:#010x} Unknown instruction {:#06x}",
-                instr_addr, instr_word
-            ),
-            Some(i) => i,
-        };
+            .position(|x| (instr_word & x.mask) == x.opcode)?;
+
         let instruction = &self.instructions[instruction_pos];
         let execute_func = &instruction.execute_func;
         let pc_increment =
             execute_func(instr_addr, instr_word, &mut self.register, &mut self.memory);
-        self.register.reg_pc = self.register.reg_pc + pc_increment;
+
+        Some(pc_increment)
+    }
+
+    fn execute_ea_instruction(self: &mut Cpu<'a>, instr_word: u16, instr_addr: u32) -> Option<u32> {
+        let instruction_pos = self
+            .ea_instructions
+            .iter()
+            .position(|x| (instr_word & x.mask) == x.opcode)?;
+
+        let instruction = &self.ea_instructions[instruction_pos];
+        let execute_func = &instruction.execute_func;
+        let pc_increment =
+            execute_func(instr_addr, instr_word, &mut self.register, &mut self.memory);
+
+        Some(pc_increment)
     }
 }
 

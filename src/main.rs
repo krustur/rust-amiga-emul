@@ -41,18 +41,18 @@ fn main() {
     // println!("0xf8000c: {:#010x}", rom.get_longword_unsigned(0xf8000c));
 
     let mut cpu = cpu::Cpu::new(mem);
-    cpu.execute_instruction();
-    cpu.execute_instruction();
-    cpu.execute_instruction();
-    cpu.execute_instruction();
-    cpu.execute_instruction();
+    cpu.execute_next_instruction();
+    cpu.execute_next_instruction();
+    cpu.execute_next_instruction();
+    cpu.execute_next_instruction();
+    cpu.execute_next_instruction();
     cpu.print_registers();
     cpu.memory.print_range(0x3d0, 0x41f);
-    cpu.execute_instruction();
-    cpu.execute_instruction();
-    cpu.execute_instruction();
-    cpu.execute_instruction();
-    cpu.execute_instruction();
+    cpu.execute_next_instruction();
+    cpu.execute_next_instruction();
+    cpu.execute_next_instruction();
+    cpu.execute_next_instruction();
+    cpu.execute_next_instruction();
     cpu.print_registers();
 
     println!("End emulation!")
