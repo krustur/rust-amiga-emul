@@ -60,8 +60,7 @@ pub enum InstructionFormat<'a> {
     },
 }
 
-#[derive(FromPrimitive)]
-#[derive(Debug)]
+#[derive(FromPrimitive, Debug)]
 pub enum EffectiveAddressingMode {
     DRegDirect = 0b000,
     ARegDirect = 0b001,
@@ -71,7 +70,7 @@ pub enum EffectiveAddressingMode {
     ARegIndirectWithDisplacement = 0b101,
     // TODO: Figure these out
     // ARegIndirectWithIndex           = 0b110,
-    ARegIndirectWithIndexOrMemIndirect = 0b110,
+    ARegIndirectWithIndex = 0b110,
     PcIndirectAndLotsMore = 0b111,
 }
 

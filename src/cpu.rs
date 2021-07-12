@@ -230,7 +230,7 @@ impl<'a> Cpu<'a> {
                     | EffectiveAddressingMode::ARegIndirectWithPostIncrement
                     | EffectiveAddressingMode::ARegIndirectWithPreDecrement
                     | EffectiveAddressingMode::ARegIndirectWithDisplacement
-                    | EffectiveAddressingMode::ARegIndirectWithIndexOrMemIndirect => {
+                    | EffectiveAddressingMode::ARegIndirectWithIndex => {
                         panic!(
                             "{:#010x} {:#06x} UNKNOWN_EA {:?} {}",
                             instr_addr, instr_word, ea_mode, ea_register
@@ -315,12 +315,6 @@ impl<'a> Cpu<'a> {
                         }
                     }
                 }
-                // else {
-                //     panic!(
-                //         "{:#010x} {:#06x} UNKNOWN_EA {} {}",
-                //         instr_addr, instr_word, ea_mode, ea_register
-                //     );
-                // }
             }
             InstructionFormat::EffectiveAddressWithOpmodeAndRegister {
                 exec_func_areg_indirect_with_post_inc,
