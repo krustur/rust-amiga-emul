@@ -137,20 +137,16 @@ impl<'a> Cpu<'a> {
         instr_word: u16,
         reg: &mut Register,
         mem: &mut Mem<'a>,
-    ) -> u32 {
+    ) -> (String, String, u32) {
         // TODO: Condition codes
         let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
         let mut instr_bytes = &instr_word.to_be_bytes()[1..2];
         let operand = instr_bytes.read_i8().unwrap();
         let operand_ptr = Cpu::sign_extend_i8(operand);
-        let instr_format = format!("MOVEQ #{},D{}", operand, register);
+        let operands_format = format!("#{},D{}", operand, register);
         let instr_comment = format!("moving {:#010x} into D{}", operand_ptr, register);
-        println!(
-            "{:#010x} {: <30} ; {}",
-            instr_address, instr_format, instr_comment
-        );
         reg.reg_d[register] = operand_ptr;
-        2
+        (operands_format, instr_comment, 2)
     }
 
     // fn execute_add_ea(
@@ -179,9 +175,9 @@ impl<'a> Cpu<'a> {
         instr_word: u16,
         reg: &mut Register,
         mem: &mut Mem<'a>,
-    ) -> u32 {
+    ) -> (String, String, u32) {
         println!("Execute addx: {:#010x} {:#06x}", instr_address, instr_word);
-        2
+        (String::from("ops"), String::from("comment"), 2)
     }
 
     pub fn execute_next_instruction(self: &mut Cpu<'a>) {
@@ -204,8 +200,14 @@ impl<'a> Cpu<'a> {
         
         let pc_increment = match instruction.instruction_format {
             InstructionFormat::Uncommon(exec_func) => {
-                let pc_increment =
+                let (operands_format, instr_comment, pc_increment) = 
                     exec_func(instr_addr, instr_word, &mut self.register, &mut self.memory);
+                let instr_format = format!("{} {}", instruction.name, operands_format);
+                // let instr_comment = format!("moving {:#010x} into D{}", operand_ptr, register);
+                println!(
+                    "{:#010x} {: <30} ; {}",
+                    instr_addr, instr_format, instr_comment
+                );
                 pc_increment
             },
             InstructionFormat::EffectiveAddressWithRegister{

@@ -7,7 +7,7 @@ pub enum InstructionFormat<'a>{
     ///    -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   - 
     /// 
     Uncommon(
-        fn(instr_address: u32, instr_word: u16, reg: &mut Register, mem: &mut Mem<'a>) -> u32
+        fn(instr_address: u32, instr_word: u16, reg: &mut Register, mem: &mut Mem<'a>) -> (String, String, u32)
     ),
     /// Instruction with common EA format and register:
     /// | 15| 14| 13| 12| 11| 10|  9|  8|  7|  6|  5|  4|  3|  2|  1|  0|
