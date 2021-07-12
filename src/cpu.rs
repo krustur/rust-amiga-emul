@@ -1,4 +1,4 @@
-use crate::instruction::{EffectiveAddressingMode, Instruction, InstructionFormat};
+use crate::instruction::{EffectiveAddressingMode, Instruction, InstructionFormat, OpMode};
 use crate::mem::Mem;
 use crate::register::Register;
 use byteorder::{BigEndian, ReadBytesExt};
@@ -87,13 +87,23 @@ impl<'a> Cpu<'a> {
     // }
 
     fn extract_effective_addressing_mode(word: u16) -> EffectiveAddressingMode {
-        let register = (word >> 3) & 0x0007;
-        let register = match FromPrimitive::from_u16(register) {
+        let ea_mode = (word >> 3) & 0x0007;
+        let ea_mode = match FromPrimitive::from_u16(ea_mode) {
             Some(r) => r,
             None => panic!("Unable to extract EffectiveAddressingMode"),
         };
-        register
+        ea_mode
     }
+
+    fn extract_op_mode(word: u16) -> OpMode {
+        let op_mode = (word >> 6) & 0x0007;
+        let op_mode = match FromPrimitive::from_u16(op_mode) {
+            Some(r) => r,
+            None => panic!("Unable to extract OpMode"),
+        };
+        op_mode
+    }
+
     fn extract_register_index_from_bit_pos(word: u16, bit_pos: u8) -> usize {
         let register = (word >> bit_pos) & 0x0007;
         let register = register.try_into().unwrap();
@@ -320,11 +330,11 @@ impl<'a> Cpu<'a> {
                 exec_func_areg_indirect_with_post_inc,
             } => {
                 let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
-                let ea_opmode = (instr_word >> 6) & 0x0007;
+                let ea_opmode = Cpu::extract_op_mode(instr_word);
                 let ea_mode = Cpu::extract_effective_addressing_mode(instr_word);
                 let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
                 println!(
-                    "register {} ea_mode {:?} ea_register {} ea_opmode {:#05b} ",
+                    "register {} ea_mode {:?} ea_register {} ea_opmode {:?} ",
                     register, ea_mode, ea_register, ea_opmode
                 );
                 panic!("EffectiveAddressWithOpmodeAndRegister not quite done");

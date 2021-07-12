@@ -89,6 +89,16 @@ pub enum EffectiveAddressingMode {
 //     }
 // }
 
+#[derive(FromPrimitive, Debug)]
+pub enum OpMode {
+    ByteWithDnAsDest = 0b000,
+    WordWithDnAsDest = 0b001,
+    LongWithDnAsDest = 0b010,
+    ByteWithEaAsDest = 0b100,
+    WordWithEaAsDest = 0b101,
+    LongWithEaAsDest = 0b110,
+}
+
 pub struct Instruction<'a> {
     pub name: String,
     pub mask: u16,
