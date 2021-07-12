@@ -31,16 +31,20 @@ impl<'a> Cpu<'a> {
                 String::from("LEA"),
                 0xf1c0,
                 0x41c0,
-                InstructionFormat::EffectiveAddressWithRegister{
+                InstructionFormat::EffectiveAddressWithRegister {
                     exec_func_absolute_short: Some(Cpu::execute_lea_absolute_short),
-                    exec_func_pc_indirect_with_displacement_mode: Some(Cpu::execute_lea_program_counter_indirect_with_displacement_mode_func),
+                    exec_func_pc_indirect_with_displacement_mode: Some(
+                        Cpu::execute_lea_program_counter_indirect_with_displacement_mode_func,
+                    ),
                 },
             ),
             Instruction::new(
                 String::from("ADD"),
                 0xf000,
                 0xd000,
-                InstructionFormat::EffectiveAddressWithOpmodeAndRegister(),
+                InstructionFormat::EffectiveAddressWithOpmodeAndRegister{
+                    exec_func_areg_indirect_with_post_inc: Some(Cpu::execute_add_ea)
+                },
             ),
         ];
         // let ea_instructions = vec![];
@@ -149,26 +153,20 @@ impl<'a> Cpu<'a> {
         (operands_format, instr_comment, 2)
     }
 
-    // fn execute_add_ea(
-    //     instr_address: u32,
-    //     instr_word: u16,
-    //     reg: &mut Register,
-    //     mem: &mut Mem<'a>,
-    // ) -> u32 {
-    //     // TODO: Condition codes
-    //     let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
-    //     let ea_mode = (instr_word >> 3) & 0x0007;
-    //     let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
-    //     let op_mode = (instr_word >> 6) & 0x0007;
-    //     println!("Execute add: {:#010x} {:#06x}", instr_address, instr_word);
-    //     println!(
-    //         "register {} ea_mode {:#05b} ea_register {} op_mode {:#05b} ",
-    //         register, ea_mode, ea_register, op_mode
-    //     );
-    //     println!("will be: ADD.L (A0)+,D5");
-    //     // SWITCH ON EA_MODE FIRST - WILL BE HANDLED OUTSIDE LATER
-    //     2
-    // }
+    fn execute_add_ea(
+        instr_address: u32,
+        instr_word: u16,
+        reg: &mut Register,
+        mem: &mut Mem<'a>,
+        register: usize,
+        operand: u32,
+    ) -> String {
+        // TODO: Condition codes
+       
+        println!("will be: ADD.L (A0)+,D5");
+        // SWITCH ON EA_MODE FIRST - WILL BE HANDLED OUTSIDE LATER
+        String::from("comment")
+    }
 
     fn execute_addx(
         instr_address: u32,
@@ -197,10 +195,9 @@ impl<'a> Cpu<'a> {
             Some(instruction_pos) => &self.instructions[instruction_pos],
         };
 
-        
         let pc_increment = match instruction.instruction_format {
             InstructionFormat::Uncommon(exec_func) => {
-                let (operands_format, instr_comment, pc_increment) = 
+                let (operands_format, instr_comment, pc_increment) =
                     exec_func(instr_addr, instr_word, &mut self.register, &mut self.memory);
                 let instr_format = format!("{} {}", instruction.name, operands_format);
                 // let instr_comment = format!("moving {:#010x} into D{}", operand_ptr, register);
@@ -209,10 +206,10 @@ impl<'a> Cpu<'a> {
                     instr_addr, instr_format, instr_comment
                 );
                 pc_increment
-            },
-            InstructionFormat::EffectiveAddressWithRegister{
-                exec_func_absolute_short, 
-                exec_func_pc_indirect_with_displacement_mode
+            }
+            InstructionFormat::EffectiveAddressWithRegister {
+                exec_func_absolute_short,
+                exec_func_pc_indirect_with_displacement_mode,
             } => {
                 let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
                 let ea_mode = (instr_word >> 3) & 0x0007;
@@ -258,9 +255,10 @@ impl<'a> Cpu<'a> {
                         // PC indirect with displacement mode
                         // (d16,PC)
                         let extension_word = self.memory.get_signed_word(instr_addr + 2);
-                        let operand = self
-                            .memory
-                            .get_unsigned_longword_with_i16_displacement(instr_addr + 2, extension_word);
+                        let operand = self.memory.get_unsigned_longword_with_i16_displacement(
+                            instr_addr + 2,
+                            extension_word,
+                        );
                         let exec_func_pc_indirect_with_displacement_mode = exec_func_pc_indirect_with_displacement_mode.unwrap_or_else(|| panic!("Effective Addressing 'PC indirect with displacement mode' not implemented for {}", instruction.name));
                         let instr_format = format!(
                             "{} ({:#06x},PC),A{}",
@@ -297,8 +295,20 @@ impl<'a> Cpu<'a> {
                         instr_addr, instr_word, ea_mode, ea_register
                     );
                 }
-            },
-            InstructionFormat::EffectiveAddressWithOpmodeAndRegister() => panic!("lol"),
+            }
+            InstructionFormat::EffectiveAddressWithOpmodeAndRegister{
+                exec_func_areg_indirect_with_post_inc
+            } => {
+                let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
+                let ea_opmode = (instr_word >> 6) & 0x0007;
+                let ea_mode = (instr_word >> 3) & 0x0007;
+                let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
+                println!(
+                    "register {} ea_mode {:#05b} ea_register {} ea_opmode {:#05b} ",
+                    register, ea_mode, ea_register, ea_opmode
+                );
+                panic!("EffectiveAddressWithOpmodeAndRegister not quite done");
+            }
         };
         self.register.reg_pc = self.register.reg_pc + pc_increment;
     }

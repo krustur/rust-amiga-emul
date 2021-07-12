@@ -20,7 +20,9 @@ pub enum InstructionFormat<'a>{
     /// | 15| 14| 13| 12| 11| 10|  9|  8|  7|  6|  5|  4|  3|  2|  1|  0|
     ///    -   -   -   -|register   |opmode     |ea mode    |ea register|
     /// 
-    EffectiveAddressWithOpmodeAndRegister(),
+    EffectiveAddressWithOpmodeAndRegister{
+        exec_func_areg_indirect_with_post_inc: Option<fn(instr_address: u32, instr_word: u16, reg: &mut Register, mem: &mut Mem<'a>, register: usize, operand: u32) -> String>,
+    },
 }
 
 pub struct Instruction<'a> {
