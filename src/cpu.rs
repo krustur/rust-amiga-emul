@@ -1,7 +1,8 @@
-use crate::instruction::{Instruction, InstructionFormat};
+use crate::instruction::{EffectiveAddressingMode, Instruction, InstructionFormat};
 use crate::mem::Mem;
 use crate::register::Register;
 use byteorder::{BigEndian, ReadBytesExt};
+use num_traits::FromPrimitive;
 use std::convert::TryInto;
 
 pub struct Cpu<'a> {
@@ -42,8 +43,8 @@ impl<'a> Cpu<'a> {
                 String::from("ADD"),
                 0xf000,
                 0xd000,
-                InstructionFormat::EffectiveAddressWithOpmodeAndRegister{
-                    exec_func_areg_indirect_with_post_inc: Some(Cpu::execute_add_ea)
+                InstructionFormat::EffectiveAddressWithOpmodeAndRegister {
+                    exec_func_areg_indirect_with_post_inc: Some(Cpu::execute_add_ea),
                 },
             ),
         ];
@@ -85,6 +86,14 @@ impl<'a> Cpu<'a> {
     //     res
     // }
 
+    fn extract_effective_addressing_mode(word: u16) -> EffectiveAddressingMode {
+        let register = (word >> 3) & 0x0007;
+        let register = match FromPrimitive::from_u16(register) {
+            Some(r) => r,
+            None => panic!("Unable to extract EffectiveAddressingMode"),
+        };
+        register
+    }
     fn extract_register_index_from_bit_pos(word: u16, bit_pos: u8) -> usize {
         let register = (word >> bit_pos) & 0x0007;
         let register = register.try_into().unwrap();
@@ -162,7 +171,6 @@ impl<'a> Cpu<'a> {
         operand: u32,
     ) -> String {
         // TODO: Condition codes
-       
         println!("will be: ADD.L (A0)+,D5");
         // SWITCH ON EA_MODE FIRST - WILL BE HANDLED OUTSIDE LATER
         String::from("comment")
@@ -212,99 +220,117 @@ impl<'a> Cpu<'a> {
                 exec_func_pc_indirect_with_displacement_mode,
             } => {
                 let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
-                let ea_mode = (instr_word >> 3) & 0x0007;
+                let ea_mode = Cpu::extract_effective_addressing_mode(instr_word);
                 let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
 
-                if ea_mode == 0b010 {
-                    panic!(
-                        "{:#010x} {:#06x} UNKNOWN_EA {} {}",
-                        instr_addr, instr_word, ea_mode, ea_register
-                    );
-                    // pc_increment = Some(2);
-                } else if ea_mode == 0b111 {
-                    if ea_register == 0b000 {
-                        // absolute short addressing mode
-                        // (xxx).W
-                        let extension_word = self.memory.get_signed_word(instr_addr + 2);
-                        let operand = self.memory.get_unsigned_longword_from_i16(extension_word);
-                        let exec_func_absolute_short = exec_func_absolute_short.unwrap_or_else(|| panic!("Effective Addressing 'Absolute short addressing mode' not implemented for {}", instruction.name));
-                        let instr_format = format!(
-                            "{} ({:#06x}).W,A{}",
-                            instruction.name, extension_word, register
-                        );
-                        let instr_comment = exec_func_absolute_short(
-                            instr_addr,
-                            instr_word,
-                            &mut self.register,
-                            &mut self.memory,
-                            register,
-                            operand,
-                        );
-                        println!(
-                            "{:#010x} {: <30} ; {}",
-                            instr_addr, instr_format, instr_comment
-                        );
-                        4
-                    } else if ea_register == 0b001 {
-                        // (xxx).L
+                match ea_mode {
+                    EffectiveAddressingMode::DRegDirect
+                    | EffectiveAddressingMode::ARegDirect
+                    | EffectiveAddressingMode::ARegIndirect
+                    | EffectiveAddressingMode::ARegIndirectWithPostIncrement
+                    | EffectiveAddressingMode::ARegIndirectWithPreDecrement
+                    | EffectiveAddressingMode::ARegIndirectWithDisplacement
+                    | EffectiveAddressingMode::ARegIndirectWithIndexOrMemIndirect => {
                         panic!(
-                            "{:#010x} {:#06x} UNKNOWN_EA {} {}",
+                            "{:#010x} {:#06x} UNKNOWN_EA {:?} {}",
                             instr_addr, instr_word, ea_mode, ea_register
                         );
-                    } else if ea_register == 0b010 {
-                        // PC indirect with displacement mode
-                        // (d16,PC)
-                        let extension_word = self.memory.get_signed_word(instr_addr + 2);
-                        let operand = self.memory.get_unsigned_longword_with_i16_displacement(
-                            instr_addr + 2,
-                            extension_word,
-                        );
-                        let exec_func_pc_indirect_with_displacement_mode = exec_func_pc_indirect_with_displacement_mode.unwrap_or_else(|| panic!("Effective Addressing 'PC indirect with displacement mode' not implemented for {}", instruction.name));
-                        let instr_format = format!(
-                            "{} ({:#06x},PC),A{}",
-                            instruction.name, extension_word, register
-                        );
-                        let instr_comment = exec_func_pc_indirect_with_displacement_mode(
-                            instr_addr,
-                            instr_word,
-                            &mut self.register,
-                            &mut self.memory,
-                            register,
-                            operand,
-                        );
-                        println!(
-                            "{:#010x} {: <30} ; {}",
-                            instr_addr, instr_format, instr_comment
-                        );
-                        4
-                    } else if ea_register == 0b011 {
-                        // (d8,PC,Xn)
-                        panic!(
-                            "{:#010x} {:#06x} UNKNOWN_EA {} {}",
-                            instr_addr, instr_word, ea_mode, ea_register
-                        );
-                    } else {
-                        panic!(
-                            "{:#010x} {:#06x} UNKNOWN_EA {} {}",
-                            instr_addr, instr_word, ea_mode, ea_register
-                        );
+                        // pc_increment = Some(2);
                     }
-                } else {
-                    panic!(
-                        "{:#010x} {:#06x} UNKNOWN_EA {} {}",
-                        instr_addr, instr_word, ea_mode, ea_register
-                    );
+                    EffectiveAddressingMode::PcIndirectAndLotsMore => {
+                        match ea_register {
+                            0b000 => {
+                                // absolute short addressing mode
+                                // (xxx).W
+                                let extension_word = self.memory.get_signed_word(instr_addr + 2);
+                                let operand =
+                                    self.memory.get_unsigned_longword_from_i16(extension_word);
+                                let exec_func_absolute_short = exec_func_absolute_short.unwrap_or_else(|| panic!("Effective Addressing 'Absolute short addressing mode' not implemented for {}", instruction.name));
+                                let instr_format = format!(
+                                    "{} ({:#06x}).W,A{}",
+                                    instruction.name, extension_word, register
+                                );
+                                let instr_comment = exec_func_absolute_short(
+                                    instr_addr,
+                                    instr_word,
+                                    &mut self.register,
+                                    &mut self.memory,
+                                    register,
+                                    operand,
+                                );
+                                println!(
+                                    "{:#010x} {: <30} ; {}",
+                                    instr_addr, instr_format, instr_comment
+                                );
+                                4
+                            }
+                            0b001 => {
+                                // (xxx).L
+                                panic!(
+                                    "{:#010x} {:#06x} UNKNOWN_EA {:?} {}",
+                                    instr_addr, instr_word, ea_mode, ea_register
+                                );
+                            }
+                            0b010 => {
+                                // PC indirect with displacement mode
+                                // (d16,PC)
+                                let extension_word = self.memory.get_signed_word(instr_addr + 2);
+                                let operand =
+                                    self.memory.get_unsigned_longword_with_i16_displacement(
+                                        instr_addr + 2,
+                                        extension_word,
+                                    );
+                                let exec_func_pc_indirect_with_displacement_mode = exec_func_pc_indirect_with_displacement_mode.unwrap_or_else(|| panic!("Effective Addressing 'PC indirect with displacement mode' not implemented for {}", instruction.name));
+                                let instr_format = format!(
+                                    "{} ({:#06x},PC),A{}",
+                                    instruction.name, extension_word, register
+                                );
+                                let instr_comment = exec_func_pc_indirect_with_displacement_mode(
+                                    instr_addr,
+                                    instr_word,
+                                    &mut self.register,
+                                    &mut self.memory,
+                                    register,
+                                    operand,
+                                );
+                                println!(
+                                    "{:#010x} {: <30} ; {}",
+                                    instr_addr, instr_format, instr_comment
+                                );
+                                4
+                            }
+                            0b011 => {
+                                // (d8,PC,Xn)
+                                panic!(
+                                    "{:#010x} {:#06x} UNKNOWN_EA {:?} {}",
+                                    instr_addr, instr_word, ea_mode, ea_register
+                                );
+                            }
+                            _ => {
+                                panic!(
+                                    "{:#010x} {:#06x} UNKNOWN_EA {:?} {}",
+                                    instr_addr, instr_word, ea_mode, ea_register
+                                );
+                            }
+                        }
+                    }
                 }
+                // else {
+                //     panic!(
+                //         "{:#010x} {:#06x} UNKNOWN_EA {} {}",
+                //         instr_addr, instr_word, ea_mode, ea_register
+                //     );
+                // }
             }
-            InstructionFormat::EffectiveAddressWithOpmodeAndRegister{
-                exec_func_areg_indirect_with_post_inc
+            InstructionFormat::EffectiveAddressWithOpmodeAndRegister {
+                exec_func_areg_indirect_with_post_inc,
             } => {
                 let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
                 let ea_opmode = (instr_word >> 6) & 0x0007;
-                let ea_mode = (instr_word >> 3) & 0x0007;
+                let ea_mode = Cpu::extract_effective_addressing_mode(instr_word);
                 let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
                 println!(
-                    "register {} ea_mode {:#05b} ea_register {} ea_opmode {:#05b} ",
+                    "register {} ea_mode {:?} ea_register {} ea_opmode {:#05b} ",
                     register, ea_mode, ea_register, ea_opmode
                 );
                 panic!("EffectiveAddressWithOpmodeAndRegister not quite done");
