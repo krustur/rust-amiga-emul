@@ -33,47 +33,48 @@ impl<'a> Instruction<'a> {
     }
 }
 
-/// Instruction with common EA layout:
+/// Instruction with common EA format:
 /// | 15| 14| 13| 12| 11| 10|  9|  8|  7|  6|  5|  4|  3|  2|  1|  0|
 ///    -   -   -   -|   register|  -   -   -|ea mode    |ea register|
 /// 
 pub struct EaInstruction<'a> {
+    pub name: String,
     pub mask: u16,
     pub opcode: u16,
     pub execute_absolute_short_func:
-        fn(instr_address: u32, instr_word: u16, reg: &mut Register, mem: &mut Mem<'a>, register: usize, operand: u32, extension_word: i16) -> u32,
-    pub execute_program_counter_indirect_with_displacement_mode_func:
-        fn(instr_address: u32, instr_word: u16, reg: &mut Register, mem: &mut Mem<'a>, register: usize, operand: u32, extension_word: i16) -> u32,
+        Option<fn(instr_address: u32, instr_word: u16, reg: &mut Register, mem: &mut Mem<'a>, register: usize, operand: u32) -> String>,
+    pub execute_pc_indirect_with_displacement_mode_func:
+        Option<fn(instr_address: u32, instr_word: u16, reg: &mut Register, mem: &mut Mem<'a>, register: usize, operand: u32) -> String>,
 }
 
 impl<'a> EaInstruction<'a> {
     pub fn new(
+        name: String,
         mask: u16,
         opcode: u16,
-        execute_absolute_short_func: fn(
+        execute_absolute_short_func: Option<fn(
             instr_address: u32,
             instr_word: u16,
             reg: &mut Register,
             mem: &mut Mem<'a>,
             register: usize,
-            operand: u32,
-            extension_word: i16
-        ) -> u32,
-        execute_program_counter_indirect_with_displacement_mode_func: fn(
+            operand: u32,        
+        ) -> String>,
+        execute_pc_indirect_with_displacement_mode_func: Option<fn(
             instr_address: u32,
             instr_word: u16,
             reg: &mut Register,
             mem: &mut Mem<'a>,
             register: usize,
-            operand: u32,
-            extension_word: i16
-        ) -> u32,
+            operand: u32,            
+        ) -> String>,
     ) -> EaInstruction<'a> {
         let instr = EaInstruction {
+            name: name,
             mask: mask,
             opcode: opcode,
             execute_absolute_short_func: execute_absolute_short_func,
-            execute_program_counter_indirect_with_displacement_mode_func: execute_program_counter_indirect_with_displacement_mode_func,
+            execute_pc_indirect_with_displacement_mode_func: execute_pc_indirect_with_displacement_mode_func,
         };
         instr
     }

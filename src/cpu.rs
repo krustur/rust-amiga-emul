@@ -17,20 +17,17 @@ impl<'a> Cpu<'a> {
         let reg_pc = mem.get_unsigned_longword(0x4);
         let instructions = vec![
             Instruction::new(0xf100, 0x7000, Cpu::execute_moveq),
-            // Instruction::new(0xf1c0, 0x41c0, Cpu::execute_lea),
             Instruction::new(0xf130, 0xd100, Cpu::execute_addx),
-            // Instruction::new(0xf000, 0xd000, Cpu::execute_add),
         ];
         let ea_instructions = vec![
-            // EaInstruction::new(0xf100, 0x7000, Cpu::execute_moveq),
             EaInstruction::new(
+                String::from("LEA"),
                 0xf1c0,
                 0x41c0,
-                Cpu::execute_lea_absolute_short,
-                Cpu::execute_lea_program_counter_indirect_with_displacement_mode_func,
+                Some(Cpu::execute_lea_absolute_short),
+                Some(Cpu::execute_lea_program_counter_indirect_with_displacement_mode_func),
             ),
-            // EaInstruction::new(0xf130, 0xd100, Cpu::execute_addx_ea),
-            // EaInstruction::new(0xf000, 0xd000, Cpu::execute_add_ea),
+            EaInstruction::new(String::from("ADD"), 0xf000, 0xd000, None, None),
         ];
         let mut register = Register::new();
         register.reg_a[7] = reg_ssp;
@@ -102,18 +99,10 @@ impl<'a> Cpu<'a> {
         mem: &mut Mem<'a>,
         register: usize,
         operand: u32,
-        extension_word: i16,
-    ) -> u32 {
+    ) -> String {
         reg.reg_a[register] = operand;
-
-        let instr_format = format!("LEA ({:#06x}).W,A{}", extension_word, register);
         let instr_comment = format!("moving {:#010x} into A{}", operand, register);
-        println!(
-            "{:#010x} {: <30} ; {}",
-            instr_address, instr_format, instr_comment
-        );
-
-        return 4;
+        return instr_comment;
     }
 
     fn execute_lea_program_counter_indirect_with_displacement_mode_func(
@@ -123,18 +112,10 @@ impl<'a> Cpu<'a> {
         mem: &mut Mem<'a>,
         register: usize,
         operand: u32,
-        extension_word: i16,
-    ) -> u32 {
+    ) -> String {
         reg.reg_a[register] = operand;
-
-        let instr_format = format!("LEA ({:#06x},PC),A{}", extension_word, register);
         let instr_comment = format!("moving {:#010x} into A{}", operand, register);
-        println!(
-            "{:#010x} {: <30} ; {}",
-            instr_address, instr_format, instr_comment
-        );
-
-        4
+        instr_comment
     }
 
     fn execute_moveq(
@@ -249,8 +230,8 @@ impl<'a> Cpu<'a> {
             //     instr_addr, ea_register, register
             // );
             panic!(
-                "{:#010x} UNKNOWN_EA {} {}",
-                instr_addr, ea_mode, ea_register
+                "{:#010x} {:#06x} UNKNOWN_EA {} {}",
+                instr_addr, instr_word, ea_mode, ea_register
             );
             // pc_increment = Some(2);
         } else if ea_mode == 0b111 {
@@ -259,31 +240,29 @@ impl<'a> Cpu<'a> {
                 // (xxx).W
                 let extension_word = self.memory.get_signed_word(instr_addr + 2);
                 let operand = self.memory.get_unsigned_longword_from_i16(extension_word);
-                // reg.reg_a[register] = operand;
-
-                // let instr_format = format!("LEA ({:#06x}).W,A{}", extension_word, register);
-                // let instr_comment = format!("moving {:#010x} into A{}", operand, register);
-                // println!(
-                //     "{:#010x} {: <30} ; {}",
-                //     instr_address, instr_format, instr_comment
-                // );
-
-                let execute_absolute_short_func = &instruction.execute_absolute_short_func;
-                execute_absolute_short_func(
+                let execute_absolute_short_func = &instruction.execute_absolute_short_func.unwrap();
+                let instr_format = format!(
+                    "{} ({:#06x}).W,A{}",
+                    instruction.name, extension_word, register
+                );
+                let instr_comment = execute_absolute_short_func(
                     instr_addr,
                     instr_word,
                     &mut self.register,
                     &mut self.memory,
                     register,
                     operand,
-                    extension_word,
+                );
+                println!(
+                    "{:#010x} {: <30} ; {}",
+                    instr_addr, instr_format, instr_comment
                 );
                 return Some(4);
             } else if ea_register == 0b001 {
                 // (xxx).L
                 panic!(
-                    "{:#010x} UNKNOWN_EA {} {}",
-                    instr_addr, ea_mode, ea_register
+                    "{:#010x} {:#06x} UNKNOWN_EA {} {}",
+                    instr_addr, instr_word, ea_mode, ea_register
                 );
             } else if ea_register == 0b010 {
                 // program counter inderict with displacement mode
@@ -292,52 +271,40 @@ impl<'a> Cpu<'a> {
                 let operand = self
                     .memory
                     .get_unsigned_longword_with_i16_displacement(instr_addr + 2, extension_word);
-                // self.register.reg_a[register] = operand;
-
-                // let instr_format = format!("LEA ({:#06x},PC),A{}", extension_word, register);
-                // let instr_comment = format!("moving {:#010x} into A{}", operand, register);
-                // println!(
-                //     "{:#010x} {: <30} ; {}",
-                //     instr_address, instr_format, instr_comment
-                // );
                 let execute_program_counter_indirect_with_displacement_mode_func =
-                    &instruction.execute_program_counter_indirect_with_displacement_mode_func;
-                execute_program_counter_indirect_with_displacement_mode_func(
+                    &instruction.execute_pc_indirect_with_displacement_mode_func.unwrap();
+                let instr_format = format!("{} ({:#06x},PC),A{}", instruction.name, extension_word, register);
+                let instr_comment = execute_program_counter_indirect_with_displacement_mode_func(
                     instr_addr,
                     instr_word,
                     &mut self.register,
                     &mut self.memory,
                     register,
                     operand,
-                    extension_word,
                 );
-
+                println!(
+                    "{:#010x} {: <30} ; {}",
+                    instr_addr, instr_format, instr_comment
+                );
                 return Some(4);
             } else if ea_register == 0b011 {
                 // (d8,PC,Xn)
                 panic!(
-                    "{:#010x} UNKNOWN_EA {} {}",
-                    instr_addr, ea_mode, ea_register
+                    "{:#010x} {:#06x} UNKNOWN_EA {} {}",
+                    instr_addr, instr_word, ea_mode, ea_register
                 );
             } else {
                 panic!(
-                    "{:#010x} UNKNOWN_EA {} {}",
-                    instr_addr, ea_mode, ea_register
+                    "{:#010x} {:#06x} UNKNOWN_EA {} {}",
+                    instr_addr, instr_word, ea_mode, ea_register
                 );
             }
         } else {
             panic!(
-                "{:#010x} UNKNOWN_EA {} {}",
-                instr_addr, ea_mode, ea_register
+                "{:#010x} {:#06x} UNKNOWN_EA {} {}",
+                instr_addr, instr_word, ea_mode, ea_register
             );
         }
-
-        // let execute_func = &instruction.execute_func;
-        // let pc_increment =
-        //     execute_func(instr_addr, instr_word, &mut self.register, &mut self.memory);
-
-        // Some(pc_increment)
-        // None
     }
 }
 
