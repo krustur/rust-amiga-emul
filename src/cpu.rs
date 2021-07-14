@@ -256,10 +256,6 @@ impl<'a> Cpu<'a> {
                                 let operand =
                                     self.memory.get_unsigned_longword_from_i16(extension_word);
                                 let exec_func_absolute_short = exec_func_absolute_short.unwrap_or_else(|| panic!("Effective Addressing 'Absolute short addressing mode' not implemented for {}", instruction.name));
-                                let instr_format = format!(
-                                    "{} ({:#06x}).W,A{}",
-                                    instruction.name, extension_word, register
-                                );
                                 let instr_comment = exec_func_absolute_short(
                                     instr_addr,
                                     instr_word,
@@ -267,6 +263,10 @@ impl<'a> Cpu<'a> {
                                     &mut self.memory,
                                     register,
                                     operand,
+                                );
+                                let instr_format = format!(
+                                    "{} ({:#06x}).W,A{}",
+                                    instruction.name, extension_word, register
                                 );
                                 println!(
                                     "{:#010x} {: <30} ; {}",
@@ -337,7 +337,57 @@ impl<'a> Cpu<'a> {
                     "register {} ea_mode {:?} ea_register {} ea_opmode {:?} ",
                     register, ea_mode, ea_register, ea_opmode
                 );
-                panic!("EffectiveAddressWithOpmodeAndRegister not quite done");
+
+                match ea_mode {
+                    EffectiveAddressingMode::DRegDirect
+                    | EffectiveAddressingMode::ARegDirect
+                    | EffectiveAddressingMode::ARegIndirect => {
+                        panic!(
+                            "{:#010x} {:#06x} UNKNOWN_EA {:?} {}",
+                            instr_addr, instr_word, ea_mode, ea_register
+                        );
+                    },
+                    EffectiveAddressingMode::ARegIndirectWithPostIncrement => {
+                        match ea_opmode {
+                            OpMode::ByteWithDnAsDest
+                            | OpMode::WordWithDnAsDest => {
+                                panic!(
+                                    "{:#010x} {:#06x} UNKNOWN_EA_OPMODE {:?} {}",
+                                    instr_addr, instr_word, ea_mode, ea_register
+                                );
+                            }
+                            OpMode::LongWithDnAsDest => {
+                                let ea_address = self.register.reg_a[ea_register];
+                                self.register.reg_a[ea_register] += 4;
+                                println!("ea_address: {:#010x}", ea_address);
+                                panic!(
+                                    "{:#010x} {:#06x} THIS IS IT {:?} {}",
+                                    instr_addr, instr_word, ea_mode, ea_register
+                                );
+                            }
+                            OpMode::ByteWithEaAsDest
+                            | OpMode::WordWithEaAsDest
+                            | OpMode::LongWithEaAsDest => {
+                                panic!(
+                                    "{:#010x} {:#06x} UNKNOWN_EA_OPMODE {:?} {}",
+                                    instr_addr, instr_word, ea_mode, ea_register
+                                );
+                            }
+                        }
+                        
+                    },
+                    EffectiveAddressingMode::ARegIndirectWithPreDecrement
+                    | EffectiveAddressingMode::ARegIndirectWithDisplacement
+                    | EffectiveAddressingMode::ARegIndirectWithIndex
+                    | EffectiveAddressingMode::PcIndirectAndLotsMore => {
+                        panic!(
+                            "{:#010x} {:#06x} UNKNOWN_EA {:?} {}",
+                            instr_addr, instr_word, ea_mode, ea_register
+                        );
+                        // pc_increment = Some(2);
+                    }
+                }
+                // panic!("EffectiveAddressWithOpmodeAndRegister not quite done");
             }
         };
         self.register.reg_pc = self.register.reg_pc + pc_increment;
