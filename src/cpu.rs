@@ -32,20 +32,13 @@ impl<'a> Cpu<'a> {
                 String::from("LEA"),
                 0xf1c0,
                 0x41c0,
-                InstructionFormat::EffectiveAddressWithRegister {
-                    exec_func_absolute_short: Some(Cpu::execute_lea_absolute_short),
-                    exec_func_pc_indirect_with_displacement_mode: Some(
-                        Cpu::execute_lea_program_counter_indirect_with_displacement_mode_func,
-                    ),
-                },
+                InstructionFormat::EffectiveAddressWithRegister(Cpu::execute_lea_absolute_short),
             ),
             Instruction::new(
                 String::from("ADD"),
                 0xf000,
                 0xd000,
-                InstructionFormat::EffectiveAddressWithOpmodeAndRegister {
-                    exec_func_areg_indirect_with_post_inc: Some(Cpu::execute_add_ea),
-                },
+                InstructionFormat::EffectiveAddressWithOpmodeAndRegister(Cpu::execute_add_ea),
             ),
         ];
         // let ea_instructions = vec![];
@@ -140,20 +133,7 @@ impl<'a> Cpu<'a> {
         reg.reg_a[register] = operand;
         let instr_comment = format!("moving {:#010x} into A{}", operand, register);
         return instr_comment;
-    }
-
-    fn execute_lea_program_counter_indirect_with_displacement_mode_func(
-        instr_address: u32,
-        instr_word: u16,
-        reg: &mut Register,
-        mem: &mut Mem<'a>,
-        register: usize,
-        operand: u32,
-    ) -> String {
-        reg.reg_a[register] = operand;
-        let instr_comment = format!("moving {:#010x} into A{}", operand, register);
-        instr_comment
-    }
+    }    
 
     fn execute_moveq(
         instr_address: u32,
@@ -225,10 +205,7 @@ impl<'a> Cpu<'a> {
                 );
                 pc_increment
             }
-            InstructionFormat::EffectiveAddressWithRegister {
-                exec_func_absolute_short,
-                exec_func_pc_indirect_with_displacement_mode,
-            } => {
+            InstructionFormat::EffectiveAddressWithRegister(exec_func) => {
                 let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
                 let ea_mode = Cpu::extract_effective_addressing_mode(instr_word);
                 let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
@@ -255,8 +232,7 @@ impl<'a> Cpu<'a> {
                                 let extension_word = self.memory.get_signed_word(instr_addr + 2);
                                 let operand =
                                     self.memory.get_unsigned_longword_from_i16(extension_word);
-                                let exec_func_absolute_short = exec_func_absolute_short.unwrap_or_else(|| panic!("Effective Addressing 'Absolute short addressing mode' not implemented for {}", instruction.name));
-                                let instr_comment = exec_func_absolute_short(
+                                let instr_comment = exec_func(
                                     instr_addr,
                                     instr_word,
                                     &mut self.register,
@@ -290,12 +266,11 @@ impl<'a> Cpu<'a> {
                                         instr_addr + 2,
                                         extension_word,
                                     );
-                                let exec_func_pc_indirect_with_displacement_mode = exec_func_pc_indirect_with_displacement_mode.unwrap_or_else(|| panic!("Effective Addressing 'PC indirect with displacement mode' not implemented for {}", instruction.name));
                                 let instr_format = format!(
                                     "{} ({:#06x},PC),A{}",
                                     instruction.name, extension_word, register
                                 );
-                                let instr_comment = exec_func_pc_indirect_with_displacement_mode(
+                                let instr_comment = exec_func(
                                     instr_addr,
                                     instr_word,
                                     &mut self.register,
@@ -326,9 +301,7 @@ impl<'a> Cpu<'a> {
                     }
                 }
             }
-            InstructionFormat::EffectiveAddressWithOpmodeAndRegister {
-                exec_func_areg_indirect_with_post_inc,
-            } => {
+            InstructionFormat::EffectiveAddressWithOpmodeAndRegister(exec_func) => {
                 let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
                 let ea_opmode = Cpu::extract_op_mode(instr_word);
                 let ea_mode = Cpu::extract_effective_addressing_mode(instr_word);
