@@ -23,6 +23,12 @@ impl<'a> Cpu<'a> {
                 InstructionFormat::EffectiveAddressWithRegister(Cpu::execute_lea_absolute_short),
             ),
             Instruction::new(
+                String::from("Bcc"),
+                0xf000,
+                0x6000,
+                InstructionFormat::Uncommon(Cpu::execute_bcc),
+            ),
+            Instruction::new(
                 String::from("MOVEQ"),
                 0xf100,
                 0x7000,
@@ -154,6 +160,25 @@ impl<'a> Cpu<'a> {
         let instr_comment = format!("moving {:#010x} into A{}", ea, register);
         return instr_comment;
     }    
+
+    fn execute_bcc(
+        instr_address: u32,
+        instr_word: u16,
+        reg: &mut Register,
+        mem: &mut Mem<'a>,
+    ) -> (String, String, u32) {
+        // TODO: Condition codes
+        // let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
+        // let mut instr_bytes = &instr_word.to_be_bytes()[1..2];
+        // let operand = instr_bytes.read_i8().unwrap();
+        // let operand_ptr = Cpu::sign_extend_i8(operand);
+        let displacement_8bit = (instr_word & 0x00ff) as i8;
+        let operands_format = format!("{}", displacement_8bit);
+        let instr_comment = format!("might branch to somnewhere ");//{:#010x} into D{}", operand_ptr, register);
+        // reg.reg_d[register] = operand_ptr;
+        (operands_format, instr_comment, 2)
+    }
+
 
     fn execute_moveq(
         instr_address: u32,
@@ -391,7 +416,7 @@ impl<'a> Cpu<'a> {
                             "{:#010x} {: <30} ; {}",
                             instr_addr, instr_format, instr_comment
                         );
-                        4                        
+                        2                      
                     },
                     EffectiveAddressingMode::ARegIndirectWithPreDecrement
                     | EffectiveAddressingMode::ARegIndirectWithDisplacement
