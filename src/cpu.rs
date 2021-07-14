@@ -66,18 +66,38 @@ impl<'a> Cpu<'a> {
         res
     }
 
-    // fn sign_extend_i16(address: i16) -> u32 {
-    //     // TODO: Any better way to do this?
-    //     let address_bytes = address.to_be_bytes();
-    //     let fixed_bytes: [u8; 4] = if address < 0 {
-    //         [0xff, 0xff, address_bytes[0], address_bytes[1]]
-    //     } else {
-    //         [0x00, 0x00, address_bytes[0], address_bytes[1]]
-    //     };
-    //     let mut fixed_bytes_slice = &fixed_bytes[0..4];
-    //     let res = fixed_bytes_slice.read_u32::<BigEndian>().unwrap();
-    //     res
-    // }
+    fn sign_extend_i16(address: i16) -> u32 {
+        // TODO: Any better way to do this?
+        let address = address as i32;
+        let address = if address < 0 {
+            // TODO: 24 bit addressing modes?
+            0xffffffffu32 - i32::abs(address) as u32
+        } else {
+            address as u32
+        };
+        address
+
+        // let address_bytes = address.to_be_bytes();
+        // let fixed_bytes: [u8; 4] = if address < 0 {
+        //     [0xff, 0xff, address_bytes[0], address_bytes[1]]
+        // } else {
+        //     [0x00, 0x00, address_bytes[0], address_bytes[1]]
+        // };
+        // let mut fixed_bytes_slice = &fixed_bytes[0..4];
+        // let res = fixed_bytes_slice.read_u32::<BigEndian>().unwrap();
+        // res
+    }
+
+    pub fn get_address_with_i16_displacement(
+        address: u32,
+        displacement: i16,
+    ) -> u32 {
+        let address_i64 = i64::from(address);
+        let displacement_i64 = i64::from(displacement);
+        let address = (address_i64 + displacement_i64).try_into().unwrap();
+
+        address
+    }
 
     fn extract_effective_addressing_mode(word: u16) -> EffectiveAddressingMode {
         let ea_mode = (word >> 3) & 0x0007;
@@ -128,10 +148,10 @@ impl<'a> Cpu<'a> {
         reg: &mut Register,
         mem: &mut Mem<'a>,
         register: usize,
-        operand: u32,
+        ea: u32,
     ) -> String {
-        reg.reg_a[register] = operand;
-        let instr_comment = format!("moving {:#010x} into A{}", operand, register);
+        reg.reg_a[register] = ea;
+        let instr_comment = format!("moving {:#010x} into A{}", ea, register);
         return instr_comment;
     }    
 
@@ -230,15 +250,14 @@ impl<'a> Cpu<'a> {
                                 // absolute short addressing mode
                                 // (xxx).W
                                 let extension_word = self.memory.get_signed_word(instr_addr + 2);
-                                let operand =
-                                    self.memory.get_unsigned_longword_from_i16(extension_word);
+                                let ea = Cpu::sign_extend_i16(extension_word);
                                 let instr_comment = exec_func(
                                     instr_addr,
                                     instr_word,
                                     &mut self.register,
                                     &mut self.memory,
                                     register,
-                                    operand,
+                                    ea,
                                 );
                                 let instr_format = format!(
                                     "{} ({:#06x}).W,A{}",
@@ -261,11 +280,12 @@ impl<'a> Cpu<'a> {
                                 // PC indirect with displacement mode
                                 // (d16,PC)
                                 let extension_word = self.memory.get_signed_word(instr_addr + 2);
-                                let operand =
-                                    self.memory.get_unsigned_longword_with_i16_displacement(
-                                        instr_addr + 2,
-                                        extension_word,
-                                    );
+                                let ea = Cpu::get_address_with_i16_displacement(self.register.reg_pc + 2, extension_word);
+                                //  let operand =
+                                    //  self.memory.get_unsigned_longword_with_i16_displacement(
+                                //         instr_addr + 2,
+                                //         extension_word,
+                                //     );
                                 let instr_format = format!(
                                     "{} ({:#06x},PC),A{}",
                                     instruction.name, extension_word, register
@@ -276,7 +296,7 @@ impl<'a> Cpu<'a> {
                                     &mut self.register,
                                     &mut self.memory,
                                     register,
-                                    operand,
+                                    ea,
                                 );
                                 println!(
                                     "{:#010x} {: <30} ; {}",
@@ -333,10 +353,25 @@ impl<'a> Cpu<'a> {
                                 let ea_address = self.register.reg_a[ea_register];
                                 self.register.reg_a[ea_register] += 4;
                                 println!("ea_address: {:#010x}", ea_address);
-                                panic!(
-                                    "{:#010x} {:#06x} THIS IS IT {:?} {}",
-                                    instr_addr, instr_word, ea_mode, ea_register
+
+                                let operand = self.memory.get_unsigned_longword(ea_address);
+                                let instr_comment = exec_func(
+                                    instr_addr,
+                                    instr_word,
+                                    &mut self.register,
+                                    &mut self.memory,
+                                    register,
+                                    operand,
                                 );
+                                let instr_format = format!(
+                                    "{} (A{}),D{}",
+                                    instruction.name, ea_register, register
+                                );
+                                println!(
+                                    "{:#010x} {: <30} ; {}",
+                                    instr_addr, instr_format, instr_comment
+                                );
+                                4                                
                             }
                             OpMode::ByteWithEaAsDest
                             | OpMode::WordWithEaAsDest

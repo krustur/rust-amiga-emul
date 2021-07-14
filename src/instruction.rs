@@ -27,7 +27,7 @@ pub enum InstructionFormat<'a> {
             reg: &mut Register,
             mem: &mut Mem<'a>,
             register: usize,
-            operand: u32,
+            ea: u32,
         ) -> String,
     ),
     /// Instruction with common EA format and opmode and register:
