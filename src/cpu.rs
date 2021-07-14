@@ -17,28 +17,28 @@ impl<'a> Cpu<'a> {
         let reg_pc = mem.get_unsigned_longword(0x4);
         let instructions = vec![
             Instruction::new(
-                String::from("MOVEQ"),
-                0xf100,
-                0x7000,
-                InstructionFormat::Uncommon(Cpu::execute_moveq),
-            ),
-            Instruction::new(
-                String::from("ADDX"),
-                0xf130,
-                0xd100,
-                InstructionFormat::Uncommon(Cpu::execute_addx),
-            ),
-            Instruction::new(
                 String::from("LEA"),
                 0xf1c0,
                 0x41c0,
                 InstructionFormat::EffectiveAddressWithRegister(Cpu::execute_lea_absolute_short),
             ),
             Instruction::new(
+                String::from("MOVEQ"),
+                0xf100,
+                0x7000,
+                InstructionFormat::Uncommon(Cpu::execute_moveq),
+            ),
+            Instruction::new(
                 String::from("ADD"),
                 0xf000,
                 0xd000,
                 InstructionFormat::EffectiveAddressWithOpmodeAndRegister(Cpu::execute_add_ea),
+            ),
+            Instruction::new(
+                String::from("ADDX"),
+                0xf130,
+                0xd100,
+                InstructionFormat::Uncommon(Cpu::execute_addx),
             ),
         ];
         // let ea_instructions = vec![];
