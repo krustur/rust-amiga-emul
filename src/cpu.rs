@@ -94,10 +94,7 @@ impl<'a> Cpu<'a> {
         // res
     }
 
-    pub fn get_address_with_i16_displacement(
-        address: u32,
-        displacement: i16,
-    ) -> u32 {
+    pub fn get_address_with_i16_displacement(address: u32, displacement: i16) -> u32 {
         let address_i64 = i64::from(address);
         let displacement_i64 = i64::from(displacement);
         let address = (address_i64 + displacement_i64).try_into().unwrap();
@@ -159,7 +156,7 @@ impl<'a> Cpu<'a> {
         reg.reg_a[register] = ea;
         let instr_comment = format!("moving {:#010x} into A{}", ea, register);
         return instr_comment;
-    }    
+    }
 
     fn execute_bcc(
         instr_address: u32,
@@ -174,11 +171,10 @@ impl<'a> Cpu<'a> {
         // let operand_ptr = Cpu::sign_extend_i8(operand);
         let displacement_8bit = (instr_word & 0x00ff) as i8;
         let operands_format = format!("{}", displacement_8bit);
-        let instr_comment = format!("might branch to somnewhere ");//{:#010x} into D{}", operand_ptr, register);
-        // reg.reg_d[register] = operand_ptr;
+        let instr_comment = format!("might branch to somnewhere "); //{:#010x} into D{}", operand_ptr, register);
+                                                                    // reg.reg_d[register] = operand_ptr;
         (operands_format, instr_comment, 2)
     }
-
 
     fn execute_moveq(
         instr_address: u32,
@@ -214,29 +210,28 @@ impl<'a> Cpu<'a> {
                 in_reg = in_reg.wrapping_add(in_mem);
                 reg.reg_d[register] = (reg.reg_d[register] & 0xffffff00) | (in_reg as u32);
                 let instr_comment = format!("adding {:#04x} to D{}", in_mem, register);
-                return (instr_comment, OperationSize::Byte)
-            },
+                return (instr_comment, OperationSize::Byte);
+            }
             0b010 => {
                 let in_mem = mem.get_unsigned_longword(ea);
                 let mut in_reg = reg.reg_d[register];
                 in_reg = in_reg.wrapping_add(in_mem);
                 reg.reg_d[register] = in_reg;
                 let instr_comment = format!("adding {:#010x} to D{}", in_mem, register);
-                return (instr_comment, OperationSize::Long)
-            },
-            _ => panic!("Unhandled ea_opmode")
+                return (instr_comment, OperationSize::Long);
+            }
+            _ => panic!("Unhandled ea_opmode"),
         }
 
-// #[derive(FromPrimitive, Debug)]
-// pub enum OpMode {
-//     ByteWithDnAsDest = 0b000,
-//     WordWithDnAsDest = 0b001,
-//     LongWithDnAsDest = 0b010,
-//     ByteWithEaAsDest = 0b100,
-//     WordWithEaAsDest = 0b101,
-//     LongWithEaAsDest = 0b110,
-// }
-
+        // #[derive(FromPrimitive, Debug)]
+        // pub enum OpMode {
+        //     ByteWithDnAsDest = 0b000,
+        //     WordWithDnAsDest = 0b001,
+        //     LongWithDnAsDest = 0b010,
+        //     ByteWithEaAsDest = 0b100,
+        //     WordWithEaAsDest = 0b101,
+        //     LongWithEaAsDest = 0b110,
+        // }
     }
 
     fn execute_addx(
@@ -333,9 +328,12 @@ impl<'a> Cpu<'a> {
                                 // PC indirect with displacement mode
                                 // (d16,PC)
                                 let extension_word = self.memory.get_signed_word(instr_addr + 2);
-                                let ea = Cpu::get_address_with_i16_displacement(self.register.reg_pc + 2, extension_word);
+                                let ea = Cpu::get_address_with_i16_displacement(
+                                    self.register.reg_pc + 2,
+                                    extension_word,
+                                );
                                 //  let operand =
-                                    //  self.memory.get_unsigned_longword_with_i16_displacement(
+                                //  self.memory.get_unsigned_longword_with_i16_displacement(
                                 //         instr_addr + 2,
                                 //         extension_word,
                                 //     );
@@ -392,7 +390,7 @@ impl<'a> Cpu<'a> {
                             "{:#010x} {:#06x} UNKNOWN_EA {:?} {}",
                             instr_addr, instr_word, ea_mode, ea_register
                         );
-                    },
+                    }
                     EffectiveAddressingMode::ARegIndirectWithPostIncrement => {
                         let ea = self.register.reg_a[ea_register];
                         println!("ea_address: {:#010x}", ea);
@@ -408,16 +406,14 @@ impl<'a> Cpu<'a> {
                             ea,
                         );
                         self.register.reg_a[ea_register] += op_size.size_in_bytes();
-                        let instr_format = format!(
-                            "{} (A{})+,D{}",
-                            instruction.name, ea_register, register
-                        );
+                        let instr_format =
+                            format!("{} (A{})+,D{}", instruction.name, ea_register, register);
                         println!(
                             "{:#010x} {: <30} ; {}",
                             instr_addr, instr_format, instr_comment
                         );
-                        2                      
-                    },
+                        2
+                    }
                     EffectiveAddressingMode::ARegIndirectWithPreDecrement
                     | EffectiveAddressingMode::ARegIndirectWithDisplacement
                     | EffectiveAddressingMode::ARegIndirectWithIndex
