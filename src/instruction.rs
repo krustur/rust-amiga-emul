@@ -14,7 +14,7 @@ pub enum InstructionFormat<'a> {
             instr_word: u16,
             reg: &mut Register,
             mem: &mut Mem<'a>,
-        ) -> (String, String, u32),
+        ) -> InstructionExecutionResult,
     ),
     /// Instruction with common EA format and register:
     /// | 15| 14| 13| 12| 11| 10|  9|  8|  7|  6|  5|  4|  3|  2|  1|  0|
@@ -26,9 +26,10 @@ pub enum InstructionFormat<'a> {
             instr_word: u16,
             reg: &mut Register,
             mem: &mut Mem<'a>,
+            ea_format: String,
             register: usize,
             ea: u32,
-        ) -> String,
+        ) -> InstructionExecutionResult,
     ),
     /// Instruction with common EA format and opmode and register:
     /// | 15| 14| 13| 12| 11| 10|  9|  8|  7|  6|  5|  4|  3|  2|  1|  0|
@@ -40,11 +41,25 @@ pub enum InstructionFormat<'a> {
             instr_word: u16,
             reg: &mut Register,
             mem: &mut Mem<'a>,
+            ea_format: String,
             ea_opmode: usize,
             register: usize,
             ea: u32,
-        ) -> (String, OperationSize),
+        ) -> InstructionExecutionResult,
     ),
+}
+
+pub enum PcResult{
+    Increment(u32),
+    Set(u32)
+}
+
+pub struct InstructionExecutionResult {
+    pub name: String,
+    pub operands_format: String,
+    pub comment: String,
+    pub op_size: OperationSize,
+    pub pc_result: PcResult
 }
 
 #[derive(FromPrimitive, Debug)]

@@ -1,4 +1,4 @@
-use crate::instruction::{EffectiveAddressingMode, Instruction, InstructionFormat, OperationSize};
+use crate::instruction::{ConditionalTest, EffectiveAddressingMode, Instruction, InstructionExecutionResult, InstructionFormat, OperationSize, PcResult};
 use crate::mem::Mem;
 use crate::register::Register;
 use byteorder::{BigEndian, ReadBytesExt};
@@ -111,6 +111,15 @@ impl<'a> Cpu<'a> {
         ea_mode
     }
 
+    fn extract_conditional_test(word: u16) -> ConditionalTest {
+        let ea_mode = (word >> 8) & 0x000f;
+        let ea_mode = match FromPrimitive::from_u16(ea_mode) {
+            Some(r) => r,
+            None => panic!("Unable to extract EffectiveAddressingMode"),
+        };
+        ea_mode
+    }
+
     fn extract_op_mode_from_bit_pos_6(word: u16) -> usize {
         let op_mode = (word >> 6) & 0x0007;
         let op_mode = match FromPrimitive::from_u16(op_mode) {
@@ -150,12 +159,19 @@ impl<'a> Cpu<'a> {
         instr_word: u16,
         reg: &mut Register,
         mem: &mut Mem<'a>,
+        ea_format: String,
         register: usize,
         ea: u32,
-    ) -> String {
+    ) -> InstructionExecutionResult {
         reg.reg_a[register] = ea;
         let instr_comment = format!("moving {:#010x} into A{}", ea, register);
-        return instr_comment;
+        InstructionExecutionResult{
+            name: String::from("LEA"),
+            operands_format: format!("{},A{}", ea_format, register),
+            comment: instr_comment,
+            op_size: OperationSize::Long,
+            pc_result: PcResult::Increment(4)
+        }
     }
 
     fn execute_bcc(
@@ -163,17 +179,27 @@ impl<'a> Cpu<'a> {
         instr_word: u16,
         reg: &mut Register,
         mem: &mut Mem<'a>,
-    ) -> (String, String, u32) {
+    ) -> InstructionExecutionResult {
         // TODO: Condition codes
-        // let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
+        let cc = Cpu::extract_conditional_test(instr_word);
         // let mut instr_bytes = &instr_word.to_be_bytes()[1..2];
         // let operand = instr_bytes.read_i8().unwrap();
         // let operand_ptr = Cpu::sign_extend_i8(operand);
+
         let displacement_8bit = (instr_word & 0x00ff) as i8;
-        let operands_format = format!("{}", displacement_8bit);
+        let operands_format = format!("[{:?}] {}", cc, displacement_8bit);
         let instr_comment = format!("might branch to somnewhere "); //{:#010x} into D{}", operand_ptr, register);
                                                                     // reg.reg_d[register] = operand_ptr;
-        (operands_format, instr_comment, 2)
+        if displacement_8bit == 0 || displacement_8bit == -1 {
+            panic!("TODO: Word and Long branches")
+        }
+        InstructionExecutionResult{
+            name: format!("B{:?}", cc),
+            operands_format: format!("{}", displacement_8bit),
+            comment: instr_comment,
+            op_size: OperationSize::Byte,
+            pc_result: PcResult::Increment(2)
+        }
     }
 
     fn execute_moveq(
@@ -181,7 +207,7 @@ impl<'a> Cpu<'a> {
         instr_word: u16,
         reg: &mut Register,
         mem: &mut Mem<'a>,
-    ) -> (String, String, u32) {
+    ) -> InstructionExecutionResult {
         // TODO: Condition codes
         let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
         let mut instr_bytes = &instr_word.to_be_bytes()[1..2];
@@ -190,7 +216,13 @@ impl<'a> Cpu<'a> {
         let operands_format = format!("#{},D{}", operand, register);
         let instr_comment = format!("moving {:#010x} into D{}", operand_ptr, register);
         reg.reg_d[register] = operand_ptr;
-        (operands_format, instr_comment, 2)
+        InstructionExecutionResult{
+            name: String::from("MOVEQ"),
+            operands_format: operands_format,
+            comment: instr_comment,
+            op_size: OperationSize::Long,
+            pc_result: PcResult::Increment(2)
+        }
     }
 
     fn execute_add_ea(
@@ -198,10 +230,11 @@ impl<'a> Cpu<'a> {
         instr_word: u16,
         reg: &mut Register,
         mem: &mut Mem<'a>,
+        ea_format: String,
         ea_opmode: usize,
         register: usize,
         ea: u32,
-    ) -> (String, OperationSize) {
+    ) -> InstructionExecutionResult {
         // TODO: Condition codes
         match ea_opmode {
             0b000 => {
@@ -210,7 +243,13 @@ impl<'a> Cpu<'a> {
                 in_reg = in_reg.wrapping_add(in_mem);
                 reg.reg_d[register] = (reg.reg_d[register] & 0xffffff00) | (in_reg as u32);
                 let instr_comment = format!("adding {:#04x} to D{}", in_mem, register);
-                return (instr_comment, OperationSize::Byte);
+                return InstructionExecutionResult{
+                    name: String::from("ADD.B"),
+                    operands_format: format!("{},D{}", ea_format, register),
+                    comment: instr_comment,
+                    op_size: OperationSize::Byte,
+                    pc_result: PcResult::Increment(2)
+                };
             }
             0b010 => {
                 let in_mem = mem.get_unsigned_longword(ea);
@@ -218,7 +257,13 @@ impl<'a> Cpu<'a> {
                 in_reg = in_reg.wrapping_add(in_mem);
                 reg.reg_d[register] = in_reg;
                 let instr_comment = format!("adding {:#010x} to D{}", in_mem, register);
-                return (instr_comment, OperationSize::Long);
+                return InstructionExecutionResult{
+                    name: String::from("ADD.L"),
+                    operands_format: format!("{},D{}", ea_format, register),
+                    comment: instr_comment,
+                    op_size: OperationSize::Long,
+                    pc_result: PcResult::Increment(2)
+                };
             }
             _ => panic!("Unhandled ea_opmode"),
         }
@@ -239,9 +284,15 @@ impl<'a> Cpu<'a> {
         instr_word: u16,
         reg: &mut Register,
         mem: &mut Mem<'a>,
-    ) -> (String, String, u32) {
+    ) -> InstructionExecutionResult {
         println!("Execute addx: {:#010x} {:#06x}", instr_address, instr_word);
-        (String::from("ops"), String::from("comment"), 2)
+        return InstructionExecutionResult{
+            name: String::from("ADDX"),
+            operands_format: String::from("operands_format"),
+            comment: String::from("comment"),
+            op_size: OperationSize::Long,
+            pc_result: PcResult::Increment(2)
+        };
     }
 
     pub fn execute_next_instruction(self: &mut Cpu<'a>) {
@@ -261,17 +312,12 @@ impl<'a> Cpu<'a> {
             Some(instruction_pos) => &self.instructions[instruction_pos],
         };
 
-        let pc_increment = match instruction.instruction_format {
+        let exec_result: InstructionExecutionResult = match instruction.instruction_format {
             InstructionFormat::Uncommon(exec_func) => {
-                let (operands_format, instr_comment, pc_increment) =
+                let exec_result =
                     exec_func(instr_addr, instr_word, &mut self.register, &mut self.memory);
-                let instr_format = format!("{} {}", instruction.name, operands_format);
-                // let instr_comment = format!("moving {:#010x} into D{}", operand_ptr, register);
-                println!(
-                    "{:#010x} {: <30} ; {}",
-                    instr_addr, instr_format, instr_comment
-                );
-                pc_increment
+                let instr_format = format!("{} {}", exec_result.name, exec_result.operands_format);
+                exec_result
             }
             InstructionFormat::EffectiveAddressWithRegister(exec_func) => {
                 let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
@@ -299,23 +345,20 @@ impl<'a> Cpu<'a> {
                                 // (xxx).W
                                 let extension_word = self.memory.get_signed_word(instr_addr + 2);
                                 let ea = Cpu::sign_extend_i16(extension_word);
-                                let instr_comment = exec_func(
+                                let ea_format = format!(
+                                    "({:#06x}).W",
+                                    extension_word
+                                );
+                                let exec_result = exec_func(
                                     instr_addr,
                                     instr_word,
                                     &mut self.register,
                                     &mut self.memory,
+                                    ea_format,
                                     register,
                                     ea,
-                                );
-                                let instr_format = format!(
-                                    "{} ({:#06x}).W,A{}",
-                                    instruction.name, extension_word, register
-                                );
-                                println!(
-                                    "{:#010x} {: <30} ; {}",
-                                    instr_addr, instr_format, instr_comment
-                                );
-                                4
+                                );      
+                                exec_result
                             }
                             0b001 => {
                                 // (xxx).L
@@ -337,23 +380,20 @@ impl<'a> Cpu<'a> {
                                 //         instr_addr + 2,
                                 //         extension_word,
                                 //     );
-                                let instr_format = format!(
-                                    "{} ({:#06x},PC),A{}",
-                                    instruction.name, extension_word, register
+                                let ea_format = format!(
+                                    "({:#06x},PC)",
+                                    extension_word
                                 );
-                                let instr_comment = exec_func(
+                                let exec_result = exec_func(
                                     instr_addr,
                                     instr_word,
                                     &mut self.register,
                                     &mut self.memory,
+                                    ea_format,
                                     register,
                                     ea,
                                 );
-                                println!(
-                                    "{:#010x} {: <30} ; {}",
-                                    instr_addr, instr_format, instr_comment
-                                );
-                                4
+                                exec_result
                             }
                             0b011 => {
                                 // (d8,PC,Xn)
@@ -393,26 +433,22 @@ impl<'a> Cpu<'a> {
                     }
                     EffectiveAddressingMode::ARegIndirectWithPostIncrement => {
                         let ea = self.register.reg_a[ea_register];
+                        let ea_format = format!("(A{})+", ea_register);
                         println!("ea_address: {:#010x}", ea);
 
                         let operand = self.memory.get_unsigned_longword(ea);
-                        let (instr_comment, op_size) = exec_func(
+                        let exec_result = exec_func(
                             instr_addr,
                             instr_word,
                             &mut self.register,
                             &mut self.memory,
+                            ea_format,
                             ea_opmode,
                             register,
                             ea,
                         );
-                        self.register.reg_a[ea_register] += op_size.size_in_bytes();
-                        let instr_format =
-                            format!("{} (A{})+,D{}", instruction.name, ea_register, register);
-                        println!(
-                            "{:#010x} {: <30} ; {}",
-                            instr_addr, instr_format, instr_comment
-                        );
-                        2
+                        self.register.reg_a[ea_register] += exec_result.op_size.size_in_bytes();           
+                        exec_result
                     }
                     EffectiveAddressingMode::ARegIndirectWithPreDecrement
                     | EffectiveAddressingMode::ARegIndirectWithDisplacement
@@ -422,13 +458,21 @@ impl<'a> Cpu<'a> {
                             "{:#010x} {:#06x} UNKNOWN_EA {:?} {}",
                             instr_addr, instr_word, ea_mode, ea_register
                         );
-                        // pc_increment = Some(2);
                     }
                 }
                 // panic!("EffectiveAddressWithOpmodeAndRegister not quite done");
             }
         };
-        self.register.reg_pc = self.register.reg_pc + pc_increment;
+        let instr_format = format!("{} {}", exec_result.name, exec_result.operands_format);
+        println!(
+            "{:#010x} {: <30} ; {}",
+            instr_addr, instr_format, exec_result.comment
+        );
+        
+        self.register.reg_pc = match exec_result.pc_result {
+            PcResult::Set(lepc) => {lepc}
+            PcResult::Increment(pc_increment) => self.register.reg_pc + pc_increment
+        }
     }
 }
 
