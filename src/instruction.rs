@@ -40,9 +40,10 @@ pub enum InstructionFormat<'a> {
             instr_word: u16,
             reg: &mut Register,
             mem: &mut Mem<'a>,
+            ea_opmode: usize,
             register: usize,
-            operand: u32,
-        ) -> String,
+            ea: u32,
+        ) -> (String, OperationSize),
     ),
 }
 
@@ -60,6 +61,22 @@ pub enum EffectiveAddressingMode {
     PcIndirectAndLotsMore = 0b111,
 }
 
+#[derive(FromPrimitive, Debug)]
+pub enum OperationSize {
+    Byte = 0b00,
+    Word = 0b01,
+    Long = 0b10,
+}
+
+impl OperationSize {
+    pub fn size_in_bytes(&self) -> u32{
+        match self {
+            OperationSize::Byte => 1,
+            OperationSize::Word => 2,
+            OperationSize::Long => 4,
+        }
+    }
+}
 // impl fmt::Display for EffectiveAddressingMode {
 //     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 //         match *self {
@@ -74,16 +91,6 @@ pub enum EffectiveAddressingMode {
 //         }
 //     }
 // }
-
-#[derive(FromPrimitive, Debug)]
-pub enum OpMode {
-    ByteWithDnAsDest = 0b000,
-    WordWithDnAsDest = 0b001,
-    LongWithDnAsDest = 0b010,
-    ByteWithEaAsDest = 0b100,
-    WordWithEaAsDest = 0b101,
-    LongWithEaAsDest = 0b110,
-}
 
 pub struct Instruction<'a> {
     pub name: String,
