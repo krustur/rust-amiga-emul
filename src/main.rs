@@ -47,8 +47,9 @@ fn main() {
     cpu.execute_next_instruction();
     cpu.execute_next_instruction();
     cpu.print_registers();
-    cpu.memory.print_range(0x3d0, 0x41f);
     cpu.execute_next_instruction();
+    cpu.print_registers();
+    cpu.memory.print_range(0xf80000, 0xf800ff);
     cpu.execute_next_instruction();
     cpu.execute_next_instruction();
     cpu.execute_next_instruction();
