@@ -69,7 +69,7 @@ pub enum OperationSize {
 }
 
 impl OperationSize {
-    pub fn size_in_bytes(&self) -> u32{
+    pub fn size_in_bytes(&self) -> u32 {
         match self {
             OperationSize::Byte => 1,
             OperationSize::Word => 2,
@@ -113,7 +113,6 @@ pub enum ConditionalTest {
     /// Less or Equal
     LE = 0b1111,
 }
-
 
 pub struct Instruction<'a> {
     pub name: String,
