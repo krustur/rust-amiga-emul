@@ -112,7 +112,7 @@ impl<'a> Cpu<'a> {
         let ea_mode = (word >> 8) & 0x000f;
         let ea_mode = match FromPrimitive::from_u16(ea_mode) {
             Some(r) => r,
-            None => panic!("Unable to extract EffectiveAddressingMode"),
+            None => panic!("Unable to extract ConditionalTest"),
         };
         ea_mode
     }
@@ -573,5 +573,20 @@ mod tests {
     fn get_address_with_i16_displacement_overflow_neg() {
         let res = Cpu::get_address_with_i16_displacement(0x00000000, i16::MIN);
         assert_eq!(0xffff8000, res);
+    }
+
+    #[test]
+    fn evaluate_condition_cc_cleared() {
+        let mut register = Register::new();
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::CC);
+        assert_eq!(true, res);
+    }
+
+    #[test]
+    fn evaluate_condition_cc_set() {
+        let mut register = Register::new();
+        register.reg_sr = 0x0001;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::CC);
+        assert_eq!(false, res);
     }
 }
