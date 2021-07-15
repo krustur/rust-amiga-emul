@@ -33,54 +33,7 @@ impl<'a> Mem<'a> {
         let range = self.get_range(address);
         let result = range.get_unsigned_longword(address);
         result
-    }
-
-    /// Get's a unsigned longword (u32) from specified memory address
-    ///
-    /// # Arguments
-    ///
-    /// * `address` - Memory address as u32
-    pub fn get_unsigned_longword_with_i16_displacement(
-        self: &Mem<'a>,
-        address: u32,
-        displacement: i16,
-    ) -> u32 {
-        let address_i64 = i64::from(address);
-        let displacement_i64 = i64::from(displacement);
-        let address = (address_i64 + displacement_i64).try_into().unwrap();
-
-        let range = self.get_range(address);
-        let result = range.get_unsigned_longword(address);
-        result
-    }
-
-    /// Get's a unsigned longword (u32) from specified memory address
-    ///
-    /// # Arguments
-    ///
-    /// * `address` - Memory address as i16
-    ///
-    /// # Note
-    ///
-    /// Used for absolute short addressing mode
-    /// Positive addresses will get from low memory (0x00000000 to 0x00007FFF)
-    /// Negative addresses will get from high memory (0xffff8000 to 0xffffffff)
-    pub fn get_unsigned_longword_from_i16(self: &Mem<'a>, address: i16) -> u32 {
-        // TODO: Maybe raname to get_unsigned_longword_absolute_short_addressing_mode
-        // TODO: Tests please
-        // println!("Incoming address {:#06x}", address);
-        let address = address as i32;
-        let address = if address < 0 {
-            // TODO: 24 bit addressing modes?
-            0xffffffffu32 - i32::abs(address) as u32
-        } else {
-            address as u32
-        };
-        // println!("Actual address {:#010x}", address);
-        let range = self.get_range(address);
-        let result = range.get_unsigned_longword(address);
-        result
-    }
+    } 
 
     /// Get's a signed longword (i32) from specified memory address
     ///
