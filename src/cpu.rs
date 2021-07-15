@@ -1,8 +1,8 @@
-use crate::instruction::{ConditionalTest, EffectiveAddressingMode, Instruction, InstructionExecutionResult, InstructionFormat, OperationSize, PcResult};
+use crate::instruction::*;
 use crate::mem::Mem;
-use crate::register::Register;
+use crate::register::*;
 use byteorder::{BigEndian, ReadBytesExt};
-use num_traits::FromPrimitive;
+use num_traits::{FromPrimitive,ToPrimitive};
 use std::convert::TryInto;
 
 pub struct Cpu<'a> {
@@ -20,31 +20,31 @@ impl<'a> Cpu<'a> {
                 String::from("LEA"),
                 0xf1c0,
                 0x41c0,
-                InstructionFormat::EffectiveAddressWithRegister(Cpu::execute_lea_absolute_short),
+                InstructionFormat::EffectiveAddressWithRegister(Cpu::instruction_lea),
             ),
             Instruction::new(
                 String::from("Bcc"),
                 0xf000,
                 0x6000,
-                InstructionFormat::Uncommon(Cpu::execute_bcc),
+                InstructionFormat::Uncommon(Cpu::instruction_bcc),
             ),
             Instruction::new(
                 String::from("MOVEQ"),
                 0xf100,
                 0x7000,
-                InstructionFormat::Uncommon(Cpu::execute_moveq),
+                InstructionFormat::Uncommon(Cpu::instruction_moveq),
             ),
             Instruction::new(
                 String::from("ADD"),
                 0xf000,
                 0xd000,
-                InstructionFormat::EffectiveAddressWithOpmodeAndRegister(Cpu::execute_add_ea),
+                InstructionFormat::EffectiveAddressWithOpmodeAndRegister(Cpu::instruction_add),
             ),
             Instruction::new(
                 String::from("ADDX"),
                 0xf130,
                 0xd100,
-                InstructionFormat::Uncommon(Cpu::execute_addx),
+                InstructionFormat::Uncommon(Cpu::instruction_addx),
             ),
         ];
         // let ea_instructions = vec![];
@@ -154,7 +154,16 @@ impl<'a> Cpu<'a> {
         println!();
     }
 
-    fn execute_lea_absolute_short(
+    fn evaluate_condition(&self, conditional_test: ConditionalTest) -> bool {
+        match conditional_test {
+            ConditionalTest::T => true,
+            ConditionalTest::F => false,
+            ConditionalTest::CC => { self.register.reg_sr & StatusRegisterMask::Carry.to_u16().unwrap() == 0x0000},
+            _ => panic!("ConditionalTest not implemented")
+        }
+    }
+
+    fn instruction_lea(
         instr_address: u32,
         instr_word: u16,
         reg: &mut Register,
@@ -174,7 +183,7 @@ impl<'a> Cpu<'a> {
         }
     }
 
-    fn execute_bcc(
+    fn instruction_bcc(
         instr_address: u32,
         instr_word: u16,
         reg: &mut Register,
@@ -202,7 +211,7 @@ impl<'a> Cpu<'a> {
         }
     }
 
-    fn execute_moveq(
+    fn instruction_moveq(
         instr_address: u32,
         instr_word: u16,
         reg: &mut Register,
@@ -225,7 +234,7 @@ impl<'a> Cpu<'a> {
         }
     }
 
-    fn execute_add_ea(
+    fn instruction_add(
         instr_address: u32,
         instr_word: u16,
         reg: &mut Register,
@@ -279,7 +288,7 @@ impl<'a> Cpu<'a> {
         // }
     }
 
-    fn execute_addx(
+    fn instruction_addx(
         instr_address: u32,
         instr_word: u16,
         reg: &mut Register,
