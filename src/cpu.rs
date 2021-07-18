@@ -47,7 +47,6 @@ impl<'a> Cpu<'a> {
                 InstructionFormat::Uncommon(Cpu::instruction_addx),
             ),
         ];
-        // let ea_instructions = vec![];
         let mut register = Register::new();
         register.reg_a[7] = reg_ssp;
         register.reg_pc = reg_pc;
@@ -252,9 +251,16 @@ impl<'a> Cpu<'a> {
         register: usize,
         ea: u32,
     ) -> InstructionExecutionResult {
+        const BYTE_WITH_DN_AS_DEST: usize = 0b000;
+        const WORD_WITH_DN_AS_DEST: usize = 0b001;
+        const LONG_WITH_DN_AS_DEST: usize = 0b010;
+        const BYTE_WITH_EA_AS_DEST: usize = 0b100;
+        const WORD_WITH_EA_AS_DEST: usize = 0b101;
+        const LONG_WITH_EA_AS_DEST: usize = 0b110;
+
         // TODO: Condition codes
         match ea_opmode {
-            0b000 => {
+            BYTE_WITH_DN_AS_DEST => {
                 let in_mem = mem.get_unsigned_byte(ea);
                 let mut in_reg = (reg.reg_d[register] & 0x000000ff) as u8;
                 in_reg = in_reg.wrapping_add(in_mem);
@@ -268,7 +274,7 @@ impl<'a> Cpu<'a> {
                     pc_result: PcResult::Increment(2),
                 };
             }
-            0b010 => {
+            LONG_WITH_DN_AS_DEST => {
                 let in_mem = mem.get_unsigned_longword(ea);
                 let mut in_reg = reg.reg_d[register];
                 in_reg = in_reg.wrapping_add(in_mem);
@@ -283,17 +289,7 @@ impl<'a> Cpu<'a> {
                 };
             }
             _ => panic!("Unhandled ea_opmode"),
-        }
-
-        // #[derive(FromPrimitive, Debug)]
-        // pub enum OpMode {
-        //     ByteWithDnAsDest = 0b000,
-        //     WordWithDnAsDest = 0b001,
-        //     LongWithDnAsDest = 0b010,
-        //     ByteWithEaAsDest = 0b100,
-        //     WordWithEaAsDest = 0b101,
-        //     LongWithEaAsDest = 0b110,
-        // }
+        }        
     }
 
     fn instruction_addx(
