@@ -1,13 +1,8 @@
-use num_derive::ToPrimitive;
-
-#[derive(ToPrimitive, Debug)]
-pub enum StatusRegisterMask {
-    Carry = 0b0000000000000001,
-    Overflow = 0b0000000000000010,
-    Zero = 0b0000000000000100,
-    Negative = 0b0000000000001000,
-    Extend = 0b0000000000010000,
-}
+pub const STATUS_REGISTER_MASK_CARRY: u16 = 0b0000000000000001;
+pub const STATUS_REGISTER_MASK_OVERFLOW: u16 = 0b0000000000000010;
+pub const STATUS_REGISTER_MASK_ZERO: u16 = 0b0000000000000100;
+pub const STATUS_REGISTER_MASK_NEGATIVE: u16 = 0b0000000000001000;
+pub const STATUS_REGISTER_MASK_EXTEND: u16 = 0b0000000000010000;
 
 pub struct Register {
     pub reg_d: [u32; 8],

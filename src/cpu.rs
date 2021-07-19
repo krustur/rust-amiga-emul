@@ -2,7 +2,7 @@ use crate::instruction::*;
 use crate::mem::Mem;
 use crate::register::*;
 use byteorder::{BigEndian, ReadBytesExt};
-use num_traits::{FromPrimitive, ToPrimitive};
+use num_traits::FromPrimitive;
 use std::convert::TryInto;
 
 pub struct Cpu<'a> {
@@ -146,6 +146,33 @@ impl<'a> Cpu<'a> {
             print!(" A{} {:#010X}", n, self.register.reg_a[n]);
         }
         println!();
+        print!(" SR {:#06X} ", self.register.reg_sr);
+        if (self.register.reg_sr & STATUS_REGISTER_MASK_EXTEND) == STATUS_REGISTER_MASK_EXTEND {
+            print!("X");
+        } else {
+            print!("-");
+        }
+        if (self.register.reg_sr & STATUS_REGISTER_MASK_NEGATIVE) == STATUS_REGISTER_MASK_NEGATIVE {
+            print!("N");
+        } else {
+            print!("-");
+        }
+        if (self.register.reg_sr & STATUS_REGISTER_MASK_ZERO) == STATUS_REGISTER_MASK_ZERO {
+            print!("Z");
+        } else {
+            print!("-");
+        }
+        if (self.register.reg_sr & STATUS_REGISTER_MASK_OVERFLOW) == STATUS_REGISTER_MASK_OVERFLOW {
+            print!("V");
+        } else {
+            print!("-");
+        }
+        if (self.register.reg_sr & STATUS_REGISTER_MASK_CARRY) == STATUS_REGISTER_MASK_CARRY {
+            print!("C");
+        } else {
+            print!("-");
+        }
+        println!();
         print!(" PC {:#010X}", self.register.reg_pc);
         println!();
     }
@@ -154,9 +181,7 @@ impl<'a> Cpu<'a> {
         match conditional_test {
             ConditionalTest::T => true,
             ConditionalTest::F => false,
-            ConditionalTest::CC => {
-                reg.reg_sr & StatusRegisterMask::Carry.to_u16().unwrap() == 0x0000
-            }
+            ConditionalTest::CC => reg.reg_sr & STATUS_REGISTER_MASK_CARRY == 0x0000,
             _ => panic!("ConditionalTest not implemented"),
         }
     }
@@ -199,23 +224,21 @@ impl<'a> Cpu<'a> {
         let branch_to_address = match displacement_8bit {
             0 => todo!(),
             -1 => todo!(),
-            _ => Cpu::get_address_with_i8_displacement(reg.reg_pc + 2, displacement_8bit)
-            
+            _ => Cpu::get_address_with_i8_displacement(reg.reg_pc + 2, displacement_8bit),
         };
         if displacement_8bit == 0 || displacement_8bit == -1 {
             panic!("TODO: Word and Long branches")
         }
         match Cpu::evaluate_condition(reg, &conditional_test) {
             true => todo!(),
-            false => {InstructionExecutionResult {
+            false => InstructionExecutionResult {
                 name: format!("B{:?}", conditional_test),
                 operands_format: format!("{}", displacement_8bit),
                 comment: format!("not branching"),
                 op_size: OperationSize::Byte,
                 pc_result: PcResult::Increment(2),
-            }},
+            },
         }
-        
     }
 
     fn instruction_moveq(
@@ -228,10 +251,19 @@ impl<'a> Cpu<'a> {
         let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
         let mut instr_bytes = &instr_word.to_be_bytes()[1..2];
         let operand = instr_bytes.read_i8().unwrap();
-        let operand_ptr = Cpu::sign_extend_i8(operand);
+        let mut status_register_flags = 0x0000;
+        match operand {
+            0 => status_register_flags |= 0x0004, // zero
+            i8::MIN..=-1 => status_register_flags |= 0x0008,
+            _ => (),
+        }
+        let operand = Cpu::sign_extend_i8(operand);
         let operands_format = format!("#{},D{}", operand, register);
-        let instr_comment = format!("moving {:#010x} into D{}", operand_ptr, register);
-        reg.reg_d[register] = operand_ptr;
+        let instr_comment = format!("moving {:#010x} into D{}", operand, register);
+        let status_register_mask = 0xfff0;
+
+        reg.reg_d[register] = operand;
+        reg.reg_sr = (reg.reg_sr & status_register_mask) | status_register_flags;
         InstructionExecutionResult {
             name: String::from("MOVEQ"),
             operands_format: operands_format,
@@ -289,7 +321,7 @@ impl<'a> Cpu<'a> {
                 };
             }
             _ => panic!("Unhandled ea_opmode"),
-        }        
+        }
     }
 
     fn instruction_addx(
@@ -534,7 +566,7 @@ mod tests {
         let res = Cpu::get_address_with_i8_displacement(0x00100000, i8::MIN);
         assert_eq!(0x000fff80, res);
     }
-    
+
     #[test]
     fn get_address_with_i8_displacement_overflow() {
         let res = Cpu::get_address_with_i8_displacement(0xffffffff, i8::MAX);
@@ -547,7 +579,7 @@ mod tests {
         assert_eq!(0xffffff80, res);
     }
 
-     #[test]
+    #[test]
     fn get_address_with_i16_displacement() {
         let res = Cpu::get_address_with_i16_displacement(0x00100000, i16::MAX);
         assert_eq!(0x00107fff, res);
@@ -558,7 +590,7 @@ mod tests {
         let res = Cpu::get_address_with_i16_displacement(0x00100000, i16::MIN);
         assert_eq!(0x000f8000, res);
     }
-    
+
     #[test]
     fn get_address_with_i16_displacement_overflow() {
         let res = Cpu::get_address_with_i16_displacement(0xffffffff, i16::MAX);
