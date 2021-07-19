@@ -1,4 +1,5 @@
 use byteorder::{BigEndian, ReadBytesExt};
+use num_traits::ToPrimitive;
 use std::convert::TryInto;
 
 pub struct MemRange {
@@ -24,6 +25,17 @@ impl MemRange {
             bytes: bytes,
         };
         Ok(mem)
+    }
+
+    pub fn from_xxx(start_address: u32, bytes: Vec<u8>) -> MemRange{
+        let length = bytes.len().to_u32().unwrap();
+        let mem = MemRange {
+            start_address: start_address,
+            end_address: start_address + length - 1,
+            length: length,
+            bytes: bytes,
+        };
+        mem
     }
 
     fn remap_address_to_index(self: &MemRange, address: u32) -> usize {
