@@ -3,7 +3,6 @@
 #![allow(unused_variables)]
 
 mod cpu;
-mod instruction;
 mod mem;
 mod memrange;
 mod register;

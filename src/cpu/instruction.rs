@@ -1,7 +1,8 @@
 use crate::mem::Mem;
-use crate::register::Register;
-// use std::fmt;
+use crate::register::{Register};
 use num_derive::FromPrimitive;
+
+pub mod moveq;
 
 pub enum InstructionFormat<'a> {
     /// Instruction with uncommon format:

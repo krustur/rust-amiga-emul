@@ -1,5 +1,4 @@
 use crate::memrange;
-use std::convert::TryInto;
 
 pub struct Mem<'a> {
     ranges: Vec<&'a memrange::MemRange>,
