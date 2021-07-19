@@ -2,6 +2,10 @@ use crate::mem::Mem;
 use crate::register::{Register};
 use num_derive::FromPrimitive;
 
+pub mod add;
+pub mod addx;
+pub mod bcc;
+pub mod lea;
 pub mod moveq;
 
 pub enum InstructionFormat<'a> {

@@ -37,3 +37,13 @@ pub fn step<'a>(
         pc_result: PcResult::Increment(2),
     }
 }
+
+
+// #[cfg(test)]
+// mod tests {
+//     #[test]
+//     fn step() {
+//         let res = Cpu::sign_extend_i8(45);
+//         assert_eq!(45, res);
+//     }
+// }
