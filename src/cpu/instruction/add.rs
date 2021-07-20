@@ -57,6 +57,40 @@ pub fn step<'a>(
                 pc_result: PcResult::Increment(2),
             };
         }
+        WORD_WITH_DN_AS_DEST => {
+            let in_mem = mem.get_unsigned_word(ea);
+            let in_reg = (reg.reg_d[register] & 0x0000ffff) as u16;
+            let (in_reg, carry) = in_reg.overflowing_add(in_mem);
+            let in_mem_signed = mem.get_signed_word(ea);
+            let in_reg_signed = (reg.reg_d[register] & 0x0000ffff) as i16;
+            let (in_mem_signed, overflow) = in_reg_signed.overflowing_add(in_mem_signed);
+            reg.reg_d[register] = (reg.reg_d[register] & 0xffff0000) | (in_reg as u32);
+            let instr_comment = format!("adding {:#06x} to D{}", in_mem, register);
+
+            let mut status_register_flags = 0x0000;
+            match carry {
+                true => status_register_flags |= STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND,
+                false => (),
+            }
+            match overflow {
+                true => status_register_flags |= STATUS_REGISTER_MASK_OVERFLOW,
+                false => (),
+            }
+            match in_mem_signed {
+                0 => status_register_flags |= STATUS_REGISTER_MASK_ZERO,
+                i16::MIN..=-1 => status_register_flags |= STATUS_REGISTER_MASK_NEGATIVE,
+                _ => (),
+            }
+            reg.reg_sr = (reg.reg_sr & status_register_mask) | status_register_flags;
+
+            return InstructionExecutionResult {
+                name: String::from("ADD.W"),
+                operands_format: format!("{},D{}", ea_format, register),
+                comment: instr_comment,
+                op_size: OperationSize::Word,
+                pc_result: PcResult::Increment(2),
+            };
+        }
         LONG_WITH_DN_AS_DEST => {
             let in_mem = mem.get_unsigned_longword(ea);
             let in_reg = reg.reg_d[register];
@@ -166,6 +200,80 @@ mod tests {
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0x00, cpu.register.reg_d[0]);
+        assert_eq!(true, cpu.register.is_sr_carry_set());
+        assert_eq!(false, cpu.register.is_sr_coverflow_set());
+        assert_eq!(true, cpu.register.is_sr_zero_set());
+        assert_eq!(false, cpu.register.is_sr_negative_set());
+        assert_eq!(true, cpu.register.is_sr_extend_set());
+    }
+
+    #[test]
+    fn step_word_to_d0() {
+        // arrange
+        let code = [0xd0, 0x50, 0x00, 0x01].to_vec(); // ADD.W d1,d0
+                                                        // DC.W 0x01
+        let mut cpu = crate::instr_test_setup(code);
+        cpu.register.reg_a[0] = 0x00080002;
+        cpu.register.reg_d[1] = 0x00000001;
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_OVERFLOW
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_NEGATIVE
+            | STATUS_REGISTER_MASK_EXTEND;
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x0001, cpu.register.reg_d[0]);
+        assert_eq!(false, cpu.register.is_sr_carry_set());
+        assert_eq!(false, cpu.register.is_sr_coverflow_set());
+        assert_eq!(false, cpu.register.is_sr_zero_set());
+        assert_eq!(false, cpu.register.is_sr_negative_set());
+        assert_eq!(false, cpu.register.is_sr_extend_set());
+    }
+    
+    #[test]
+    fn step_word_to_d0_overflow() {
+        // arrange
+        let code = [0xd0, 0x50, 0x00, 0x01].to_vec(); // ADD.W d1,d0
+                                                             // DC.W 0x01
+        let mut cpu = crate::instr_test_setup(code);
+        cpu.register.reg_a[0] = 0x00080002;
+        cpu.register.reg_d[0] = 0x00007fff;
+        cpu.register.reg_d[1] = 0x00000001;
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_OVERFLOW
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_NEGATIVE
+            | STATUS_REGISTER_MASK_EXTEND;
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x8000, cpu.register.reg_d[0]);
+        assert_eq!(false, cpu.register.is_sr_carry_set());
+        assert_eq!(true, cpu.register.is_sr_coverflow_set());
+        assert_eq!(false, cpu.register.is_sr_zero_set());
+        assert_eq!(true, cpu.register.is_sr_negative_set());
+        assert_eq!(false, cpu.register.is_sr_extend_set());
+    }
+
+    #[test]
+    fn step_word_to_d0_carry() {
+        // arrange
+        let code = [0xd0, 0x50, 0x00, 0x01].to_vec(); // ADD.W d1,d0
+                                                             // DC.W 0x01
+        let mut cpu = crate::instr_test_setup(code);
+        cpu.register.reg_a[0] = 0x00080002;
+        cpu.register.reg_d[0] = 0x0000ffff;
+        cpu.register.reg_d[1] = 0x00000001;
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_OVERFLOW
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_NEGATIVE
+            | STATUS_REGISTER_MASK_EXTEND;
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x0000, cpu.register.reg_d[0]);
         assert_eq!(true, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
         assert_eq!(true, cpu.register.is_sr_zero_set());
