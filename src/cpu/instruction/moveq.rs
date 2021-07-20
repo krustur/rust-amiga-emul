@@ -1,10 +1,13 @@
-use crate::{cpu::Cpu, cpu::instruction::{OperationSize, PcResult}, register::STATUS_REGISTER_MASK_NEGATIVE};
 use crate::mem::Mem;
 use crate::register::{Register, STATUS_REGISTER_MASK_ZERO};
+use crate::{
+    cpu::instruction::{OperationSize, PcResult},
+    cpu::Cpu,
+    register::STATUS_REGISTER_MASK_NEGATIVE,
+};
 use byteorder::ReadBytesExt;
 
 use super::InstructionExecutionResult;
-
 
 pub fn step<'a>(
     instr_address: u32,
@@ -38,15 +41,20 @@ pub fn step<'a>(
     }
 }
 
-
 #[cfg(test)]
 mod tests {
+    use crate::register::{STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_NEGATIVE, STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO};
+
 
     #[test]
     fn step_positive_d0() {
         // arrange
         let code = [0x70, 0x1d].to_vec(); // MOVEQ #$1d,d0
         let mut cpu = crate::instr_test_setup(code);
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_OVERFLOW
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_NEGATIVE;
         // act
         cpu.execute_next_instruction();
         // assert
@@ -63,6 +71,9 @@ mod tests {
         // arrange
         let code = [0x72, 0xff].to_vec(); // MOVEQ #-1,d0
         let mut cpu = crate::instr_test_setup(code);
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
+        | STATUS_REGISTER_MASK_OVERFLOW
+        | STATUS_REGISTER_MASK_ZERO;
         // act
         cpu.execute_next_instruction();
         cpu.print_registers();
@@ -72,7 +83,6 @@ mod tests {
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
         assert_eq!(false, cpu.register.is_sr_zero_set());
         assert_eq!(true, cpu.register.is_sr_negative_set());
-        assert_eq!(false, cpu.register.is_sr_extend_set());
     }
 
     #[test]
@@ -80,6 +90,9 @@ mod tests {
         // arrange
         let code = [0x74, 0x00].to_vec(); // MOVEQ #0,d0
         let mut cpu = crate::instr_test_setup(code);
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_OVERFLOW
+            | STATUS_REGISTER_MASK_NEGATIVE;
         // act
         cpu.execute_next_instruction();
         // assert
@@ -88,7 +101,5 @@ mod tests {
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
         assert_eq!(true, cpu.register.is_sr_zero_set());
         assert_eq!(false, cpu.register.is_sr_negative_set());
-        assert_eq!(false, cpu.register.is_sr_extend_set());
     }
-
 }
