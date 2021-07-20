@@ -11,6 +11,7 @@ pub fn step<'a>(
     register: usize,
     ea: u32,
 ) -> InstructionExecutionResult {
+    // TODO: Tests
     reg.reg_a[register] = ea;
     let instr_comment = format!("moving {:#010x} into A{}", ea, register);
     InstructionExecutionResult {

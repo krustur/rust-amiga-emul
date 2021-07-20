@@ -94,3 +94,82 @@ pub fn step<'a>(
         _ => panic!("Unhandled ea_opmode"),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::register::{STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE, STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO};
+
+    #[test]
+    fn step_byte_to_d0() {
+        // arrange
+        let code = [0xd0, 0x10, 0x01].to_vec(); // ADD.B d1,d0
+                                                        // DC.B 0x01
+        let mut cpu = crate::instr_test_setup(code);
+        cpu.register.reg_a[0] = 0x00080002;
+        cpu.register.reg_d[1] = 0x00000001;
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_OVERFLOW
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_NEGATIVE
+            | STATUS_REGISTER_MASK_EXTEND;
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x01, cpu.register.reg_d[0]);
+        assert_eq!(false, cpu.register.is_sr_carry_set());
+        assert_eq!(false, cpu.register.is_sr_coverflow_set());
+        assert_eq!(false, cpu.register.is_sr_zero_set());
+        assert_eq!(false, cpu.register.is_sr_negative_set());
+        assert_eq!(false, cpu.register.is_sr_extend_set());
+    }
+    
+    #[test]
+    fn step_byte_to_d0_overflow() {
+        // arrange
+        let code = [0xd0, 0x10, 0x01].to_vec(); // ADD.B d1,d0
+                                                        // DC.B 0x01
+        let mut cpu = crate::instr_test_setup(code);
+        cpu.register.reg_a[0] = 0x00080002;
+        cpu.register.reg_d[0] = 0x0000007f;
+        cpu.register.reg_d[1] = 0x00000001;
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_OVERFLOW
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_NEGATIVE
+            | STATUS_REGISTER_MASK_EXTEND;
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x80, cpu.register.reg_d[0]);
+        assert_eq!(false, cpu.register.is_sr_carry_set());
+        assert_eq!(true, cpu.register.is_sr_coverflow_set());
+        assert_eq!(false, cpu.register.is_sr_zero_set());
+        assert_eq!(true, cpu.register.is_sr_negative_set());
+        assert_eq!(false, cpu.register.is_sr_extend_set());
+    }
+
+    #[test]
+    fn step_byte_to_d0_carry() {
+        // arrange
+        let code = [0xd0, 0x10, 0x01].to_vec(); // ADD.B d1,d0
+                                                        // DC.B 0x01
+        let mut cpu = crate::instr_test_setup(code);
+        cpu.register.reg_a[0] = 0x00080002;
+        cpu.register.reg_d[0] = 0x000000ff;
+        cpu.register.reg_d[1] = 0x00000001;
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_OVERFLOW
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_NEGATIVE
+            | STATUS_REGISTER_MASK_EXTEND;
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00, cpu.register.reg_d[0]);
+        assert_eq!(true, cpu.register.is_sr_carry_set());
+        assert_eq!(false, cpu.register.is_sr_coverflow_set());
+        assert_eq!(true, cpu.register.is_sr_zero_set());
+        assert_eq!(false, cpu.register.is_sr_negative_set());
+        assert_eq!(true, cpu.register.is_sr_extend_set());
+    }
+}

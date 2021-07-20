@@ -68,6 +68,7 @@ pub struct InstructionExecutionResult {
 }
 
 #[derive(FromPrimitive, Debug)]
+#[derive(std::cmp::PartialEq)]
 pub enum EffectiveAddressingMode {
     DRegDirect = 0b000,
     ARegDirect = 0b001,
