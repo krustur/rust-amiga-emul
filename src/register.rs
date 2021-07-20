@@ -21,4 +21,24 @@ impl Register {
         };
         register
     }
+
+    pub fn is_sr_carry_set(&self) -> bool {
+        return  (self.reg_sr & STATUS_REGISTER_MASK_CARRY) == STATUS_REGISTER_MASK_CARRY;
+    }
+   
+    pub fn is_sr_coverflow_set(&self) -> bool {
+        return  (self.reg_sr & STATUS_REGISTER_MASK_OVERFLOW) == STATUS_REGISTER_MASK_OVERFLOW;
+    }
+
+    pub fn is_sr_zero_set(&self) -> bool {
+        return  (self.reg_sr & STATUS_REGISTER_MASK_ZERO) == STATUS_REGISTER_MASK_ZERO;
+    }
+
+    pub fn is_sr_negative_set(&self) -> bool {
+        return  (self.reg_sr & STATUS_REGISTER_MASK_NEGATIVE) == STATUS_REGISTER_MASK_NEGATIVE;
+    }
+
+    pub fn is_sr_extend_set(&self) -> bool {
+        return  (self.reg_sr & STATUS_REGISTER_MASK_EXTEND) == STATUS_REGISTER_MASK_EXTEND;
+    }
 }

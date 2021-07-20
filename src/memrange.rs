@@ -27,7 +27,7 @@ impl MemRange {
         Ok(mem)
     }
 
-    pub fn from_xxx(start_address: u32, bytes: Vec<u8>) -> MemRange{
+    pub fn from_bytes<'a>(start_address: u32, bytes: Vec<u8>) -> MemRange{
         let length = bytes.len().to_u32().unwrap();
         let mem = MemRange {
             start_address: start_address,

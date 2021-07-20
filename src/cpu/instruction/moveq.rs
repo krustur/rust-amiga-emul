@@ -1,4 +1,4 @@
-use crate::{cpu::Cpu, cpu::instruction::{OperationSize, PcResult}};
+use crate::{cpu::Cpu, cpu::instruction::{OperationSize, PcResult}, register::STATUS_REGISTER_MASK_NEGATIVE};
 use crate::mem::Mem;
 use crate::register::{Register, STATUS_REGISTER_MASK_ZERO};
 use byteorder::ReadBytesExt;
@@ -10,7 +10,7 @@ pub fn step<'a>(
     instr_address: u32,
     instr_word: u16,
     reg: &mut Register,
-    mem: &mut Mem<'a>,
+    mem: &mut Mem,
 ) -> InstructionExecutionResult {
     // TODO: Condition codes
     let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
@@ -19,7 +19,7 @@ pub fn step<'a>(
     let mut status_register_flags = 0x0000;
     match operand {
         0 => status_register_flags |= STATUS_REGISTER_MASK_ZERO,
-        i8::MIN..=-1 => status_register_flags |= STATUS_REGISTER_MASK_ZERO,
+        i8::MIN..=-1 => status_register_flags |= STATUS_REGISTER_MASK_NEGATIVE,
         _ => (),
     }
     let operand = Cpu::sign_extend_i8(operand);
@@ -41,28 +41,54 @@ pub fn step<'a>(
 
 #[cfg(test)]
 mod tests {
-    use crate::{cpu::Cpu};
-    use crate::memrange::MemRange;
-    use crate::mem::{Mem};
 
     #[test]
-    fn step() {
-        // TODO: This is way too messy! Too much code required to setup simple test.
-        // TODO: Would be nice to not need the rom cheat
-        let rom_cheat =
-        MemRange::from_file(0x000000, 512 * 1024, "D:\\Amiga\\ROM\\Kickstart 3.1.rom")
-            .unwrap();
-        let code: [u8; 2] = [0x70, 0x1d];
-        let code = code.to_vec();
-        let mut mem_ranges = Vec::new();
-        let code = MemRange::from_xxx(0x080000, code);
-        mem_ranges.push(&rom_cheat);
-        mem_ranges.push(&code);
-        let mem = Mem::new(mem_ranges);
-        let mut cpu = Cpu::new(mem);
-        cpu.register.reg_pc = 0x080000;
-
+    fn step_positive_d0() {
+        // arrange
+        let code = [0x70, 0x1d].to_vec(); // MOVEQ #$1d,d0
+        let mut cpu = crate::instr_test_setup(code);
+        // act
         cpu.execute_next_instruction();
+        // assert
         assert_eq!(0x1d, cpu.register.reg_d[0]);
+        assert_eq!(false, cpu.register.is_sr_carry_set());
+        assert_eq!(false, cpu.register.is_sr_coverflow_set());
+        assert_eq!(false, cpu.register.is_sr_zero_set());
+        assert_eq!(false, cpu.register.is_sr_negative_set());
+        assert_eq!(false, cpu.register.is_sr_extend_set());
     }
+
+    #[test]
+    fn step_negative_d0() {
+        // arrange
+        let code = [0x72, 0xff].to_vec(); // MOVEQ #-1,d0
+        let mut cpu = crate::instr_test_setup(code);
+        // act
+        cpu.execute_next_instruction();
+        cpu.print_registers();
+        // assert
+        assert_eq!(0xffffffff, cpu.register.reg_d[1]);
+        assert_eq!(false, cpu.register.is_sr_carry_set());
+        assert_eq!(false, cpu.register.is_sr_coverflow_set());
+        assert_eq!(false, cpu.register.is_sr_zero_set());
+        assert_eq!(true, cpu.register.is_sr_negative_set());
+        assert_eq!(false, cpu.register.is_sr_extend_set());
+    }
+
+    #[test]
+    fn step_zero_d0() {
+        // arrange
+        let code = [0x74, 0x00].to_vec(); // MOVEQ #0,d0
+        let mut cpu = crate::instr_test_setup(code);
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0, cpu.register.reg_d[2]);
+        assert_eq!(false, cpu.register.is_sr_carry_set());
+        assert_eq!(false, cpu.register.is_sr_coverflow_set());
+        assert_eq!(true, cpu.register.is_sr_zero_set());
+        assert_eq!(false, cpu.register.is_sr_negative_set());
+        assert_eq!(false, cpu.register.is_sr_extend_set());
+    }
+
 }

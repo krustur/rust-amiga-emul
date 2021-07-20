@@ -1,15 +1,15 @@
 use crate::memrange;
 
-pub struct Mem<'a> {
-    ranges: Vec<&'a memrange::MemRange>,
+pub struct Mem {
+    ranges: Vec<memrange::MemRange>,
 }
 
-impl<'a> Mem<'a> {
-    pub fn new(ranges: Vec<&'a memrange::MemRange>) -> Mem<'a> {
+impl Mem {
+    pub fn new(ranges: Vec<memrange::MemRange>) -> Mem {
         Mem { ranges: ranges }
     }
 
-    fn get_range(self: &Mem<'a>, address: u32) -> &memrange::MemRange {
+    fn get_range(self: &Mem, address: u32) -> &memrange::MemRange {
         // TODO: How to handle addresses not in Ranges?
         // TODO: How to handle custom regs etc.?
         let pos = self
@@ -20,7 +20,7 @@ impl<'a> Mem<'a> {
             None => panic!("Could not find MemRange for address: {:010x}", address),
             Some(pos) => pos,
         };
-        self.ranges[pos]
+        &self.ranges[pos]
     }
 
     /// Get's a unsigned longword (u32) from specified memory address
@@ -28,7 +28,7 @@ impl<'a> Mem<'a> {
     /// # Arguments
     ///
     /// * `address` - Memory address as u32
-    pub fn get_unsigned_longword(self: &Mem<'a>, address: u32) -> u32 {
+    pub fn get_unsigned_longword(self: &Mem, address: u32) -> u32 {
         let range = self.get_range(address);
         let result = range.get_unsigned_longword(address);
         result
@@ -39,7 +39,7 @@ impl<'a> Mem<'a> {
     /// # Arguments
     ///
     /// * `address` - Memory address as u32
-    pub fn get_signed_longword(self: &Mem<'a>, address: u32) -> i32 {
+    pub fn get_signed_longword(self: &Mem, address: u32) -> i32 {
         let range = self.get_range(address);
         let result = range.get_signed_longword(address);
         result
@@ -50,7 +50,7 @@ impl<'a> Mem<'a> {
     /// # Arguments
     ///
     /// * `address` - Memory address as u32
-    pub fn get_unsigned_word(self: &Mem<'a>, address: u32) -> u16 {
+    pub fn get_unsigned_word(self: &Mem, address: u32) -> u16 {
         let range = self.get_range(address);
         let result = range.get_unsigned_word(address);
         result
@@ -60,7 +60,7 @@ impl<'a> Mem<'a> {
     /// # Arguments
     ///
     /// * `address` - Memory address as u32
-    pub fn get_signed_word(self: &Mem<'a>, address: u32) -> i16 {
+    pub fn get_signed_word(self: &Mem, address: u32) -> i16 {
         let range = self.get_range(address);
         let result = range.get_signed_word(address);
         result
@@ -71,7 +71,7 @@ impl<'a> Mem<'a> {
     /// # Arguments
     ///
     /// * `address` - Memory address as u32
-    pub fn get_unsigned_byte(self: &Mem<'a>, address: u32) -> u8 {
+    pub fn get_unsigned_byte(self: &Mem, address: u32) -> u8 {
         let range = self.get_range(address);
         let result = range.get_unsigned_byte(address);
         result
@@ -82,7 +82,7 @@ impl<'a> Mem<'a> {
     /// # Arguments
     ///
     /// * `address` - Memory address as u32
-    pub fn get_signed_byte(self: &Mem<'a>, address: u32) -> i8 {
+    pub fn get_signed_byte(self: &Mem, address: u32) -> i8 {
         let range = self.get_range(address);
         let result = range.get_signed_byte(address);
         result
@@ -93,7 +93,7 @@ impl<'a> Mem<'a> {
     ///
     /// * `start_address` - Start address of memory to print
     /// * `end_address` - End address of memory to print
-    pub fn print_range(self: &Mem<'a>, start_address: u32, end_address: u32) {
+    pub fn print_range(self: &Mem, start_address: u32, end_address: u32) {
         let mut col_cnt = 0;
         let mut address = start_address;
         while address <= end_address {

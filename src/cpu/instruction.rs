@@ -8,7 +8,7 @@ pub mod bcc;
 pub mod lea;
 pub mod moveq;
 
-pub enum InstructionFormat<'a> {
+pub enum InstructionFormat {
     /// Instruction with uncommon format:
     /// | 15| 14| 13| 12| 11| 10|  9|  8|  7|  6|  5|  4|  3|  2|  1|  0|
     ///    -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
@@ -18,7 +18,7 @@ pub enum InstructionFormat<'a> {
             instr_address: u32,
             instr_word: u16,
             reg: &mut Register,
-            mem: &mut Mem<'a>,
+            mem: &mut Mem,
         ) -> InstructionExecutionResult,
     ),
     /// Instruction with common EA format and register:
@@ -30,7 +30,7 @@ pub enum InstructionFormat<'a> {
             instr_address: u32,
             instr_word: u16,
             reg: &mut Register,
-            mem: &mut Mem<'a>,
+            mem: &mut Mem,
             ea_format: String,
             register: usize,
             ea: u32,
@@ -45,7 +45,7 @@ pub enum InstructionFormat<'a> {
             instr_address: u32,
             instr_word: u16,
             reg: &mut Register,
-            mem: &mut Mem<'a>,
+            mem: &mut Mem,
             ea_format: String,
             ea_opmode: usize,
             register: usize,
@@ -134,20 +134,20 @@ pub enum ConditionalTest {
     LE = 0b1111,
 }
 
-pub struct Instruction<'a> {
+pub struct Instruction {
     pub name: String,
     pub mask: u16,
     pub opcode: u16,
-    pub instruction_format: InstructionFormat<'a>,
+    pub instruction_format: InstructionFormat,
 }
 
-impl<'a> Instruction<'a> {
+impl Instruction {
     pub fn new(
         name: String,
         mask: u16,
         opcode: u16,
-        instruction_format: InstructionFormat<'a>,
-    ) -> Instruction<'a> {
+        instruction_format: InstructionFormat,
+    ) -> Instruction {
         let instr = Instruction {
             name: name,
             mask: mask,

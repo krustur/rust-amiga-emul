@@ -6,7 +6,7 @@ pub fn step<'a>(
     instr_address: u32,
     instr_word: u16,
     reg: &mut Register,
-    mem: &mut Mem<'a>,
+    mem: &mut Mem,
 ) -> InstructionExecutionResult {
     println!("Execute addx: {:#010x} {:#06x}", instr_address, instr_word);
     return InstructionExecutionResult {

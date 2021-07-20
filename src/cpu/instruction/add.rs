@@ -8,7 +8,7 @@ pub fn step<'a>(
     instr_address: u32,
     instr_word: u16,
     reg: &mut Register,
-    mem: &mut Mem<'a>,
+    mem: &mut Mem,
     ea_format: String,
     ea_opmode: usize,
     register: usize,

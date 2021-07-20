@@ -7,14 +7,14 @@ use std::convert::TryInto;
 
 mod instruction;
 
-pub struct Cpu<'a> {
-    register: Register,
-    pub memory: Mem<'a>,
-    instructions: Vec<Instruction<'a>>,
+pub struct Cpu {
+    pub register: Register,
+    pub memory: Mem,
+    instructions: Vec<Instruction>,
 }
 
-impl<'a> Cpu<'a> {
-    pub fn new(mem: Mem<'a>) -> Cpu {
+impl Cpu {
+    pub fn new(mem: Mem) -> Cpu {
         let reg_ssp = mem.get_unsigned_longword(0x0);
         let reg_pc = mem.get_unsigned_longword(0x4);
         let instructions = vec![
@@ -139,7 +139,7 @@ impl<'a> Cpu<'a> {
         register
     }
 
-    pub fn print_registers(self: &mut Cpu<'a>) {
+    pub fn print_registers(self: &mut Cpu) {
         for n in 0..8 {
             print!(" D{} {:#010X}", n, self.register.reg_d[n]);
         }
@@ -188,7 +188,7 @@ impl<'a> Cpu<'a> {
         }
     }
 
-    pub fn execute_next_instruction(self: &mut Cpu<'a>) {
+    pub fn execute_next_instruction(self: &mut Cpu) {
         let instr_addr = self.register.reg_pc;
         let instr_word = self.memory.get_unsigned_word(instr_addr);
 
