@@ -25,16 +25,51 @@ pub fn step<'a>(
 }
 
 fn branch_8bit(reg: &mut Register, conditional_test: ConditionalTest, condition: bool, displacement_8bit: i8) -> InstructionExecutionResult {
-    let a = Cpu::get_address_with_i8_displacement(reg.reg_pc + 2, displacement_8bit);
+    let branch_to = Cpu::get_address_with_i8_displacement(reg.reg_pc + 2, displacement_8bit);
 
     match condition {
-        true => todo!("8 bit branch"),
+        true => InstructionExecutionResult {
+            name: format!("B{:?}.B", conditional_test),
+            operands_format: format!("{}", displacement_8bit),
+            comment: format!("branching to {:#010x}", branch_to),
+            op_size: OperationSize::Byte,
+            pc_result: PcResult::Set(branch_to),
+        },
         false => InstructionExecutionResult {
             name: format!("B{:?}.B", conditional_test),
-            operands_format: format!("{}", displacement_8bit as i8),
+            operands_format: format!("{}", displacement_8bit),
             comment: format!("not branching"),
             op_size: OperationSize::Byte,
             pc_result: PcResult::Increment(2),
-        },
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::register::{STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE, STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO};
+
+    #[test]
+    fn step_bcc_b_when_carry_clear() {
+        // arrange
+        let code = [0x64, 0x02].to_vec(); // BCC.B 2
+        let mut cpu = crate::instr_test_setup(code);
+        cpu.register.reg_sr = 0x0000;//STATUS_REGISTER_MASK_CARRY;
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x080004, cpu.register.reg_pc);
+    }
+    
+    #[test]
+    fn step_bcc_b_when_carry_set() {
+        // arrange
+        let code = [0x64, 0x02].to_vec(); // BCC.B 2
+        let mut cpu = crate::instr_test_setup(code);
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY;
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x080002, cpu.register.reg_pc);
     }
 }
