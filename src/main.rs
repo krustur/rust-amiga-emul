@@ -8,13 +8,15 @@ mod memrange;
 mod register;
 
 fn main() {
+    // let rom_file_path = "D:\\Amiga\\ROM\\Kickstart 3.1.rom";
     println!("Begin emulation!");
+    
     // Incorrect, but let's load the ROM to address 0x0 for now
     let rom_cheat =
-        memrange::MemRange::from_file(0x000000, 512 * 1024, "D:\\Amiga\\ROM\\Kickstart 3.1.rom")
+        memrange::MemRange::from_file(0x000000, 512 * 1024, rom_file_path)
             .unwrap();
     let rom =
-        memrange::MemRange::from_file(0xF80000, 512 * 1024, "D:\\Amiga\\ROM\\Kickstart 3.1.rom")
+        memrange::MemRange::from_file(0xF80000, 512 * 1024, rom_file_path)
             .unwrap();
 
     let mut mem_ranges = Vec::new();
