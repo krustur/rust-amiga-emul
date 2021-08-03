@@ -9,11 +9,10 @@ pub fn step<'a>(
     mem: &mut Mem,
 ) -> InstructionExecutionResult {
     // TODO: Condition codes
-    let conditional_test = Cpu::extract_conditional_test(instr_word);
+    let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
     let condition = Cpu::evaluate_condition(reg, &conditional_test);
 
     let displacement_8bit = (instr_word & 0x00ff) as i8;
-    let operands_format = format!("[{:?}] {}", conditional_test, displacement_8bit);
 
     let result = match displacement_8bit {
         0x00 => todo!("16 bit displacement"),

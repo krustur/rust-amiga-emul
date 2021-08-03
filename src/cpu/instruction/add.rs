@@ -1,3 +1,4 @@
+use crate::cpu::Cpu;
 use crate::register::{Register, STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE, STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO};
 use crate::mem::Mem;
 use crate::cpu::instruction::{OperationSize, PcResult};
@@ -10,8 +11,6 @@ pub fn step<'a>(
     reg: &mut Register,
     mem: &mut Mem,
     ea_format: String,
-    ea_opmode: usize,
-    register: usize,
     ea: u32,
 ) -> InstructionExecutionResult {
     const BYTE_WITH_DN_AS_DEST: usize = 0b000;
@@ -21,6 +20,8 @@ pub fn step<'a>(
     const WORD_WITH_EA_AS_DEST: usize = 0b101;
     const LONG_WITH_EA_AS_DEST: usize = 0b110;
     let status_register_mask = 0xffe0;
+    let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
+    let ea_opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
     // TODO: Condition codes
     match ea_opmode {
         BYTE_WITH_DN_AS_DEST => {

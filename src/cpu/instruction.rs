@@ -5,8 +5,12 @@ use num_derive::FromPrimitive;
 pub mod add;
 pub mod addx;
 pub mod bcc;
+pub mod dbcc;
 pub mod lea;
 pub mod moveq;
+pub mod subq;
+
+pub mod todo;
 
 pub enum InstructionFormat {
     /// Instruction with uncommon format:
@@ -23,35 +27,49 @@ pub enum InstructionFormat {
     ),
     /// Instruction with common EA format and register:
     /// | 15| 14| 13| 12| 11| 10|  9|  8|  7|  6|  5|  4|  3|  2|  1|  0|
-    ///    -   -   -   -|   register|  -   -   -|ea mode    |ea register|
+    ///    -   -   -   -   -   -   -   -   -   -|ea mode    |ea register|
     ///
-    EffectiveAddressWithRegister(
+    EffectiveAddress(
         fn(
             instr_address: u32,
             instr_word: u16,
             reg: &mut Register,
             mem: &mut Mem,
             ea_format: String,
-            register: usize,
             ea: u32,
         ) -> InstructionExecutionResult,
     ),
-    /// Instruction with common EA format and opmode and register:
-    /// | 15| 14| 13| 12| 11| 10|  9|  8|  7|  6|  5|  4|  3|  2|  1|  0|
-    ///    -   -   -   -|register   |opmode     |ea mode    |ea register|
-    ///
-    EffectiveAddressWithOpmodeAndRegister(
-        fn(
-            instr_address: u32,
-            instr_word: u16,
-            reg: &mut Register,
-            mem: &mut Mem,
-            ea_format: String,
-            ea_opmode: usize,
-            register: usize,
-            ea: u32,
-        ) -> InstructionExecutionResult,
-    ),
+    // /// Instruction with common EA format and register:
+    // /// | 15| 14| 13| 12| 11| 10|  9|  8|  7|  6|  5|  4|  3|  2|  1|  0|
+    // ///    -   -   -   -|   register|  -   -   -|ea mode    |ea register|
+    // ///
+    // EffectiveAddressWithRegister(
+    //     fn(
+    //         instr_address: u32,
+    //         instr_word: u16,
+    //         reg: &mut Register,
+    //         mem: &mut Mem,
+    //         ea_format: String,
+    //         register: usize,
+    //         ea: u32,
+    //     ) -> InstructionExecutionResult,
+    // ),
+    // /// Instruction with common EA format and opmode and register:
+    // /// | 15| 14| 13| 12| 11| 10|  9|  8|  7|  6|  5|  4|  3|  2|  1|  0|
+    // ///    -   -   -   -|register   |opmode     |ea mode    |ea register|
+    // ///
+    // EffectiveAddressWithOpmodeAndRegister(
+    //     fn(
+    //         instr_address: u32,
+    //         instr_word: u16,
+    //         reg: &mut Register,
+    //         mem: &mut Mem,
+    //         ea_format: String,
+    //         ea_opmode: usize,
+    //         register: usize,
+    //         ea: u32,
+    //     ) -> InstructionExecutionResult,
+    // ),
 }
 
 pub enum PcResult{

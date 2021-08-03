@@ -11,9 +11,10 @@ pub fn step<'a>(
     ea: u32,
 ) -> InstructionExecutionResult {
     // TODO: Tests
-    let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
+    // let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
+    int 
     reg.reg_a[register] = ea;
-    let instr_comment = format!("moving {:#010x} into A{}", ea, register);
+    let instr_comment = format!("subtracting {:#010x} into A{}", ea, register);
     InstructionExecutionResult {
         name: String::from("LEA"),
         operands_format: format!("{},A{}", ea_format, register),
