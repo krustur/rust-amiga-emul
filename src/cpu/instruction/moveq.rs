@@ -32,10 +32,10 @@ pub fn step<'a>(
 
     reg.reg_d[register] = operand;
     reg.reg_sr = (reg.reg_sr & status_register_mask) | status_register_flags;
-    InstructionExecutionResult {
-        name: String::from("MOVEQ"),
-        operands_format: operands_format,
-        comment: instr_comment,
+    InstructionExecutionResult::Done {
+        name: "MOVEQ",
+        // operands_format: &operands_format,
+        // comment: &instr_comment,
         op_size: OperationSize::Long,
         pc_result: PcResult::Increment(2),
     }

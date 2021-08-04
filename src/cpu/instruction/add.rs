@@ -5,7 +5,7 @@ use crate::cpu::instruction::{OperationSize, PcResult};
 
 use super::InstructionExecutionResult;
 
-pub fn step<'a>(
+pub fn common_step_func<'a>(
     instr_address: u32,
     instr_word: u16,
     reg: &mut Register,
@@ -50,10 +50,10 @@ pub fn step<'a>(
             }
             reg.reg_sr = (reg.reg_sr & status_register_mask) | status_register_flags;
 
-            return InstructionExecutionResult {
-                name: String::from("ADD.B"),
-                operands_format: format!("{},D{}", ea_format, register),
-                comment: instr_comment,
+            return InstructionExecutionResult::Done {
+                name: "ADD.B",
+                // operands_format: &format!("{},D{}", ea_format, register),
+                // comment: &instr_comment,
                 op_size: OperationSize::Byte,
                 pc_result: PcResult::Increment(2),
             };
@@ -84,10 +84,10 @@ pub fn step<'a>(
             }
             reg.reg_sr = (reg.reg_sr & status_register_mask) | status_register_flags;
 
-            return InstructionExecutionResult {
-                name: String::from("ADD.W"),
-                operands_format: format!("{},D{}", ea_format, register),
-                comment: instr_comment,
+            return InstructionExecutionResult::Done {
+                name: "ADD.W",
+                // operands_format: &format!("{},D{}", ea_format, register),
+                // comment: &instr_comment,
                 op_size: OperationSize::Word,
                 pc_result: PcResult::Increment(2),
             };
@@ -118,10 +118,10 @@ pub fn step<'a>(
             }
             reg.reg_sr = (reg.reg_sr & status_register_mask) | status_register_flags;
 
-            return InstructionExecutionResult {
-                name: String::from("ADD.L"),
-                operands_format: format!("{},D{}", ea_format, register),
-                comment: instr_comment,
+            return InstructionExecutionResult::Done {
+                name: "ADD.L",
+                // operands_format: &format!("{},D{}", ea_format, register),
+                // comment: &instr_comment,
                 op_size: OperationSize::Long,
                 pc_result: PcResult::Increment(2),
             };
@@ -281,4 +281,14 @@ mod tests {
         assert_eq!(false, cpu.register.is_sr_negative_set());
         assert_eq!(true, cpu.register.is_sr_extend_set());
     }
+}
+
+pub fn areg_direct_step_func<'a>(
+    instr_address: u32,
+    instr_word: u16,
+    reg: &mut Register,
+    mem: &mut Mem,
+    ea_register: usize
+) -> InstructionExecutionResult<'a> {
+    todo!("ADD address register direct");
 }

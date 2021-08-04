@@ -48,7 +48,7 @@ fn main() {
 }
 
 #[cfg(test)]
-fn instr_test_setup<'a>(code: Vec<u8>) -> cpu::Cpu {
+fn instr_test_setup<'a>(code: Vec<u8>) -> cpu::Cpu<'a> {
         // TODO: Would be nice to not need the rom cheat
         let rom_cheat =
         memrange::MemRange::from_file(0x000000, 512 * 1024, ROM_FILE_PATH)

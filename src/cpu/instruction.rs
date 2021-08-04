@@ -10,9 +10,10 @@ pub mod lea;
 pub mod moveq;
 pub mod subq;
 
+// pub mod instruction;
 pub mod todo;
 
-pub enum InstructionFormat {
+pub enum InstructionFormat<'a> {
     /// Instruction with uncommon format:
     /// | 15| 14| 13| 12| 11| 10|  9|  8|  7|  6|  5|  4|  3|  2|  1|  0|
     ///    -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
@@ -29,8 +30,8 @@ pub enum InstructionFormat {
     /// | 15| 14| 13| 12| 11| 10|  9|  8|  7|  6|  5|  4|  3|  2|  1|  0|
     ///    -   -   -   -   -   -   -   -   -   -|ea mode    |ea register|
     ///
-    EffectiveAddress(
-        fn(
+    EffectiveAddress{
+        common_step: fn(
             instr_address: u32,
             instr_word: u16,
             reg: &mut Register,
@@ -38,7 +39,22 @@ pub enum InstructionFormat {
             ea_format: String,
             ea: u32,
         ) -> InstructionExecutionResult,
-    ),
+        common_step_print: fn(
+            instr_address: u32,
+            instr_word: u16,
+            reg: &mut Register,
+            mem: &mut Mem,
+            ea_format: String,
+            ea: u32,
+        ),
+        areg_direct_step: fn(
+            instr_address: u32,
+            instr_word: u16,
+            reg: &mut Register,
+            mem: &mut Mem,
+            ea_register: usize
+        ) -> InstructionExecutionResult,
+    },
     // /// Instruction with common EA format and register:
     // /// | 15| 14| 13| 12| 11| 10|  9|  8|  7|  6|  5|  4|  3|  2|  1|  0|
     // ///    -   -   -   -|   register|  -   -   -|ea mode    |ea register|
@@ -72,17 +88,22 @@ pub enum InstructionFormat {
     // ),
 }
 
+#[derive(Copy, Clone)]
 pub enum PcResult{
     Increment(u32),
     Set(u32)
 }
 
-pub struct InstructionExecutionResult {
-    pub name: String,
-    pub operands_format: String,
-    pub comment: String,
-    pub op_size: OperationSize,
-    pub pc_result: PcResult
+#[derive(Copy, Clone)]
+pub enum InstructionExecutionResult {
+    Done{
+        name: String,
+        // operands_format: &str,
+        // comment: &str,
+        op_size: OperationSize,
+        pc_result: PcResult
+    }, 
+    PassOn,
 }
 
 #[derive(FromPrimitive, Debug)]
@@ -101,6 +122,7 @@ pub enum EffectiveAddressingMode {
 }
 
 #[derive(FromPrimitive, Debug)]
+#[derive(Copy, Clone)]
 pub enum OperationSize {
     Byte = 0b00,
     Word = 0b01,
@@ -153,14 +175,14 @@ pub enum ConditionalTest {
     LE = 0b1111,
 }
 
-pub struct Instruction {
+pub struct Instruction<'a> {
     pub name: String,
     pub mask: u16,
     pub opcode: u16,
-    pub instruction_format: InstructionFormat,
+    pub instruction_format: InstructionFormat<'a>,
 }
 
-impl Instruction {
+impl<'a> Instruction<'a> {
     pub fn new(
         name: String,
         mask: u16,

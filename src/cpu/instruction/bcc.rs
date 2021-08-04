@@ -23,21 +23,21 @@ pub fn step<'a>(
     result
 }
 
-fn branch_8bit(reg: &mut Register, conditional_test: ConditionalTest, condition: bool, displacement_8bit: i8) -> InstructionExecutionResult {
+fn branch_8bit<'a>(reg: &mut Register, conditional_test: ConditionalTest, condition: bool, displacement_8bit: i8) -> InstructionExecutionResult {
     let branch_to = Cpu::get_address_with_i8_displacement(reg.reg_pc + 2, displacement_8bit);
 
     match condition {
-        true => InstructionExecutionResult {
-            name: format!("B{:?}.B", conditional_test),
-            operands_format: format!("{}", displacement_8bit),
-            comment: format!("branching to {:#010x}", branch_to),
+        true => InstructionExecutionResult::Done {
+            name: &format!("B{:?}.B", conditional_test),
+            // operands_format: &format!("{}", displacement_8bit),
+            // comment: &format!("branching to {:#010x}", branch_to),
             op_size: OperationSize::Byte,
             pc_result: PcResult::Set(branch_to),
         },
-        false => InstructionExecutionResult {
-            name: format!("B{:?}.B", conditional_test),
-            operands_format: format!("{}", displacement_8bit),
-            comment: format!("not branching"),
+        false => InstructionExecutionResult::Done {
+            name: &format!("B{:?}.B", conditional_test),
+            // operands_format: &format!("{}", displacement_8bit),
+            // comment: &format!("not branching"),
             op_size: OperationSize::Byte,
             pc_result: PcResult::Increment(2),
         }

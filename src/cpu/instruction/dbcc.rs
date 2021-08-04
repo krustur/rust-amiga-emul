@@ -19,17 +19,17 @@ pub fn step<'a>(
     let branch_to = Cpu::get_address_with_i16_displacement(reg.reg_pc + 2, displacement_16bit);
 
     let result = match condition {
-        true => InstructionExecutionResult {
-            name: format!("DB{:?}", conditional_test),
-            operands_format: format!("D{},{}", register, displacement_16bit),
-            comment: format!("not branching"),
+        true => InstructionExecutionResult::Done {
+            name: &format!("DB{:?}", conditional_test),
+            // operands_format: &format!("D{},{}", register, displacement_16bit),
+            // comment: &format!("not branching"),
             op_size: OperationSize::Word,
             pc_result: PcResult::Increment(4),
         },
-        false => InstructionExecutionResult {
-            name: format!("DB{:?}", conditional_test),
-            operands_format: format!("D{},{}", register, displacement_16bit),
-            comment: format!("branching to {}", branch_to),
+        false => InstructionExecutionResult::Done {
+            name: &format!("DB{:?}", conditional_test),
+            // operands_format: &format!("D{},{}", register, displacement_16bit),
+            // comment: &format!("branching to {}", branch_to),
             op_size: OperationSize::Word,
             pc_result: PcResult::Set(branch_to),
         }

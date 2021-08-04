@@ -7,14 +7,14 @@ use std::convert::TryInto;
 
 mod instruction;
 
-pub struct Cpu {
+pub struct Cpu<'a> {
     pub register: Register,
     pub memory: Mem,
-    instructions: Vec<Instruction>,
+    instructions: Vec<Instruction<'a>>,
 }
 
-impl Cpu {
-    pub fn new(mem: Mem) -> Cpu {
+impl<'a> Cpu<'a> {
+    pub fn new(mem: Mem) -> Cpu<'a> {
         let reg_ssp = mem.get_unsigned_longword(0x0);
         let reg_pc = mem.get_unsigned_longword(0x4);
         let instructions = vec![
@@ -22,7 +22,11 @@ impl Cpu {
                 String::from("LEA"),
                 0xf1c0,
                 0x41c0,
-                InstructionFormat::EffectiveAddress(instruction::lea::step),
+                InstructionFormat::EffectiveAddress {
+                    common_step: instruction::lea::common_step_func,
+                    common_step_print: instruction::lea::common_step_func,
+                    areg_direct_step: instruction::lea::areg_direct_step_func,
+                },
             ),
             // 0x5---
             Instruction::new(
@@ -35,7 +39,11 @@ impl Cpu {
                 String::from("SUBQ"),
                 0xf100,
                 0x5100,
-                InstructionFormat::EffectiveAddress(instruction::subq::step),
+                InstructionFormat::EffectiveAddress {
+                    common_step: instruction::subq::common_step_func,
+                    common_step_print: instruction::subq::common_step_func,
+                    areg_direct_step: instruction::subq::areg_direct_step_func,
+                },
             ),
             Instruction::new(
                 String::from("DBcc"),
@@ -71,7 +79,11 @@ impl Cpu {
                 String::from("ADD"),
                 0xf000,
                 0xd000,
-                InstructionFormat::EffectiveAddress(instruction::add::step),
+                InstructionFormat::EffectiveAddress {
+                    common_step: instruction::add::common_step_func,
+                    common_step_print: instruction::add::common_step_func,
+                    areg_direct_step: instruction::add::areg_direct_step_func,
+                },
             ),
             Instruction::new(
                 String::from("ADDX"),
@@ -170,7 +182,18 @@ impl Cpu {
         register
     }
 
-    pub fn print_registers(self: &mut Cpu) {
+    pub fn extract_size_from_bit_pos_6(word: u16) -> Option<OperationSize> {
+        let size = word & 0x0007;
+        let size = (word >> 6) & 0x0003;
+        match size {
+            0b00 => Some(OperationSize::Byte),
+            0b01 => Some(OperationSize::Word),
+            0b10 => Some(OperationSize::Long),
+            _ => None,
+        }
+    }
+
+    pub fn print_registers(self: &mut Cpu<'a>) {
         for n in 0..8 {
             print!(" D{} {:#010X}", n, self.register.reg_d[n]);
         }
@@ -219,7 +242,7 @@ impl Cpu {
         }
     }
 
-    pub fn execute_next_instruction(self: &mut Cpu) {
+    pub fn execute_next_instruction(self: &mut Cpu<'a>) {
         let instr_addr = self.register.reg_pc;
         let instr_word = self.memory.get_unsigned_word(instr_addr);
 
@@ -241,20 +264,32 @@ impl Cpu {
                 println!("{}", instruction.name);
                 let exec_result =
                     exec_func(instr_addr, instr_word, &mut self.register, &mut self.memory);
-                let instr_format = format!("{} {}", exec_result.name, exec_result.operands_format);
                 exec_result
             }
-            InstructionFormat::EffectiveAddress(exec_func) => {
+            InstructionFormat::EffectiveAddress {
+                common_step: common_step,
+                common_step_print: common_step_print,
+                areg_direct_step: areg_direct_exec_func,
+            } => {
                 let ea_mode = Cpu::extract_effective_addressing_mode(instr_word);
                 let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
 
                 match ea_mode {
-                    EffectiveAddressingMode::DRegDirect
-                    | EffectiveAddressingMode::ARegDirect => {
+                    EffectiveAddressingMode::DRegDirect => {
                         panic!(
                             "{:#010x} {:#06x} UNKNOWN_EA {:?} {}",
                             instr_addr, instr_word, ea_mode, ea_register
                         );
+                    }
+                    EffectiveAddressingMode::ARegDirect => {
+                        let exec_result = areg_direct_exec_func(
+                            instr_addr,
+                            instr_word,
+                            &mut self.register,
+                            &mut self.memory,
+                            ea_register,
+                        );
+                        exec_result
                     }
                     EffectiveAddressingMode::ARegIndirect
                     | EffectiveAddressingMode::ARegIndirectWithPostIncrement => {
@@ -262,7 +297,7 @@ impl Cpu {
                         let ea_format = format!("(A{})+", ea_register);
 
                         // let operand = self.memory.get_unsigned_longword(ea);
-                        let exec_result = exec_func(
+                        let exec_result = common_step (
                             instr_addr,
                             instr_word,
                             &mut self.register,
@@ -271,7 +306,16 @@ impl Cpu {
                             ea,
                         );
                         if ea_mode == EffectiveAddressingMode::ARegIndirectWithPostIncrement {
-                            self.register.reg_a[ea_register] += exec_result.op_size.size_in_bytes();
+                            if let InstructionExecutionResult::Done {
+                                name,
+                                operands_format,
+                                comment,
+                                op_size,
+                                pc_result,
+                            } = exec_result
+                            {
+                                self.register.reg_a[ea_register] += op_size.size_in_bytes();
+                            }
                         }
                         exec_result
                     }
@@ -292,7 +336,7 @@ impl Cpu {
                                 let extension_word = self.memory.get_signed_word(instr_addr + 2);
                                 let ea = Cpu::sign_extend_i16(extension_word);
                                 let ea_format = format!("({:#06x}).W", extension_word);
-                                let exec_result = exec_func(
+                                let exec_result = common_step(
                                     instr_addr,
                                     instr_word,
                                     &mut self.register,
@@ -323,7 +367,7 @@ impl Cpu {
                                 //         extension_word,
                                 //     );
                                 let ea_format = format!("({:#06x},PC)", extension_word);
-                                let exec_result = exec_func(
+                                let exec_result = common_exec_func(
                                     instr_addr,
                                     instr_word,
                                     &mut self.register,
@@ -349,67 +393,72 @@ impl Cpu {
                         }
                     }
                 }
-            }
-            // InstructionFormat::EffectiveAddressWithOpmodeAndRegister(exec_func) => {
-            //     let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
-            //     let ea_opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
-            //     let ea_mode = Cpu::extract_effective_addressing_mode(instr_word);
-            //     let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
-            //     println!(
-            //         "register {} ea_mode {:?} ea_register {} ea_opmode {:?} ",
-            //         register, ea_mode, ea_register, ea_opmode
-            //     );
+            } // InstructionFormat::EffectiveAddressWithOpmodeAndRegister(exec_func) => {
+              //     let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
+              //     let ea_opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
+              //     let ea_mode = Cpu::extract_effective_addressing_mode(instr_word);
+              //     let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
+              //     println!(
+              //         "register {} ea_mode {:?} ea_register {} ea_opmode {:?} ",
+              //         register, ea_mode, ea_register, ea_opmode
+              //     );
 
-            //     match ea_mode {
-            //         EffectiveAddressingMode::DRegDirect | EffectiveAddressingMode::ARegDirect => {
-            //             panic!(
-            //                 "{:#010x} {:#06x} UNKNOWN_EA {:?} {}",
-            //                 instr_addr, instr_word, ea_mode, ea_register
-            //             );
-            //         }
-            //         EffectiveAddressingMode::ARegIndirect
-            //         | EffectiveAddressingMode::ARegIndirectWithPostIncrement => {
-            //             let ea = self.register.reg_a[ea_register];
-            //             let ea_format = format!("(A{})+", ea_register);
+              //     match ea_mode {
+              //         EffectiveAddressingMode::DRegDirect | EffectiveAddressingMode::ARegDirect => {
+              //             panic!(
+              //                 "{:#010x} {:#06x} UNKNOWN_EA {:?} {}",
+              //                 instr_addr, instr_word, ea_mode, ea_register
+              //             );
+              //         }
+              //         EffectiveAddressingMode::ARegIndirect
+              //         | EffectiveAddressingMode::ARegIndirectWithPostIncrement => {
+              //             let ea = self.register.reg_a[ea_register];
+              //             let ea_format = format!("(A{})+", ea_register);
 
-            //             // let operand = self.memory.get_unsigned_longword(ea);
-            //             let exec_result = exec_func(
-            //                 instr_addr,
-            //                 instr_word,
-            //                 &mut self.register,
-            //                 &mut self.memory,
-            //                 ea_format,
-            //                 ea_opmode,
-            //                 register,
-            //                 ea,
-            //             );
-            //             if ea_mode == EffectiveAddressingMode::ARegIndirectWithPostIncrement {
-            //                 self.register.reg_a[ea_register] += exec_result.op_size.size_in_bytes();
-            //             }
-            //             exec_result
-            //         }
-            //         EffectiveAddressingMode::ARegIndirectWithPreDecrement
-            //         | EffectiveAddressingMode::ARegIndirectWithDisplacement
-            //         | EffectiveAddressingMode::ARegIndirectWithIndex
-            //         | EffectiveAddressingMode::PcIndirectAndLotsMore => {
-            //             panic!(
-            //                 "{:#010x} {:#06x} UNKNOWN_EA {:?} {}",
-            //                 instr_addr, instr_word, ea_mode, ea_register
-            //             );
-            //         }
-            //     }
-            //     // panic!("EffectiveAddressWithOpmodeAndRegister not quite done");
-            // }
+              //             // let operand = self.memory.get_unsigned_longword(ea);
+              //             let exec_result = exec_func(
+              //                 instr_addr,
+              //                 instr_word,
+              //                 &mut self.register,
+              //                 &mut self.memory,
+              //                 ea_format,
+              //                 ea_opmode,
+              //                 register,
+              //                 ea,
+              //             );
+              //             if ea_mode == EffectiveAddressingMode::ARegIndirectWithPostIncrement {
+              //                 self.register.reg_a[ea_register] += exec_result.op_size.size_in_bytes();
+              //             }
+              //             exec_result
+              //         }
+              //         EffectiveAddressingMode::ARegIndirectWithPreDecrement
+              //         | EffectiveAddressingMode::ARegIndirectWithDisplacement
+              //         | EffectiveAddressingMode::ARegIndirectWithIndex
+              //         | EffectiveAddressingMode::PcIndirectAndLotsMore => {
+              //             panic!(
+              //                 "{:#010x} {:#06x} UNKNOWN_EA {:?} {}",
+              //                 instr_addr, instr_word, ea_mode, ea_register
+              //             );
+              //         }
+              //     }
+              //     // panic!("EffectiveAddressWithOpmodeAndRegister not quite done");
+              // }
         };
-        let instr_format = format!("{} {}", exec_result.name, exec_result.operands_format);
-        println!(
-            "{:#010x} {: <30} ; {}",
-            instr_addr, instr_format, exec_result.comment
-        );
+        if let InstructionExecutionResult::Done {
+            name,
+            operands_format,
+            comment,
+            op_size,
+            pc_result,
+        } = exec_result
+        {
+            let instr_format = format!("{} {}", name, operands_format);
+            println!("{:#010x} {: <30} ; {}", instr_addr, instr_format, comment);
 
-        self.register.reg_pc = match exec_result.pc_result {
-            PcResult::Set(lepc) => lepc,
-            PcResult::Increment(pc_increment) => self.register.reg_pc + pc_increment,
+            self.register.reg_pc = match pc_result {
+                PcResult::Set(lepc) => lepc,
+                PcResult::Increment(pc_increment) => self.register.reg_pc + pc_increment,
+            }
         }
     }
 }
