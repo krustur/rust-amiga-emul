@@ -1,4 +1,4 @@
-use crate::{cpu::{Cpu, instruction::{OperationSize, PcResult}}, mem::Mem, register::Register};
+use crate::{cpu::{Cpu, instruction::{ PcResult}}, mem::Mem, register::Register};
 
 use super::{ConditionalTest, InstructionExecutionResult};
 
@@ -28,17 +28,17 @@ fn branch_8bit<'a>(reg: &mut Register, conditional_test: ConditionalTest, condit
 
     match condition {
         true => InstructionExecutionResult::Done {
-            name: &format!("B{:?}.B", conditional_test),
-            // operands_format: &format!("{}", displacement_8bit),
+            // name: format!("B{:?}.B", conditional_test),
+            // operands_format: format!("{}", displacement_8bit),
             // comment: &format!("branching to {:#010x}", branch_to),
-            op_size: OperationSize::Byte,
+            // op_size: OperationSize::Byte,
             pc_result: PcResult::Set(branch_to),
         },
         false => InstructionExecutionResult::Done {
-            name: &format!("B{:?}.B", conditional_test),
-            // operands_format: &format!("{}", displacement_8bit),
+            // name: format!("B{:?}.B", conditional_test),
+            // operands_format: format!("{}", displacement_8bit),
             // comment: &format!("not branching"),
-            op_size: OperationSize::Byte,
+            // op_size: OperationSize::Byte,
             pc_result: PcResult::Increment(2),
         }
     }

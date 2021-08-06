@@ -7,14 +7,14 @@ use std::convert::TryInto;
 
 mod instruction;
 
-pub struct Cpu<'a> {
+pub struct Cpu {
     pub register: Register,
     pub memory: Mem,
-    instructions: Vec<Instruction<'a>>,
+    instructions: Vec<Instruction>,
 }
 
-impl<'a> Cpu<'a> {
-    pub fn new(mem: Mem) -> Cpu<'a> {
+impl Cpu {
+    pub fn new(mem: Mem) -> Cpu {
         let reg_ssp = mem.get_unsigned_longword(0x0);
         let reg_pc = mem.get_unsigned_longword(0x4);
         let instructions = vec![
@@ -23,9 +23,10 @@ impl<'a> Cpu<'a> {
                 0xf1c0,
                 0x41c0,
                 InstructionFormat::EffectiveAddress {
-                    common_step: instruction::lea::common_step_func,
-                    common_step_print: instruction::lea::common_step_func,
-                    areg_direct_step: instruction::lea::areg_direct_step_func,
+                    common_step: instruction::lea::common_step,
+                    common_get_debug: instruction::lea::common_get_debug,
+                    areg_direct_step: instruction::lea::areg_direct_step,
+                    areg_direct_get_debug: instruction::lea::areg_direct_get_debug,
                 },
             ),
             // 0x5---
@@ -33,63 +34,86 @@ impl<'a> Cpu<'a> {
                 String::from("ADDQ"),
                 0xf100,
                 0x5000,
-                InstructionFormat::Uncommon(instruction::todo::step),
+                InstructionFormat::Uncommon {
+                    step: instruction::todo::step,
+                    get_debug: instruction::todo::get_debug,
+                },
             ),
             Instruction::new(
                 String::from("SUBQ"),
                 0xf100,
                 0x5100,
                 InstructionFormat::EffectiveAddress {
-                    common_step: instruction::subq::common_step_func,
-                    common_step_print: instruction::subq::common_step_func,
-                    areg_direct_step: instruction::subq::areg_direct_step_func,
+                    common_step: instruction::subq::common_step,
+                    common_get_debug: instruction::subq::common_get_debug,
+                    areg_direct_step: instruction::subq::areg_direct_step,
+                    areg_direct_get_debug: instruction::subq::areg_direct_get_debug,
                 },
             ),
             Instruction::new(
                 String::from("DBcc"),
                 0xf0f8,
                 0x50c8,
-                InstructionFormat::Uncommon(instruction::dbcc::step),
+                InstructionFormat::Uncommon {
+                    step: instruction::dbcc::step,
+                    get_debug: instruction::dbcc::get_debug,
+                },
             ),
             Instruction::new(
                 String::from("TRAPcc"),
                 0xf0f8,
                 0x50f8,
-                InstructionFormat::Uncommon(instruction::todo::step),
+                InstructionFormat::Uncommon {
+                    step: instruction::todo::step,
+                    get_debug: instruction::todo::get_debug,
+                },
             ),
             Instruction::new(
                 String::from("Scc"),
                 0xf0c0,
                 0x50c0,
-                InstructionFormat::Uncommon(instruction::todo::step),
+                InstructionFormat::Uncommon {
+                    step: instruction::todo::step,
+                    get_debug: instruction::todo::get_debug,
+                },
             ),
             Instruction::new(
                 String::from("Bcc"),
                 0xf000,
                 0x6000,
-                InstructionFormat::Uncommon(instruction::bcc::step),
+                InstructionFormat::Uncommon {
+                    step: instruction::bcc::step,
+                    get_debug: instruction::todo::get_debug,
+                },
             ),
             Instruction::new(
                 String::from("MOVEQ"),
                 0xf100,
                 0x7000,
-                InstructionFormat::Uncommon(instruction::moveq::step),
+                InstructionFormat::Uncommon {
+                    step: instruction::moveq::step,
+                    get_debug: instruction::moveq::get_debug,
+                },
             ),
             Instruction::new(
                 String::from("ADD"),
                 0xf000,
                 0xd000,
                 InstructionFormat::EffectiveAddress {
-                    common_step: instruction::add::common_step_func,
-                    common_step_print: instruction::add::common_step_func,
+                    common_step: instruction::add::common_step,
+                    common_get_debug: instruction::add::common_get_debug,
                     areg_direct_step: instruction::add::areg_direct_step_func,
+                    areg_direct_get_debug: instruction::add::areg_direct_get_debug,
                 },
             ),
             Instruction::new(
                 String::from("ADDX"),
                 0xf130,
                 0xd100,
-                InstructionFormat::Uncommon(instruction::addx::step),
+                InstructionFormat::Uncommon {
+                    step: instruction::addx::step,
+                    get_debug: instruction::addx::get_debug,
+                },
             ),
         ];
         let mut register = Register::new();
@@ -193,7 +217,7 @@ impl<'a> Cpu<'a> {
         }
     }
 
-    pub fn print_registers(self: &mut Cpu<'a>) {
+    pub fn print_registers(self: &mut Cpu) {
         for n in 0..8 {
             print!(" D{} {:#010X}", n, self.register.reg_d[n]);
         }
@@ -242,7 +266,7 @@ impl<'a> Cpu<'a> {
         }
     }
 
-    pub fn execute_next_instruction(self: &mut Cpu<'a>) {
+    pub fn execute_next_instruction(self: &mut Cpu) {
         let instr_addr = self.register.reg_pc;
         let instr_word = self.memory.get_unsigned_word(instr_addr);
 
@@ -259,17 +283,29 @@ impl<'a> Cpu<'a> {
             Some(instruction_pos) => &self.instructions[instruction_pos],
         };
 
-        let exec_result: InstructionExecutionResult = match instruction.instruction_format {
-            InstructionFormat::Uncommon(exec_func) => {
+        // // TODO: Expose the debugger somewhere else, not when executing instructions
+        // let debug_string = match instruction.instruction_format {
+        //     InstructionFormat::Uncommon{step, get_debug} => {
+        //         println!("{}", instruction.name);
+        //         get_debug(instr_addr, instr_word, &mut self.register, &mut self.memory)
+        //     }
+        // };
+
+        let (exec_result, debug) = match instruction.instruction_format {
+            InstructionFormat::Uncommon { step, get_debug } => {
                 println!("{}", instruction.name);
+                let debug_result =
+                    get_debug(instr_addr, instr_word, &mut self.register, &mut self.memory);
+                // println!("{}", debug);
                 let exec_result =
-                    exec_func(instr_addr, instr_word, &mut self.register, &mut self.memory);
-                exec_result
+                    step(instr_addr, instr_word, &mut self.register, &mut self.memory);
+                (exec_result, debug_result)
             }
             InstructionFormat::EffectiveAddress {
-                common_step: common_step,
-                common_step_print: common_step_print,
-                areg_direct_step: areg_direct_exec_func,
+                common_step,
+                common_get_debug,
+                areg_direct_step,
+                areg_direct_get_debug,
             } => {
                 let ea_mode = Cpu::extract_effective_addressing_mode(instr_word);
                 let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
@@ -282,22 +318,28 @@ impl<'a> Cpu<'a> {
                         );
                     }
                     EffectiveAddressingMode::ARegDirect => {
-                        let exec_result = areg_direct_exec_func(
+                        let debug = areg_direct_get_debug(
                             instr_addr,
                             instr_word,
                             &mut self.register,
                             &mut self.memory,
                             ea_register,
                         );
-                        exec_result
+                        let exec_result = areg_direct_step(
+                            instr_addr,
+                            instr_word,
+                            &mut self.register,
+                            &mut self.memory,
+                            ea_register,
+                        );
+                        (exec_result, debug)
                     }
                     EffectiveAddressingMode::ARegIndirect
                     | EffectiveAddressingMode::ARegIndirectWithPostIncrement => {
                         let ea = self.register.reg_a[ea_register];
                         let ea_format = format!("(A{})+", ea_register);
 
-                        // let operand = self.memory.get_unsigned_longword(ea);
-                        let exec_result = common_step (
+                        let debug = common_get_debug(
                             instr_addr,
                             instr_word,
                             &mut self.register,
@@ -305,19 +347,21 @@ impl<'a> Cpu<'a> {
                             ea_format,
                             ea,
                         );
+                        let exec_result = common_step(
+                            instr_addr,
+                            instr_word,
+                            &mut self.register,
+                            &mut self.memory,
+                            ea,
+                        );
+
                         if ea_mode == EffectiveAddressingMode::ARegIndirectWithPostIncrement {
-                            if let InstructionExecutionResult::Done {
-                                name,
-                                operands_format,
-                                comment,
-                                op_size,
-                                pc_result,
-                            } = exec_result
-                            {
-                                self.register.reg_a[ea_register] += op_size.size_in_bytes();
+                            if let InstructionExecutionResult::Done { pc_result } = exec_result {
+                                todo!("post incrementen");
+                                // self.register.reg_a[ea_register] += op_size.size_in_bytes();
                             }
                         }
-                        exec_result
+                        (exec_result, debug)
                     }
                     EffectiveAddressingMode::ARegIndirectWithPreDecrement
                     | EffectiveAddressingMode::ARegIndirectWithDisplacement
@@ -336,7 +380,7 @@ impl<'a> Cpu<'a> {
                                 let extension_word = self.memory.get_signed_word(instr_addr + 2);
                                 let ea = Cpu::sign_extend_i16(extension_word);
                                 let ea_format = format!("({:#06x}).W", extension_word);
-                                let exec_result = common_step(
+                                let debug = common_get_debug(
                                     instr_addr,
                                     instr_word,
                                     &mut self.register,
@@ -344,7 +388,14 @@ impl<'a> Cpu<'a> {
                                     ea_format,
                                     ea,
                                 );
-                                exec_result
+                                let exec_result = common_step(
+                                    instr_addr,
+                                    instr_word,
+                                    &mut self.register,
+                                    &mut self.memory,
+                                    ea,
+                                );
+                                (exec_result, debug)
                             }
                             0b001 => {
                                 // (xxx).L
@@ -367,7 +418,7 @@ impl<'a> Cpu<'a> {
                                 //         extension_word,
                                 //     );
                                 let ea_format = format!("({:#06x},PC)", extension_word);
-                                let exec_result = common_exec_func(
+                                let debug = common_get_debug(
                                     instr_addr,
                                     instr_word,
                                     &mut self.register,
@@ -375,7 +426,14 @@ impl<'a> Cpu<'a> {
                                     ea_format,
                                     ea,
                                 );
-                                exec_result
+                                let exec_result = common_step(
+                                    instr_addr,
+                                    instr_word,
+                                    &mut self.register,
+                                    &mut self.memory,
+                                    ea,
+                                );
+                                (exec_result, debug)
                             }
                             0b011 => {
                                 // (d8,PC,Xn)
@@ -444,17 +502,21 @@ impl<'a> Cpu<'a> {
               //     // panic!("EffectiveAddressWithOpmodeAndRegister not quite done");
               // }
         };
-        if let InstructionExecutionResult::Done {
+        if let InstructionDebugResult::Done {
             name,
             operands_format,
-            comment,
-            op_size,
+            next_instr_address,
+        } = debug
+        {
+            let instr_format = format!("{} {}", name, operands_format);
+            println!("{:#010x} {: <30}", instr_addr, instr_format);
+        }
+        if let InstructionExecutionResult::Done {
+            // comment,
+            // op_size,
             pc_result,
         } = exec_result
         {
-            let instr_format = format!("{} {}", name, operands_format);
-            println!("{:#010x} {: <30} ; {}", instr_addr, instr_format, comment);
-
             self.register.reg_pc = match pc_result {
                 PcResult::Set(lepc) => lepc,
                 PcResult::Increment(pc_increment) => self.register.reg_pc + pc_increment,

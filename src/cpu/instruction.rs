@@ -13,19 +13,25 @@ pub mod subq;
 // pub mod instruction;
 pub mod todo;
 
-pub enum InstructionFormat<'a> {
+pub enum InstructionFormat {
     /// Instruction with uncommon format:
     /// | 15| 14| 13| 12| 11| 10|  9|  8|  7|  6|  5|  4|  3|  2|  1|  0|
     ///    -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
     ///
-    Uncommon(
-        fn(
+    Uncommon{
+        step: fn(
             instr_address: u32,
             instr_word: u16,
             reg: &mut Register,
             mem: &mut Mem,
         ) -> InstructionExecutionResult,
-    ),
+        get_debug: fn(
+            instr_address: u32,
+            instr_word: u16,
+            reg: &Register,
+            mem: &Mem
+        ) -> InstructionDebugResult
+    },
     /// Instruction with common EA format and register:
     /// | 15| 14| 13| 12| 11| 10|  9|  8|  7|  6|  5|  4|  3|  2|  1|  0|
     ///    -   -   -   -   -   -   -   -   -   -|ea mode    |ea register|
@@ -36,17 +42,16 @@ pub enum InstructionFormat<'a> {
             instr_word: u16,
             reg: &mut Register,
             mem: &mut Mem,
-            ea_format: String,
             ea: u32,
         ) -> InstructionExecutionResult,
-        common_step_print: fn(
+        common_get_debug: fn(
             instr_address: u32,
             instr_word: u16,
-            reg: &mut Register,
-            mem: &mut Mem,
+            reg: &Register,
+            mem: &Mem,
             ea_format: String,
             ea: u32,
-        ),
+        ) -> InstructionDebugResult,
         areg_direct_step: fn(
             instr_address: u32,
             instr_word: u16,
@@ -54,6 +59,14 @@ pub enum InstructionFormat<'a> {
             mem: &mut Mem,
             ea_register: usize
         ) -> InstructionExecutionResult,
+        areg_direct_get_debug: fn(
+            instr_address: u32,
+            instr_word: u16,
+            reg: &Register,
+            mem: &Mem,
+            ea_register: usize
+        ) -> InstructionDebugResult,
+
     },
     // /// Instruction with common EA format and register:
     // /// | 15| 14| 13| 12| 11| 10|  9|  8|  7|  6|  5|  4|  3|  2|  1|  0|
@@ -97,11 +110,16 @@ pub enum PcResult{
 #[derive(Copy, Clone)]
 pub enum InstructionExecutionResult {
     Done{
-        name: String,
-        // operands_format: &str,
-        // comment: &str,
-        op_size: OperationSize,
         pc_result: PcResult
+    }, 
+    PassOn,
+}
+
+pub enum InstructionDebugResult {
+    Done{
+        name: String,
+        operands_format: String,
+        next_instr_address: u32
     }, 
     PassOn,
 }
@@ -175,14 +193,14 @@ pub enum ConditionalTest {
     LE = 0b1111,
 }
 
-pub struct Instruction<'a> {
+pub struct Instruction {
     pub name: String,
     pub mask: u16,
     pub opcode: u16,
-    pub instruction_format: InstructionFormat<'a>,
+    pub instruction_format: InstructionFormat,
 }
 
-impl<'a> Instruction<'a> {
+impl Instruction {
     pub fn new(
         name: String,
         mask: u16,

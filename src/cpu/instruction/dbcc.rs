@@ -1,4 +1,11 @@
-use crate::{cpu::{Cpu, instruction::{OperationSize, PcResult}}, mem::Mem, register::Register};
+use crate::{
+    cpu::{
+        instruction::{InstructionDebugResult, PcResult},
+        Cpu,
+    },
+    mem::Mem,
+    register::Register,
+};
 
 use super::InstructionExecutionResult;
 
@@ -20,25 +27,50 @@ pub fn step<'a>(
 
     let result = match condition {
         true => InstructionExecutionResult::Done {
-            name: &format!("DB{:?}", conditional_test),
+            // name: &format!("DB{:?}", conditional_test),
             // operands_format: &format!("D{},{}", register, displacement_16bit),
             // comment: &format!("not branching"),
-            op_size: OperationSize::Word,
+            // op_size: OperationSize::Word,
             pc_result: PcResult::Increment(4),
         },
         false => InstructionExecutionResult::Done {
-            name: &format!("DB{:?}", conditional_test),
+            // name: &format!("DB{:?}", conditional_test),
             // operands_format: &format!("D{},{}", register, displacement_16bit),
             // comment: &format!("branching to {}", branch_to),
-            op_size: OperationSize::Word,
+            // op_size: OperationSize::Word,
             pc_result: PcResult::Set(branch_to),
-        }
+        },
     };
 
     result
 }
 
+pub fn get_debug<'a>(
+    instr_address: u32,
+    instr_word: u16,
+    reg: &Register,
+    mem: &Mem,
+) -> InstructionDebugResult {
+    // TODO: Condition codes
+    let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
+    let register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
 
+    let displacement_16bit = mem.get_signed_word(instr_address + 2);
+    // let operands_format = format!("[{:?}] {}", conditional_test, displacement_8bit);
+
+    let branch_to = Cpu::get_address_with_i16_displacement(reg.reg_pc + 2, displacement_16bit);
+
+    let result = InstructionDebugResult::Done {
+        name: format!("DB{:?}", conditional_test),
+        operands_format: format!("D{},{}", register, displacement_16bit),
+        // comment: &format!("not branching"),
+        // op_size: OperationSize::Word,
+        // pc_result: PcResult::Increment(4),
+        next_instr_address: instr_address + 4,
+    };
+
+    result
+}
 
 #[cfg(test)]
 mod tests {
@@ -55,7 +87,7 @@ mod tests {
     //     // assert
     //     assert_eq!(0x080004, cpu.register.reg_pc);
     // }
-    
+
     // #[test]
     // fn step_dbcc_b_when_carry_set() {
     //     // arrange
