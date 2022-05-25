@@ -1,11 +1,7 @@
 use crate::cpu::instruction::InstructionDebugResult;
 use crate::mem::Mem;
 use crate::register::{Register, STATUS_REGISTER_MASK_ZERO};
-use crate::{
-    cpu::instruction::{PcResult},
-    cpu::Cpu,
-    register::STATUS_REGISTER_MASK_NEGATIVE,
-};
+use crate::{cpu::instruction::PcResult, cpu::Cpu, register::STATUS_REGISTER_MASK_NEGATIVE};
 use byteorder::ReadBytesExt;
 
 use super::InstructionExecutionResult;
@@ -58,7 +54,7 @@ pub fn get_debug<'a>(
     //     i8::MIN..=-1 => status_register_flags |= STATUS_REGISTER_MASK_NEGATIVE,
     //     _ => (),
     // }
-    let operand = Cpu::sign_extend_i8(operand);
+    // let operand = Cpu::sign_extend_i8(operand);
     let operands_format = format!("#{},D{}", operand, register);
     let instr_comment = format!("moving {:#010x} into D{}", operand, register);
     let status_register_mask = 0xfff0;
@@ -69,14 +65,19 @@ pub fn get_debug<'a>(
         // comment: &instr_comment,
         // op_size: OperationSize::Long,
         // pc_result: PcResult::Increment(2),
-        next_instr_address: instr_address + 2
+        next_instr_address: instr_address + 2,
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::register::{STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_NEGATIVE, STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO};
-
+    use crate::{
+        cpu::instruction::InstructionDebugResult,
+        register::{
+            STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_NEGATIVE,
+            STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
+        },
+    };
 
     #[test]
     fn step_positive_d0() {
@@ -88,7 +89,7 @@ mod tests {
             | STATUS_REGISTER_MASK_ZERO
             | STATUS_REGISTER_MASK_NEGATIVE;
         // act
-        cpu.execute_next_instruction();
+        let debug_result = cpu.execute_next_instruction();
         // assert
         assert_eq!(0x1d, cpu.register.reg_d[0]);
         assert_eq!(false, cpu.register.is_sr_carry_set());
@@ -96,25 +97,39 @@ mod tests {
         assert_eq!(false, cpu.register.is_sr_zero_set());
         assert_eq!(false, cpu.register.is_sr_negative_set());
         assert_eq!(false, cpu.register.is_sr_extend_set());
+        assert_eq!(
+            InstructionDebugResult::Done {
+                name: String::from("MOVEQ"),
+                operands_format: String::from("#29,D0"),
+                next_instr_address: 0x080002
+            },
+            debug_result
+        );
     }
 
     #[test]
     fn step_negative_d0() {
         // arrange
-        let code = [0x72, 0xff].to_vec(); // MOVEQ #-1,d0
+        let code = [0x72, 0xff].to_vec(); // MOVEQ #-1,d1
         let mut cpu = crate::instr_test_setup(code);
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
-        | STATUS_REGISTER_MASK_OVERFLOW
-        | STATUS_REGISTER_MASK_ZERO;
+        cpu.register.reg_sr =
+            STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_OVERFLOW | STATUS_REGISTER_MASK_ZERO;
         // act
-        cpu.execute_next_instruction();
-        cpu.print_registers();
+        let debug_result = cpu.execute_next_instruction();
         // assert
         assert_eq!(0xffffffff, cpu.register.reg_d[1]);
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
         assert_eq!(false, cpu.register.is_sr_zero_set());
         assert_eq!(true, cpu.register.is_sr_negative_set());
+        assert_eq!(
+            InstructionDebugResult::Done {
+                name: String::from("MOVEQ"),
+                operands_format: String::from("#-1,D1"),
+                next_instr_address: 0x080002
+            },
+            debug_result
+        );
     }
 
     #[test]
@@ -126,12 +141,20 @@ mod tests {
             | STATUS_REGISTER_MASK_OVERFLOW
             | STATUS_REGISTER_MASK_NEGATIVE;
         // act
-        cpu.execute_next_instruction();
+        let debug_result = cpu.execute_next_instruction();
         // assert
         assert_eq!(0, cpu.register.reg_d[2]);
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
         assert_eq!(true, cpu.register.is_sr_zero_set());
         assert_eq!(false, cpu.register.is_sr_negative_set());
+        assert_eq!(
+            InstructionDebugResult::Done {
+                name: String::from("MOVEQ"),
+                operands_format: String::from("#0,D2"),
+                next_instr_address: 0x080002
+            },
+            debug_result
+        );
     }
 }

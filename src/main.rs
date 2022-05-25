@@ -7,8 +7,8 @@ mod mem;
 mod memrange;
 mod register;
 
-//static ROM_FILE_PATH: &str = "D:\\Amiga\\ROM\\Kickstart 3.1.rom";
-static ROM_FILE_PATH: &str = "C:\\WS\\Amiga\\Kickstart v3.1 rev 40.68 (1993)(Commodore)(A1200).rom";
+static ROM_FILE_PATH: &str = "D:\\Amiga\\ROM\\Kickstart 3.1.rom";
+// static ROM_FILE_PATH: &str = "C:\\WS\\Amiga\\Kickstart v3.1 rev 40.68 (1993)(Commodore)(A1200).rom";
 
 fn main() {
     
@@ -35,6 +35,7 @@ fn main() {
     cpu.execute_next_instruction();
     cpu.execute_next_instruction();
     cpu.print_registers();
+    cpu.memory.print_range(0xf80000, 0xf800ff);
     cpu.execute_next_instruction();
     cpu.print_registers();
     cpu.memory.print_range(0xf80000, 0xf800ff);
@@ -48,7 +49,7 @@ fn main() {
 }
 
 #[cfg(test)]
-fn instr_test_setup<'a>(code: Vec<u8>) -> cpu::Cpu<'a> {
+fn instr_test_setup<'a>(code: Vec<u8>) -> cpu::Cpu {
         // TODO: Would be nice to not need the rom cheat
         let rom_cheat =
         memrange::MemRange::from_file(0x000000, 512 * 1024, ROM_FILE_PATH)

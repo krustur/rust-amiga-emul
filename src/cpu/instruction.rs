@@ -115,6 +115,7 @@ pub enum InstructionExecutionResult {
     PassOn,
 }
 
+#[derive(Debug, PartialEq)]
 pub enum InstructionDebugResult {
     Done{
         name: String,

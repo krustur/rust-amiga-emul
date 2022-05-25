@@ -266,22 +266,11 @@ impl Cpu {
         }
     }
 
-    pub fn execute_next_instruction(self: &mut Cpu) {
+    pub fn execute_next_instruction(self: &mut Cpu) -> InstructionDebugResult {
         let instr_addr = self.register.reg_pc;
         let instr_word = self.memory.get_unsigned_word(instr_addr);
 
-        let instruction_pos = self
-            .instructions
-            .iter()
-            .position(|x| (instr_word & x.mask) == x.opcode);
-
-        let instruction = match instruction_pos {
-            None => panic!(
-                "{:#010x} Unidentified instruction {:#06x}",
-                instr_addr, instr_word
-            ),
-            Some(instruction_pos) => &self.instructions[instruction_pos],
-        };
+        let instruction = self.get_instruction(instr_addr, instr_word);
 
         // // TODO: Expose the debugger somewhere else, not when executing instructions
         // let debug_string = match instruction.instruction_format {
@@ -291,12 +280,12 @@ impl Cpu {
         //     }
         // };
 
-        let (exec_result, debug) = match instruction.instruction_format {
+        let (exec_result, debug_result) = match instruction.instruction_format {
             InstructionFormat::Uncommon { step, get_debug } => {
-                println!("{}", instruction.name);
+                // println!("{}", instruction.name);
                 let debug_result =
                     get_debug(instr_addr, instr_word, &mut self.register, &mut self.memory);
-                // println!("{}", debug);
+                // println!("{}", debug_result);
                 let exec_result =
                     step(instr_addr, instr_word, &mut self.register, &mut self.memory);
                 (exec_result, debug_result)
@@ -318,7 +307,7 @@ impl Cpu {
                         );
                     }
                     EffectiveAddressingMode::ARegDirect => {
-                        let debug = areg_direct_get_debug(
+                        let debug_result = areg_direct_get_debug(
                             instr_addr,
                             instr_word,
                             &mut self.register,
@@ -332,14 +321,14 @@ impl Cpu {
                             &mut self.memory,
                             ea_register,
                         );
-                        (exec_result, debug)
+                        (exec_result, debug_result)
                     }
                     EffectiveAddressingMode::ARegIndirect
                     | EffectiveAddressingMode::ARegIndirectWithPostIncrement => {
                         let ea = self.register.reg_a[ea_register];
                         let ea_format = format!("(A{})+", ea_register);
 
-                        let debug = common_get_debug(
+                        let debug_result = common_get_debug(
                             instr_addr,
                             instr_word,
                             &mut self.register,
@@ -361,7 +350,7 @@ impl Cpu {
                                 // self.register.reg_a[ea_register] += op_size.size_in_bytes();
                             }
                         }
-                        (exec_result, debug)
+                        (exec_result, debug_result)
                     }
                     EffectiveAddressingMode::ARegIndirectWithPreDecrement
                     | EffectiveAddressingMode::ARegIndirectWithDisplacement
@@ -380,7 +369,7 @@ impl Cpu {
                                 let extension_word = self.memory.get_signed_word(instr_addr + 2);
                                 let ea = Cpu::sign_extend_i16(extension_word);
                                 let ea_format = format!("({:#06x}).W", extension_word);
-                                let debug = common_get_debug(
+                                let debug_result = common_get_debug(
                                     instr_addr,
                                     instr_word,
                                     &mut self.register,
@@ -395,7 +384,7 @@ impl Cpu {
                                     &mut self.memory,
                                     ea,
                                 );
-                                (exec_result, debug)
+                                (exec_result, debug_result)
                             }
                             0b001 => {
                                 // (xxx).L
@@ -418,7 +407,7 @@ impl Cpu {
                                 //         extension_word,
                                 //     );
                                 let ea_format = format!("({:#06x},PC)", extension_word);
-                                let debug = common_get_debug(
+                                let debug_result = common_get_debug(
                                     instr_addr,
                                     instr_word,
                                     &mut self.register,
@@ -433,7 +422,7 @@ impl Cpu {
                                     &mut self.memory,
                                     ea,
                                 );
-                                (exec_result, debug)
+                                (exec_result, debug_result)
                             }
                             0b011 => {
                                 // (d8,PC,Xn)
@@ -506,22 +495,48 @@ impl Cpu {
             name,
             operands_format,
             next_instr_address,
-        } = debug
+        } = &debug_result
         {
             let instr_format = format!("{} {}", name, operands_format);
-            println!("{:#010x} {: <30}", instr_addr, instr_format);
+            print!("{:#010X} ", instr_addr);
+            for i in (instr_addr .. instr_addr + 8).step_by(2) {
+                if i < *next_instr_address {
+                    let op_mem = self.memory.get_unsigned_word(i);
+                    print!("{:04X} ", op_mem);
+                } else {
+                    print!("     ");
+                }
+            }
+            println!("{: <30}", instr_format);
         }
         if let InstructionExecutionResult::Done {
             // comment,
             // op_size,
             pc_result,
-        } = exec_result
+        } = &exec_result
         {
             self.register.reg_pc = match pc_result {
-                PcResult::Set(lepc) => lepc,
+                PcResult::Set(lepc) => *lepc,
                 PcResult::Increment(pc_increment) => self.register.reg_pc + pc_increment,
             }
         }
+
+        debug_result
+    }
+
+    fn get_instruction(self: &mut Cpu, instr_addr: u32, instr_word: u16) -> &Instruction {
+        let instruction_pos = self
+            .instructions
+            .iter()
+            .position(|x| (instr_word & x.mask) == x.opcode);
+        let instruction = match instruction_pos {
+            None => panic!(
+                "{:#010x} Unidentified instruction {:#06x}",
+                instr_addr, instr_word
+            ),
+            Some(instruction_pos) => &self.instructions[instruction_pos],
+        };
+        instruction
     }
 }
 
