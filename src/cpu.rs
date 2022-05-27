@@ -48,6 +48,13 @@ impl Cpu {
                 // },
             ),
             Instruction::new(
+                String::from("DBcc"),
+                0xf0f8,
+                0x50c8,
+                instruction::dbcc::step,
+                instruction::dbcc::get_debug,
+            ),
+            Instruction::new(
                 String::from("ADDQ"),
                 0xf100,
                 0x5000,
@@ -69,14 +76,7 @@ impl Cpu {
                 0x6000,
                 instruction::bcc::step,
                 instruction::bcc::get_debug,
-            ),
-            Instruction::new(
-                String::from("DBcc"),
-                0xf0f8,
-                0x50c8,
-                instruction::dbcc::step,
-                instruction::dbcc::get_debug,
-            ),
+            ),            
             Instruction::new(
                 String::from("LEA"),
                 0xf1c0,

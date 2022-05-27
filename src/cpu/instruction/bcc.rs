@@ -71,10 +71,10 @@ pub fn get_debug<'a>(
 
 #[cfg(test)]
 mod tests {
-    use crate::register::{
+    use crate::{register::{
         STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE,
         STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
-    };
+    }, cpu::instruction::InstructionDebugResult};
 
     #[test]
     fn step_bcc_b_when_carry_clear() {
@@ -82,7 +82,17 @@ mod tests {
         let code = [0x64, 0x02].to_vec(); // BCC.B 2
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.reg_sr = 0x0000; //STATUS_REGISTER_MASK_CARRY;
-                                      // act
+        // act assert - debug
+        let debug_result = cpu.get_next_instruction_debug();
+        assert_eq!(
+            InstructionDebugResult::Done {
+                name: String::from("BCC.B"),
+                operands_format: String::from("$02 [$00080004]"),
+                next_instr_address: 0x080002
+            },
+            debug_result
+        );                             
+        // act
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0x080004, cpu.register.reg_pc);
@@ -94,6 +104,16 @@ mod tests {
         let code = [0x64, 0x02].to_vec(); // BCC.B 2
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY;
+        // act assert - debug
+        let debug_result = cpu.get_next_instruction_debug();
+        assert_eq!(
+            InstructionDebugResult::Done {
+                name: String::from("BCC.B"),
+                operands_format: String::from("$02 [$00080004]"),
+                next_instr_address: 0x080002
+            },
+            debug_result
+        );
         // act
         cpu.execute_next_instruction();
         // assert
