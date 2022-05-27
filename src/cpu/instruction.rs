@@ -1,8 +1,11 @@
+use std::fmt;
+
 use crate::mem::Mem;
-use crate::register::{Register};
+use crate::register::Register;
 use num_derive::FromPrimitive;
 
 pub mod add;
+pub mod addq;
 pub mod addx;
 pub mod bcc;
 pub mod dbcc;
@@ -13,120 +16,117 @@ pub mod subq;
 // pub mod instruction;
 pub mod todo;
 
-pub enum InstructionFormat {
-    /// Instruction with uncommon format:
-    /// | 15| 14| 13| 12| 11| 10|  9|  8|  7|  6|  5|  4|  3|  2|  1|  0|
-    ///    -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
-    ///
-    Uncommon{
-        step: fn(
-            instr_address: u32,
-            instr_word: u16,
-            reg: &mut Register,
-            mem: &mut Mem,
-        ) -> InstructionExecutionResult,
-        get_debug: fn(
-            instr_address: u32,
-            instr_word: u16,
-            reg: &Register,
-            mem: &Mem
-        ) -> InstructionDebugResult
-    },
-    /// Instruction with common EA format and register:
-    /// | 15| 14| 13| 12| 11| 10|  9|  8|  7|  6|  5|  4|  3|  2|  1|  0|
-    ///    -   -   -   -   -   -   -   -   -   -|ea mode    |ea register|
-    ///
-    EffectiveAddress{
-        common_step: fn(
-            instr_address: u32,
-            instr_word: u16,
-            reg: &mut Register,
-            mem: &mut Mem,
-            ea: u32,
-        ) -> InstructionExecutionResult,
-        common_get_debug: fn(
-            instr_address: u32,
-            instr_word: u16,
-            reg: &Register,
-            mem: &Mem,
-            ea_format: String,
-            ea: u32,
-        ) -> InstructionDebugResult,
-        areg_direct_step: fn(
-            instr_address: u32,
-            instr_word: u16,
-            reg: &mut Register,
-            mem: &mut Mem,
-            ea_register: usize
-        ) -> InstructionExecutionResult,
-        areg_direct_get_debug: fn(
-            instr_address: u32,
-            instr_word: u16,
-            reg: &Register,
-            mem: &Mem,
-            ea_register: usize
-        ) -> InstructionDebugResult,
+// pub enum InstructionFormat {
+//     /// Instruction with uncommon format:
+//     /// | 15| 14| 13| 12| 11| 10|  9|  8|  7|  6|  5|  4|  3|  2|  1|  0|
+//     ///    -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
+//     ///
+//     Uncommon{
+//         step: fn(
+//             instr_address: u32,
+//             instr_word: u16,
+//             reg: &mut Register,
+//             mem: &mut Mem,
+//         ) -> InstructionExecutionResult,
+//         get_debug: fn(
+//             instr_address: u32,
+//             instr_word: u16,
+//             reg: &Register,
+//             mem: &Mem
+//         ) -> InstructionDebugResult
+//     },
+//     /// Instruction with common EA format and register:
+//     /// | 15| 14| 13| 12| 11| 10|  9|  8|  7|  6|  5|  4|  3|  2|  1|  0|
+//     ///    -   -   -   -   -   -   -   -   -   -|ea mode    |ea register|
+//     ///
+//     EffectiveAddress{
+//         common_step: fn(
+//             instr_address: u32,
+//             instr_word: u16,
+//             reg: &mut Register,
+//             mem: &mut Mem,
+//             ea: u32,
+//         ) -> InstructionExecutionResult,
+//         common_get_debug: fn(
+//             instr_address: u32,
+//             instr_word: u16,
+//             reg: &Register,
+//             mem: &Mem,
+//             ea_format: String,
+//             ea: u32,
+//         ) -> InstructionDebugResult,
+//         areg_direct_step: fn(
+//             instr_address: u32,
+//             instr_word: u16,
+//             reg: &mut Register,
+//             mem: &mut Mem,
+//             ea_register: usize
+//         ) -> InstructionExecutionResult,
+//         areg_direct_get_debug: fn(
+//             instr_address: u32,
+//             instr_word: u16,
+//             reg: &Register,
+//             mem: &Mem,
+//             ea_register: usize
+//         ) -> InstructionDebugResult,
 
-    },
-    // /// Instruction with common EA format and register:
-    // /// | 15| 14| 13| 12| 11| 10|  9|  8|  7|  6|  5|  4|  3|  2|  1|  0|
-    // ///    -   -   -   -|   register|  -   -   -|ea mode    |ea register|
-    // ///
-    // EffectiveAddressWithRegister(
-    //     fn(
-    //         instr_address: u32,
-    //         instr_word: u16,
-    //         reg: &mut Register,
-    //         mem: &mut Mem,
-    //         ea_format: String,
-    //         register: usize,
-    //         ea: u32,
-    //     ) -> InstructionExecutionResult,
-    // ),
-    // /// Instruction with common EA format and opmode and register:
-    // /// | 15| 14| 13| 12| 11| 10|  9|  8|  7|  6|  5|  4|  3|  2|  1|  0|
-    // ///    -   -   -   -|register   |opmode     |ea mode    |ea register|
-    // ///
-    // EffectiveAddressWithOpmodeAndRegister(
-    //     fn(
-    //         instr_address: u32,
-    //         instr_word: u16,
-    //         reg: &mut Register,
-    //         mem: &mut Mem,
-    //         ea_format: String,
-    //         ea_opmode: usize,
-    //         register: usize,
-    //         ea: u32,
-    //     ) -> InstructionExecutionResult,
-    // ),
-}
+//     },
+//     // /// Instruction with common EA format and register:
+//     // /// | 15| 14| 13| 12| 11| 10|  9|  8|  7|  6|  5|  4|  3|  2|  1|  0|
+//     // ///    -   -   -   -|   register|  -   -   -|ea mode    |ea register|
+//     // ///
+//     // EffectiveAddressWithRegister(
+//     //     fn(
+//     //         instr_address: u32,
+//     //         instr_word: u16,
+//     //         reg: &mut Register,
+//     //         mem: &mut Mem,
+//     //         ea_format: String,
+//     //         register: usize,
+//     //         ea: u32,
+//     //     ) -> InstructionExecutionResult,
+//     // ),
+//     // /// Instruction with common EA format and opmode and register:
+//     // /// | 15| 14| 13| 12| 11| 10|  9|  8|  7|  6|  5|  4|  3|  2|  1|  0|
+//     // ///    -   -   -   -|register   |opmode     |ea mode    |ea register|
+//     // ///
+//     // EffectiveAddressWithOpmodeAndRegister(
+//     //     fn(
+//     //         instr_address: u32,
+//     //         instr_word: u16,
+//     //         reg: &mut Register,
+//     //         mem: &mut Mem,
+//     //         ea_format: String,
+//     //         ea_opmode: usize,
+//     //         register: usize,
+//     //         ea: u32,
+//     //     ) -> InstructionExecutionResult,
+//     // ),
+// }
 
 #[derive(Copy, Clone)]
-pub enum PcResult{
+pub enum PcResult {
     Increment(u32),
-    Set(u32)
+    Set(u32),
 }
 
 #[derive(Copy, Clone)]
 pub enum InstructionExecutionResult {
-    Done{
-        pc_result: PcResult
-    }, 
+    Done { pc_result: PcResult },
     PassOn,
 }
 
 #[derive(Debug, PartialEq)]
 pub enum InstructionDebugResult {
-    Done{
+    Done {
         name: String,
         operands_format: String,
-        next_instr_address: u32
-    }, 
+        next_instr_address: u32,
+    },
     PassOn,
 }
 
-#[derive(FromPrimitive, Debug)]
-#[derive(std::cmp::PartialEq)]
+#[derive(Copy, Clone, FromPrimitive, Debug, std::cmp::PartialEq)]
 pub enum EffectiveAddressingMode {
     DRegDirect = 0b000,
     ARegDirect = 0b001,
@@ -140,8 +140,7 @@ pub enum EffectiveAddressingMode {
     PcIndirectAndLotsMore = 0b111,
 }
 
-#[derive(FromPrimitive, Debug)]
-#[derive(Copy, Clone)]
+#[derive(FromPrimitive, Debug, Copy, Clone)]
 pub enum OperationSize {
     Byte = 0b00,
     Word = 0b01,
@@ -194,11 +193,79 @@ pub enum ConditionalTest {
     LE = 0b1111,
 }
 
+impl fmt::Display for ConditionalTest {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            ConditionalTest::T => {
+                write!(f, "T")
+            }
+            ConditionalTest::F => {
+                write!(f, "F")
+            }
+            ConditionalTest::HI => {
+                write!(f, "HI")
+            }
+            ConditionalTest::LS => {
+                write!(f, "LS")
+            }
+            ConditionalTest::CC => {
+                write!(f, "CC")
+            }
+            ConditionalTest::NE => {
+                write!(f, "NE")
+            }
+            ConditionalTest::EQ => {
+                write!(f, "EQ")
+            }
+            ConditionalTest::VC => {
+                write!(f, "VC")
+            }
+            ConditionalTest::VS => {
+                write!(f, "VS")
+            }
+            ConditionalTest::PL => {
+                write!(f, "PL")
+            }
+            ConditionalTest::MI => {
+                write!(f, "MI")
+            }
+            ConditionalTest::GE => {
+                write!(f, "GE")
+            }
+            ConditionalTest::LT => {
+                write!(f, "LT")
+            }
+            ConditionalTest::GT => {
+                write!(f, "GT")
+            }
+            ConditionalTest::LE => {
+                write!(f, "LE")
+            }
+            _ => {
+                write!(f, "cc")
+            }
+        }
+        // write!(f, "{}", self.format)
+    }
+}
+
 pub struct Instruction {
     pub name: String,
     pub mask: u16,
     pub opcode: u16,
-    pub instruction_format: InstructionFormat,
+    // pub instruction_format: InstructionFormat,
+    pub step: fn(
+        instr_address: u32,
+        instr_word: u16,
+        reg: &mut Register,
+        mem: &mut Mem,
+    ) -> InstructionExecutionResult,
+    pub get_debug: fn(
+        instr_address: u32,
+        instr_word: u16,
+        reg: &Register,
+        mem: &Mem,
+    ) -> InstructionDebugResult,
 }
 
 impl Instruction {
@@ -206,13 +273,25 @@ impl Instruction {
         name: String,
         mask: u16,
         opcode: u16,
-        instruction_format: InstructionFormat,
+        step: fn(
+            instr_address: u32,
+            instr_word: u16,
+            reg: &mut Register,
+            mem: &mut Mem,
+        ) -> InstructionExecutionResult,
+        get_debug: fn(
+            instr_address: u32,
+            instr_word: u16,
+            reg: &Register,
+            mem: &Mem,
+        ) -> InstructionDebugResult,
     ) -> Instruction {
         let instr = Instruction {
             name: name,
             mask: mask,
             opcode: opcode,
-            instruction_format: instruction_format,
+            step: step,
+            get_debug: get_debug,
         };
         instr
     }

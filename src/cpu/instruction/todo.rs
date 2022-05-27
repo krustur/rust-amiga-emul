@@ -18,5 +18,6 @@ pub fn get_debug<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> InstructionDebugResult {
-    todo!("{:#010x} get_debug function not implemented", instr_word);
+    println!("{:#010x} get_debug function not implemented", instr_word);
+    InstructionDebugResult::PassOn
 }

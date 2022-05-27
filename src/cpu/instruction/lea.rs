@@ -1,61 +1,115 @@
-use crate::{cpu::{Cpu, instruction::{PcResult}}, mem::Mem, register::Register};
+use crate::{
+    cpu::{instruction::PcResult, Cpu},
+    mem::Mem,
+    register::Register,
+};
 
 use super::{InstructionDebugResult, InstructionExecutionResult};
 
-pub fn common_step<'a>(
+pub fn step<'a>(
     instr_address: u32,
     instr_word: u16,
     reg: &mut Register,
     mem: &mut Mem,
-    ea: u32,
 ) -> InstructionExecutionResult {
     // TODO: Tests
+    let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
+    let ea_mode = Cpu::extract_effective_addressing_mode(instr_word);
     let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
-    reg.reg_a[register] = ea;
-    // let instr_comment = format!("moving {:#010x} into A{}", ea, register);
+    let ea_value = Cpu::get_ea_value_unsigned_long(ea_mode, ea_register, instr_address, reg, mem);
+
+    reg.reg_a[register] = ea_value.address;
     InstructionExecutionResult::Done {
-        // op_size: OperationSize::Long,
-        pc_result: PcResult::Increment(4),
+        pc_result: PcResult::Increment(2 + (ea_value.num_extension_words << 1)),
     }
 }
 
-pub fn common_get_debug<'a>(
+pub fn get_debug<'a>(
     instr_address: u32,
     instr_word: u16,
     reg: &Register,
     mem: &Mem,
-    ea_format: String,
-    ea: u32,
 ) -> InstructionDebugResult {
     // TODO: Tests
+    let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
+    let ea_mode = Cpu::extract_effective_addressing_mode(instr_word);
     let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
-    // reg.reg_a[register] = ea;
-    // let instr_comment = format!("moving {:#010x} into A{}", ea, register);
+
+    println!("ea_register: {}", ea_register);
+
+    let ea_format = Cpu::get_ea_format(ea_mode, ea_register, instr_address, reg, mem);
     InstructionDebugResult::Done {
         name: String::from("LEA"),
         operands_format: format!("{},A{}", ea_format, register),
-        // comment: &instr_comment,
-        // op_size: OperationSize::Long,
-        next_instr_address: instr_address + 4,
+        next_instr_address: instr_address + 2 + (ea_format.num_extension_words << 1),
     }
 }
 
-pub fn areg_direct_step<'a>(
-    instr_address: u32,
-    instr_word: u16,
-    reg: &mut Register,
-    mem: &mut Mem,
-    ea_register: usize
-) -> InstructionExecutionResult {
-    todo!("LEA addres register direct");
-}
+#[cfg(test)]
+mod tests {
+    use crate::{register::{
+        STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE,
+        STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
+    }, cpu::instruction::InstructionDebugResult, memrange::MemRange};
 
-pub fn areg_direct_get_debug<'a>(
-    instr_address: u32,
-    instr_word: u16,
-    reg: &Register,
-    mem: &Mem,
-    ea_register: usize
-) -> InstructionDebugResult {
-    todo!("LEA addres register direct");
+    #[test]
+    fn absolute_short_addressing_mode_to_a0() {
+        // arrange
+        let code = [0x41, 0xf8, 0x05, 0x00].to_vec(); // LEA ($0500).W,A0
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.reg_a[0] = 0x00000000;
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_OVERFLOW
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_NEGATIVE
+            | STATUS_REGISTER_MASK_EXTEND;
+        // act assert - debug
+        let debug_result = cpu.get_next_instruction_debug();
+        assert_eq!(
+            InstructionDebugResult::Done {
+                name: String::from("LEA"),
+                operands_format: String::from("($0500).W,A0"),
+                next_instr_address: 0x080004
+            },
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x500, cpu.register.reg_a[0]);
+        assert_eq!(true, cpu.register.is_sr_carry_set());
+        assert_eq!(true, cpu.register.is_sr_coverflow_set());
+        assert_eq!(true, cpu.register.is_sr_zero_set());
+        assert_eq!(true, cpu.register.is_sr_negative_set());
+        assert_eq!(true, cpu.register.is_sr_extend_set());
+    }
+
+    #[test]
+    fn absolute_long_addressing_mode_to_a0() {
+        // arrange
+        let code = [0x43, 0xf9, 0x00, 0xf8, 0x00, 0x00].to_vec(); // LEA ($00F80000).L,A1
+        let mem_range = MemRange::from_bytes(0xf80000, [0x00, 0x00, 0x00, 0x00].to_vec());
+        let mut cpu = crate::instr_test_setup(code, Some(mem_range));
+        cpu.register.reg_a[0] = 0x00000000;
+        cpu.register.reg_sr = 0x0000;
+         // act assert - debug
+         let debug_result = cpu.get_next_instruction_debug();
+         assert_eq!(
+             InstructionDebugResult::Done {
+                 name: String::from("LEA"),
+                 operands_format: String::from("($00F80000).L,A1"),
+                 next_instr_address: 0x080006
+             },
+             debug_result
+         );
+        // // act
+        cpu.execute_next_instruction();
+        // // assert
+        assert_eq!(0x00F80000, cpu.register.reg_a[1]);
+        assert_eq!(false, cpu.register.is_sr_carry_set());
+        assert_eq!(false, cpu.register.is_sr_coverflow_set());
+        assert_eq!(false, cpu.register.is_sr_zero_set());
+        assert_eq!(false, cpu.register.is_sr_negative_set());
+        assert_eq!(false, cpu.register.is_sr_extend_set());
+    }
 }

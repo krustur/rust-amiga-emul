@@ -83,13 +83,14 @@ mod tests {
     fn step_positive_d0() {
         // arrange
         let code = [0x70, 0x1d].to_vec(); // MOVEQ #$1d,d0
-        let mut cpu = crate::instr_test_setup(code);
+        let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
             | STATUS_REGISTER_MASK_OVERFLOW
             | STATUS_REGISTER_MASK_ZERO
             | STATUS_REGISTER_MASK_NEGATIVE;
         // act
-        let debug_result = cpu.execute_next_instruction();
+        let debug_result = cpu.get_next_instruction_debug();
+        cpu.execute_next_instruction();
         // assert
         assert_eq!(0x1d, cpu.register.reg_d[0]);
         assert_eq!(false, cpu.register.is_sr_carry_set());
@@ -111,11 +112,12 @@ mod tests {
     fn step_negative_d0() {
         // arrange
         let code = [0x72, 0xff].to_vec(); // MOVEQ #-1,d1
-        let mut cpu = crate::instr_test_setup(code);
+        let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.reg_sr =
             STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_OVERFLOW | STATUS_REGISTER_MASK_ZERO;
         // act
-        let debug_result = cpu.execute_next_instruction();
+        let debug_result = cpu.get_next_instruction_debug();
+        cpu.execute_next_instruction();
         // assert
         assert_eq!(0xffffffff, cpu.register.reg_d[1]);
         assert_eq!(false, cpu.register.is_sr_carry_set());
@@ -136,12 +138,13 @@ mod tests {
     fn step_zero_d0() {
         // arrange
         let code = [0x74, 0x00].to_vec(); // MOVEQ #0,d0
-        let mut cpu = crate::instr_test_setup(code);
+        let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
             | STATUS_REGISTER_MASK_OVERFLOW
             | STATUS_REGISTER_MASK_NEGATIVE;
         // act
-        let debug_result = cpu.execute_next_instruction();
+        let debug_result = cpu.get_next_instruction_debug();
+        cpu.execute_next_instruction();
         // assert
         assert_eq!(0, cpu.register.reg_d[2]);
         assert_eq!(false, cpu.register.is_sr_carry_set());
