@@ -8,6 +8,7 @@ pub mod add;
 pub mod addq;
 pub mod addx;
 pub mod bcc;
+pub mod cmp;
 pub mod dbcc;
 pub mod lea;
 pub mod moveq;

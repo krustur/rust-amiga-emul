@@ -76,7 +76,14 @@ impl Cpu {
                 0x6000,
                 instruction::bcc::step,
                 instruction::bcc::get_debug,
-            ),            
+            ),
+            Instruction::new(
+                String::from("CMP"),
+                0xb000,
+                0xb000,
+                instruction::cmp::step,
+                instruction::cmp::get_debug,
+            ),
             Instruction::new(
                 String::from("LEA"),
                 0xf1c0,
@@ -114,8 +121,6 @@ impl Cpu {
             //     get_debug: instruction::todo::get_debug,
             //     // },
             // ),
-
-
             Instruction::new(
                 String::from("MOVEQ"),
                 0xf100,
@@ -123,7 +128,6 @@ impl Cpu {
                 instruction::moveq::step,
                 instruction::moveq::get_debug,
             ),
-
         ];
         let mut register = Register::new();
         register.reg_a[7] = reg_ssp;
@@ -1060,8 +1064,7 @@ impl Cpu {
         };
 
         let get_debug = instruction.get_debug;
-        let debug_result =
-            get_debug(instr_addr, instr_word, &mut self.register, &mut self.memory);
+        let debug_result = get_debug(instr_addr, instr_word, &mut self.register, &mut self.memory);
 
         // if let DisassemblyResult::Done {
         //     name,
@@ -1085,7 +1088,7 @@ impl Cpu {
         debug_result
     }
 
-    pub fn print_disassembly(self: &mut Cpu, debug_result: &DisassemblyResult) {                   
+    pub fn print_disassembly(self: &mut Cpu, debug_result: &DisassemblyResult) {
         if let DisassemblyResult::Done {
             name,
             instr_address,

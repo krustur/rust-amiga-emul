@@ -10,6 +10,13 @@ use crate::register::{
 
 use super::{DisassemblyResult, InstructionExecutionResult};
 
+const BYTE_WITH_DN_AS_DEST: usize = 0b000;
+const WORD_WITH_DN_AS_DEST: usize = 0b001;
+const LONG_WITH_DN_AS_DEST: usize = 0b010;
+const BYTE_WITH_EA_AS_DEST: usize = 0b100;
+const WORD_WITH_EA_AS_DEST: usize = 0b101;
+const LONG_WITH_EA_AS_DEST: usize = 0b110;
+
 pub fn step<'a>(
     instr_address: u32,
     instr_word: u16,
@@ -17,12 +24,6 @@ pub fn step<'a>(
     mem: &mut Mem,
     // ea: u32,
 ) -> InstructionExecutionResult {
-    const BYTE_WITH_DN_AS_DEST: usize = 0b000;
-    const WORD_WITH_DN_AS_DEST: usize = 0b001;
-    const LONG_WITH_DN_AS_DEST: usize = 0b010;
-    const BYTE_WITH_EA_AS_DEST: usize = 0b100;
-    const WORD_WITH_EA_AS_DEST: usize = 0b101;
-    const LONG_WITH_EA_AS_DEST: usize = 0b110;
     let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
     let ea_mode = Cpu::extract_effective_addressing_mode(instr_word);
     let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
@@ -197,12 +198,6 @@ pub fn get_debug<'a>(
     // ea_format: String,
     // ea: u32,
 ) -> DisassemblyResult {
-    const BYTE_WITH_DN_AS_DEST: usize = 0b000;
-    const WORD_WITH_DN_AS_DEST: usize = 0b001;
-    const LONG_WITH_DN_AS_DEST: usize = 0b010;
-    const BYTE_WITH_EA_AS_DEST: usize = 0b100;
-    const WORD_WITH_EA_AS_DEST: usize = 0b101;
-    const LONG_WITH_EA_AS_DEST: usize = 0b110;
     // let status_register_mask = 0xffe0;
     let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
     let ea_mode = Cpu::extract_effective_addressing_mode(instr_word);
