@@ -1,6 +1,6 @@
 use crate::{
     cpu::{
-        instruction::{InstructionDebugResult, PcResult},
+        instruction::{DisassemblyResult, PcResult},
         Cpu,
     },
     mem::Mem,
@@ -26,14 +26,12 @@ pub fn step<'a>(
 
             let x = match reg.reg_d[register] & 0xffff {
                 0x0000ffff => {
-                    println!("NOT branching {:08x}!", reg.reg_d[register] & 0xffff);
                     InstructionExecutionResult::Done {
                         // -1
                         pc_result: PcResult::Increment(4),
                     }
                 }
                 _ => {
-                    println!("BRANCHING  {:08x}!", reg.reg_d[register] & 0xffff);
                     let displacement_16bit = mem.get_signed_word(instr_address + 2);
                     let branch_to =
                         Cpu::get_address_with_i16_displacement(reg.reg_pc + 2, displacement_16bit);
@@ -58,20 +56,21 @@ pub fn get_debug<'a>(
     instr_word: u16,
     reg: &Register,
     mem: &Mem,
-) -> InstructionDebugResult {
+) -> DisassemblyResult {
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
     let register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
 
     let displacement_16bit = mem.get_signed_word(instr_address + 2);
 
-    let branch_to = Cpu::get_address_with_i16_displacement(reg.reg_pc + 2, displacement_16bit);
+    let branch_to = Cpu::get_address_with_i16_displacement(instr_address + 2, displacement_16bit);
 
-    let result = InstructionDebugResult::Done {
+    let result = DisassemblyResult::Done {
         name: format!("DB{:?}", conditional_test),
         operands_format: format!(
             "D{},${:04X} [${:08X}]",
             register, displacement_16bit, branch_to
         ),
+        instr_address,
         next_instr_address: instr_address + 4,
     };
 
@@ -80,7 +79,7 @@ pub fn get_debug<'a>(
 
 #[cfg(test)]
 mod tests {
-    use crate::{cpu::instruction::InstructionDebugResult, register::STATUS_REGISTER_MASK_CARRY};
+    use crate::{cpu::instruction::DisassemblyResult, register::STATUS_REGISTER_MASK_CARRY};
 
     // DBCC C set/reg gt 0 => decrease reg and branch (not -1)
     // DBCC C set/reg eq 0 => decrease reg and no branch (-1)
@@ -94,11 +93,12 @@ mod tests {
         cpu.register.reg_d[0] = 0xffff0001;
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY;
         // act assert - debug
-        let debug_result = cpu.get_next_instruction_debug();
+        let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            InstructionDebugResult::Done {
+            DisassemblyResult::Done {
                 name: String::from("DBCC"),
                 operands_format: String::from("D0,$0004 [$00080006]"),
+                instr_address: 0x80000,
                 next_instr_address: 0x080004
             },
             debug_result
@@ -118,11 +118,12 @@ mod tests {
         cpu.register.reg_d[1] = 0xffff0000;
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY;
         // act assert - debug
-        let debug_result = cpu.get_next_instruction_debug();
+        let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            InstructionDebugResult::Done {
+            DisassemblyResult::Done {
                 name: String::from("DBCC"),
                 operands_format: String::from("D1,$0004 [$00080006]"),
+                instr_address: 0x80000,
                 next_instr_address: 0x080004
             },
             debug_result
@@ -142,11 +143,12 @@ mod tests {
         cpu.register.reg_d[2] = 0xffff0001;
         cpu.register.reg_sr = 0x0000; //STATUS_REGISTER_MASK_CARRY;
                                       // act assert - debug
-        let debug_result = cpu.get_next_instruction_debug();
+        let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            InstructionDebugResult::Done {
+            DisassemblyResult::Done {
                 name: String::from("DBCC"),
                 operands_format: String::from("D2,$0004 [$00080006]"),
+                instr_address: 0x80000,
                 next_instr_address: 0x080004
             },
             debug_result

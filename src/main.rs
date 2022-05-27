@@ -2,6 +2,8 @@
 #![allow(unused_must_use)]
 #![allow(unused_variables)]
 
+use crate::cpu::instruction::DisassemblyResult;
+
 mod cpu;
 mod mem;
 mod memrange;
@@ -32,51 +34,63 @@ fn main() {
     let mut cpu = cpu::Cpu::new(mem);
     cpu.memory.print_range(0xf80000, 0xf800ff);
 
+    let mut disassembly_ptr = cpu.register.reg_pc;
+    for i in 0 .. 20 {
+        let disassembly_result = cpu.get_disassembly(disassembly_ptr);
+        match &disassembly_result {
+            DisassemblyResult::Done{name, operands_format, instr_address, next_instr_address} => {
+                disassembly_ptr = *next_instr_address;
+            }
+            DisassemblyResult::PassOn => {}
+        }
+        cpu.print_disassembly(&disassembly_result);
+    }
+
     loop {
-        cpu.print_registers();
-        cpu.get_next_instruction_debug();
+        // cpu.print_registers();
+        // cpu.get_next_disassembly();
         cpu.execute_next_instruction();
     }
     // cpu.print_registers();
-    // cpu.get_next_instruction_debug();
+    // cpu.get_next_disassembly();
     // cpu.execute_next_instruction();
 
     // cpu.print_registers();
-    // cpu.get_next_instruction_debug();
+    // cpu.get_next_disassembly();
     // cpu.execute_next_instruction();
 
     // cpu.print_registers();
-    // cpu.get_next_instruction_debug();
+    // cpu.get_next_disassembly();
     // cpu.execute_next_instruction();
 
     // cpu.print_registers();
-    // cpu.get_next_instruction_debug();
-    // cpu.execute_next_instruction();
-
-    // cpu.print_registers();
-    // // cpu.memory.print_range(0xf80000, 0xf800ff);
-    // cpu.get_next_instruction_debug();
+    // cpu.get_next_disassembly();
     // cpu.execute_next_instruction();
 
     // cpu.print_registers();
     // // cpu.memory.print_range(0xf80000, 0xf800ff);
-    // cpu.get_next_instruction_debug();
+    // cpu.get_next_disassembly();
     // cpu.execute_next_instruction();
 
     // cpu.print_registers();
-    // cpu.get_next_instruction_debug();
+    // // cpu.memory.print_range(0xf80000, 0xf800ff);
+    // cpu.get_next_disassembly();
     // cpu.execute_next_instruction();
 
     // cpu.print_registers();
-    // cpu.get_next_instruction_debug();
+    // cpu.get_next_disassembly();
     // cpu.execute_next_instruction();
 
     // cpu.print_registers();
-    // cpu.get_next_instruction_debug();
+    // cpu.get_next_disassembly();
     // cpu.execute_next_instruction();
 
     // cpu.print_registers();
-    // cpu.get_next_instruction_debug();
+    // cpu.get_next_disassembly();
+    // cpu.execute_next_instruction();
+
+    // cpu.print_registers();
+    // cpu.get_next_disassembly();
     // cpu.execute_next_instruction();
 
     // println!("End emulation!")

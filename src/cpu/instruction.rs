@@ -117,10 +117,11 @@ pub enum InstructionExecutionResult {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum InstructionDebugResult {
+pub enum DisassemblyResult {
     Done {
         name: String,
         operands_format: String,
+        instr_address: u32,
         next_instr_address: u32,
     },
     PassOn,
@@ -265,7 +266,7 @@ pub struct Instruction {
         instr_word: u16,
         reg: &Register,
         mem: &Mem,
-    ) -> InstructionDebugResult,
+    ) -> DisassemblyResult,
 }
 
 impl Instruction {
@@ -284,7 +285,7 @@ impl Instruction {
             instr_word: u16,
             reg: &Register,
             mem: &Mem,
-        ) -> InstructionDebugResult,
+        ) -> DisassemblyResult,
     ) -> Instruction {
         let instr = Instruction {
             name: name,

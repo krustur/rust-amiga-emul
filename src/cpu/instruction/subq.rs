@@ -1,6 +1,6 @@
 use crate::{cpu::Cpu, mem::Mem, register::Register};
 
-use super::{InstructionDebugResult, InstructionExecutionResult};
+use super::{DisassemblyResult, InstructionExecutionResult};
 
 pub fn common_step<'a>(
     instr_address: u32,
@@ -30,7 +30,7 @@ pub fn common_get_debug<'a>(
     mem: &Mem,
     ea_format: String,
     ea: u32,
-) -> InstructionDebugResult {
+) -> DisassemblyResult {
     todo!("SUBQ common_exec_func");
     // TODO: Tests
     // let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
@@ -76,14 +76,15 @@ pub fn areg_direct_get_debug<'a>(
     reg: &Register,
     mem: &Mem,
     ea_register: usize
-) -> InstructionDebugResult {
+) -> DisassemblyResult {
     // TODO: Tests
     let size = Cpu::extract_size_from_bit_pos_6(instr_word);
     let size = match size {
         Some(size) => size,
-        None => return InstructionDebugResult::Done{
+        None => return DisassemblyResult::Done{
             name: String::from("SUBQ"),
             operands_format: String::from("operands"),
+            instr_address,
             next_instr_address: instr_address + 4
         }
     };

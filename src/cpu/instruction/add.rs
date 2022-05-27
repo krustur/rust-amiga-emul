@@ -8,7 +8,7 @@ use crate::register::{
     STATUS_REGISTER_MASK_NEGATIVE, STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
 };
 
-use super::{InstructionDebugResult, InstructionExecutionResult};
+use super::{DisassemblyResult, InstructionExecutionResult};
 
 pub fn step<'a>(
     instr_address: u32,
@@ -196,7 +196,7 @@ pub fn get_debug<'a>(
     mem: &Mem,
     // ea_format: String,
     // ea: u32,
-) -> InstructionDebugResult {
+) -> DisassemblyResult {
     const BYTE_WITH_DN_AS_DEST: usize = 0b000;
     const WORD_WITH_DN_AS_DEST: usize = 0b001;
     const LONG_WITH_DN_AS_DEST: usize = 0b010;
@@ -238,12 +238,10 @@ pub fn get_debug<'a>(
             // }
             // reg.reg_sr = (reg.reg_sr & status_register_mask) | status_register_flags;
 
-            return InstructionDebugResult::Done {
+            return DisassemblyResult::Done {
                 name: String::from("ADD.B"),
                 operands_format: format!("{},D{}", ea_format, register),
-                // comment: &instr_comment,
-                // op_size: OperationSize::Byte,
-                // pc_result: PcResult::Increment(2),
+                instr_address,
                 next_instr_address: instr_address + 2,
             };
         }
@@ -273,12 +271,10 @@ pub fn get_debug<'a>(
             // }
             // reg.reg_sr = (reg.reg_sr & status_register_mask) | status_register_flags;
 
-            return InstructionDebugResult::Done {
+            return DisassemblyResult::Done {
                 name: String::from("ADD.W"),
                 operands_format: format!("{},D{}", ea_format, register),
-                // comment: &instr_comment,
-                // op_size: OperationSize::Word,
-                // pc_result: PcResult::Increment(2),
+                instr_address,
                 next_instr_address: instr_address + 2,
             };
         }
@@ -308,37 +304,15 @@ pub fn get_debug<'a>(
             // }
             // reg.reg_sr = (reg.reg_sr & status_register_mask) | status_register_flags;
 
-            return InstructionDebugResult::Done {
+            return DisassemblyResult::Done {
                 name: String::from("ADD.L"),
                 operands_format: format!("{},D{}", ea_format, register),
-                // comment: &instr_comment,
-                // op_size: OperationSize::Long,
-                // pc_result: PcResult::Increment(2),
+                instr_address,
                 next_instr_address: instr_address + 2,
             };
         }
         _ => panic!("Unhandled ea_opmode"),
     }
-}
-
-pub fn areg_direct_step_func<'a>(
-    instr_address: u32,
-    instr_word: u16,
-    reg: &mut Register,
-    mem: &mut Mem,
-    ea_register: usize,
-) -> InstructionExecutionResult {
-    todo!("ADD address register direct");
-}
-
-pub fn areg_direct_get_debug<'a>(
-    instr_address: u32,
-    instr_word: u16,
-    reg: &Register,
-    mem: &Mem,
-    ea_register: usize,
-) -> InstructionDebugResult {
-    todo!("ADD address register direct");
 }
 
 #[cfg(test)]

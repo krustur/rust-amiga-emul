@@ -1,7 +1,7 @@
 use crate::mem::Mem;
 use crate::register::Register;
 
-use super::{InstructionDebugResult, InstructionExecutionResult};
+use super::{DisassemblyResult, InstructionExecutionResult};
 
 pub fn step<'a>(
     instr_address: u32,
@@ -17,7 +17,7 @@ pub fn get_debug<'a>(
     instr_word: u16,
     reg: &Register,
     mem: &Mem,
-) -> InstructionDebugResult {
+) -> DisassemblyResult {
     println!("{:#010x} get_debug function not implemented", instr_word);
-    InstructionDebugResult::PassOn
+    DisassemblyResult::PassOn
 }

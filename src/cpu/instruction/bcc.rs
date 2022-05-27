@@ -4,7 +4,7 @@ use crate::{
     register::Register,
 };
 
-use super::{ConditionalTest, InstructionDebugResult, InstructionExecutionResult};
+use super::{ConditionalTest, DisassemblyResult, InstructionExecutionResult};
 
 pub fn step<'a>(
     instr_address: u32,
@@ -12,7 +12,6 @@ pub fn step<'a>(
     reg: &mut Register,
     mem: &mut Mem,
 ) -> InstructionExecutionResult {
-    // TODO: Condition codes
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
     let condition = Cpu::evaluate_condition(reg, &conditional_test);
 
@@ -50,7 +49,7 @@ pub fn get_debug<'a>(
     instr_word: u16,
     reg: &Register,
     mem: &Mem,
-) -> InstructionDebugResult {
+) -> DisassemblyResult {
     // TODO: Condition codes
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
 
@@ -59,12 +58,13 @@ pub fn get_debug<'a>(
     let (size_format, num_extension_words, operands_format) = match displacement_8bit {
         0x00 => (String::from("W"), 1, String::from("0x666")),
         -1 => (String::from("L"), 2, String::from("0x666")), // 0xff
-        _ => (String::from("B"), 0, format!("${:02X} [${:08X}]", displacement_8bit, Cpu::get_address_with_i8_displacement(reg.reg_pc + 2, displacement_8bit))),  //,
+        _ => (String::from("B"), 0, format!("${:02X} [${:08X}]", displacement_8bit, Cpu::get_address_with_i8_displacement(instr_address + 2, displacement_8bit))),  //,
     };
 
-    InstructionDebugResult::Done {
+    DisassemblyResult::Done {
         name: format!("B{}.{}", conditional_test, size_format),
         operands_format: operands_format,
+        instr_address,
         next_instr_address: instr_address + 2 + (num_extension_words << 1),
     }
 }
@@ -74,7 +74,7 @@ mod tests {
     use crate::{register::{
         STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE,
         STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
-    }, cpu::instruction::InstructionDebugResult};
+    }, cpu::instruction::DisassemblyResult};
 
     #[test]
     fn step_bcc_b_when_carry_clear() {
@@ -83,11 +83,12 @@ mod tests {
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.reg_sr = 0x0000; //STATUS_REGISTER_MASK_CARRY;
         // act assert - debug
-        let debug_result = cpu.get_next_instruction_debug();
+        let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            InstructionDebugResult::Done {
+            DisassemblyResult::Done {
                 name: String::from("BCC.B"),
                 operands_format: String::from("$02 [$00080004]"),
+                instr_address: 0x080000,
                 next_instr_address: 0x080002
             },
             debug_result
@@ -105,11 +106,12 @@ mod tests {
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY;
         // act assert - debug
-        let debug_result = cpu.get_next_instruction_debug();
+        let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            InstructionDebugResult::Done {
+            DisassemblyResult::Done {
                 name: String::from("BCC.B"),
                 operands_format: String::from("$02 [$00080004]"),
+                instr_address: 0x080000,
                 next_instr_address: 0x080002
             },
             debug_result

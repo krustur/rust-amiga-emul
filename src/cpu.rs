@@ -5,7 +5,7 @@ use byteorder::{BigEndian, ReadBytesExt};
 use num_traits::FromPrimitive;
 use std::{convert::TryInto, fmt};
 
-mod instruction;
+pub mod instruction;
 
 pub struct EffectiveAddressValue<T> {
     pub address: u32,
@@ -1039,49 +1039,74 @@ impl Cpu {
         // debug_result
     }
 
-    pub fn get_next_instruction_debug(self: &mut Cpu) -> InstructionDebugResult {
+    pub fn get_next_disassembly(self: &mut Cpu) -> DisassemblyResult {
+        let result = self.get_disassembly(self.register.reg_pc);
+        result
+    }
+
+    pub fn get_disassembly(self: &mut Cpu, instr_addr: u32) -> DisassemblyResult {
+        let instr_word = self.memory.get_unsigned_word(instr_addr);
+
+        let instruction_pos = self
+            .instructions
+            .iter()
+            .position(|x| (instr_word & x.mask) == x.opcode);
+        let instruction = match instruction_pos {
+            None => panic!(
+                "{:#010x} Unidentified instruction {:#06X}",
+                instr_addr, instr_word
+            ),
+            Some(instruction_pos) => &self.instructions[instruction_pos],
+        };
+
+        let get_debug = instruction.get_debug;
+        let debug_result =
+            get_debug(instr_addr, instr_word, &mut self.register, &mut self.memory);
+
+        // if let DisassemblyResult::Done {
+        //     name,
+        //     operands_format,
+        //     next_instr_address,
+        // } = &debug_result
+        // {
+        //     let instr_format = format!("{} {}", name, operands_format);
+        //     print!("{:#010X} ", instr_addr);
+        //     for i in (instr_addr..instr_addr + 8).step_by(2) {
+        //         if i < *next_instr_address {
+        //             let op_mem = self.memory.get_unsigned_word(i);
+        //             print!("{:04X} ", op_mem);
+        //         } else {
+        //             print!("     ");
+        //         }
+        //     }
+        //     println!("{: <30}", instr_format);
+        // }
+
+        debug_result
+    }
+
+    pub fn print_disassembly(self: &mut Cpu, debug_result: &DisassemblyResult) {                   
+        if let DisassemblyResult::Done {
+            name,
+            instr_address,
+            operands_format,
+            next_instr_address,
+        } = &debug_result
         {
-            let instr_addr = self.register.reg_pc;
-            let instr_word = self.memory.get_unsigned_word(instr_addr);
-
-            let instruction_pos = self
-                .instructions
-                .iter()
-                .position(|x| (instr_word & x.mask) == x.opcode);
-            let instruction = match instruction_pos {
-                None => panic!(
-                    "{:#010x} Unidentified instruction {:#06X}",
-                    instr_addr, instr_word
-                ),
-                Some(instruction_pos) => &self.instructions[instruction_pos],
-            };
-
-            let get_debug = instruction.get_debug;
-            let debug_result =
-                get_debug(instr_addr, instr_word, &mut self.register, &mut self.memory);
-
-            if let InstructionDebugResult::Done {
-                name,
-                operands_format,
-                next_instr_address,
-            } = &debug_result
-            {
-                let instr_format = format!("{} {}", name, operands_format);
-                print!("{:#010X} ", instr_addr);
-                for i in (instr_addr..instr_addr + 8).step_by(2) {
-                    if i < *next_instr_address {
-                        let op_mem = self.memory.get_unsigned_word(i);
-                        print!("{:04X} ", op_mem);
-                    } else {
-                        print!("     ");
-                    }
+            let instr_format = format!("{} {}", name, operands_format);
+            print!("{:#010X} ", instr_address);
+            for i in (*instr_address..*instr_address + 8).step_by(2) {
+                if i < *next_instr_address {
+                    let op_mem = self.memory.get_unsigned_word(i);
+                    print!("{:04X} ", op_mem);
+                } else {
+                    print!("     ");
                 }
-                println!("{: <30}", instr_format);
             }
-
-            debug_result
+            println!("{: <30}", instr_format);
         }
     }
+
     // fn get_instruction(self: &mut Cpu, instr_addr: u32, instr_word: u16) -> &Instruction {
     //     let instruction_pos = self
     //         .instructions

@@ -1,4 +1,4 @@
-use crate::cpu::instruction::InstructionDebugResult;
+use crate::cpu::instruction::DisassemblyResult;
 use crate::mem::Mem;
 use crate::register::{Register, STATUS_REGISTER_MASK_ZERO};
 use crate::{cpu::instruction::PcResult, cpu::Cpu, register::STATUS_REGISTER_MASK_NEGATIVE};
@@ -43,7 +43,7 @@ pub fn get_debug<'a>(
     instr_word: u16,
     reg: &Register,
     mem: &Mem,
-) -> InstructionDebugResult {
+) -> DisassemblyResult {
     // TODO: Condition codes
     let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
     let mut instr_bytes = &instr_word.to_be_bytes()[1..2];
@@ -59,12 +59,13 @@ pub fn get_debug<'a>(
     let instr_comment = format!("moving {:#010x} into D{}", operand, register);
     let status_register_mask = 0xfff0;
 
-    InstructionDebugResult::Done {
+    DisassemblyResult::Done {
         name: String::from("MOVEQ"),
         operands_format: operands_format,
         // comment: &instr_comment,
         // op_size: OperationSize::Long,
         // pc_result: PcResult::Increment(2),
+        instr_address,
         next_instr_address: instr_address + 2,
     }
 }
@@ -72,7 +73,7 @@ pub fn get_debug<'a>(
 #[cfg(test)]
 mod tests {
     use crate::{
-        cpu::instruction::InstructionDebugResult,
+        cpu::instruction::DisassemblyResult,
         register::{
             STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_NEGATIVE,
             STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
@@ -89,7 +90,7 @@ mod tests {
             | STATUS_REGISTER_MASK_ZERO
             | STATUS_REGISTER_MASK_NEGATIVE;
         // act
-        let debug_result = cpu.get_next_instruction_debug();
+        let debug_result = cpu.get_next_disassembly();
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0x1d, cpu.register.reg_d[0]);
@@ -99,9 +100,10 @@ mod tests {
         assert_eq!(false, cpu.register.is_sr_negative_set());
         assert_eq!(false, cpu.register.is_sr_extend_set());
         assert_eq!(
-            InstructionDebugResult::Done {
+            DisassemblyResult::Done {
                 name: String::from("MOVEQ"),
                 operands_format: String::from("#29,D0"),
+                instr_address: 0x080000,
                 next_instr_address: 0x080002
             },
             debug_result
@@ -116,7 +118,7 @@ mod tests {
         cpu.register.reg_sr =
             STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_OVERFLOW | STATUS_REGISTER_MASK_ZERO;
         // act
-        let debug_result = cpu.get_next_instruction_debug();
+        let debug_result = cpu.get_next_disassembly();
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0xffffffff, cpu.register.reg_d[1]);
@@ -125,9 +127,10 @@ mod tests {
         assert_eq!(false, cpu.register.is_sr_zero_set());
         assert_eq!(true, cpu.register.is_sr_negative_set());
         assert_eq!(
-            InstructionDebugResult::Done {
+            DisassemblyResult::Done {
                 name: String::from("MOVEQ"),
                 operands_format: String::from("#-1,D1"),
+                instr_address: 0x080000,
                 next_instr_address: 0x080002
             },
             debug_result
@@ -143,7 +146,7 @@ mod tests {
             | STATUS_REGISTER_MASK_OVERFLOW
             | STATUS_REGISTER_MASK_NEGATIVE;
         // act
-        let debug_result = cpu.get_next_instruction_debug();
+        let debug_result = cpu.get_next_disassembly();
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0, cpu.register.reg_d[2]);
@@ -152,9 +155,10 @@ mod tests {
         assert_eq!(true, cpu.register.is_sr_zero_set());
         assert_eq!(false, cpu.register.is_sr_negative_set());
         assert_eq!(
-            InstructionDebugResult::Done {
+            DisassemblyResult::Done {
                 name: String::from("MOVEQ"),
                 operands_format: String::from("#0,D2"),
+                instr_address: 0x080000,
                 next_instr_address: 0x080002
             },
             debug_result
