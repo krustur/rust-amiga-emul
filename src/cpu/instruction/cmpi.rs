@@ -47,15 +47,24 @@ pub fn get_disassembly<'a>(
     // let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
     // let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
 
-    let ea_format = Cpu::get_ea_format(ea_mode, ea_register, instr_address, None, reg, mem);
+    let ea_format = Cpu::get_ea_format(ea_mode, ea_register, instr_address + 2, None, reg, mem);
 
     let (name, num_immediate_words, immediate_data) = match size {
-        Some(size) => match size {
-            OperationSize::Byte => (String::from("CMPI.B"), 1, format!("#${:02X}", mem.get_unsigned_byte(instr_address + 3))),
-            OperationSize::Word => (String::from("CMPI.W"), 1, format!("#${:04X}", mem.get_unsigned_word(instr_address + 2))),
-            OperationSize::Long => (String::from("CMPI.L"), 2, format!("#${:08X}", mem.get_unsigned_longword(instr_address + 2))),
-        }
-        None => (String::from("unknown CMPI"), 1, String::from("x")),
+        OperationSize::Byte => (
+            String::from("CMPI.B"),
+            1,
+            format!("#${:02X}", mem.get_unsigned_byte(instr_address + 3)),
+        ),
+        OperationSize::Word => (
+            String::from("CMPI.W"),
+            1,
+            format!("#${:04X}", mem.get_unsigned_word(instr_address + 2)),
+        ),
+        OperationSize::Long => (
+            String::from("CMPI.L"),
+            2,
+            format!("#${:08X}", mem.get_unsigned_longword(instr_address + 2)),
+        ),
     };
 
     DisassemblyResult::Done {

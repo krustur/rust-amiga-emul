@@ -62,10 +62,7 @@ pub fn areg_direct_step<'a>(
 ) -> InstructionExecutionResult {
     // TODO: Tests
     let size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
-    let size = match size {
-        Some(size) => size,
-        None => return InstructionExecutionResult::PassOn
-    };
+    
     todo!("SUBQ areg_direct_exec_func");
     // reg.reg_a[register] = ea;
     // let instr_comment = format!("subtracting {:#010x} into A{}", ea, register);
@@ -86,16 +83,16 @@ pub fn areg_direct_get_debug<'a>(
     ea_register: usize
 ) -> DisassemblyResult {
     // TODO: Tests
-    let size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
-    let size = match size {
-        Some(size) => size,
-        None => return DisassemblyResult::Done{
-            name: String::from("SUBQ"),
-            operands_format: String::from("operands"),
-            instr_address,
-            next_instr_address: instr_address + 4
-        }
-    };
+    // let size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
+    // let size = match size {
+    //     Some(size) => size,
+    //     None => return DisassemblyResult::Done{
+    //         name: String::from("SUBQ"),
+    //         operands_format: String::from("operands"),
+    //         instr_address,
+    //         next_instr_address: instr_address + 4
+    //     }
+    // };
     todo!("SUBQ areg_direct_exec_func");
     // reg.reg_a[register] = ea;
     // let instr_comment = format!("subtracting {:#010x} into A{}", ea, register);

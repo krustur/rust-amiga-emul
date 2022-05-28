@@ -256,23 +256,23 @@ impl Cpu {
         register
     }
 
-    pub fn extract_size000110_from_bit_pos_6(word: u16) -> Option<OperationSize> {
+    pub fn extract_size000110_from_bit_pos_6(word: u16) -> OperationSize {
         let size = (word >> 6) & 0x0003;
         match size {
-            0b00 => Some(OperationSize::Byte),
-            0b01 => Some(OperationSize::Word),
-            0b10 => Some(OperationSize::Long),
-            _ => None,
+            0b00 => OperationSize::Byte,
+            0b01 => OperationSize::Word,
+            0b10 => OperationSize::Long,
+            _ => panic!("Unknown size!"),
         }
     }
 
-    pub fn extract_size011110_from_bit_pos(word: u16, bit_pos: u8) -> Option<OperationSize> {
+    pub fn extract_size011110_from_bit_pos(word: u16, bit_pos: u8) -> OperationSize {
         let size = (word >> bit_pos) & 0x0003;
         match size {
-            0b01 => Some(OperationSize::Byte),
-            0b11 => Some(OperationSize::Word),
-            0b10 => Some(OperationSize::Long),
-            _ => None,
+            0b01 => OperationSize::Byte,
+            0b11 => OperationSize::Word,
+            0b10 => OperationSize::Long,
+            _ => panic!("Unknown size!"),
         }
     }
 
