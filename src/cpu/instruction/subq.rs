@@ -61,7 +61,7 @@ pub fn areg_direct_step<'a>(
     ea_register: usize
 ) -> InstructionExecutionResult {
     // TODO: Tests
-    let size = Cpu::extract_size_from_bit_pos_6(instr_word);
+    let size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
     let size = match size {
         Some(size) => size,
         None => return InstructionExecutionResult::PassOn
@@ -86,7 +86,7 @@ pub fn areg_direct_get_debug<'a>(
     ea_register: usize
 ) -> DisassemblyResult {
     // TODO: Tests
-    let size = Cpu::extract_size_from_bit_pos_6(instr_word);
+    let size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
     let size = match size {
         Some(size) => size,
         None => return DisassemblyResult::Done{

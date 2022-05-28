@@ -13,7 +13,9 @@ pub mod cmpi;
 pub mod dbcc;
 pub mod jmp;
 pub mod lea;
+pub mod mov;
 pub mod moveq;
+pub mod nop;
 pub mod subq;
 
 // pub mod instruction;

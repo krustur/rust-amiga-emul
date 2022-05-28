@@ -136,11 +136,25 @@ impl Cpu {
             //     // },
             // ),
             Instruction::new(
+                String::from("MOVE"),
+                0xc000,
+                0x0000,
+                instruction::mov::step,
+                instruction::mov::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("MOVEQ"),
                 0xf100,
                 0x7000,
                 instruction::moveq::step,
                 instruction::moveq::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("NOP"),
+                0xffff,
+                0x4e71,
+                instruction::nop::step,
+                instruction::nop::get_disassembly,
             ),
         ];
         let mut register = Register::new();
@@ -194,8 +208,17 @@ impl Cpu {
         address
     }
 
-    fn extract_effective_addressing_mode(word: u16) -> EffectiveAddressingMode {
+    fn extract_effective_addressing_mode_from_bit_pos_3(word: u16) -> EffectiveAddressingMode {
         let ea_mode = (word >> 3) & 0x0007;
+        let ea_mode = match FromPrimitive::from_u16(ea_mode) {
+            Some(r) => r,
+            None => panic!("Unable to extract EffectiveAddressingMode"),
+        };
+        ea_mode
+    }
+
+    fn extract_effective_addressing_mode_from_bit_pos(word: u16, bit_pos: u8) -> EffectiveAddressingMode {
+        let ea_mode = (word >> bit_pos) & 0x0007;
         let ea_mode = match FromPrimitive::from_u16(ea_mode) {
             Some(r) => r,
             None => panic!("Unable to extract EffectiveAddressingMode"),
@@ -233,12 +256,21 @@ impl Cpu {
         register
     }
 
-    pub fn extract_size_from_bit_pos_6(word: u16) -> Option<OperationSize> {
-        let size = word & 0x0007;
+    pub fn extract_size000110_from_bit_pos_6(word: u16) -> Option<OperationSize> {
         let size = (word >> 6) & 0x0003;
         match size {
             0b00 => Some(OperationSize::Byte),
             0b01 => Some(OperationSize::Word),
+            0b10 => Some(OperationSize::Long),
+            _ => None,
+        }
+    }
+
+    pub fn extract_size011110_from_bit_pos(word: u16, bit_pos: u8) -> Option<OperationSize> {
+        let size = (word >> bit_pos) & 0x0003;
+        match size {
+            0b01 => Some(OperationSize::Byte),
+            0b11 => Some(OperationSize::Word),
             0b10 => Some(OperationSize::Long),
             _ => None,
         }
@@ -267,7 +299,8 @@ impl Cpu {
     pub fn get_ea_format(
         ea_mode: EffectiveAddressingMode,
         ea_register: usize,
-        instr_address: u32,
+        extension_address: u32,
+        operation_size: Option<OperationSize>,
         reg: &Register,
         mem: &Mem,
     ) -> EffectiveAddressDebug {
@@ -308,7 +341,7 @@ impl Cpu {
                 }
             }
             EffectiveAddressingMode::ARegIndirectWithDisplacement => {
-                let extension_word = mem.get_signed_word(instr_address + 2);
+                let extension_word = mem.get_signed_word(extension_address);
                 let format = format!("(${:04X},A{})", extension_word, ea_register);
                     EffectiveAddressDebug {
                         format: format,
@@ -322,7 +355,7 @@ impl Cpu {
                 0b000 => {
                     // absolute short addressing mode
                     // (xxx).W
-                    let extension_word = mem.get_signed_word(instr_address + 2);
+                    let extension_word = mem.get_signed_word(extension_address);
                     let format = format!("(${:04X}).W", extension_word);
                     EffectiveAddressDebug {
                         format: format,
@@ -332,10 +365,11 @@ impl Cpu {
                 0b001 => {
                     // absolute long addressing mode
                     // (xxx).L
-                    let first_extension_word = mem.get_unsigned_word(instr_address + 2);
-                    let second_extension_word = mem.get_unsigned_word(instr_address + 4);
-                    let address =
-                        u32::from(first_extension_word) << 16 | u32::from(second_extension_word);
+                    // let first_extension_word = mem.get_unsigned_word(instr_address + 2);
+                    // let second_extension_word = mem.get_unsigned_word(instr_address + 4);
+                    // let address =
+                    //     u32::from(first_extension_word) << 16 | u32::from(second_extension_word);
+                    let address = mem.get_unsigned_longword(extension_address);
                     let format = format!("(${:08X}).L", address);
                     EffectiveAddressDebug {
                         format: format,
@@ -345,7 +379,7 @@ impl Cpu {
                 0b010 => {
                     // PC indirect with displacement mode
                     // (d16,PC)
-                    let extension_word = mem.get_signed_word(instr_address + 2);
+                    let extension_word = mem.get_signed_word(extension_address);
                     let ea = Cpu::get_address_with_i16_displacement(reg.reg_pc + 2, extension_word);
                     let format = format!("({:#06x},PC)", extension_word);
 
@@ -360,6 +394,37 @@ impl Cpu {
                         "get_ea_format() UNKNOWN_PcIndirectAndLotsMore 0b011 {:?} {}",
                         ea_mode, ea_register
                     );
+                }
+                0b100 => {
+                    // Immediate data
+                    // #<data>
+                    match operation_size {
+                        None => panic!("Must have operation_size for Immediate data!"),
+                        Some(operation_size) => {
+                            match operation_size {
+                                OperationSize::Byte => {
+                                    let extension_word = mem.get_signed_byte(extension_address + 1);
+                                    EffectiveAddressDebug {
+                                        format: format!("#{}", extension_word),
+                                        num_extension_words: 1,
+                                    }
+                                }
+                                OperationSize::Word => {
+                                    EffectiveAddressDebug {
+                                        format: String::from("todo word"),
+                                        num_extension_words: 1,
+                                    }
+                                }
+                                OperationSize::Long => {
+                                    EffectiveAddressDebug {
+                                        format: String::from("todo long"),
+                                        num_extension_words: 2,
+                                    }
+                                }
+                            }
+        
+                        }
+                    }
                 }
                 _ => {
                     panic!(

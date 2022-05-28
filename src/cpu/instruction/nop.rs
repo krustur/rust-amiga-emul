@@ -8,7 +8,7 @@ use super::{DisassemblyResult, InstructionExecutionResult};
 
 // Instruction State
 // =================
-// step-logic: TODO
+// step-logic: DONE
 // step cc: DONE (none)
 // step tests: TODO
 // get_disassembly: DONE
@@ -20,16 +20,9 @@ pub fn step<'a>(
     reg: &mut Register,
     mem: &mut Mem,
 ) -> InstructionExecutionResult {
-    
-    let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
-    let ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos_3(instr_word);
-    let ea_value = Cpu::get_ea_value_unsigned_long(ea_mode, ea_register, instr_address, reg, mem);
-
-    // reg.reg_a[register] = ea_value.address;
-    // InstructionExecutionResult::Done {
-    //     pc_result: PcResult::Increment(2 + (ea_value.num_extension_words << 1)),
-    // }
-    todo!();
+    InstructionExecutionResult::Done {
+        pc_result: PcResult::Increment(2),
+    }
 }
 
 pub fn get_disassembly<'a>(
@@ -38,15 +31,11 @@ pub fn get_disassembly<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> DisassemblyResult {
-    let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
-    let ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos_3(instr_word);
-
-    let ea_debug = Cpu::get_ea_format(ea_mode, ea_register, instr_address, None, reg, mem);
     DisassemblyResult::Done {
-        name: String::from("JMP"),
-        operands_format: ea_debug.format,
+        name: String::from("NOP"),
+        operands_format: String::from(""),
         instr_address,
-        next_instr_address: instr_address + 2 + (ea_debug.num_extension_words << 1),
+        next_instr_address: instr_address + 2,
     }
 }
 

@@ -9,7 +9,7 @@ use super::{DisassemblyResult, InstructionExecutionResult};
 // Instruction State
 // =================
 // step-logic: TODO
-// step cc: DONE (none)
+// step cc: TODO (none)
 // step tests: TODO
 // get_disassembly: DONE
 // get_disassembly tests: TODO
@@ -38,15 +38,24 @@ pub fn get_disassembly<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> DisassemblyResult {
-    let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
-    let ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos_3(instr_word);
+    let src_ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
+    let src_ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos_3(instr_word);
 
-    let ea_debug = Cpu::get_ea_format(ea_mode, ea_register, instr_address, None, reg, mem);
+    let dst_ea_register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
+    let dst_ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos(instr_word, 6);
+  
+    let size = Cpu::extract_size011110_from_bit_pos(instr_word, 12);
+    // println!("{:08X} {:04X} {:?} {} {:?} {} {:?}", instr_address, instr_word, src_ea_mode, src_ea_register, dst_ea_mode, dst_ea_register, size);
+
+    let src_ea_debug = Cpu::get_ea_format(src_ea_mode, src_ea_register, instr_address + 2, size, reg, mem);
+    let dst_ea_debug = Cpu::get_ea_format(dst_ea_mode, dst_ea_register, instr_address + 2 + (src_ea_debug.num_extension_words << 1), size, reg, mem);
+
+
     DisassemblyResult::Done {
-        name: String::from("JMP"),
-        operands_format: ea_debug.format,
+        name: String::from("MOVE"),
+        operands_format: format!("{},{}", src_ea_debug.format, dst_ea_debug.format),
         instr_address,
-        next_instr_address: instr_address + 2 + (ea_debug.num_extension_words << 1),
+        next_instr_address: instr_address + 2 + (src_ea_debug.num_extension_words << 1) + (dst_ea_debug.num_extension_words << 1),
     }
 }
 
