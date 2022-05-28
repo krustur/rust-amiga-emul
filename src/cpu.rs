@@ -85,6 +85,13 @@ impl Cpu {
                 instruction::cmp::get_debug,
             ),
             Instruction::new(
+                String::from("CMPI"),
+                0xff00,
+                0x0c00,
+                instruction::cmpi::step,
+                instruction::cmpi::get_debug,
+            ),
+            Instruction::new(
                 String::from("LEA"),
                 0xf1c0,
                 0x41c0,

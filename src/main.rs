@@ -34,6 +34,8 @@ fn main() {
     let mut cpu = cpu::Cpu::new(mem);
     cpu.memory.print_range(0xf80000, 0xf800ff);
 
+    cpu.print_registers();
+
     let mut disassembly_ptr = cpu.register.reg_pc;
     for i in 0 .. 20 {
         let disassembly_result = cpu.get_disassembly(disassembly_ptr);
