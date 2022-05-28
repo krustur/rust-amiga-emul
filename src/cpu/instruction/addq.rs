@@ -2,6 +2,14 @@ use crate::{cpu::instruction::{PcResult}, mem::Mem, register::Register};
 
 use super::{DisassemblyResult, InstructionExecutionResult};
 
+// Instruction State
+// =================
+// step-logic: TODO
+// step cc: TODO (none)
+// step tests: TODO
+// get_disassembly: TODO
+// get_disassembly tests: TODO
+
 pub fn step<'a>(
     instr_address: u32,
     instr_word: u16,
@@ -18,7 +26,7 @@ pub fn step<'a>(
     };
 }
 
-pub fn get_debug<'a>(
+pub fn get_disassembly<'a>(
     instr_address: u32,
     instr_word: u16,
     reg: &Register,

@@ -10,6 +10,14 @@ use crate::register::{
 
 use super::{DisassemblyResult, InstructionExecutionResult};
 
+// Instruction State
+// =================
+// step-logic: TODO
+// step cc: TODO (none)
+// step tests: TODO
+// get_disassembly: TODO
+// get_disassembly tests: TODO
+
 const BYTE_WITH_DN_AS_DEST: usize = 0b000;
 const WORD_WITH_DN_AS_DEST: usize = 0b001;
 const LONG_WITH_DN_AS_DEST: usize = 0b010;
@@ -190,7 +198,7 @@ pub fn step<'a>(
     }
 }
 
-pub fn get_debug<'a>(
+pub fn get_disassembly<'a>(
     instr_address: u32,
     instr_word: u16,
     reg: &Register,

@@ -9,9 +9,9 @@ use super::{DisassemblyResult, InstructionExecutionResult};
 // Instruction State
 // =================
 // step-logic: TODO
-// step cc: TODO (none)
+// step cc: DONE (none)
 // step tests: TODO
-// get_disassembly: TODO
+// get_disassembly: DONE
 // get_disassembly tests: TODO
 
 pub fn step<'a>(
@@ -20,16 +20,16 @@ pub fn step<'a>(
     reg: &mut Register,
     mem: &mut Mem,
 ) -> InstructionExecutionResult {
-    // TODO: Tests
+    
     let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
     let ea_mode = Cpu::extract_effective_addressing_mode(instr_word);
-    let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
     let ea_value = Cpu::get_ea_value_unsigned_long(ea_mode, ea_register, instr_address, reg, mem);
 
-    reg.reg_a[register] = ea_value.address;
-    InstructionExecutionResult::Done {
-        pc_result: PcResult::Increment(2 + (ea_value.num_extension_words << 1)),
-    }
+    // reg.reg_a[register] = ea_value.address;
+    // InstructionExecutionResult::Done {
+    //     pc_result: PcResult::Increment(2 + (ea_value.num_extension_words << 1)),
+    // }
+    todo!();
 }
 
 pub fn get_disassembly<'a>(
@@ -38,17 +38,15 @@ pub fn get_disassembly<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> DisassemblyResult {
-    // TODO: Tests
     let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
     let ea_mode = Cpu::extract_effective_addressing_mode(instr_word);
-    let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
 
-    let ea_format = Cpu::get_ea_format(ea_mode, ea_register, instr_address, reg, mem);
+    let ea_debug = Cpu::get_ea_format(ea_mode, ea_register, instr_address, reg, mem);
     DisassemblyResult::Done {
-        name: String::from("LEA"),
-        operands_format: format!("{},A{}", ea_format, register),
+        name: String::from("JMP"),
+        operands_format: ea_debug.format,
         instr_address,
-        next_instr_address: instr_address + 2 + (ea_format.num_extension_words << 1),
+        next_instr_address: instr_address + 2 + (ea_debug.num_extension_words << 1),
     }
 }
 

@@ -6,6 +6,14 @@ use crate::{
 
 use super::{ConditionalTest, DisassemblyResult, InstructionExecutionResult};
 
+// Instruction State
+// =================
+// step-logic: TODO
+// step cc: TODO (none)
+// step tests: TODO
+// get_disassembly: TODO
+// get_disassembly tests: TODO
+
 pub fn step<'a>(
     instr_address: u32,
     instr_word: u16,
@@ -44,7 +52,7 @@ fn branch_8bit<'a>(
     }
 }
 
-pub fn get_debug<'a>(
+pub fn get_disassembly<'a>(
     instr_address: u32,
     instr_word: u16,
     reg: &Register,

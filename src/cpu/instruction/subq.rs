@@ -2,6 +2,14 @@ use crate::{cpu::Cpu, mem::Mem, register::Register};
 
 use super::{DisassemblyResult, InstructionExecutionResult};
 
+// Instruction State
+// =================
+// step-logic: TODO
+// step cc: TODO (none)
+// step tests: TODO
+// get_disassembly: TODO
+// get_disassembly tests: TODO
+
 pub fn common_step<'a>(
     instr_address: u32,
     instr_word: u16,

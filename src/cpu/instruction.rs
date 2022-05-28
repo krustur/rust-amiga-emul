@@ -11,12 +11,13 @@ pub mod bcc;
 pub mod cmp;
 pub mod cmpi;
 pub mod dbcc;
+pub mod jmp;
 pub mod lea;
 pub mod moveq;
 pub mod subq;
 
 // pub mod instruction;
-pub mod todo;
+
 
 // pub enum InstructionFormat {
 //     /// Instruction with uncommon format:

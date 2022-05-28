@@ -42,7 +42,7 @@ impl Cpu {
                 0xd000,
                 // InstructionFormat::EffectiveAddress {
                 instruction::add::step,
-                instruction::add::get_debug,
+                instruction::add::get_disassembly,
                 // areg_direct_step: instruction::add::areg_direct_step_func,
                 // areg_direct_get_debug: instruction::add::areg_direct_get_debug,
                 // },
@@ -52,14 +52,14 @@ impl Cpu {
                 0xf0f8,
                 0x50c8,
                 instruction::dbcc::step,
-                instruction::dbcc::get_debug,
+                instruction::dbcc::get_disassembly,
             ),
             Instruction::new(
                 String::from("ADDQ"),
                 0xf100,
                 0x5000,
                 instruction::addq::step,
-                instruction::addq::get_debug,
+                instruction::addq::get_disassembly,
             ),
             // Instruction::new(
             //     String::from("ADDX"),
@@ -75,28 +75,35 @@ impl Cpu {
                 0xf000,
                 0x6000,
                 instruction::bcc::step,
-                instruction::bcc::get_debug,
+                instruction::bcc::get_disassembly,
             ),
             Instruction::new(
                 String::from("CMP"),
                 0xb000,
                 0xb000,
                 instruction::cmp::step,
-                instruction::cmp::get_debug,
+                instruction::cmp::get_disassembly,
             ),
             Instruction::new(
                 String::from("CMPI"),
                 0xff00,
                 0x0c00,
                 instruction::cmpi::step,
-                instruction::cmpi::get_debug,
+                instruction::cmpi::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("JMP"),
+                0xffc0,
+                0x4ec0,
+                instruction::jmp::step,
+                instruction::jmp::get_disassembly,
             ),
             Instruction::new(
                 String::from("LEA"),
                 0xf1c0,
                 0x41c0,
                 instruction::lea::step,
-                instruction::lea::get_debug,
+                instruction::lea::get_disassembly,
             ),
             // Instruction::new(
             //     String::from("Scc"),
@@ -133,7 +140,7 @@ impl Cpu {
                 0xf100,
                 0x7000,
                 instruction::moveq::step,
-                instruction::moveq::get_debug,
+                instruction::moveq::get_disassembly,
             ),
         ];
         let mut register = Register::new();
@@ -300,8 +307,15 @@ impl Cpu {
                     num_extension_words: 0,
                 }
             }
-            EffectiveAddressingMode::ARegIndirectWithDisplacement
-            | EffectiveAddressingMode::ARegIndirectWithIndex => {
+            EffectiveAddressingMode::ARegIndirectWithDisplacement => {
+                let extension_word = mem.get_signed_word(instr_address + 2);
+                let format = format!("(${:04X},A{})", extension_word, ea_register);
+                    EffectiveAddressDebug {
+                        format: format,
+                        num_extension_words: 1,
+                    }
+            }
+            EffectiveAddressingMode::ARegIndirectWithIndex => {
                 panic!("get_ea_format() UNKNOWN_EA {:?} {}", ea_mode, ea_register);
             }
             EffectiveAddressingMode::PcIndirectAndLotsMore => match ea_register {
