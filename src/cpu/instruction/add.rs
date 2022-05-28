@@ -8,7 +8,7 @@ use crate::register::{
     STATUS_REGISTER_MASK_NEGATIVE, STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
 };
 
-use super::{DisassemblyResult, InstructionExecutionResult};
+use super::{DisassemblyResult, InstructionExecutionResult, OperationSize};
 
 // Instruction State
 // =================
@@ -83,13 +83,13 @@ pub fn step<'a>(
     // TODO: Condition codes
     match opmode {
         BYTE_WITH_DN_AS_DEST => {
-            let ea_value = Cpu::get_ea_value_unsigned_byte(ea_mode, ea_register, instr_address, reg, mem);
+            let ea_value = Cpu::get_ea_value_unsigned_byte(ea_mode, ea_register, instr_address + 2, Some(OperationSize::Byte), reg, mem);
             // let in_mem = mem.get_unsigned_byte(ea);
             let in_reg = (reg.reg_d[register] & 0x000000ff) as u8;
-            let (in_reg, carry) = in_reg.overflowing_add(ea_value);
-            let in_mem_signed = Cpu::get_ea_value_signed_byte(ea_mode, ea_register, instr_address, reg, mem);
+            let (in_reg, carry) = in_reg.overflowing_add(ea_value.value);
+            let in_mem_signed = Cpu::get_ea_value_signed_byte(ea_mode, ea_register, instr_address + 2, Some(OperationSize::Byte), reg, mem);
             let in_reg_signed = (reg.reg_d[register] & 0x000000ff) as i8;
-            let (in_mem_signed, overflow) = in_reg_signed.overflowing_add(in_mem_signed);
+            let (in_mem_signed, overflow) = in_reg_signed.overflowing_add(in_mem_signed.value);
             reg.reg_d[register] = (reg.reg_d[register] & 0xffffff00) | (in_reg as u32);
             // let instr_comment = format!("adding {:#04x} to D{}", in_mem, register);
 
@@ -121,14 +121,14 @@ pub fn step<'a>(
             };
         }
         WORD_WITH_DN_AS_DEST => {
-            let in_mem = Cpu::get_ea_value_unsigned_word(ea_mode, ea_register, instr_address, reg, mem);
+            let in_mem = Cpu::get_ea_value_unsigned_word(ea_mode, ea_register, instr_address + 2, Some(OperationSize::Word), reg, mem);
             let in_reg = (reg.reg_d[register] & 0x0000ffff) as u16;
-            let (in_reg, carry) = in_reg.overflowing_add(in_mem);
-            let in_mem_signed = Cpu::get_ea_value_signed_word(ea_mode, ea_register, instr_address, reg, mem);
+            let (in_reg, carry) = in_reg.overflowing_add(in_mem.value);
+            let in_mem_signed = Cpu::get_ea_value_signed_word(ea_mode, ea_register, instr_address + 2, Some(OperationSize::Word), reg, mem);
             let in_reg_signed = (reg.reg_d[register] & 0x0000ffff) as i16;
-            let (in_mem_signed, overflow) = in_reg_signed.overflowing_add(in_mem_signed);
+            let (in_mem_signed, overflow) = in_reg_signed.overflowing_add(in_mem_signed.value);
             reg.reg_d[register] = (reg.reg_d[register] & 0xffff0000) | (in_reg as u32);
-            let instr_comment = format!("adding {:#06x} to D{}", in_mem, register);
+            // let instr_comment = format!("adding {:#06x} to D{}", in_mem, register);
 
             let mut status_register_flags = 0x0000;
             match carry {
@@ -158,12 +158,12 @@ pub fn step<'a>(
             };
         }
         LONG_WITH_DN_AS_DEST => {
-            let ea_value = Cpu::get_ea_value_unsigned_long(ea_mode, ea_register, instr_address, reg, mem);
+            let ea_value = Cpu::get_ea_value_unsigned_long(ea_mode, ea_register, instr_address + 2, None, reg, mem);
             let in_reg = reg.reg_d[register];
             let (in_reg, carry) = in_reg.overflowing_add(ea_value.value);
-            let ea_value_signed = Cpu::get_ea_value_signed_long(ea_mode, ea_register, instr_address, reg, mem);
+            let ea_value_signed = Cpu::get_ea_value_signed_long(ea_mode, ea_register, instr_address + 2, Some(OperationSize::Long), reg, mem);
             let in_reg_signed = reg.reg_d[register] as i32;
-            let (in_reg_signed, overflow) = in_reg_signed.overflowing_add(ea_value_signed);
+            let (in_reg_signed, overflow) = in_reg_signed.overflowing_add(ea_value_signed.value);
             reg.reg_d[register] = in_reg;
             // let instr_comment = format!("adding {:#010x} to D{}", in_mem, register);
 
@@ -179,7 +179,7 @@ pub fn step<'a>(
                 true => status_register_flags |= STATUS_REGISTER_MASK_OVERFLOW,
                 false => (),
             }
-            match ea_value_signed {
+            match ea_value_signed.value {
                 0 => status_register_flags |= STATUS_REGISTER_MASK_ZERO,
                 i32::MIN..=-1 => status_register_flags |= STATUS_REGISTER_MASK_NEGATIVE,
                 _ => (),
@@ -282,10 +282,10 @@ pub fn get_disassembly<'a>(
             };
         }
         LONG_WITH_DN_AS_DEST => {
-            // let in_mem = mem.get_unsigned_longword(ea);
+            // let in_mem = mem.get_unsigned_long(ea);
             // let in_reg = reg.reg_d[register];
             // let (in_reg, carry) = in_reg.overflowing_add(in_mem);
-            // let in_mem_signed = mem.get_signed_longword(ea);
+            // let in_mem_signed = mem.get_signed_long(ea);
             // let in_reg_signed = reg.reg_d[register] as i32;
             // let (in_reg_signed, overflow) = in_reg_signed.overflowing_add(in_mem_signed);
             // reg.reg_d[register] = in_reg;

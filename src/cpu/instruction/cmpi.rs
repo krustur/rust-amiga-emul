@@ -63,7 +63,7 @@ pub fn get_disassembly<'a>(
         OperationSize::Long => (
             String::from("CMPI.L"),
             2,
-            format!("#${:08X}", mem.get_unsigned_longword(instr_address + 2)),
+            format!("#${:08X}", mem.get_unsigned_long(instr_address + 2)),
         ),
     };
 

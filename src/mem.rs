@@ -28,9 +28,9 @@ impl Mem {
     /// # Arguments
     ///
     /// * `address` - Memory address as u32
-    pub fn get_unsigned_longword(self: &Mem, address: u32) -> u32 {
+    pub fn get_unsigned_long(self: &Mem, address: u32) -> u32 {
         let range = self.get_range(address);
-        let result = range.get_unsigned_longword(address);
+        let result = range.get_unsigned_long(address);
         result
     } 
 
@@ -39,9 +39,9 @@ impl Mem {
     /// # Arguments
     ///
     /// * `address` - Memory address as u32
-    pub fn get_signed_longword(self: &Mem, address: u32) -> i32 {
+    pub fn get_signed_long(self: &Mem, address: u32) -> i32 {
         let range = self.get_range(address);
-        let result = range.get_signed_longword(address);
+        let result = range.get_signed_long(address);
         result
     }
 

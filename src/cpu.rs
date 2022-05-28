@@ -7,8 +7,12 @@ use std::{convert::TryInto, fmt};
 
 pub mod instruction;
 
-pub struct EffectiveAddressValue<T> {
+pub struct EffectiveAddress {
     pub address: u32,
+    pub num_extension_words: u32,
+}
+
+pub struct EffectiveAddressValue<T> {
     pub value: T,
     pub num_extension_words: u32,
 }
@@ -33,8 +37,8 @@ pub struct Cpu {
 
 impl Cpu {
     pub fn new(mem: Mem) -> Cpu {
-        let reg_ssp = mem.get_unsigned_longword(0x0);
-        let reg_pc = mem.get_unsigned_longword(0x4);
+        let reg_ssp = mem.get_unsigned_long(0x0);
+        let reg_pc = mem.get_unsigned_long(0x4);
         let instructions = vec![
             Instruction::new(
                 String::from("ADD"),
@@ -213,7 +217,10 @@ impl Cpu {
         ea_mode
     }
 
-    fn extract_effective_addressing_mode_from_bit_pos(word: u16, bit_pos: u8) -> EffectiveAddressingMode {
+    fn extract_effective_addressing_mode_from_bit_pos(
+        word: u16,
+        bit_pos: u8,
+    ) -> EffectiveAddressingMode {
         let ea_mode = (word >> bit_pos) & 0x0007;
         let ea_mode = match FromPrimitive::from_u16(ea_mode) {
             Some(r) => r,
@@ -339,17 +346,17 @@ impl Cpu {
             EffectiveAddressingMode::ARegIndirectWithDisplacement => {
                 let extension_word = mem.get_signed_word(extension_address);
                 let format = format!("(${:04X},A{})", extension_word, ea_register);
-                    EffectiveAddressDebug {
-                        format: format,
-                        num_extension_words: 1,
-                    }
+                EffectiveAddressDebug {
+                    format: format,
+                    num_extension_words: 1,
+                }
             }
             EffectiveAddressingMode::ARegIndirectWithIndex => {
                 panic!("get_ea_format() UNKNOWN_EA {:?} {}", ea_mode, ea_register);
             }
             EffectiveAddressingMode::PcIndirectAndLotsMore => match ea_register {
                 0b000 => {
-                    // absolute short addressing mode
+                    // Absolute Short Addressing Mode
                     // (xxx).W
                     let extension_word = mem.get_signed_word(extension_address);
                     let format = format!("(${:04X}).W", extension_word);
@@ -359,13 +366,13 @@ impl Cpu {
                     }
                 }
                 0b001 => {
-                    // absolute long addressing mode
+                    // Absolute Long Addressing Mode
                     // (xxx).L
                     // let first_extension_word = mem.get_unsigned_word(instr_address + 2);
                     // let second_extension_word = mem.get_unsigned_word(instr_address + 4);
                     // let address =
                     //     u32::from(first_extension_word) << 16 | u32::from(second_extension_word);
-                    let address = mem.get_unsigned_longword(extension_address);
+                    let address = mem.get_unsigned_long(extension_address);
                     let format = format!("(${:08X}).L", address);
                     EffectiveAddressDebug {
                         format: format,
@@ -373,7 +380,7 @@ impl Cpu {
                     }
                 }
                 0b010 => {
-                    // PC indirect with displacement mode
+                    // Program Counter Indirect with Displacement Mode
                     // (d16,PC)
                     let extension_word = mem.get_signed_word(extension_address);
                     let ea = Cpu::get_address_with_i16_displacement(reg.reg_pc + 2, extension_word);
@@ -385,46 +392,46 @@ impl Cpu {
                     }
                 }
                 0b011 => {
+                    // Program Counter Indirect with Index (8-Bit Displacement) Mode
+                    // Program Counter Indirect with Index (Base Displacement) Mode
+                    // Program Counter Memory Indirect Postindexed Mode
+                    // Program Counter Memory Indirect Preindexed Mode
                     // (d8,PC,Xn)
+                    // (bd,PC,Xn,SIZE*SCALE)
+                    // ([bd,PC],Xn,SIZE*SCALE,od)
+                    // ([bd,PC],Xn,SIZE*SCALE,od)
                     panic!(
-                        "get_ea_format() UNKNOWN_PcIndirectAndLotsMore 0b011 {:?} {}",
+                        "get_ea_format() Unhandled PcIndirectAndLotsMore 0b011 {:?} {}",
                         ea_mode, ea_register
                     );
                 }
                 0b100 => {
                     // Immediate data
-                    // #<data>
+                    // #<xxx>
                     match operation_size {
                         None => panic!("Must have operation_size for Immediate data!"),
-                        Some(operation_size) => {
-                            match operation_size {
-                                OperationSize::Byte => {
-                                    let extension_word = mem.get_signed_byte(extension_address + 1);
-                                    EffectiveAddressDebug {
-                                        format: format!("#{}", extension_word),
-                                        num_extension_words: 1,
-                                    }
-                                }
-                                OperationSize::Word => {
-                                    EffectiveAddressDebug {
-                                        format: String::from("todo word"),
-                                        num_extension_words: 1,
-                                    }
-                                }
-                                OperationSize::Long => {
-                                    EffectiveAddressDebug {
-                                        format: String::from("todo long"),
-                                        num_extension_words: 2,
-                                    }
+                        Some(operation_size) => match operation_size {
+                            OperationSize::Byte => {
+                                let extension_word = mem.get_signed_byte(extension_address + 1);
+                                EffectiveAddressDebug {
+                                    format: format!("#{}", extension_word),
+                                    num_extension_words: 1,
                                 }
                             }
-        
-                        }
+                            OperationSize::Word => EffectiveAddressDebug {
+                                format: String::from("todo word"),
+                                num_extension_words: 1,
+                            },
+                            OperationSize::Long => EffectiveAddressDebug {
+                                format: String::from("todo long"),
+                                num_extension_words: 2,
+                            },
+                        },
                     }
                 }
                 _ => {
                     panic!(
-                        "get_ea_format() UNKNOWN_PcIndirectAndLotsMore {:?} {}",
+                        "get_ea_format() UNKNOWN PcIndirectAndLotsMore {:?} {}",
                         ea_mode, ea_register
                     );
                 }
@@ -432,213 +439,51 @@ impl Cpu {
         }
     }
 
-    // pub fn get_ea (
-    //     ea_mode: EffectiveAddressingMode,
-    //     ea_register: usize,
-    //     reg: &mut Register,
-    //     mem: &Mem,
-    // ) -> u32 {
-    //     match ea_mode {
-    //         EffectiveAddressingMode::DRegDirect => reg.reg_d[ea_register],
-    //         EffectiveAddressingMode::ARegDirect => reg.reg_a[ea_register],
-    //         EffectiveAddressingMode::ARegIndirect
-    //         | EffectiveAddressingMode::ARegIndirectWithPostIncrement => {
-    //             reg.reg_a[ea_register]
-    //         }
-    //         EffectiveAddressingMode::ARegIndirectWithPreDecrement => {
-    //             reg.reg_a[ea_register] += 1;
-    //             reg.reg_a[ea_register]
-    //         }
-    //         EffectiveAddressingMode::ARegIndirectWithDisplacement
-    //         | EffectiveAddressingMode::ARegIndirectWithIndex
-    //         | EffectiveAddressingMode::PcIndirectAndLotsMore => {
-    //             panic!(
-    //                 "get_ea() UNKNOWN_EA {:?} {}",
-    //                 ea_mode, ea_register
-    //             );
-    //         }
-    //     }
-    // }
-
-    pub fn get_ea_value_unsigned_byte(
+    pub fn get_ea(
         ea_mode: EffectiveAddressingMode,
         ea_register: usize,
-        instr_address: u32,
+        extension_address: u32,
+        operation_size: Option<OperationSize>,
         reg: &mut Register,
         mem: &Mem,
-    ) -> u8 {
+    ) -> EffectiveAddress {
         match ea_mode {
             EffectiveAddressingMode::DRegDirect => {
-                Cpu::get_unsigned_byte_from_unsigned_long(reg.reg_d[ea_register])
+                panic!("Cannot get Effective Address for 'Data Register Direct' EA mode");
             }
             EffectiveAddressingMode::ARegDirect => {
-                Cpu::get_unsigned_byte_from_unsigned_long(reg.reg_a[ea_register])
+                panic!("Cannot get Effective Address for 'Address Register Direct' EA mode");
             }
-            EffectiveAddressingMode::ARegIndirect
-            | EffectiveAddressingMode::ARegIndirectWithPostIncrement => {
-                mem.get_unsigned_byte(reg.reg_a[ea_register])
-            }
-            EffectiveAddressingMode::ARegIndirectWithPreDecrement => {
-                reg.reg_a[ea_register] += 1;
-                mem.get_unsigned_byte(reg.reg_a[ea_register])
-            }
-            EffectiveAddressingMode::ARegIndirectWithDisplacement
-            | EffectiveAddressingMode::ARegIndirectWithIndex
-            | EffectiveAddressingMode::PcIndirectAndLotsMore => {
-                panic!(
-                    "get_ea_value_unsigned_byte() UNKNOWN_EA {:?} {}",
-                    ea_mode, ea_register
-                );
-            }
-        }
-    }
-
-    pub fn get_ea_value_signed_byte(
-        ea_mode: EffectiveAddressingMode,
-        ea_register: usize,
-        instr_address: u32,
-        reg: &mut Register,
-        mem: &Mem,
-    ) -> i8 {
-        match ea_mode {
-            EffectiveAddressingMode::DRegDirect => {
-                Cpu::get_signed_byte_from_long(reg.reg_d[ea_register])
-            }
-            EffectiveAddressingMode::ARegDirect => {
-                Cpu::get_signed_byte_from_long(reg.reg_a[ea_register])
-            }
-            EffectiveAddressingMode::ARegIndirect
-            | EffectiveAddressingMode::ARegIndirectWithPostIncrement => {
-                mem.get_signed_byte(reg.reg_a[ea_register])
-            }
-            EffectiveAddressingMode::ARegIndirectWithPreDecrement => {
-                reg.reg_a[ea_register] += 1;
-                mem.get_signed_byte(reg.reg_a[ea_register])
-            }
-            EffectiveAddressingMode::ARegIndirectWithDisplacement
-            | EffectiveAddressingMode::ARegIndirectWithIndex
-            | EffectiveAddressingMode::PcIndirectAndLotsMore => {
-                panic!(
-                    "get_ea_value_signed_byte() UNKNOWN_EA {:?} {}",
-                    ea_mode, ea_register
-                );
-            }
-        }
-    }
-
-    pub fn get_ea_value_unsigned_word(
-        ea_mode: EffectiveAddressingMode,
-        ea_register: usize,
-        instr_address: u32,
-        reg: &mut Register,
-        mem: &Mem,
-    ) -> u16 {
-        match ea_mode {
-            EffectiveAddressingMode::DRegDirect => {
-                Cpu::get_unsigned_word_from_unsigned_long(reg.reg_d[ea_register])
-            }
-            EffectiveAddressingMode::ARegDirect => {
-                Cpu::get_unsigned_word_from_unsigned_long(reg.reg_a[ea_register])
-            }
-            EffectiveAddressingMode::ARegIndirect
-            | EffectiveAddressingMode::ARegIndirectWithPostIncrement => {
-                mem.get_unsigned_word(reg.reg_a[ea_register])
-            }
-            EffectiveAddressingMode::ARegIndirectWithPreDecrement => {
-                reg.reg_a[ea_register] += 1;
-                mem.get_unsigned_word(reg.reg_a[ea_register])
-            }
-            EffectiveAddressingMode::ARegIndirectWithDisplacement
-            | EffectiveAddressingMode::ARegIndirectWithIndex
-            | EffectiveAddressingMode::PcIndirectAndLotsMore => {
-                panic!(
-                    "get_ea_value_unsigned_word() UNKNOWN_EA {:?} {}",
-                    ea_mode, ea_register
-                );
-            }
-        }
-    }
-
-    pub fn get_ea_value_signed_word(
-        ea_mode: EffectiveAddressingMode,
-        ea_register: usize,
-        instr_address: u32,
-        reg: &mut Register,
-        mem: &Mem,
-    ) -> i16 {
-        match ea_mode {
-            EffectiveAddressingMode::DRegDirect => {
-                Cpu::get_signed_word_from_unsigned_long(reg.reg_d[ea_register])
-            }
-            EffectiveAddressingMode::ARegDirect => {
-                Cpu::get_signed_word_from_unsigned_long(reg.reg_a[ea_register])
-            }
-            EffectiveAddressingMode::ARegIndirect
-            | EffectiveAddressingMode::ARegIndirectWithPostIncrement => {
-                mem.get_signed_word(reg.reg_a[ea_register])
-            }
-            EffectiveAddressingMode::ARegIndirectWithPreDecrement => {
-                reg.reg_a[ea_register] += 1;
-                mem.get_signed_word(reg.reg_a[ea_register])
-            }
-            EffectiveAddressingMode::ARegIndirectWithDisplacement
-            | EffectiveAddressingMode::ARegIndirectWithIndex
-            | EffectiveAddressingMode::PcIndirectAndLotsMore => {
-                panic!(
-                    "get_ea_value_signed_word() UNKNOWN_EA {:?} {}",
-                    ea_mode, ea_register
-                );
-            }
-        }
-    }
-
-    pub fn get_ea_value_unsigned_long(
-        ea_mode: EffectiveAddressingMode,
-        ea_register: usize,
-        instr_address: u32,
-        reg: &mut Register,
-        mem: &Mem,
-    ) -> EffectiveAddressValue<u32> {
-        match ea_mode {
-            EffectiveAddressingMode::DRegDirect => {
-                let address = reg.reg_d[ea_register];
-                let value = reg.reg_d[ea_register];
-                EffectiveAddressValue {
+            EffectiveAddressingMode::ARegIndirect => {
+                let address = reg.reg_a[ea_register];
+                EffectiveAddress {
                     address: address,
                     num_extension_words: 0,
-                    value: value,
                 }
             }
-            EffectiveAddressingMode::ARegDirect => {
+            EffectiveAddressingMode::ARegIndirectWithPostIncrement => {
                 let address = reg.reg_a[ea_register];
-                let value = reg.reg_a[ea_register];
-                EffectiveAddressValue {
+                let size_in_bytes = match operation_size {
+                    None => panic!("Must have operation_size for ARegIndirectWithPostIncrement!"),
+                    Some(operation_size) => operation_size.size_in_bytes(),
+                };
+                reg.reg_a[ea_register] += size_in_bytes;
+                EffectiveAddress {
                     address: address,
                     num_extension_words: 0,
-                    value: value,
                 }
             }
-            EffectiveAddressingMode::ARegIndirect
-            | EffectiveAddressingMode::ARegIndirectWithPostIncrement => {
-                let address = reg.reg_a[ea_register];
-                let value = mem.get_unsigned_longword(address);
-                let res = EffectiveAddressValue {
-                    address: address,
-                    num_extension_words: 0,
-                    value: value,
-                };
-                res
-            }
             EffectiveAddressingMode::ARegIndirectWithPreDecrement => {
-                reg.reg_a[ea_register] += 1;
+                let size_in_bytes = match operation_size {
+                    None => panic!("Must have operation_size for ARegIndirectWithPreDecrement!"),
+                    Some(operation_size) => operation_size.size_in_bytes(),
+                };
+                reg.reg_a[ea_register] -= size_in_bytes;
                 let address = reg.reg_a[ea_register];
-                let value = mem.get_unsigned_longword(address);
-                let res = EffectiveAddressValue {
+                EffectiveAddress {
                     address: address,
                     num_extension_words: 0,
-                    value: value,
-                };
-                res
+                }
             }
             EffectiveAddressingMode::ARegIndirectWithDisplacement
             | EffectiveAddressingMode::ARegIndirectWithIndex => {
@@ -649,35 +494,29 @@ impl Cpu {
             }
             EffectiveAddressingMode::PcIndirectAndLotsMore => match ea_register {
                 0b000 => {
-                    // absolute short addressing mode
+                    // Absolute Short Addressing Mode
                     // (xxx).W
-                    let extension_word = mem.get_signed_word(instr_address + 2);
+                    let extension_word = mem.get_signed_word(extension_address);
                     let address = Cpu::sign_extend_i16(extension_word);
                     // let ea_format = format!("({:#06x}).W", extension_word);
-                    let value = mem.get_unsigned_longword(address);
-                    EffectiveAddressValue {
+                    EffectiveAddress {
                         address: address,
                         num_extension_words: 1,
-                        value: value,
                     }
                 }
                 0b001 => {
-                    // absolute long addressing mode
+                    // Absolute Long Addressing Mode
                     // (xxx).L
-                    let first_extension_word = mem.get_unsigned_word(instr_address + 2);
-                    let second_extension_word = mem.get_unsigned_word(instr_address + 4);
-                    let address =
-                        u32::from(first_extension_word) << 16 | u32::from(second_extension_word);
-                    let value = mem.get_unsigned_longword(address);
-                    EffectiveAddressValue {
+                    let address = mem.get_unsigned_long(extension_address);
+                    EffectiveAddress {
                         address: address,
                         num_extension_words: 2,
-                        value: value,
                     }
                 }
                 0b010 => {
-                    // // PC indirect with displacement mode
-                    // // (d16,PC)
+                    // Program Counter Indirect with Displacement Mode
+                    // (d16,PC)
+
                     // let extension_word = self.memory.get_signed_word(instr_addr + 2);
                     // let ea = Cpu::get_address_with_i16_displacement(
                     //     self.register.reg_pc + 2,
@@ -706,20 +545,32 @@ impl Cpu {
                     // // );
                     // // (exec_result, debug_result)
                     panic!(
-                        "get_ea_value_signed_long() UNKNOWN_PcIndirectAndLotsMore 0b010 {:?} {}",
+                        "get_ea() Unhandled PcIndirectAndLotsMore 0b010 {:?} {}",
                         ea_mode, ea_register
                     );
                 }
                 0b011 => {
+                    // Program Counter Indirect with Index (8-Bit Displacement) Mode
+                    // Program Counter Indirect with Index (Base Displacement) Mode
+                    // Program Counter Memory Indirect Postindexed Mode
+                    // Program Counter Memory Indirect Preindexed Mode
                     // (d8,PC,Xn)
+                    // (bd,PC,Xn,SIZE*SCALE)
+                    // ([bd,PC],Xn,SIZE*SCALE,od)
+                    // ([bd,PC],Xn,SIZE*SCALE,od)
                     panic!(
-                        "get_ea_value_signed_long() UNKNOWN_PcIndirectAndLotsMore 0b011 {:?} {}",
+                        "get_ea() Unhandled PcIndirectAndLotsMore 0b011 {:?} {}",
                         ea_mode, ea_register
                     );
                 }
+                0b100 => {
+                    // Immediate data
+                    // #<xxx>
+                    panic!("Cannot get Effective Address for 'Data Register Direct' EA mode");
+                }
                 _ => {
                     panic!(
-                        "get_ea_value_signed_long() UNKNOWN_PcIndirectAndLotsMore {:?} {}",
+                        "get_ea() UNKNOWN PcIndirectAndLotsMore {:?} {}",
                         ea_mode, ea_register
                     );
                 }
@@ -727,101 +578,309 @@ impl Cpu {
         }
     }
 
+    pub fn get_ea_value_unsigned_byte(
+        ea_mode: EffectiveAddressingMode,
+        ea_register: usize,
+        extension_address: u32,
+        operation_size: Option<OperationSize>,
+        reg: &mut Register,
+        mem: &Mem,
+    ) -> EffectiveAddressValue<u8> {
+        match ea_mode {
+            EffectiveAddressingMode::DRegDirect => {
+                let value = Cpu::get_unsigned_byte_from_unsigned_long(reg.reg_d[ea_register]);
+                EffectiveAddressValue {
+                    num_extension_words: 0,
+                    value: value,
+                }
+            }
+            EffectiveAddressingMode::ARegDirect => {
+                let value = Cpu::get_unsigned_byte_from_unsigned_long(reg.reg_a[ea_register]);
+                EffectiveAddressValue {
+                    num_extension_words: 0,
+                    value: value,
+                }
+            }
+            EffectiveAddressingMode::PcIndirectAndLotsMore if ea_register == 0b100 => {
+                // Immediate data
+                // #<xxx>
+                todo!();
+                // EffectiveAddressValue {
+                //     address: address,
+                //     num_extension_words: 1,
+                //     value: value,
+                // }
+            }
+            _ => {
+                let ea = Cpu::get_ea(
+                    ea_mode,
+                    ea_register,
+                    extension_address,
+                    operation_size,
+                    reg,
+                    mem,
+                );
+                let value = mem.get_unsigned_byte(ea.address);
+                EffectiveAddressValue {
+                    num_extension_words: ea.num_extension_words,
+                    value: value,
+                }
+            }
+        }
+    }
+
+    pub fn get_ea_value_signed_byte(
+        ea_mode: EffectiveAddressingMode,
+        ea_register: usize,
+        extension_address: u32,
+        operation_size: Option<OperationSize>,
+        reg: &mut Register,
+        mem: &Mem,
+    ) -> EffectiveAddressValue<i8> {
+        match ea_mode {
+            EffectiveAddressingMode::DRegDirect => {
+                let value = Cpu::get_signed_byte_from_long(reg.reg_d[ea_register]);
+                EffectiveAddressValue {
+                    num_extension_words: 0,
+                    value: value,
+                }
+            }
+            EffectiveAddressingMode::ARegDirect => {
+                let value = Cpu::get_signed_byte_from_long(reg.reg_a[ea_register]);
+                EffectiveAddressValue {
+                    num_extension_words: 0,
+                    value: value,
+                }
+            }
+            EffectiveAddressingMode::PcIndirectAndLotsMore if ea_register == 0b100 => {
+                // Immediate data
+                // #<xxx>
+                todo!();
+                // EffectiveAddressValue {
+                //     address: address,
+                //     num_extension_words: 1,
+                //     value: value,
+                // }
+            }
+            _ => {
+                let ea = Cpu::get_ea(
+                    ea_mode,
+                    ea_register,
+                    extension_address,
+                    operation_size,
+                    reg,
+                    mem,
+                );
+                let value = mem.get_signed_byte(ea.address);
+                EffectiveAddressValue {
+                    num_extension_words: ea.num_extension_words,
+                    value: value,
+                }
+            }
+        }
+    }
+
+    pub fn get_ea_value_unsigned_word(
+        ea_mode: EffectiveAddressingMode,
+        ea_register: usize,
+        extension_address: u32,
+        operation_size: Option<OperationSize>,
+        reg: &mut Register,
+        mem: &Mem,
+    ) -> EffectiveAddressValue<u16> {
+        match ea_mode {
+            EffectiveAddressingMode::DRegDirect => {
+                let value = Cpu::get_unsigned_word_from_unsigned_long(reg.reg_d[ea_register]);
+                EffectiveAddressValue {
+                    num_extension_words: 0,
+                    value: value,
+                }
+            }
+            EffectiveAddressingMode::ARegDirect => {
+                let value = Cpu::get_unsigned_word_from_unsigned_long(reg.reg_a[ea_register]);
+                EffectiveAddressValue {
+                    num_extension_words: 0,
+                    value: value,
+                }
+            }
+            EffectiveAddressingMode::PcIndirectAndLotsMore if ea_register == 0b100 => {
+                // Immediate data
+                // #<xxx>
+                todo!();
+                // EffectiveAddressValue {
+                //     address: address,
+                //     num_extension_words: 1,
+                //     value: value,
+                // }
+            }
+            _ => {
+                let ea = Cpu::get_ea(
+                    ea_mode,
+                    ea_register,
+                    extension_address,
+                    operation_size,
+                    reg,
+                    mem,
+                );
+                let value = mem.get_unsigned_word(ea.address);
+                EffectiveAddressValue {
+                    num_extension_words: ea.num_extension_words,
+                    value: value,
+                }
+            }
+        }
+    }
+
+    pub fn get_ea_value_signed_word(
+        ea_mode: EffectiveAddressingMode,
+        ea_register: usize,
+        extension_address: u32,
+        operation_size: Option<OperationSize>,
+        reg: &mut Register,
+        mem: &Mem,
+    ) -> EffectiveAddressValue<i16> {
+        match ea_mode {
+            EffectiveAddressingMode::DRegDirect => {
+                let value = Cpu::get_signed_word_from_unsigned_long(reg.reg_d[ea_register]);
+                EffectiveAddressValue {
+                    num_extension_words: 0,
+                    value: value,
+                }
+            }
+            EffectiveAddressingMode::ARegDirect => {
+                let value = Cpu::get_signed_word_from_unsigned_long(reg.reg_a[ea_register]);
+                EffectiveAddressValue {
+                    num_extension_words: 0,
+                    value: value,
+                }
+            }
+            EffectiveAddressingMode::PcIndirectAndLotsMore if ea_register == 0b100 => {
+                // Immediate data
+                // #<xxx>
+                todo!();
+                // EffectiveAddressValue {
+                //     address: address,
+                //     num_extension_words: 1,
+                //     value: value,
+                // }
+            }
+            _ => {
+                let ea = Cpu::get_ea(
+                    ea_mode,
+                    ea_register,
+                    extension_address,
+                    operation_size,
+                    reg,
+                    mem,
+                );
+                let value = mem.get_signed_word(ea.address);
+                EffectiveAddressValue {
+                    num_extension_words: ea.num_extension_words,
+                    value: value,
+                }
+            }
+        }
+    }
+
+    pub fn get_ea_value_unsigned_long(
+        ea_mode: EffectiveAddressingMode,
+        ea_register: usize,
+        extension_address: u32,
+        operation_size: Option<OperationSize>,
+        reg: &mut Register,
+        mem: &Mem,
+    ) -> EffectiveAddressValue<u32> {
+        match ea_mode {
+            EffectiveAddressingMode::DRegDirect => {
+                let value = reg.reg_d[ea_register];
+                EffectiveAddressValue {
+                    num_extension_words: 0,
+                    value: value,
+                }
+            }
+            EffectiveAddressingMode::ARegDirect => {
+                let value = reg.reg_a[ea_register];
+                EffectiveAddressValue {
+                    num_extension_words: 0,
+                    value: value,
+                }
+            }
+            EffectiveAddressingMode::PcIndirectAndLotsMore if ea_register == 0b100 => {
+                // Immediate data
+                // #<xxx>
+                todo!();
+                // EffectiveAddressValue {
+                //     address: address,
+                //     num_extension_words: 1,
+                //     value: value,
+                // }
+            }
+            _ => {
+                let ea = Cpu::get_ea(
+                    ea_mode,
+                    ea_register,
+                    extension_address,
+                    operation_size,
+                    reg,
+                    mem,
+                );
+                let value = mem.get_unsigned_long(ea.address);
+                EffectiveAddressValue {
+                    num_extension_words: ea.num_extension_words,
+                    value: value,
+                }
+            }
+        }
+    }
+
     pub fn get_ea_value_signed_long(
         ea_mode: EffectiveAddressingMode,
         ea_register: usize,
-        instr_address: u32,
+        extension_address: u32,
+        operation_size: Option<OperationSize>,
         reg: &mut Register,
         mem: &Mem,
-    ) -> i32 {
+    ) -> EffectiveAddressValue<i32> {
         match ea_mode {
             EffectiveAddressingMode::DRegDirect => {
-                Cpu::get_signed_long_from_unsigned_long(reg.reg_d[ea_register])
+                let value = Cpu::get_signed_long_from_unsigned_long(reg.reg_d[ea_register]);
+                EffectiveAddressValue {
+                    num_extension_words: 0,
+                    value: value,
+                }
             }
             EffectiveAddressingMode::ARegDirect => {
-                Cpu::get_signed_long_from_unsigned_long(reg.reg_a[ea_register])
+                let value = Cpu::get_signed_long_from_unsigned_long(reg.reg_a[ea_register]);
+                EffectiveAddressValue {
+                    num_extension_words: 0,
+                    value: value,
+                }
             }
-            EffectiveAddressingMode::ARegIndirect
-            | EffectiveAddressingMode::ARegIndirectWithPostIncrement => {
-                mem.get_signed_longword(reg.reg_a[ea_register])
+            EffectiveAddressingMode::PcIndirectAndLotsMore if ea_register == 0b100 => {
+                // Immediate data
+                // #<xxx>
+                todo!();
+                // EffectiveAddressValue {
+                //     address: address,
+                //     num_extension_words: 1,
+                //     value: value,
+                // }
             }
-            EffectiveAddressingMode::ARegIndirectWithPreDecrement => {
-                reg.reg_a[ea_register] += 1;
-                mem.get_signed_longword(reg.reg_a[ea_register])
-            }
-            EffectiveAddressingMode::ARegIndirectWithDisplacement
-            | EffectiveAddressingMode::ARegIndirectWithIndex => {
-                panic!(
-                    "get_ea_value_signed_long() UNKNOWN_EA {:?} {}",
-                    ea_mode, ea_register
+            _ => {
+                let ea = Cpu::get_ea(
+                    ea_mode,
+                    ea_register,
+                    extension_address,
+                    operation_size,
+                    reg,
+                    mem,
                 );
+                let value = mem.get_signed_long(ea.address);
+                EffectiveAddressValue {
+                    num_extension_words: ea.num_extension_words,
+                    value: value,
+                }
             }
-            EffectiveAddressingMode::PcIndirectAndLotsMore => match ea_register {
-                0b000 => {
-                    // absolute short addressing mode
-                    // (xxx).W
-                    let extension_word = mem.get_signed_word(instr_address + 2);
-                    let ea = Cpu::sign_extend_i16(extension_word);
-                    // let ea_format = format!("({:#06x}).W", extension_word);
-                    // BUG: This should p
-                    mem.get_signed_longword(ea)
-                }
-                0b001 => {
-                    // (xxx).L
-                    panic!(
-                        "get_ea_value_signed_long() UNKNOWN_EA {:?} {}",
-                        ea_mode, ea_register
-                    );
-                }
-                0b010 => {
-                    // // PC indirect with displacement mode
-                    // // (d16,PC)
-                    // let extension_word = self.memory.get_signed_word(instr_addr + 2);
-                    // let ea = Cpu::get_address_with_i16_displacement(
-                    //     self.register.reg_pc + 2,
-                    //     extension_word,
-                    // );
-                    // //  let operand =
-                    // //  self.memory.get_unsigned_longword_with_i16_displacement(
-                    // //         instr_addr + 2,
-                    // //         extension_word,
-                    // //     );
-                    // let ea_format = format!("({:#06x},PC)", extension_word);
-                    // // let debug_result = common_get_debug(
-                    // //     instr_addr,
-                    // //     instr_word,
-                    // //     &mut self.register,
-                    // //     &mut self.memory,
-                    // //     ea_format,
-                    // //     ea,
-                    // // );
-                    // // let exec_result = common_step(
-                    // //     instr_addr,
-                    // //     instr_word,
-                    // //     &mut self.register,
-                    // //     &mut self.memory,
-                    // //     ea,
-                    // // );
-                    // // (exec_result, debug_result)
-                    panic!(
-                        "get_ea_value_signed_long() UNKNOWN_PcIndirectAndLotsMore {:?} {}",
-                        ea_mode, ea_register
-                    );
-                }
-                0b011 => {
-                    // (d8,PC,Xn)
-                    panic!(
-                        "get_ea_value_signed_long() UNKNOWN_PcIndirectAndLotsMore {:?} {}",
-                        ea_mode, ea_register
-                    );
-                }
-                _ => {
-                    panic!(
-                        "get_ea_value_signed_long() UNKNOWN_PcIndirectAndLotsMore {:?} {}",
-                        ea_mode, ea_register
-                    );
-                }
-            },
         }
     }
 

@@ -47,14 +47,14 @@ impl MemRange {
         return index.try_into().unwrap();
     }
 
-    pub fn get_unsigned_longword(self: &MemRange, address: u32) -> u32 {
+    pub fn get_unsigned_long(self: &MemRange, address: u32) -> u32 {
         let index = self.remap_address_to_index(address);
         let mut bytes = &self.bytes[index..index + 4];
         let result = bytes.read_u32::<BigEndian>().unwrap();
         result
     }
 
-    pub fn get_signed_longword(self: &MemRange, address: u32) -> i32 {
+    pub fn get_signed_long(self: &MemRange, address: u32) -> i32 {
         let index = self.remap_address_to_index(address);
         let mut bytes = &self.bytes[index..index + 4];
         let result = bytes.read_i32::<BigEndian>().unwrap();
