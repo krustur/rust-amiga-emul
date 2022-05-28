@@ -37,7 +37,7 @@ fn main() {
     cpu.print_registers();
 
     let mut disassembly_ptr = cpu.register.reg_pc;
-    for i in 0 .. 20 {
+    for i in 0 .. 30 {
         let disassembly_result = cpu.get_disassembly(disassembly_ptr);
         match &disassembly_result {
             DisassemblyResult::Done{name, operands_format, instr_address, next_instr_address} => {

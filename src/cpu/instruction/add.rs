@@ -158,7 +158,7 @@ pub fn step<'a>(
             };
         }
         LONG_WITH_DN_AS_DEST => {
-            let ea_value = Cpu::get_ea_value_unsigned_long(ea_mode, ea_register, instr_address + 2, None, reg, mem);
+            let ea_value = Cpu::get_ea_value_unsigned_long(ea_mode, ea_register, instr_address + 2, Some(OperationSize::Long), reg, mem);
             let in_reg = reg.reg_d[register];
             let (in_reg, carry) = in_reg.overflowing_add(ea_value.value);
             let ea_value_signed = Cpu::get_ea_value_signed_long(ea_mode, ea_register, instr_address + 2, Some(OperationSize::Long), reg, mem);
