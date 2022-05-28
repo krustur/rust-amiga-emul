@@ -40,12 +40,8 @@ impl Cpu {
                 String::from("ADD"),
                 0xf000,
                 0xd000,
-                // InstructionFormat::EffectiveAddress {
                 instruction::add::step,
                 instruction::add::get_disassembly,
-                // areg_direct_step: instruction::add::areg_direct_step_func,
-                // areg_direct_get_debug: instruction::add::areg_direct_get_debug,
-                // },
             ),
             Instruction::new(
                 String::from("DBcc"),
@@ -276,23 +272,23 @@ impl Cpu {
         }
     }
 
-    pub fn get_byte_unsigned_from_long(long: u32) -> u8 {
+    pub fn get_unsigned_byte_from_unsigned_long(long: u32) -> u8 {
         (long & 0x000000ff) as u8
     }
 
-    pub fn get_word_unsigned_from_long(long: u32) -> u16 {
+    pub fn get_unsigned_word_from_unsigned_long(long: u32) -> u16 {
         (long & 0x0000ffff) as u16
     }
 
-    pub fn get_byte_signed_from_long(long: u32) -> i8 {
+    pub fn get_signed_byte_from_long(long: u32) -> i8 {
         (long & 0x000000ff) as i8
     }
 
-    pub fn get_word_signed_from_long(long: u32) -> i16 {
+    pub fn get_signed_word_from_unsigned_long(long: u32) -> i16 {
         (long & 0x0000ffff) as i16
     }
 
-    pub fn get_long_signed_from_long(long: u32) -> i32 {
+    pub fn get_signed_long_from_unsigned_long(long: u32) -> i32 {
         long as i32
     }
 
@@ -473,10 +469,10 @@ impl Cpu {
     ) -> u8 {
         match ea_mode {
             EffectiveAddressingMode::DRegDirect => {
-                Cpu::get_byte_unsigned_from_long(reg.reg_d[ea_register])
+                Cpu::get_unsigned_byte_from_unsigned_long(reg.reg_d[ea_register])
             }
             EffectiveAddressingMode::ARegDirect => {
-                Cpu::get_byte_unsigned_from_long(reg.reg_a[ea_register])
+                Cpu::get_unsigned_byte_from_unsigned_long(reg.reg_a[ea_register])
             }
             EffectiveAddressingMode::ARegIndirect
             | EffectiveAddressingMode::ARegIndirectWithPostIncrement => {
@@ -506,10 +502,10 @@ impl Cpu {
     ) -> i8 {
         match ea_mode {
             EffectiveAddressingMode::DRegDirect => {
-                Cpu::get_byte_signed_from_long(reg.reg_d[ea_register])
+                Cpu::get_signed_byte_from_long(reg.reg_d[ea_register])
             }
             EffectiveAddressingMode::ARegDirect => {
-                Cpu::get_byte_signed_from_long(reg.reg_a[ea_register])
+                Cpu::get_signed_byte_from_long(reg.reg_a[ea_register])
             }
             EffectiveAddressingMode::ARegIndirect
             | EffectiveAddressingMode::ARegIndirectWithPostIncrement => {
@@ -539,10 +535,10 @@ impl Cpu {
     ) -> u16 {
         match ea_mode {
             EffectiveAddressingMode::DRegDirect => {
-                Cpu::get_word_unsigned_from_long(reg.reg_d[ea_register])
+                Cpu::get_unsigned_word_from_unsigned_long(reg.reg_d[ea_register])
             }
             EffectiveAddressingMode::ARegDirect => {
-                Cpu::get_word_unsigned_from_long(reg.reg_a[ea_register])
+                Cpu::get_unsigned_word_from_unsigned_long(reg.reg_a[ea_register])
             }
             EffectiveAddressingMode::ARegIndirect
             | EffectiveAddressingMode::ARegIndirectWithPostIncrement => {
@@ -572,10 +568,10 @@ impl Cpu {
     ) -> i16 {
         match ea_mode {
             EffectiveAddressingMode::DRegDirect => {
-                Cpu::get_word_signed_from_long(reg.reg_d[ea_register])
+                Cpu::get_signed_word_from_unsigned_long(reg.reg_d[ea_register])
             }
             EffectiveAddressingMode::ARegDirect => {
-                Cpu::get_word_signed_from_long(reg.reg_a[ea_register])
+                Cpu::get_signed_word_from_unsigned_long(reg.reg_a[ea_register])
             }
             EffectiveAddressingMode::ARegIndirect
             | EffectiveAddressingMode::ARegIndirectWithPostIncrement => {
@@ -740,10 +736,10 @@ impl Cpu {
     ) -> i32 {
         match ea_mode {
             EffectiveAddressingMode::DRegDirect => {
-                Cpu::get_long_signed_from_long(reg.reg_d[ea_register])
+                Cpu::get_signed_long_from_unsigned_long(reg.reg_d[ea_register])
             }
             EffectiveAddressingMode::ARegDirect => {
-                Cpu::get_long_signed_from_long(reg.reg_a[ea_register])
+                Cpu::get_signed_long_from_unsigned_long(reg.reg_a[ea_register])
             }
             EffectiveAddressingMode::ARegIndirect
             | EffectiveAddressingMode::ARegIndirectWithPostIncrement => {
