@@ -1,5 +1,5 @@
 [package]
-name = "rust-render"
+name = "rust-amiga-emul"
 version = "0.1.0"
 authors = ["Krister Jansson <krustur@gmail.com>"]
 edition = "2018"
