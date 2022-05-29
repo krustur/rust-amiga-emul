@@ -1,5 +1,5 @@
 use crate::{
-    cpu::{instruction::PcResult, Cpu},
+    cpu::Cpu,
     mem::Mem,
     register::Register,
 };

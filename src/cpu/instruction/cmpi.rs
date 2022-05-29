@@ -1,10 +1,10 @@
 use crate::{
-    cpu::{instruction::PcResult, Cpu},
+    cpu::Cpu,
     mem::Mem,
     register::Register,
 };
 
-use super::{ConditionalTest, DisassemblyResult, InstructionExecutionResult, OperationSize};
+use super::{DisassemblyResult, InstructionExecutionResult, OperationSize};
 
 // Instruction State
 // =================

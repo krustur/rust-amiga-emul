@@ -1,6 +1,5 @@
 use std::panic;
-
-use crate::cpu::instruction::{EffectiveAddressingMode, PcResult};
+use crate::cpu::instruction::PcResult;
 use crate::cpu::Cpu;
 use crate::mem::Mem;
 use crate::register::{

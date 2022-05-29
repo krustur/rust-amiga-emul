@@ -1,10 +1,10 @@
 use crate::{
-    cpu::{instruction::PcResult, Cpu},
+    cpu::Cpu,
     mem::Mem,
     register::Register,
 };
 
-use super::{ConditionalTest, DisassemblyResult, InstructionExecutionResult};
+use super::{DisassemblyResult, InstructionExecutionResult};
 
 const CMP_BYTE: usize = 0b000;
 const CMP_WORD: usize = 0b001;
@@ -52,7 +52,7 @@ pub fn get_disassembly<'a>(
     let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
     let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
 
-    let ea_format = Cpu::get_ea_format(ea_mode, ea_register, instr_address, None, reg, mem);
+    let ea_format = Cpu::get_ea_format(ea_mode, ea_register, instr_address + 2, None, reg, mem);
 
     let (name, register_type) = match opmode {
         CMP_BYTE => (String::from("CMP.B"), 'D'),
