@@ -23,7 +23,7 @@ impl Mem {
         &self.ranges[pos]
     }
 
-    /// Get's a unsigned longword (u32) from specified memory address
+    /// Get's a unsigned long (u32) from specified memory address
     ///
     /// # Arguments
     ///
@@ -34,7 +34,7 @@ impl Mem {
         result
     } 
 
-    /// Get's a signed longword (i32) from specified memory address
+    /// Get's a signed long (i32) from specified memory address
     ///
     /// # Arguments
     ///

@@ -50,7 +50,8 @@ fn main() {
 
     loop {
         // cpu.print_registers();
-        // cpu.get_next_disassembly();
+        // let disassembly_result = cpu.get_next_disassembly();
+        // cpu.print_disassembly(&disassembly_result);
         cpu.execute_next_instruction();
     }
     // cpu.print_registers();

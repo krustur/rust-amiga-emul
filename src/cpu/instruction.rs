@@ -195,8 +195,10 @@ pub enum ConditionalTest {
     LT = 0b1101,
     /// Greater Than (N & V & !Z) | (!N & !V & !Z)
     GT = 0b1110,
+
     /// Less or Equal (Z) | (N & !V) | (!N & V)
     LE = 0b1111,
+    
 }
 
 impl fmt::Display for ConditionalTest {

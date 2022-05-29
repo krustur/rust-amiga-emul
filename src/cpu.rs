@@ -29,6 +29,18 @@ impl fmt::Display for EffectiveAddressDebug {
     }
 }
 
+#[derive(Debug, PartialEq)]
+pub struct ResultWithStatusRegister<T> {
+    pub result: T,
+    pub status_register: u16
+}
+
+impl<T> ResultWithStatusRegister<T> {
+    pub fn merge_status_register(&self, status_register: u16, status_register_mask : u16) -> u16 {
+        (status_register & !status_register_mask) | (self.status_register & status_register_mask)
+    }
+}
+
 pub struct Cpu {
     pub register: Register,
     pub memory: Mem,
@@ -299,6 +311,49 @@ impl Cpu {
         long as i32
     }
 
+    pub fn add_unsigned_bytes(value_1: u8, value_2: u8) -> ResultWithStatusRegister<u8> {
+        let (result, carry) = value_2.overflowing_add(value_1);
+        let value_1_signed = value_1 as i8;
+        let value_2_signed = value_2 as i8;
+        
+        let (result_signed, overflow) = value_2_signed.overflowing_add(value_1_signed);
+        
+        // let carrys = match carry {
+        //     false => String::from(""),
+        //     true => String::from("carry"),
+        // };
+        // let overflows = match overflow {
+        //     false => String::from(""),
+        //     true => String::from("overflow"),
+        // };
+
+        // println!("value_1:        {:4}, value_2:        {:4}, result:        {:4} {:5}", value_1, value_2, result, carrys);
+        // println!("value_1_signed: {:4}, value_2_signed: {:4}, result_signed: {:4} {:5}", value_1_signed, value_2_signed, result_signed, overflows);
+
+        let mut status_register = 0x0000;
+        match carry {
+            true => {
+                status_register |=
+                    STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND
+            }
+            false => (),
+        }
+        match overflow {
+            true => status_register |= STATUS_REGISTER_MASK_OVERFLOW,
+            false => (),
+        }
+        match result_signed {
+            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            i8::MIN..=-1 => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+            _ => (),
+        }
+
+        ResultWithStatusRegister { 
+            result,
+            status_register
+        }
+    }
+
     pub fn get_ea_format(
         ea_mode: EffectiveAddressingMode,
         ea_register: usize,
@@ -467,6 +522,7 @@ impl Cpu {
                     None => panic!("Must have operation_size for ARegIndirectWithPostIncrement!"),
                     Some(operation_size) => operation_size.size_in_bytes(),
                 };
+                // println!("ARegIndirectWithPostIncrement: A{}", ea_register);
                 reg.reg_a[ea_register] += size_in_bytes;
                 EffectiveAddress {
                     address: address,
@@ -478,6 +534,8 @@ impl Cpu {
                     None => panic!("Must have operation_size for ARegIndirectWithPreDecrement!"),
                     Some(operation_size) => operation_size.size_in_bytes(),
                 };
+
+                // println!("ARegIndirectWithPreDecrement: A{}", ea_register);
                 reg.reg_a[ea_register] -= size_in_bytes;
                 let address = reg.reg_a[ea_register];
                 EffectiveAddress {
@@ -933,29 +991,38 @@ impl Cpu {
             ConditionalTest::EQ => reg.reg_sr & STATUS_REGISTER_MASK_ZERO != 0x0000,
             ConditionalTest::F => false,
             ConditionalTest::GE => {
-                (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE == 0x0000
-                    && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW == 0x0000)
-                    || (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE != 0x0000
-                        && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW != 0x0000)
+                let ge_mask = STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW;
+                let sr = reg.reg_sr & ge_mask;
+                sr == ge_mask || sr == 0x0000
+                // (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE == 0x0000
+                //     && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW == 0x0000)
+                //     || (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE != 0x0000
+                //         && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW != 0x0000)
             }
             ConditionalTest::GT => {
-                (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE != 0x0000
-                    && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW != 0x0000
-                    && reg.reg_sr & STATUS_REGISTER_MASK_ZERO == 0x0000)
-                    || (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE == 0x0000
-                        && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW == 0x0000
-                        && reg.reg_sr & STATUS_REGISTER_MASK_ZERO == 0x0000)
+                let gt_mask = STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW | STATUS_REGISTER_MASK_ZERO;
+                let sr = reg.reg_sr & gt_mask;
+                sr == STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW || sr == 0x0000
+                // (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE != 0x0000
+                //     && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW != 0x0000
+                //     && reg.reg_sr & STATUS_REGISTER_MASK_ZERO == 0x0000)
+                //     || (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE == 0x0000
+                //         && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW == 0x0000
+                //         && reg.reg_sr & STATUS_REGISTER_MASK_ZERO == 0x0000)
             }
             ConditionalTest::HI => {
                 reg.reg_sr & STATUS_REGISTER_MASK_CARRY == 0x0000
                     && reg.reg_sr & STATUS_REGISTER_MASK_ZERO == 0x0000
             }
             ConditionalTest::LE => {
-                (reg.reg_sr & STATUS_REGISTER_MASK_ZERO != 0x0000)
-                    || (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE != 0x0000
-                        && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW == 0x0000)
-                    || (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE == 0x0000
-                        && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW != 0x0000)
+                let le_mask = STATUS_REGISTER_MASK_ZERO | STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW;
+                let sr = reg.reg_sr & le_mask;
+                sr == STATUS_REGISTER_MASK_ZERO || sr == STATUS_REGISTER_MASK_NEGATIVE || sr == STATUS_REGISTER_MASK_OVERFLOW
+                // (reg.reg_sr & STATUS_REGISTER_MASK_ZERO != 0x0000)
+                //     || (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE != 0x0000
+                //         && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW == 0x0000)
+                //     || (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE == 0x0000
+                //         && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW != 0x0000)
             }
             ConditionalTest::LS => {
                 (reg.reg_sr & STATUS_REGISTER_MASK_CARRY != 0x0000)
@@ -1395,14 +1462,6 @@ mod tests {
         assert_eq!(0xffff8000, res);
     }
 
-    /*
-    ---pub fn get_unsigned_byte_from_unsigned_long(long: u32) -> u8 {
-    ---pub fn get_unsigned_word_from_unsigned_long(long: u32) -> u16 {
-    ---pub fn get_signed_byte_from_long(long: u32) -> i8 {
-    ---pub fn get_signed_word_from_unsigned_long(long: u32) -> i16 {
-    pub fn get_signed_long_from_unsigned_long(long: u32) -> i32 {
-    pub fn add_unsigned_bytes(value_1: u8, value_2: u8) -> AddResult<u8> {
-     */
     #[test]
     fn get_unsigned_byte_from_unsigned_long_x78() {
         let res = Cpu::get_unsigned_byte_from_unsigned_long(0x12345678);
@@ -1509,6 +1568,46 @@ mod tests {
     fn get_signed_long_from_unsigned_long_x00000000() {
         let res = Cpu::get_signed_long_from_unsigned_long(0x00000000);
         assert_eq!(0x00000000, res);
+    }
+
+    #[test]
+    fn add_unsigned_bytes_unsigned_overflow_set_carry_and_extend() {
+        let result = Cpu::add_unsigned_bytes(0xf0, 0x20);
+        assert_eq!(
+            ResultWithStatusRegister {
+                result: 0x10,
+                status_register: STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND
+            },
+            result
+        );
+    }
+
+    #[test]
+    fn add_unsigned_bytes_signed_overflow_set_overflow() {
+        let result = Cpu::add_unsigned_bytes(0x70, 0x10);
+        assert_eq!(
+            ResultWithStatusRegister {
+                result: 0x80,
+                status_register: STATUS_REGISTER_MASK_OVERFLOW | STATUS_REGISTER_MASK_NEGATIVE
+            },
+            result
+        );
+    }
+
+    #[test]
+    fn add_unsigned_bytes_both_overflow_set_carry_and_extend_and_overflow() {
+        // for i in 0 .. 255 {
+        //     Cpu::add_unsigned_bytes(i, 3);
+        // }
+
+        let result = Cpu::add_unsigned_bytes(0x80, 0x80);
+        assert_eq!(
+            ResultWithStatusRegister {
+                result: 0x00,
+                status_register: STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_OVERFLOW | STATUS_REGISTER_MASK_ZERO
+            },
+            result
+        );
     }
 
     #[test]

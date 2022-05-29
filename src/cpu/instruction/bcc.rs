@@ -80,8 +80,7 @@ pub fn get_disassembly<'a>(
 #[cfg(test)]
 mod tests {
     use crate::{register::{
-        STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE,
-        STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
+        STATUS_REGISTER_MASK_CARRY, 
     }, cpu::instruction::DisassemblyResult};
 
     #[test]

@@ -46,77 +46,19 @@ pub fn step<'a>(
         _ => panic!("What")
     };
 
-    // let ea = match ea_mode {
-    //     EffectiveAddressingMode::DRegDirect => {
-    //         panic!(
-    //             "{:#010x} {:#06x} UNKNOWN_EA {:?} {}",
-    //             instr_address, instr_word, ea_mode, ea_register
-    //         );
-    //     }
-    //     EffectiveAddressingMode::ARegDirect => {
-    //         panic!(
-    //             "{:#010x} {:#06x} UNKNOWN_EA {:?} {}",
-    //             instr_address, instr_word, ea_mode, ea_register
-    //         );
-    //     }
-    //     EffectiveAddressingMode::ARegIndirect
-    //     | EffectiveAddressingMode::ARegIndirectWithPostIncrement => {
-    //         reg.reg_a[ea_register]
-    //     }
-    //     EffectiveAddressingMode::ARegIndirectWithPreDecrement => {
-    //         reg.reg_a[ea_register] += opsize;
-    //         reg.reg_a[ea_register]
-    //     }
-    //     EffectiveAddressingMode::ARegIndirectWithDisplacement
-    //     | EffectiveAddressingMode::ARegIndirectWithIndex
-    //     | EffectiveAddressingMode::PcIndirectAndLotsMore => {
-    //         panic!(
-    //             "{:#010x} {:#06x} UNKNOWN_EA {:?} {}",
-    //             instr_address, instr_word, ea_mode, ea_register
-    //         );
-    //     }
-    // };
-    //  = reg.reg_a[ea_register];
-
     let status_register_mask = 0xffe0;
-    // TODO: Condition codes
+    let status_register_mask2 = STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_OVERFLOW | STATUS_REGISTER_MASK_ZERO |STATUS_REGISTER_MASK_NEGATIVE;
     match opmode {
         BYTE_WITH_DN_AS_DEST => {
             let ea_value = Cpu::get_ea_value_unsigned_byte(ea_mode, ea_register, instr_address + 2, Some(OperationSize::Byte), reg, mem);
-            // let in_mem = mem.get_unsigned_byte(ea);
-            let in_reg = (reg.reg_d[register] & 0x000000ff) as u8;
-            let (in_reg, carry) = in_reg.overflowing_add(ea_value.value);
-            let in_mem_signed = Cpu::get_ea_value_signed_byte(ea_mode, ea_register, instr_address + 2, Some(OperationSize::Byte), reg, mem);
-            let in_reg_signed = (reg.reg_d[register] & 0x000000ff) as i8;
-            let (in_mem_signed, overflow) = in_reg_signed.overflowing_add(in_mem_signed.value);
-            reg.reg_d[register] = (reg.reg_d[register] & 0xffffff00) | (in_reg as u32);
-            // let instr_comment = format!("adding {:#04x} to D{}", in_mem, register);
-
-            let mut status_register_flags = 0x0000;
-            match carry {
-                true => {
-                    status_register_flags |=
-                        STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND
-                }
-                false => (),
-            }
-            match overflow {
-                true => status_register_flags |= STATUS_REGISTER_MASK_OVERFLOW,
-                false => (),
-            }
-            match in_mem_signed {
-                0 => status_register_flags |= STATUS_REGISTER_MASK_ZERO,
-                i8::MIN..=-1 => status_register_flags |= STATUS_REGISTER_MASK_NEGATIVE,
-                _ => (),
-            }
-            reg.reg_sr = (reg.reg_sr & status_register_mask) | status_register_flags;
+            let reg_value = (reg.reg_d[register] & 0x000000ff) as u8;
+            let add_result = Cpu::add_unsigned_bytes(ea_value.value, reg_value);
+            
+            reg.reg_d[register] = (reg.reg_d[register] & 0xffffff00) | (add_result.result as u32);
+            reg.reg_sr = add_result.merge_status_register(reg.reg_sr, status_register_mask2);
 
             return InstructionExecutionResult::Done {
-                // name: "ADD.B",
-                // operands_format: &format!("{},D{}", ea_format, register),
-                // comment: &instr_comment,
-                // op_size: OperationSize::Byte,
-                pc_result: PcResult::Increment(2),
+                pc_result: PcResult::Increment(2 + (ea_value.num_extension_words << 1)),
             };
         }
         WORD_WITH_DN_AS_DEST => {
@@ -205,41 +147,13 @@ pub fn get_disassembly<'a>(
     // ea_format: String,
     // ea: u32,
 ) -> DisassemblyResult {
-    // let status_register_mask = 0xffe0;
     let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
     let ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos_3(instr_word);
     let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
     let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
-    // let ea_opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
     let ea_format = Cpu::get_ea_format(ea_mode, ea_register, instr_address + 2, None, reg, mem);
-    // TODO: Condition codes
     match opmode {
         BYTE_WITH_DN_AS_DEST => {
-            // let in_mem = mem.get_unsigned_byte(ea);
-            // let in_reg = (reg.reg_d[register] & 0x000000ff) as u8;
-            // let (in_reg, carry) = in_reg.overflowing_add(in_mem);
-            // let in_mem_signed = mem.get_signed_byte(ea);
-            // let in_reg_signed = (reg.reg_d[register] & 0x000000ff) as i8;
-            // let (in_mem_signed, overflow) = in_reg_signed.overflowing_add(in_mem_signed);
-            // reg.reg_d[register] = (reg.reg_d[register] & 0xffffff00) | (in_reg as u32);
-            // let instr_comment = format!("adding {:#04x} to D{}", in_mem, register);
-
-            // let mut status_register_flags = 0x0000;
-            // match carry {
-            //     true => status_register_flags |= STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND,
-            //     false => (),
-            // }
-            // match overflow {
-            //     true => status_register_flags |= STATUS_REGISTER_MASK_OVERFLOW,
-            //     false => (),
-            // }
-            // match in_mem_signed {
-            //     0 => status_register_flags |= STATUS_REGISTER_MASK_ZERO,
-            //     i8::MIN..=-1 => status_register_flags |= STATUS_REGISTER_MASK_NEGATIVE,
-            //     _ => (),
-            // }
-            // reg.reg_sr = (reg.reg_sr & status_register_mask) | status_register_flags;
-
             return DisassemblyResult::Done {
                 name: String::from("ADD.B"),
                 operands_format: format!("{},D{}", ea_format, register),
@@ -248,31 +162,6 @@ pub fn get_disassembly<'a>(
             };
         }
         WORD_WITH_DN_AS_DEST => {
-            // let in_mem = mem.get_unsigned_word(ea);
-            // let in_reg = (reg.reg_d[register] & 0x0000ffff) as u16;
-            // let (in_reg, carry) = in_reg.overflowing_add(in_mem);
-            // let in_mem_signed = mem.get_signed_word(ea);
-            // let in_reg_signed = (reg.reg_d[register] & 0x0000ffff) as i16;
-            // let (in_mem_signed, overflow) = in_reg_signed.overflowing_add(in_mem_signed);
-            // reg.reg_d[register] = (reg.reg_d[register] & 0xffff0000) | (in_reg as u32);
-            // let instr_comment = format!("adding {:#06x} to D{}", in_mem, register);
-
-            // let mut status_register_flags = 0x0000;
-            // match carry {
-            //     true => status_register_flags |= STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND,
-            //     false => (),
-            // }
-            // match overflow {
-            //     true => status_register_flags |= STATUS_REGISTER_MASK_OVERFLOW,
-            //     false => (),
-            // }
-            // match in_mem_signed {
-            //     0 => status_register_flags |= STATUS_REGISTER_MASK_ZERO,
-            //     i16::MIN..=-1 => status_register_flags |= STATUS_REGISTER_MASK_NEGATIVE,
-            //     _ => (),
-            // }
-            // reg.reg_sr = (reg.reg_sr & status_register_mask) | status_register_flags;
-
             return DisassemblyResult::Done {
                 name: String::from("ADD.W"),
                 operands_format: format!("{},D{}", ea_format, register),
@@ -281,31 +170,6 @@ pub fn get_disassembly<'a>(
             };
         }
         LONG_WITH_DN_AS_DEST => {
-            // let in_mem = mem.get_unsigned_long(ea);
-            // let in_reg = reg.reg_d[register];
-            // let (in_reg, carry) = in_reg.overflowing_add(in_mem);
-            // let in_mem_signed = mem.get_signed_long(ea);
-            // let in_reg_signed = reg.reg_d[register] as i32;
-            // let (in_reg_signed, overflow) = in_reg_signed.overflowing_add(in_mem_signed);
-            // reg.reg_d[register] = in_reg;
-            // let instr_comment = format!("adding {:#010x} to D{}", in_mem, register);
-
-            // let mut status_register_flags = 0x0000;
-            // match carry {
-            //     true => status_register_flags |= STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND,
-            //     false => (),
-            // }
-            // match overflow {
-            //     true => status_register_flags |= STATUS_REGISTER_MASK_OVERFLOW,
-            //     false => (),
-            // }
-            // match in_mem_signed {
-            //     0 => status_register_flags |= STATUS_REGISTER_MASK_ZERO,
-            //     i32::MIN..=-1 => status_register_flags |= STATUS_REGISTER_MASK_NEGATIVE,
-            //     _ => (),
-            // }
-            // reg.reg_sr = (reg.reg_sr & status_register_mask) | status_register_flags;
-
             return DisassemblyResult::Done {
                 name: String::from("ADD.L"),
                 operands_format: format!("{},D{}", ea_format, register),
