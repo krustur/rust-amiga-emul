@@ -354,6 +354,68 @@ impl Cpu {
         }
     }
 
+    pub fn add_unsigned_words(value_1: u16, value_2: u16) -> ResultWithStatusRegister<u16> {
+        let (result, carry) = value_2.overflowing_add(value_1);
+        let value_1_signed = value_1 as i16;
+        let value_2_signed = value_2 as i16;
+        
+        let (result_signed, overflow) = value_2_signed.overflowing_add(value_1_signed);
+                
+        let mut status_register = 0x0000;
+        match carry {
+            true => {
+                status_register |=
+                    STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND
+            }
+            false => (),
+        }
+        match overflow {
+            true => status_register |= STATUS_REGISTER_MASK_OVERFLOW,
+            false => (),
+        }
+        match result_signed {
+            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            i16::MIN..=-1 => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+            _ => (),
+        }
+
+        ResultWithStatusRegister { 
+            result,
+            status_register
+        }
+    }
+
+    pub fn add_unsigned_longs(value_1: u32, value_2: u32) -> ResultWithStatusRegister<u32> {
+        let (result, carry) = value_2.overflowing_add(value_1);
+        let value_1_signed = value_1 as i32;
+        let value_2_signed = value_2 as i32;
+        
+        let (result_signed, overflow) = value_2_signed.overflowing_add(value_1_signed);
+                
+        let mut status_register = 0x0000;
+        match carry {
+            true => {
+                status_register |=
+                    STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND
+            }
+            false => (),
+        }
+        match overflow {
+            true => status_register |= STATUS_REGISTER_MASK_OVERFLOW,
+            false => (),
+        }
+        match result_signed {
+            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            i32::MIN..=-1 => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+            _ => (),
+        }
+
+        ResultWithStatusRegister { 
+            result,
+            status_register
+        }
+    }
+
     pub fn get_ea_format(
         ea_mode: EffectiveAddressingMode,
         ea_register: usize,

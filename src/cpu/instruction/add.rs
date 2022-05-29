@@ -62,77 +62,27 @@ pub fn step<'a>(
             };
         }
         WORD_WITH_DN_AS_DEST => {
-            let in_mem = Cpu::get_ea_value_unsigned_word(ea_mode, ea_register, instr_address + 2, Some(OperationSize::Word), reg, mem);
-            let in_reg = (reg.reg_d[register] & 0x0000ffff) as u16;
-            let (in_reg, carry) = in_reg.overflowing_add(in_mem.value);
-            let in_mem_signed = Cpu::get_ea_value_signed_word(ea_mode, ea_register, instr_address + 2, Some(OperationSize::Word), reg, mem);
-            let in_reg_signed = (reg.reg_d[register] & 0x0000ffff) as i16;
-            let (in_mem_signed, overflow) = in_reg_signed.overflowing_add(in_mem_signed.value);
-            reg.reg_d[register] = (reg.reg_d[register] & 0xffff0000) | (in_reg as u32);
-            // let instr_comment = format!("adding {:#06x} to D{}", in_mem, register);
-
-            let mut status_register_flags = 0x0000;
-            match carry {
-                true => {
-                    status_register_flags |=
-                        STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND
-                }
-                false => (),
-            }
-            match overflow {
-                true => status_register_flags |= STATUS_REGISTER_MASK_OVERFLOW,
-                false => (),
-            }
-            match in_mem_signed {
-                0 => status_register_flags |= STATUS_REGISTER_MASK_ZERO,
-                i16::MIN..=-1 => status_register_flags |= STATUS_REGISTER_MASK_NEGATIVE,
-                _ => (),
-            }
-            reg.reg_sr = (reg.reg_sr & status_register_mask) | status_register_flags;
+            let ea_value = Cpu::get_ea_value_unsigned_word(ea_mode, ea_register, instr_address + 2, Some(OperationSize::Byte), reg, mem);
+            let reg_value = (reg.reg_d[register] & 0x0000ffff) as u16;
+            let add_result = Cpu::add_unsigned_words(ea_value.value, reg_value);
+              
+            reg.reg_d[register] = (reg.reg_d[register] & 0xffff0000) | (add_result.result as u32);
+            reg.reg_sr = add_result.merge_status_register(reg.reg_sr, status_register_mask2);
 
             return InstructionExecutionResult::Done {
-                // name: "ADD.W",
-                // operands_format: &format!("{},D{}", ea_format, register),
-                // comment: &instr_comment,
-                // op_size: OperationSize::Word,
-                pc_result: PcResult::Increment(2),
+                pc_result: PcResult::Increment(2 + (ea_value.num_extension_words << 1)),
             };
         }
         LONG_WITH_DN_AS_DEST => {
             let ea_value = Cpu::get_ea_value_unsigned_long(ea_mode, ea_register, instr_address + 2, Some(OperationSize::Long), reg, mem);
-            let in_reg = reg.reg_d[register];
-            let (in_reg, carry) = in_reg.overflowing_add(ea_value.value);
-            let ea_value_signed = Cpu::get_ea_value_signed_long(ea_mode, ea_register, instr_address + 2, Some(OperationSize::Long), reg, mem);
-            let in_reg_signed = reg.reg_d[register] as i32;
-            let (in_reg_signed, overflow) = in_reg_signed.overflowing_add(ea_value_signed.value);
-            reg.reg_d[register] = in_reg;
-            // let instr_comment = format!("adding {:#010x} to D{}", in_mem, register);
-
-            let mut status_register_flags = 0x0000;
-            match carry {
-                true => {
-                    status_register_flags |=
-                        STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND
-                }
-                false => (),
-            }
-            match overflow {
-                true => status_register_flags |= STATUS_REGISTER_MASK_OVERFLOW,
-                false => (),
-            }
-            match ea_value_signed.value {
-                0 => status_register_flags |= STATUS_REGISTER_MASK_ZERO,
-                i32::MIN..=-1 => status_register_flags |= STATUS_REGISTER_MASK_NEGATIVE,
-                _ => (),
-            }
-            reg.reg_sr = (reg.reg_sr & status_register_mask) | status_register_flags;
+            let reg_value = reg.reg_d[register];
+            let add_result = Cpu::add_unsigned_longs(ea_value.value, reg_value);
+            
+            reg.reg_d[register] = add_result.result;
+            reg.reg_sr = add_result.merge_status_register(reg.reg_sr, status_register_mask2);
 
             return InstructionExecutionResult::Done {
-                // name: "ADD.L",
-                // operands_format: &format!("{},D{}", ea_format, register),
-                // comment: &instr_comment,
-                // op_size: OperationSize::Long,
-                pc_result: PcResult::Increment(2),
+                pc_result: PcResult::Increment(2 + (ea_value.num_extension_words << 1)),
             };
         }
         _ => panic!("Unhandled ea_opmode"),
