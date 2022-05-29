@@ -927,9 +927,49 @@ impl Cpu {
     fn evaluate_condition(reg: &mut Register, conditional_test: &ConditionalTest) -> bool {
         match conditional_test {
             ConditionalTest::T => true,
-            ConditionalTest::F => false,
+
             ConditionalTest::CC => reg.reg_sr & STATUS_REGISTER_MASK_CARRY == 0x0000,
-            _ => panic!("ConditionalTest not implemented"),
+            ConditionalTest::CS => reg.reg_sr & STATUS_REGISTER_MASK_CARRY != 0x0000,
+            ConditionalTest::EQ => reg.reg_sr & STATUS_REGISTER_MASK_ZERO != 0x0000,
+            ConditionalTest::F => false,
+            ConditionalTest::GE => {
+                (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE == 0x0000
+                    && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW == 0x0000)
+                    || (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE != 0x0000
+                        && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW != 0x0000)
+            }
+            ConditionalTest::GT => {
+                (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE != 0x0000
+                    && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW != 0x0000
+                    && reg.reg_sr & STATUS_REGISTER_MASK_ZERO == 0x0000)
+                    || (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE == 0x0000
+                        && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW == 0x0000
+                        && reg.reg_sr & STATUS_REGISTER_MASK_ZERO == 0x0000)
+            }
+            ConditionalTest::HI => {
+                reg.reg_sr & STATUS_REGISTER_MASK_CARRY == 0x0000
+                    && reg.reg_sr & STATUS_REGISTER_MASK_ZERO == 0x0000
+            }
+            ConditionalTest::LE => {
+                (reg.reg_sr & STATUS_REGISTER_MASK_ZERO != 0x0000)
+                    || (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE != 0x0000
+                        && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW == 0x0000)
+                    || (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE == 0x0000
+                        && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW != 0x0000)
+            }
+            ConditionalTest::LS => {
+                (reg.reg_sr & STATUS_REGISTER_MASK_CARRY != 0x0000)
+                    || (reg.reg_sr & STATUS_REGISTER_MASK_ZERO != 0x0000)
+            }
+            ConditionalTest::LT => {
+                (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE != 0x0000 && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW == 0x0000)
+                    || (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE == 0x0000 && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW != 0x0000)
+            }
+            ConditionalTest::MI => reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE != 0x0000,
+            ConditionalTest::NE => reg.reg_sr & STATUS_REGISTER_MASK_ZERO == 0x0000,
+            ConditionalTest::PL => reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE == 0x0000,
+            ConditionalTest::VC => reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW == 0x0000,
+            ConditionalTest::VS => reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW != 0x0000,
         }
     }
 
@@ -1229,13 +1269,13 @@ impl Cpu {
         debug_result
     }
 
-    pub fn print_disassembly(self: &mut Cpu, debug_result: &DisassemblyResult) {
+    pub fn print_disassembly(self: &mut Cpu, disassembly_result: &DisassemblyResult) {
         if let DisassemblyResult::Done {
             name,
             instr_address,
             operands_format,
             next_instr_address,
-        } = &debug_result
+        } = &disassembly_result
         {
             let instr_format = format!("{} {}", name, operands_format);
             print!("{:#010X} ", instr_address);
@@ -1355,18 +1395,602 @@ mod tests {
         assert_eq!(0xffff8000, res);
     }
 
+    /*
+    ---pub fn get_unsigned_byte_from_unsigned_long(long: u32) -> u8 {
+    ---pub fn get_unsigned_word_from_unsigned_long(long: u32) -> u16 {
+    ---pub fn get_signed_byte_from_long(long: u32) -> i8 {
+    ---pub fn get_signed_word_from_unsigned_long(long: u32) -> i16 {
+    pub fn get_signed_long_from_unsigned_long(long: u32) -> i32 {
+    pub fn add_unsigned_bytes(value_1: u8, value_2: u8) -> AddResult<u8> {
+     */
     #[test]
-    fn evaluate_condition_cc_cleared() {
+    fn get_unsigned_byte_from_unsigned_long_x78() {
+        let res = Cpu::get_unsigned_byte_from_unsigned_long(0x12345678);
+        assert_eq!(0x78, res);
+    }
+
+    #[test]
+    fn get_unsigned_byte_from_unsigned_long_xff() {
+        let res = Cpu::get_unsigned_byte_from_unsigned_long(0xffffffff);
+        assert_eq!(0xff, res);
+    }
+
+    #[test]
+    fn get_unsigned_byte_from_unsigned_long_x00() {
+        let res = Cpu::get_unsigned_byte_from_unsigned_long(0x88888800);
+        assert_eq!(0x00, res);
+    }
+
+    #[test]
+    fn get_unsigned_word_from_unsigned_long_x5678() {
+        let res = Cpu::get_unsigned_word_from_unsigned_long(0x12345678);
+        assert_eq!(0x5678, res);
+    }
+
+    #[test]
+    fn get_unsigned_word_from_unsigned_long_xffff() {
+        let res = Cpu::get_unsigned_word_from_unsigned_long(0xffffffff);
+        assert_eq!(0xffff, res);
+    }
+
+    #[test]
+    fn get_unsigned_word_from_unsigned_long_x0000() {
+        let res = Cpu::get_unsigned_word_from_unsigned_long(0x88880000);
+        assert_eq!(0x0000, res);
+    }
+
+    #[test]
+    fn get_signed_byte_from_long_x78() {
+        let res = Cpu::get_signed_byte_from_long(0x12345678);
+        assert_eq!(0x78, res);
+    }
+
+    #[test]
+    fn get_signed_byte_from_long_xff() {
+        let res = Cpu::get_signed_byte_from_long(0xffffffff);
+        assert_eq!(-1, res);
+    }
+
+    #[test]
+    fn get_signed_byte_from_long_x80() {
+        let res = Cpu::get_signed_byte_from_long(0xffffff80);
+        assert_eq!(-128, res);
+    }
+
+    #[test]
+    fn get_signed_byte_from_long_x00() {
+        let res = Cpu::get_signed_byte_from_long(0x88880000);
+        assert_eq!(0x00, res);
+    }
+
+    #[test]
+    fn get_signed_word_from_unsigned_long_x5678() {
+        let res = Cpu::get_signed_word_from_unsigned_long(0x12345678);
+        assert_eq!(0x5678, res);
+    }
+
+    #[test]
+    fn get_signed_word_from_unsigned_long_xffff() {
+        let res = Cpu::get_signed_word_from_unsigned_long(0xffffffff);
+        assert_eq!(-1, res);
+    }
+
+    #[test]
+    fn get_signed_word_from_unsigned_long_x8000() {
+        let res = Cpu::get_signed_word_from_unsigned_long(0xffff8000);
+        assert_eq!(-32768, res);
+    }
+
+    #[test]
+    fn get_signed_word_from_unsigned_long_x0000() {
+        let res = Cpu::get_signed_word_from_unsigned_long(0x88880000);
+        assert_eq!(0x0000, res);
+    }
+
+    #[test]
+    fn get_signed_long_from_unsigned_long_x12345678() {
+        let res = Cpu::get_signed_long_from_unsigned_long(0x12345678);
+        assert_eq!(0x12345678, res);
+    }
+
+    #[test]
+    fn get_signed_long_from_unsigned_long_xffffffff() {
+        let res = Cpu::get_signed_long_from_unsigned_long(0xffffffff);
+        assert_eq!(-1, res);
+    }
+
+    #[test]
+    fn get_signed_long_from_unsigned_long_x80000000() {
+        let res = Cpu::get_signed_long_from_unsigned_long(0x80000000);
+        assert_eq!(-2147483648, res);
+    }
+
+    #[test]
+    fn get_signed_long_from_unsigned_long_x00000000() {
+        let res = Cpu::get_signed_long_from_unsigned_long(0x00000000);
+        assert_eq!(0x00000000, res);
+    }
+
+    #[test]
+    fn evaluate_condition_cc_when_carry_cleared() {
         let mut register = Register::new();
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::CC);
         assert_eq!(true, res);
     }
 
     #[test]
-    fn evaluate_condition_cc_set() {
+    fn evaluate_condition_cc_when_carry_set() {
         let mut register = Register::new();
-        register.reg_sr = 0x0001;
+        register.reg_sr = STATUS_REGISTER_MASK_CARRY;
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::CC);
         assert_eq!(false, res);
+    }
+
+    #[test]
+    fn evaluate_condition_cs_when_carry_cleared() {
+        let mut register = Register::new();
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::CS);
+        assert_eq!(false, res);
+    }
+
+    #[test]
+    fn evaluate_condition_cs_when_carry_set() {
+        let mut register = Register::new();
+        register.reg_sr = STATUS_REGISTER_MASK_CARRY;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::CS);
+        assert_eq!(true, res);
+    }
+
+    #[test]
+    fn evaluate_condition_eq_when_zero_cleared() {
+        let mut register = Register::new();
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::EQ);
+        assert_eq!(false, res);
+    }
+
+    #[test]
+    fn evaluate_condition_eq_when_zero_set() {
+        let mut register = Register::new();
+        register.reg_sr = STATUS_REGISTER_MASK_ZERO;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::EQ);
+        assert_eq!(true, res);
+    }
+    
+    #[test]
+    fn evaluate_condition_f_false() {
+        let mut register = Register::new();
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::F);
+        assert_eq!(false, res);
+
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO | STATUS_REGISTER_MASK_OVERFLOW | STATUS_REGISTER_MASK_NEGATIVE;
+
+        register.reg_sr = 0x0000 | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::F);
+        assert_eq!(false, res);
+    }
+
+    #[test]
+    fn evaluate_condition_ge_false() {
+        let mut register = Register::new();
+        register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::GE);
+        assert_eq!(false, res);
+        register.reg_sr = STATUS_REGISTER_MASK_OVERFLOW;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::GE);
+        assert_eq!(false, res);
+
+        let extra_flags =
+            STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_ZERO;
+
+        register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::GE);
+        assert_eq!(false, res);
+        register.reg_sr = STATUS_REGISTER_MASK_OVERFLOW | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::GE);
+        assert_eq!(false, res);
+    }
+
+    #[test]
+    fn evaluate_condition_ge_true() {
+        let mut register = Register::new();
+        register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::GE);
+        assert_eq!(true, res);
+        register.reg_sr = 0x0000;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::GE);
+        assert_eq!(true, res);
+
+        let extra_flags =
+            STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_ZERO;
+
+        let mut register = Register::new();
+        register.reg_sr =
+            STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::GE);
+        assert_eq!(true, res);
+        register.reg_sr = 0x0000 | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::GE);
+        assert_eq!(true, res);
+    }
+
+    #[test]
+    fn evaluate_condition_gt_false() {
+        let mut register = Register::new();
+        register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::GT);
+        assert_eq!(false, res);
+        register.reg_sr = STATUS_REGISTER_MASK_OVERFLOW;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::GT);
+        assert_eq!(false, res);
+        register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE
+            | STATUS_REGISTER_MASK_OVERFLOW
+            | STATUS_REGISTER_MASK_ZERO;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::GT);
+        assert_eq!(false, res);
+        register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_ZERO;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::GT);
+        assert_eq!(false, res);
+        register.reg_sr = STATUS_REGISTER_MASK_OVERFLOW | STATUS_REGISTER_MASK_ZERO;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::GT);
+        assert_eq!(false, res);
+        register.reg_sr = STATUS_REGISTER_MASK_ZERO;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::GT);
+        assert_eq!(false, res);
+
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY;
+
+        register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::GT);
+        assert_eq!(false, res);
+        register.reg_sr = STATUS_REGISTER_MASK_OVERFLOW | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::GT);
+        assert_eq!(false, res);
+        register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE
+            | STATUS_REGISTER_MASK_OVERFLOW
+            | STATUS_REGISTER_MASK_ZERO
+            | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::GT);
+        assert_eq!(false, res);
+        register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_ZERO | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::GT);
+        assert_eq!(false, res);
+        register.reg_sr = STATUS_REGISTER_MASK_OVERFLOW | STATUS_REGISTER_MASK_ZERO | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::GT);
+        assert_eq!(false, res);
+        register.reg_sr = STATUS_REGISTER_MASK_ZERO | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::GT);
+        assert_eq!(false, res);
+    }
+
+    #[test]
+    fn evaluate_condition_gt_true() {
+        let mut register = Register::new();
+        register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::GT);
+        assert_eq!(true, res);
+        register.reg_sr = 0x0000;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::GT);
+        assert_eq!(true, res);
+
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY;
+
+        register.reg_sr =
+            STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::GT);
+        assert_eq!(true, res);
+        register.reg_sr = 0x0000 | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::GT);
+        assert_eq!(true, res);
+    }
+
+    #[test]
+    fn evaluate_condition_hi_false() {
+        let mut register = Register::new();
+        register.reg_sr = STATUS_REGISTER_MASK_CARRY;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::HI);
+        assert_eq!(false, res);
+        register.reg_sr = STATUS_REGISTER_MASK_ZERO;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::HI);
+        assert_eq!(false, res);
+
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY;
+
+        register.reg_sr = STATUS_REGISTER_MASK_CARRY | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::HI);
+        assert_eq!(false, res);
+        register.reg_sr = STATUS_REGISTER_MASK_ZERO | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::HI);
+        assert_eq!(false, res);
+    }
+
+    #[test]
+    fn evaluate_condition_hi_true() {
+        let mut register = Register::new();
+        register.reg_sr = 0x0000;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::HI);
+        assert_eq!(true, res);
+
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND
+            | STATUS_REGISTER_MASK_NEGATIVE
+            | STATUS_REGISTER_MASK_OVERFLOW;
+
+        register.reg_sr = 0x0000 | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::HI);
+        assert_eq!(true, res);
+    }
+
+    #[test]
+    fn evaluate_condition_le_false() {
+        let mut register = Register::new();
+        register.reg_sr = 0x0000;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LE);
+        assert_eq!(false, res);
+        register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LE);
+        assert_eq!(false, res);
+
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY;
+
+        register.reg_sr = 0x0000 | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LE);
+        assert_eq!(false, res);
+        register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LE);
+        assert_eq!(false, res);
+    }
+
+    #[test]
+    fn evaluate_condition_le_true() {
+        let mut register = Register::new();
+        register.reg_sr = STATUS_REGISTER_MASK_ZERO;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LE);
+        assert_eq!(true, res);
+        register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LE);
+        assert_eq!(true, res);
+        register.reg_sr = STATUS_REGISTER_MASK_OVERFLOW;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LE);
+        assert_eq!(true, res);
+
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY;
+
+        register.reg_sr = STATUS_REGISTER_MASK_ZERO | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LE);
+        assert_eq!(true, res);
+        register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LE);
+        assert_eq!(true, res);
+        register.reg_sr = STATUS_REGISTER_MASK_OVERFLOW | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LE);
+        assert_eq!(true, res);
+    }
+
+    #[test]
+    fn evaluate_condition_ls_false() {
+        let mut register = Register::new();
+        register.reg_sr = 0x0000;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LS);
+        assert_eq!(false, res);
+
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW;
+
+        register.reg_sr = 0x0000 | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LS);
+        assert_eq!(false, res);
+    }
+
+    #[test]
+    fn evaluate_condition_ls_true() {
+        let mut register = Register::new();
+        register.reg_sr = STATUS_REGISTER_MASK_CARRY;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LS);
+        assert_eq!(true, res);
+        register.reg_sr = STATUS_REGISTER_MASK_ZERO;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LS);
+        assert_eq!(true, res);
+
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW;
+
+        register.reg_sr = STATUS_REGISTER_MASK_CARRY | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LS);
+        assert_eq!(true, res);
+        register.reg_sr = STATUS_REGISTER_MASK_ZERO | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LS);
+        assert_eq!(true, res);
+    }
+
+    #[test]
+    fn evaluate_condition_lt_false() {
+        let mut register = Register::new();
+        register.reg_sr = 0x0000;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LT);
+        assert_eq!(false, res);
+        register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LT);
+        assert_eq!(false, res);
+
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO;
+
+        register.reg_sr = 0x0000 | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LT);
+        assert_eq!(false, res);
+        register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LT);
+        assert_eq!(false, res);
+    }
+
+    #[test]
+    fn evaluate_condition_lt_true() {
+        let mut register = Register::new();
+        register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LT);
+        assert_eq!(true, res);
+        register.reg_sr = STATUS_REGISTER_MASK_OVERFLOW;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LT);
+        assert_eq!(true, res);
+
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO;
+
+        register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LT);
+        assert_eq!(true, res);
+        register.reg_sr = STATUS_REGISTER_MASK_OVERFLOW | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LT);
+        assert_eq!(true, res);
+    }
+
+    #[test]
+    fn evaluate_condition_mi_false() {
+        let mut register = Register::new();
+        register.reg_sr = 0x0000;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::MI);
+        assert_eq!(false, res);
+
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO | STATUS_REGISTER_MASK_OVERFLOW;
+
+        register.reg_sr = 0x0000 | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::MI);
+        assert_eq!(false, res);
+    }
+
+    #[test]
+    fn evaluate_condition_mi_true() {
+        let mut register = Register::new();
+        register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::MI);
+        assert_eq!(true, res);
+
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO | STATUS_REGISTER_MASK_OVERFLOW;
+
+        register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::MI);
+        assert_eq!(true, res);
+    }
+
+    #[test]
+    fn evaluate_condition_ne_false() {
+        //  Z => EQ=TRUE => NE=FALSE
+        // !Z => NE=TRUE => EQ=TRUE
+        let mut register = Register::new();
+        register.reg_sr = STATUS_REGISTER_MASK_ZERO;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::NE);
+        assert_eq!(false, res);
+
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW;
+
+        register.reg_sr = STATUS_REGISTER_MASK_ZERO | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::NE);
+        assert_eq!(false, res);
+    }
+
+    #[test]
+    fn evaluate_condition_ne_true() {
+        let mut register = Register::new();
+        register.reg_sr = 0x0000;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::NE);
+        assert_eq!(true, res);
+
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW;
+
+        register.reg_sr = 0x0000 | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::NE);
+        assert_eq!(true, res);
+    }
+
+    #[test]
+    fn evaluate_condition_pl_false() {
+        let mut register = Register::new();
+        register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::PL);
+        assert_eq!(false, res);
+
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO | STATUS_REGISTER_MASK_OVERFLOW;
+
+        register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::PL);
+        assert_eq!(false, res);
+    }
+
+    #[test]
+    fn evaluate_condition_pl_true() {
+        let mut register = Register::new();
+        register.reg_sr = 0x0000;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::PL);
+        assert_eq!(true, res);
+
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO | STATUS_REGISTER_MASK_OVERFLOW;
+
+        register.reg_sr = 0x0000 | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::PL);
+        assert_eq!(true, res);
+    }
+
+    #[test]
+    fn evaluate_condition_t_true() {
+        let mut register = Register::new();
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::T);
+        assert_eq!(true, res);
+
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO | STATUS_REGISTER_MASK_OVERFLOW | STATUS_REGISTER_MASK_NEGATIVE;
+
+        register.reg_sr = 0x0000 | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::T);
+        assert_eq!(true, res);
+    }
+
+    #[test]
+    fn evaluate_condition_vc_false() {
+        let mut register = Register::new();
+        register.reg_sr = STATUS_REGISTER_MASK_OVERFLOW;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::VC);
+        assert_eq!(false, res);
+
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO |  STATUS_REGISTER_MASK_NEGATIVE;
+
+        register.reg_sr = STATUS_REGISTER_MASK_OVERFLOW | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::VC);
+        assert_eq!(false, res);
+    }
+
+    #[test]
+    fn evaluate_condition_vc_true() {
+        let mut register = Register::new();
+        register.reg_sr = 0x0000;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::VC);
+        assert_eq!(true, res);
+
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO | STATUS_REGISTER_MASK_NEGATIVE;
+
+        register.reg_sr = 0x0000 | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::VC);
+        assert_eq!(true, res);
+    }
+
+    #[test]
+    fn evaluate_condition_vs_false() {
+        let mut register = Register::new();
+        register.reg_sr = 0x0000;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::VS);
+        assert_eq!(false, res);
+
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO |  STATUS_REGISTER_MASK_NEGATIVE;
+
+        register.reg_sr = 0x0000 | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::VS);
+        assert_eq!(false, res);
+    }
+
+    #[test]
+    fn evaluate_condition_vs_true() {
+        let mut register = Register::new();
+        register.reg_sr = STATUS_REGISTER_MASK_OVERFLOW;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::VS);
+        assert_eq!(true, res);
+
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO | STATUS_REGISTER_MASK_NEGATIVE;
+
+        register.reg_sr = STATUS_REGISTER_MASK_OVERFLOW | extra_flags;
+        let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::VS);
+        assert_eq!(true, res);
     }
 }

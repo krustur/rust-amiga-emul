@@ -165,37 +165,37 @@ impl OperationSize {
 
 #[derive(FromPrimitive, Debug)]
 pub enum ConditionalTest {
-    /// True
+    /// True (1)
     T = 0b0000,
-    /// False
+    /// False (0)
     F = 0b0001,
-    /// High
+    /// High (!C & !Z)
     HI = 0b0010,
-    /// Low or Same
+    /// Low or Same (C) | (Z)
     LS = 0b0011,
-    /// Carry Clear (CC HI)
+    /// Carry Clear (!C) 
     CC = 0b0100,
-    /// Carry Set (CC LO)
+    /// Carry Set (C)
     CS = 0b0101,
-    /// Not Equal
+    /// Not Equal (!Z)
     NE = 0b0110,
-    /// Equal
+    /// Equal (Z)
     EQ = 0b0111,
-    /// Overflow Clear
+    /// Overflow Clear (!V)
     VC = 0b1000,
-    /// Overflow Set
+    /// Overflow Set (V)
     VS = 0b1001,
-    /// Plus
+    /// Plus (!N)
     PL = 0b1010,
-    /// Minus
+    /// Minus (N)
     MI = 0b1011,
-    /// Greater or Equal
+    /// Greater or Equal (N & V) | (!N & !V)
     GE = 0b1100,
-    /// Less Than
+    /// Less Than (N & !V) | (!N & V)
     LT = 0b1101,
-    /// Greater Than
+    /// Greater Than (N & V & !Z) | (!N & !V & !Z)
     GT = 0b1110,
-    /// Less or Equal
+    /// Less or Equal (Z) | (N & !V) | (!N & V)
     LE = 0b1111,
 }
 
