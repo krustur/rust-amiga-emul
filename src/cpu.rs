@@ -32,11 +32,11 @@ impl fmt::Display for EffectiveAddressDebug {
 #[derive(Debug, PartialEq)]
 pub struct ResultWithStatusRegister<T> {
     pub result: T,
-    pub status_register: u16
+    pub status_register: u16,
 }
 
 impl<T> ResultWithStatusRegister<T> {
-    pub fn merge_status_register(&self, status_register: u16, status_register_mask : u16) -> u16 {
+    pub fn merge_status_register(&self, status_register: u16, status_register_mask: u16) -> u16 {
         (status_register & !status_register_mask) | (self.status_register & status_register_mask)
     }
 }
@@ -315,9 +315,9 @@ impl Cpu {
         let (result, carry) = value_2.overflowing_add(value_1);
         let value_1_signed = value_1 as i8;
         let value_2_signed = value_2 as i8;
-        
+
         let (result_signed, overflow) = value_2_signed.overflowing_add(value_1_signed);
-        
+
         // let carrys = match carry {
         //     false => String::from(""),
         //     true => String::from("carry"),
@@ -332,10 +332,7 @@ impl Cpu {
 
         let mut status_register = 0x0000;
         match carry {
-            true => {
-                status_register |=
-                    STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND
-            }
+            true => status_register |= STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND,
             false => (),
         }
         match overflow {
@@ -348,9 +345,9 @@ impl Cpu {
             _ => (),
         }
 
-        ResultWithStatusRegister { 
+        ResultWithStatusRegister {
             result,
-            status_register
+            status_register,
         }
     }
 
@@ -358,15 +355,12 @@ impl Cpu {
         let (result, carry) = value_2.overflowing_add(value_1);
         let value_1_signed = value_1 as i16;
         let value_2_signed = value_2 as i16;
-        
+
         let (result_signed, overflow) = value_2_signed.overflowing_add(value_1_signed);
-                
+
         let mut status_register = 0x0000;
         match carry {
-            true => {
-                status_register |=
-                    STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND
-            }
+            true => status_register |= STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND,
             false => (),
         }
         match overflow {
@@ -379,9 +373,9 @@ impl Cpu {
             _ => (),
         }
 
-        ResultWithStatusRegister { 
+        ResultWithStatusRegister {
             result,
-            status_register
+            status_register,
         }
     }
 
@@ -389,15 +383,12 @@ impl Cpu {
         let (result, carry) = value_2.overflowing_add(value_1);
         let value_1_signed = value_1 as i32;
         let value_2_signed = value_2 as i32;
-        
+
         let (result_signed, overflow) = value_2_signed.overflowing_add(value_1_signed);
-                
+
         let mut status_register = 0x0000;
         match carry {
-            true => {
-                status_register |=
-                    STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND
-            }
+            true => status_register |= STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND,
             false => (),
         }
         match overflow {
@@ -410,9 +401,9 @@ impl Cpu {
             _ => (),
         }
 
-        ResultWithStatusRegister { 
+        ResultWithStatusRegister {
             result,
-            status_register
+            status_register,
         }
     }
 
@@ -637,7 +628,8 @@ impl Cpu {
                     // Program Counter Indirect with Displacement Mode
                     // (d16,PC)
                     let extension_word = mem.get_signed_word(extension_address);
-                    let address = Cpu::get_address_with_i16_displacement(reg.reg_pc + 2, extension_word);
+                    let address =
+                        Cpu::get_address_with_i16_displacement(reg.reg_pc + 2, extension_word);
                     EffectiveAddress {
                         address: address,
                         num_extension_words: 1,
@@ -676,7 +668,6 @@ impl Cpu {
         ea_mode: EffectiveAddressingMode,
         ea_register: usize,
         extension_address: u32,
-        operation_size: Option<OperationSize>,
         reg: &mut Register,
         mem: &Mem,
     ) -> EffectiveAddressValue<u8> {
@@ -698,19 +689,18 @@ impl Cpu {
             EffectiveAddressingMode::PcIndirectAndLotsMore if ea_register == 0b100 => {
                 // Immediate data
                 // #<xxx>
-                todo!();
-                // EffectiveAddressValue {
-                //     address: address,
-                //     num_extension_words: 1,
-                //     value: value,
-                // }
+                let extension_word = mem.get_unsigned_byte(extension_address + 1);
+                EffectiveAddressValue {
+                    value: extension_word,
+                    num_extension_words: 1,
+                }
             }
             _ => {
                 let ea = Cpu::get_ea(
                     ea_mode,
                     ea_register,
                     extension_address,
-                    operation_size,
+                    Some(OperationSize::Byte),
                     reg,
                     mem,
                 );
@@ -727,7 +717,6 @@ impl Cpu {
         ea_mode: EffectiveAddressingMode,
         ea_register: usize,
         extension_address: u32,
-        operation_size: Option<OperationSize>,
         reg: &mut Register,
         mem: &Mem,
     ) -> EffectiveAddressValue<i8> {
@@ -749,19 +738,18 @@ impl Cpu {
             EffectiveAddressingMode::PcIndirectAndLotsMore if ea_register == 0b100 => {
                 // Immediate data
                 // #<xxx>
-                todo!();
-                // EffectiveAddressValue {
-                //     address: address,
-                //     num_extension_words: 1,
-                //     value: value,
-                // }
+                let extension_word = mem.get_signed_byte(extension_address + 1);
+                EffectiveAddressValue {
+                    value: extension_word,
+                    num_extension_words: 1,
+                }
             }
             _ => {
                 let ea = Cpu::get_ea(
                     ea_mode,
                     ea_register,
                     extension_address,
-                    operation_size,
+                    Some(OperationSize::Byte),
                     reg,
                     mem,
                 );
@@ -778,7 +766,6 @@ impl Cpu {
         ea_mode: EffectiveAddressingMode,
         ea_register: usize,
         extension_address: u32,
-        operation_size: Option<OperationSize>,
         reg: &mut Register,
         mem: &Mem,
     ) -> EffectiveAddressValue<u16> {
@@ -800,19 +787,18 @@ impl Cpu {
             EffectiveAddressingMode::PcIndirectAndLotsMore if ea_register == 0b100 => {
                 // Immediate data
                 // #<xxx>
-                todo!();
-                // EffectiveAddressValue {
-                //     address: address,
-                //     num_extension_words: 1,
-                //     value: value,
-                // }
+                let extension_word = mem.get_unsigned_word(extension_address + 1);
+                EffectiveAddressValue {
+                    value: extension_word,
+                    num_extension_words: 1,
+                }
             }
             _ => {
                 let ea = Cpu::get_ea(
                     ea_mode,
                     ea_register,
                     extension_address,
-                    operation_size,
+                    Some(OperationSize::Word),
                     reg,
                     mem,
                 );
@@ -828,8 +814,7 @@ impl Cpu {
     pub fn get_ea_value_signed_word(
         ea_mode: EffectiveAddressingMode,
         ea_register: usize,
-        extension_address: u32,
-        operation_size: Option<OperationSize>,
+        extension_address: u32,        
         reg: &mut Register,
         mem: &Mem,
     ) -> EffectiveAddressValue<i16> {
@@ -851,19 +836,18 @@ impl Cpu {
             EffectiveAddressingMode::PcIndirectAndLotsMore if ea_register == 0b100 => {
                 // Immediate data
                 // #<xxx>
-                todo!();
-                // EffectiveAddressValue {
-                //     address: address,
-                //     num_extension_words: 1,
-                //     value: value,
-                // }
+                let extension_word = mem.get_signed_word(extension_address + 1);
+                EffectiveAddressValue {
+                    value: extension_word,
+                    num_extension_words: 1,
+                }
             }
             _ => {
                 let ea = Cpu::get_ea(
                     ea_mode,
                     ea_register,
                     extension_address,
-                    operation_size,
+                    Some(OperationSize::Word),
                     reg,
                     mem,
                 );
@@ -879,8 +863,7 @@ impl Cpu {
     pub fn get_ea_value_unsigned_long(
         ea_mode: EffectiveAddressingMode,
         ea_register: usize,
-        extension_address: u32,
-        operation_size: Option<OperationSize>,
+        extension_address: u32,        
         reg: &mut Register,
         mem: &Mem,
     ) -> EffectiveAddressValue<u32> {
@@ -902,19 +885,18 @@ impl Cpu {
             EffectiveAddressingMode::PcIndirectAndLotsMore if ea_register == 0b100 => {
                 // Immediate data
                 // #<xxx>
-                todo!();
-                // EffectiveAddressValue {
-                //     address: address,
-                //     num_extension_words: 1,
-                //     value: value,
-                // }
+                let extension_word = mem.get_unsigned_long(extension_address + 1);
+                EffectiveAddressValue {
+                    value: extension_word,
+                    num_extension_words: 1,
+                }
             }
             _ => {
                 let ea = Cpu::get_ea(
                     ea_mode,
                     ea_register,
                     extension_address,
-                    operation_size,
+                    Some(OperationSize::Long),
                     reg,
                     mem,
                 );
@@ -930,8 +912,7 @@ impl Cpu {
     pub fn get_ea_value_signed_long(
         ea_mode: EffectiveAddressingMode,
         ea_register: usize,
-        extension_address: u32,
-        operation_size: Option<OperationSize>,
+        extension_address: u32,        
         reg: &mut Register,
         mem: &Mem,
     ) -> EffectiveAddressValue<i32> {
@@ -953,19 +934,18 @@ impl Cpu {
             EffectiveAddressingMode::PcIndirectAndLotsMore if ea_register == 0b100 => {
                 // Immediate data
                 // #<xxx>
-                todo!();
-                // EffectiveAddressValue {
-                //     address: address,
-                //     num_extension_words: 1,
-                //     value: value,
-                // }
+                let extension_word = mem.get_signed_long(extension_address + 1);
+                EffectiveAddressValue {
+                    value: extension_word,
+                    num_extension_words: 1,
+                }
             }
             _ => {
                 let ea = Cpu::get_ea(
                     ea_mode,
                     ea_register,
                     extension_address,
-                    operation_size,
+                    Some(OperationSize::Long),
                     reg,
                     mem,
                 );
@@ -1036,7 +1016,9 @@ impl Cpu {
                 //         && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW != 0x0000)
             }
             ConditionalTest::GT => {
-                let gt_mask = STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW | STATUS_REGISTER_MASK_ZERO;
+                let gt_mask = STATUS_REGISTER_MASK_NEGATIVE
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO;
                 let sr = reg.reg_sr & gt_mask;
                 sr == STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW || sr == 0x0000
                 // (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE != 0x0000
@@ -1051,9 +1033,13 @@ impl Cpu {
                     && reg.reg_sr & STATUS_REGISTER_MASK_ZERO == 0x0000
             }
             ConditionalTest::LE => {
-                let le_mask = STATUS_REGISTER_MASK_ZERO | STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW;
+                let le_mask = STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE
+                    | STATUS_REGISTER_MASK_OVERFLOW;
                 let sr = reg.reg_sr & le_mask;
-                sr == STATUS_REGISTER_MASK_ZERO || sr == STATUS_REGISTER_MASK_NEGATIVE || sr == STATUS_REGISTER_MASK_OVERFLOW
+                sr == STATUS_REGISTER_MASK_ZERO
+                    || sr == STATUS_REGISTER_MASK_NEGATIVE
+                    || sr == STATUS_REGISTER_MASK_OVERFLOW
                 // (reg.reg_sr & STATUS_REGISTER_MASK_ZERO != 0x0000)
                 //     || (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE != 0x0000
                 //         && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW == 0x0000)
@@ -1065,8 +1051,10 @@ impl Cpu {
                     || (reg.reg_sr & STATUS_REGISTER_MASK_ZERO != 0x0000)
             }
             ConditionalTest::LT => {
-                (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE != 0x0000 && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW == 0x0000)
-                    || (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE == 0x0000 && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW != 0x0000)
+                (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE != 0x0000
+                    && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW == 0x0000)
+                    || (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE == 0x0000
+                        && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW != 0x0000)
             }
             ConditionalTest::MI => reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE != 0x0000,
             ConditionalTest::NE => reg.reg_sr & STATUS_REGISTER_MASK_ZERO == 0x0000,
@@ -1095,10 +1083,7 @@ impl Cpu {
         let step = instruction.step;
         let exec_result = step(instr_addr, instr_word, &mut self.register, &mut self.memory);
 
-        if let InstructionExecutionResult::Done {
-            pc_result,
-        } = &exec_result
-        {
+        if let InstructionExecutionResult::Done { pc_result } = &exec_result {
             self.register.reg_pc = match pc_result {
                 PcResult::Set(new_pc) => *new_pc,
                 PcResult::Increment(pc_increment) => self.register.reg_pc + pc_increment,
@@ -1400,7 +1385,10 @@ mod tests {
         assert_eq!(
             ResultWithStatusRegister {
                 result: 0x00,
-                status_register: STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_OVERFLOW | STATUS_REGISTER_MASK_ZERO
+                status_register: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_EXTEND
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
             },
             result
         );
@@ -1450,14 +1438,18 @@ mod tests {
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::EQ);
         assert_eq!(true, res);
     }
-    
+
     #[test]
     fn evaluate_condition_f_false() {
         let mut register = Register::new();
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::F);
         assert_eq!(false, res);
 
-        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO | STATUS_REGISTER_MASK_OVERFLOW | STATUS_REGISTER_MASK_NEGATIVE;
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND
+            | STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_OVERFLOW
+            | STATUS_REGISTER_MASK_NEGATIVE;
 
         register.reg_sr = 0x0000 | extra_flags;
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::F);
@@ -1629,7 +1621,8 @@ mod tests {
         register.reg_sr = 0x0000 | extra_flags;
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LE);
         assert_eq!(false, res);
-        register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW | extra_flags;
+        register.reg_sr =
+            STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW | extra_flags;
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LE);
         assert_eq!(false, res);
     }
@@ -1667,7 +1660,9 @@ mod tests {
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LS);
         assert_eq!(false, res);
 
-        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW;
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND
+            | STATUS_REGISTER_MASK_NEGATIVE
+            | STATUS_REGISTER_MASK_OVERFLOW;
 
         register.reg_sr = 0x0000 | extra_flags;
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LS);
@@ -1684,7 +1679,9 @@ mod tests {
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LS);
         assert_eq!(true, res);
 
-        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW;
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND
+            | STATUS_REGISTER_MASK_NEGATIVE
+            | STATUS_REGISTER_MASK_OVERFLOW;
 
         register.reg_sr = STATUS_REGISTER_MASK_CARRY | extra_flags;
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LS);
@@ -1704,12 +1701,14 @@ mod tests {
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LT);
         assert_eq!(false, res);
 
-        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO;
+        let extra_flags =
+            STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO;
 
         register.reg_sr = 0x0000 | extra_flags;
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LT);
         assert_eq!(false, res);
-        register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW | extra_flags;
+        register.reg_sr =
+            STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW | extra_flags;
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LT);
         assert_eq!(false, res);
     }
@@ -1724,7 +1723,8 @@ mod tests {
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LT);
         assert_eq!(true, res);
 
-        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO;
+        let extra_flags =
+            STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO;
 
         register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE | extra_flags;
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::LT);
@@ -1741,7 +1741,10 @@ mod tests {
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::MI);
         assert_eq!(false, res);
 
-        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO | STATUS_REGISTER_MASK_OVERFLOW;
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND
+            | STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_OVERFLOW;
 
         register.reg_sr = 0x0000 | extra_flags;
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::MI);
@@ -1755,7 +1758,10 @@ mod tests {
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::MI);
         assert_eq!(true, res);
 
-        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO | STATUS_REGISTER_MASK_OVERFLOW;
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND
+            | STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_OVERFLOW;
 
         register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE | extra_flags;
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::MI);
@@ -1771,7 +1777,10 @@ mod tests {
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::NE);
         assert_eq!(false, res);
 
-        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW;
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND
+            | STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_NEGATIVE
+            | STATUS_REGISTER_MASK_OVERFLOW;
 
         register.reg_sr = STATUS_REGISTER_MASK_ZERO | extra_flags;
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::NE);
@@ -1785,7 +1794,10 @@ mod tests {
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::NE);
         assert_eq!(true, res);
 
-        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW;
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND
+            | STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_NEGATIVE
+            | STATUS_REGISTER_MASK_OVERFLOW;
 
         register.reg_sr = 0x0000 | extra_flags;
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::NE);
@@ -1799,7 +1811,10 @@ mod tests {
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::PL);
         assert_eq!(false, res);
 
-        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO | STATUS_REGISTER_MASK_OVERFLOW;
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND
+            | STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_OVERFLOW;
 
         register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE | extra_flags;
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::PL);
@@ -1813,7 +1828,10 @@ mod tests {
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::PL);
         assert_eq!(true, res);
 
-        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO | STATUS_REGISTER_MASK_OVERFLOW;
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND
+            | STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_OVERFLOW;
 
         register.reg_sr = 0x0000 | extra_flags;
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::PL);
@@ -1826,7 +1844,11 @@ mod tests {
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::T);
         assert_eq!(true, res);
 
-        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO | STATUS_REGISTER_MASK_OVERFLOW | STATUS_REGISTER_MASK_NEGATIVE;
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND
+            | STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_OVERFLOW
+            | STATUS_REGISTER_MASK_NEGATIVE;
 
         register.reg_sr = 0x0000 | extra_flags;
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::T);
@@ -1840,7 +1862,10 @@ mod tests {
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::VC);
         assert_eq!(false, res);
 
-        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO |  STATUS_REGISTER_MASK_NEGATIVE;
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND
+            | STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_NEGATIVE;
 
         register.reg_sr = STATUS_REGISTER_MASK_OVERFLOW | extra_flags;
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::VC);
@@ -1854,7 +1879,10 @@ mod tests {
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::VC);
         assert_eq!(true, res);
 
-        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO | STATUS_REGISTER_MASK_NEGATIVE;
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND
+            | STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_NEGATIVE;
 
         register.reg_sr = 0x0000 | extra_flags;
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::VC);
@@ -1868,7 +1896,10 @@ mod tests {
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::VS);
         assert_eq!(false, res);
 
-        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO |  STATUS_REGISTER_MASK_NEGATIVE;
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND
+            | STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_NEGATIVE;
 
         register.reg_sr = 0x0000 | extra_flags;
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::VS);
@@ -1882,7 +1913,10 @@ mod tests {
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::VS);
         assert_eq!(true, res);
 
-        let extra_flags = STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO | STATUS_REGISTER_MASK_NEGATIVE;
+        let extra_flags = STATUS_REGISTER_MASK_EXTEND
+            | STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_NEGATIVE;
 
         register.reg_sr = STATUS_REGISTER_MASK_OVERFLOW | extra_flags;
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::VS);

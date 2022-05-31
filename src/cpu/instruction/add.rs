@@ -7,7 +7,7 @@ use crate::register::{
     STATUS_REGISTER_MASK_NEGATIVE, STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
 };
 
-use super::{DisassemblyResult, InstructionExecutionResult, OperationSize};
+use super::{DisassemblyResult, InstructionExecutionResult};
 
 // Instruction State
 // =================
@@ -49,7 +49,7 @@ pub fn step<'a>(
     let status_register_mask = STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_OVERFLOW | STATUS_REGISTER_MASK_ZERO |STATUS_REGISTER_MASK_NEGATIVE;
     match opmode {
         BYTE_WITH_DN_AS_DEST => {
-            let ea_value = Cpu::get_ea_value_unsigned_byte(ea_mode, ea_register, instr_address + 2, Some(OperationSize::Byte), reg, mem);
+            let ea_value = Cpu::get_ea_value_unsigned_byte(ea_mode, ea_register, instr_address + 2, reg, mem);
             let reg_value = (reg.reg_d[register] & 0x000000ff) as u8;
             let add_result = Cpu::add_unsigned_bytes(ea_value.value, reg_value);
             
@@ -61,7 +61,7 @@ pub fn step<'a>(
             };
         }
         WORD_WITH_DN_AS_DEST => {
-            let ea_value = Cpu::get_ea_value_unsigned_word(ea_mode, ea_register, instr_address + 2, Some(OperationSize::Byte), reg, mem);
+            let ea_value = Cpu::get_ea_value_unsigned_word(ea_mode, ea_register, instr_address + 2, reg, mem);
             let reg_value = (reg.reg_d[register] & 0x0000ffff) as u16;
             let add_result = Cpu::add_unsigned_words(ea_value.value, reg_value);
               
@@ -73,7 +73,7 @@ pub fn step<'a>(
             };
         }
         LONG_WITH_DN_AS_DEST => {
-            let ea_value = Cpu::get_ea_value_unsigned_long(ea_mode, ea_register, instr_address + 2, Some(OperationSize::Long), reg, mem);
+            let ea_value = Cpu::get_ea_value_unsigned_long(ea_mode, ea_register, instr_address + 2, reg, mem);
             let reg_value = reg.reg_d[register];
             let add_result = Cpu::add_unsigned_longs(ea_value.value, reg_value);
             

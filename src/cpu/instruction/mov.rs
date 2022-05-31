@@ -34,13 +34,13 @@ pub fn step<'a>(
     
     match size {
         OperationSize::Byte => {
-            let data = Cpu::get_ea_value_unsigned_byte(src_ea_mode, src_ea_register, instr_address + 2, Some(size), reg, mem);
+            let data = Cpu::get_ea_value_unsigned_byte(src_ea_mode, src_ea_register, instr_address + 2, reg, mem);
         }
         OperationSize::Word => {
-            let data = Cpu::get_ea_value_unsigned_word(src_ea_mode, src_ea_register, instr_address + 2, Some(size), reg, mem);
+            let data = Cpu::get_ea_value_unsigned_word(src_ea_mode, src_ea_register, instr_address + 2, reg, mem);
         }
         OperationSize::Long => {
-            let get_data_result = Cpu::get_ea_value_unsigned_long(src_ea_mode, src_ea_register, instr_address + 2, Some(size), reg, mem);
+            let get_data_result = Cpu::get_ea_value_unsigned_long(src_ea_mode, src_ea_register, instr_address + 2, reg, mem);
             // let set_result = Cpu::set_ea_value_unsigned_long(dst_ea_mode, dst_ea_register, get_data_result.value, instr_address, reg, mem);
         }
     };
