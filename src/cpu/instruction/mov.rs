@@ -236,4 +236,43 @@ mod tests {
         assert_eq!(false, cpu.register.is_sr_negative_set());
         assert_eq!(false, cpu.register.is_sr_extend_set());
     }
+
+    #[test]
+    fn address_reg_indirect_with_post_increment_to_address_reg_indirect() {
+        // arrange
+        let code = [0x14, 0x99].to_vec(); // MOVE.B (A1)+,(A2)
+        let mem_range = MemRange::from_bytes(0x00090000, [0xf0, 0x00].to_vec());
+        let mut cpu = crate::instr_test_setup(code, Some(mem_range));
+        cpu.register.reg_a[1] = 0x00090000;
+        cpu.register.reg_a[2] = 0x00090001;
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_OVERFLOW
+            // | STATUS_REGISTER_MASK_ZERO
+            // | STATUS_REGISTER_MASK_NEGATIVE
+            // | STATUS_REGISTER_MASK_EXTEND
+            ;
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            DisassemblyResult::Done {
+                name: String::from("MOVE.B"),
+                operands_format: String::from("(A1)+,(A2)"),
+                instr_address: 0x080000,
+                next_instr_address: 0x080002
+            },
+            debug_result
+        );
+        // // act
+        cpu.execute_next_instruction();
+        // // assert
+        assert_eq!(0x00090001, cpu.register.reg_a[1]);
+        assert_eq!(0x00080002, cpu.register.reg_pc);
+    
+        assert_eq!(0xf0, cpu.memory.get_unsigned_byte(0x00090001));
+        assert_eq!(false, cpu.register.is_sr_carry_set());
+        assert_eq!(false, cpu.register.is_sr_coverflow_set());
+        assert_eq!(false, cpu.register.is_sr_zero_set());
+        assert_eq!(true, cpu.register.is_sr_negative_set());
+        assert_eq!(false, cpu.register.is_sr_extend_set());
+    }
 }
