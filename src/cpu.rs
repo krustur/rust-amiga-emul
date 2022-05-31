@@ -636,38 +636,12 @@ impl Cpu {
                 0b010 => {
                     // Program Counter Indirect with Displacement Mode
                     // (d16,PC)
-
-                    // let extension_word = self.memory.get_signed_word(instr_addr + 2);
-                    // let ea = Cpu::get_address_with_i16_displacement(
-                    //     self.register.reg_pc + 2,
-                    //     extension_word,
-                    // );
-                    // //  let operand =
-                    // //  self.memory.get_unsigned_longword_with_i16_displacement(
-                    // //         instr_addr + 2,
-                    // //         extension_word,
-                    // //     );
-                    // let ea_format = format!("({:#06x},PC)", extension_word);
-                    // // let debug_result = common_get_debug(
-                    // //     instr_addr,
-                    // //     instr_word,
-                    // //     &mut self.register,
-                    // //     &mut self.memory,
-                    // //     ea_format,
-                    // //     ea,
-                    // // );
-                    // // let exec_result = common_step(
-                    // //     instr_addr,
-                    // //     instr_word,
-                    // //     &mut self.register,
-                    // //     &mut self.memory,
-                    // //     ea,
-                    // // );
-                    // // (exec_result, debug_result)
-                    panic!(
-                        "get_ea() Unhandled PcIndirectAndLotsMore 0b010 {:?} {}",
-                        ea_mode, ea_register
-                    );
+                    let extension_word = mem.get_signed_word(extension_address);
+                    let address = Cpu::get_address_with_i16_displacement(reg.reg_pc + 2, extension_word);
+                    EffectiveAddress {
+                        address: address,
+                        num_extension_words: 1,
+                    }
                 }
                 0b011 => {
                     // Program Counter Indirect with Index (8-Bit Displacement) Mode
@@ -1154,25 +1128,6 @@ impl Cpu {
 
         let get_debug = instruction.get_debug;
         let debug_result = get_debug(instr_addr, instr_word, &mut self.register, &mut self.memory);
-
-        // if let DisassemblyResult::Done {
-        //     name,
-        //     operands_format,
-        //     next_instr_address,
-        // } = &debug_result
-        // {
-        //     let instr_format = format!("{} {}", name, operands_format);
-        //     print!("{:#010X} ", instr_addr);
-        //     for i in (instr_addr..instr_addr + 8).step_by(2) {
-        //         if i < *next_instr_address {
-        //             let op_mem = self.memory.get_unsigned_word(i);
-        //             print!("{:04X} ", op_mem);
-        //         } else {
-        //             print!("     ");
-        //         }
-        //     }
-        //     println!("{: <30}", instr_format);
-        // }
 
         debug_result
     }
