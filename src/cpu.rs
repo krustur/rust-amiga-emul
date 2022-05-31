@@ -32,12 +32,19 @@ impl fmt::Display for EffectiveAddressDebug {
 #[derive(Debug, PartialEq)]
 pub struct ResultWithStatusRegister<T> {
     pub result: T,
-    pub status_register: u16,
+    pub status_register_result: StatusRegisterResult,
 }
 
-impl<T> ResultWithStatusRegister<T> {
-    pub fn merge_status_register(&self, status_register: u16, status_register_mask: u16) -> u16 {
-        (status_register & !status_register_mask) | (self.status_register & status_register_mask)
+#[derive(Debug, PartialEq)]
+pub struct StatusRegisterResult {
+    pub status_register: u16,
+    pub status_register_mask: u16,
+}
+
+impl StatusRegisterResult {
+    pub fn merge_status_register(&self, status_register: u16) -> u16 {
+        (status_register & !self.status_register_mask)
+            | (self.status_register & self.status_register_mask)
     }
 }
 
@@ -347,7 +354,14 @@ impl Cpu {
 
         ResultWithStatusRegister {
             result,
-            status_register,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_EXTEND
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
         }
     }
 
@@ -375,7 +389,14 @@ impl Cpu {
 
         ResultWithStatusRegister {
             result,
-            status_register,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_EXTEND
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
         }
     }
 
@@ -403,7 +424,14 @@ impl Cpu {
 
         ResultWithStatusRegister {
             result,
-            status_register,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_EXTEND
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
         }
     }
 
@@ -814,7 +842,7 @@ impl Cpu {
     pub fn get_ea_value_signed_word(
         ea_mode: EffectiveAddressingMode,
         ea_register: usize,
-        extension_address: u32,        
+        extension_address: u32,
         reg: &mut Register,
         mem: &Mem,
     ) -> EffectiveAddressValue<i16> {
@@ -863,7 +891,7 @@ impl Cpu {
     pub fn get_ea_value_unsigned_long(
         ea_mode: EffectiveAddressingMode,
         ea_register: usize,
-        extension_address: u32,        
+        extension_address: u32,
         reg: &mut Register,
         mem: &Mem,
     ) -> EffectiveAddressValue<u32> {
@@ -912,7 +940,7 @@ impl Cpu {
     pub fn get_ea_value_signed_long(
         ea_mode: EffectiveAddressingMode,
         ea_register: usize,
-        extension_address: u32,        
+        extension_address: u32,
         reg: &mut Register,
         mem: &Mem,
     ) -> EffectiveAddressValue<i32> {
@@ -1357,7 +1385,14 @@ mod tests {
         assert_eq!(
             ResultWithStatusRegister {
                 result: 0x10,
-                status_register: STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND
+                status_register_result: StatusRegisterResult {
+                    status_register: STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND,
+                    status_register_mask: STATUS_REGISTER_MASK_CARRY
+                        | STATUS_REGISTER_MASK_EXTEND
+                        | STATUS_REGISTER_MASK_OVERFLOW
+                        | STATUS_REGISTER_MASK_ZERO
+                        | STATUS_REGISTER_MASK_NEGATIVE
+                }
             },
             result
         );
@@ -1369,7 +1404,14 @@ mod tests {
         assert_eq!(
             ResultWithStatusRegister {
                 result: 0x80,
-                status_register: STATUS_REGISTER_MASK_OVERFLOW | STATUS_REGISTER_MASK_NEGATIVE
+                status_register_result: StatusRegisterResult {
+                    status_register: STATUS_REGISTER_MASK_OVERFLOW | STATUS_REGISTER_MASK_NEGATIVE,
+                    status_register_mask: STATUS_REGISTER_MASK_CARRY
+                        | STATUS_REGISTER_MASK_EXTEND
+                        | STATUS_REGISTER_MASK_OVERFLOW
+                        | STATUS_REGISTER_MASK_ZERO
+                        | STATUS_REGISTER_MASK_NEGATIVE
+                }
             },
             result
         );
@@ -1385,11 +1427,18 @@ mod tests {
         assert_eq!(
             ResultWithStatusRegister {
                 result: 0x00,
-                status_register: STATUS_REGISTER_MASK_CARRY
-                    | STATUS_REGISTER_MASK_EXTEND
-                    | STATUS_REGISTER_MASK_OVERFLOW
-                    | STATUS_REGISTER_MASK_ZERO
-            },
+                status_register_result: StatusRegisterResult {
+                    status_register: STATUS_REGISTER_MASK_CARRY
+                        | STATUS_REGISTER_MASK_EXTEND
+                        | STATUS_REGISTER_MASK_OVERFLOW
+                        | STATUS_REGISTER_MASK_ZERO,
+                    status_register_mask: STATUS_REGISTER_MASK_CARRY
+                        | STATUS_REGISTER_MASK_EXTEND
+                        | STATUS_REGISTER_MASK_OVERFLOW
+                        | STATUS_REGISTER_MASK_ZERO
+                        | STATUS_REGISTER_MASK_NEGATIVE
+                }
+            },            
             result
         );
     }

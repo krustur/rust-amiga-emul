@@ -46,7 +46,6 @@ pub fn step<'a>(
         _ => panic!("What")
     };
 
-    let status_register_mask = STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_OVERFLOW | STATUS_REGISTER_MASK_ZERO |STATUS_REGISTER_MASK_NEGATIVE;
     match opmode {
         BYTE_WITH_DN_AS_DEST => {
             let ea_value = Cpu::get_ea_value_unsigned_byte(ea_mode, ea_register, instr_address + 2, reg, mem);
@@ -54,7 +53,7 @@ pub fn step<'a>(
             let add_result = Cpu::add_unsigned_bytes(ea_value.value, reg_value);
             
             reg.reg_d[register] = (reg.reg_d[register] & 0xffffff00) | (add_result.result as u32);
-            reg.reg_sr = add_result.merge_status_register(reg.reg_sr, status_register_mask);
+            reg.reg_sr = add_result.status_register_result.merge_status_register(reg.reg_sr);
 
             return InstructionExecutionResult::Done {
                 pc_result: PcResult::Increment(2 + (ea_value.num_extension_words << 1)),
@@ -66,7 +65,7 @@ pub fn step<'a>(
             let add_result = Cpu::add_unsigned_words(ea_value.value, reg_value);
               
             reg.reg_d[register] = (reg.reg_d[register] & 0xffff0000) | (add_result.result as u32);
-            reg.reg_sr = add_result.merge_status_register(reg.reg_sr, status_register_mask);
+            reg.reg_sr = add_result.status_register_result.merge_status_register(reg.reg_sr);
 
             return InstructionExecutionResult::Done {
                 pc_result: PcResult::Increment(2 + (ea_value.num_extension_words << 1)),
@@ -78,7 +77,7 @@ pub fn step<'a>(
             let add_result = Cpu::add_unsigned_longs(ea_value.value, reg_value);
             
             reg.reg_d[register] = add_result.result;
-            reg.reg_sr = add_result.merge_status_register(reg.reg_sr, status_register_mask);
+            reg.reg_sr = add_result.status_register_result.merge_status_register(reg.reg_sr);
 
             return InstructionExecutionResult::Done {
                 pc_result: PcResult::Increment(2 + (ea_value.num_extension_words << 1)),
