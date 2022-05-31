@@ -1131,6 +1131,64 @@ impl Cpu {
         }
     }
 
+    pub fn set_ea_value_unsigned_long(
+        ea_mode: EffectiveAddressingMode,
+        ea_register: usize,
+        extension_address: u32,
+        value: u32,
+        reg: &mut Register,
+        mem: &mut Mem,
+    ) -> SetEffectiveAddressValueResult {
+        let num_extension_words = match ea_mode {
+            EffectiveAddressingMode::DRegDirect => {
+                reg.reg_d[ea_register] = value;
+                0
+            }
+            EffectiveAddressingMode::ARegDirect => {
+                reg.reg_a[ea_register] = value;
+                0
+            }
+            EffectiveAddressingMode::PcIndirectAndLotsMore if ea_register == 0b100 => {
+                // Immediate data
+                // #<xxx>
+                panic!("set_ea_value_unsigned_word invalid EffectiveAddressingMode::PcIndirectAndLotsMore Immediate data");
+            }
+            _ => {
+                let ea = Cpu::get_ea(
+                    ea_mode,
+                    ea_register,
+                    extension_address,
+                    Some(OperationSize::Long),
+                    reg,
+                    mem,
+                );
+                mem.set_unsigned_long(ea.address, value);
+                ea.num_extension_words
+            }
+        };
+
+        let value_signed = value as i32;
+
+        let mut status_register = 0x0000;
+
+        match value_signed {
+            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            i32::MIN..=-1 => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+            _ => (),
+        }
+
+        SetEffectiveAddressValueResult {
+            num_extension_words,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
+        }
+    }
+
     pub fn print_registers(self: &mut Cpu) {
         for n in 0..8 {
             print!(" D{} {:#010X}", n, self.register.reg_d[n]);
