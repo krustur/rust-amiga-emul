@@ -628,7 +628,6 @@ impl Cpu {
                     None => panic!("Must have operation_size for ARegIndirectWithPostIncrement!"),
                     Some(operation_size) => operation_size.size_in_bytes(),
                 };
-                // println!("ARegIndirectWithPostIncrement: A{}", ea_register);
                 reg.reg_a[ea_register] += size_in_bytes;
                 EffectiveAddress {
                     address: address,
@@ -640,8 +639,6 @@ impl Cpu {
                     None => panic!("Must have operation_size for ARegIndirectWithPreDecrement!"),
                     Some(operation_size) => operation_size.size_in_bytes(),
                 };
-
-                // println!("ARegIndirectWithPreDecrement: A{}", ea_register);
                 reg.reg_a[ea_register] -= size_in_bytes;
                 let address = reg.reg_a[ea_register];
                 EffectiveAddress {
@@ -649,8 +646,15 @@ impl Cpu {
                     num_extension_words: 0,
                 }
             }
-            EffectiveAddressingMode::ARegIndirectWithDisplacement
-            | EffectiveAddressingMode::ARegIndirectWithIndex => {
+            EffectiveAddressingMode::ARegIndirectWithDisplacement => {
+                let extension_word = mem.get_signed_word(extension_address);
+                let address = reg.reg_a[ea_register] + Cpu::sign_extend_i16(extension_word);
+                EffectiveAddress {
+                    address: address,
+                    num_extension_words: 1,
+                }
+            }
+            EffectiveAddressingMode::ARegIndirectWithIndex => {
                 panic!(
                     "get_ea_value_unsigned_long() UNKNOWN_EA {:?} {}",
                     ea_mode, ea_register
