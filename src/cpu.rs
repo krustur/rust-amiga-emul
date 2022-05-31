@@ -262,6 +262,15 @@ impl Cpu {
         ea_mode
     }
 
+    fn extract_scale_factor_from_bit_pos(word: u16, bit_pos: u8) -> ScaleFactor {
+        let scale_factor = (word >> bit_pos) & 0b0011;
+        let scale_factor = match ScaleFactor::from_u16(scale_factor) {
+            Some(r) => r,
+            None => panic!("Unable to extract ScaleFactor"),
+        };
+        scale_factor
+    }
+
     fn extract_op_mode_from_bit_pos_6(word: u16) -> usize {
         let op_mode = (word >> 6) & 0x0007;
         let op_mode = match FromPrimitive::from_u16(op_mode) {
@@ -513,7 +522,37 @@ impl Cpu {
                 }
             }
             EffectiveAddressingMode::ARegIndirectWithIndex => {
-                panic!("get_ea_format() UNKNOWN_EA {:?} {}", ea_mode, ea_register);
+                // panic!("get_ea_format() UNKNOWN_EA {:?} {}", ea_mode, ea_register);
+                let extension_word = mem.get_unsigned_word(extension_address);
+                let displacement = (extension_word & 0x00ff) as i8;
+                let displacement_sign = match displacement {
+                    i8::MIN..=-1 => String::from("-"),
+                    _ => String::from(""),
+                };
+                let register_type = match extension_word & 0x8000 {
+                    0x8000 => 'A',
+                    _ => 'D',
+                };
+                let index_size = match extension_word & 0x0800 {
+                    0x0800 => 'L',
+                    _ => 'W',
+                };
+                let register = Cpu::extract_register_index_from_bit_pos(extension_word, 12);
+                let scale_factor = Cpu::extract_scale_factor_from_bit_pos(extension_word, 9);
+                let format = format!(
+                    "({}${:02X},A{},{}{}.{}{})",
+                    displacement_sign,
+                    displacement,
+                    ea_register,
+                    register_type,
+                    register,
+                    index_size,
+                    scale_factor
+                );
+                EffectiveAddressDebug {
+                    format: format,
+                    num_extension_words: 1,
+                }
             }
             EffectiveAddressingMode::PcIndirectAndLotsMore => match ea_register {
                 0b000 => {

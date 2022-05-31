@@ -72,6 +72,49 @@ impl OperationSize {
     }
 }
 
+#[derive(FromPrimitive, Debug, Copy, Clone)]
+pub enum ScaleFactor {
+    One = 0b00,
+    Two = 0b01,
+    Four = 0b10,
+    Eight = 0b11
+}
+
+impl ScaleFactor {
+    pub fn scale_as_int(&self) -> u32 {
+        match self {
+            ScaleFactor::One => 1,
+            ScaleFactor::Two => 2,
+            ScaleFactor::Four => 4,
+            ScaleFactor::Eight => 8,
+        }
+    }
+}
+
+impl fmt::Display for ScaleFactor {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            ScaleFactor::One => {
+                write!(f, "")
+            }
+            ScaleFactor::Two => {
+                write!(f, "*2")
+            }
+            ScaleFactor::Four => {
+                write!(f, "*4")
+            }
+            ScaleFactor::Eight => {
+                write!(f, "*8")
+            }            
+            _ => {
+                write!(f, "")
+            }
+        }
+        // write!(f, "{}", self.format)
+    }
+}
+
+
 #[derive(FromPrimitive, Debug)]
 pub enum ConditionalTest {
     /// True (1)
