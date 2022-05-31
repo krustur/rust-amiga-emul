@@ -61,6 +61,14 @@ impl MemRange {
         result
     }
 
+    pub fn set_unsigned_long(self: &mut MemRange, address: u32, value: u32) {
+        let index = self.remap_address_to_index(address);
+        self.bytes[index] = ((value >> 24) & 0x000000ff) as u8;
+        self.bytes[index+1] = ((value >> 16) & 0x000000ff) as u8;
+        self.bytes[index+2] = ((value >> 8) & 0x000000ff) as u8;
+        self.bytes[index+3] = ((value) & 0x000000ff) as u8;
+    }
+
     pub fn get_unsigned_word(self: &MemRange, address: u32) -> u16 {
         let index = self.remap_address_to_index(address);
         let mut bytes = &self.bytes[index..index + 2];
@@ -78,6 +86,12 @@ impl MemRange {
         result
     }
 
+    pub fn set_unsigned_word(self: &mut MemRange, address: u32, value: u16) {
+        let index = self.remap_address_to_index(address);
+        self.bytes[index] = ((value >> 8) & 0x000000ff) as u8;
+        self.bytes[index+1] = ((value) & 0x000000ff) as u8;
+    }
+
     pub fn get_unsigned_byte(self: &MemRange, address: u32) -> u8 {
         let index = self.remap_address_to_index(address);
         let mut bytes = &self.bytes[index..index + 1];
@@ -91,4 +105,11 @@ impl MemRange {
         let result = bytes.read_i8().unwrap();
         result
     }
+
+    pub fn set_unsigned_byte(self: &mut MemRange, address: u32, value: u8) {
+        let index = self.remap_address_to_index(address);
+        self.bytes[index] = ((value) & 0x000000ff) as u8;
+    }
+
+    
 }

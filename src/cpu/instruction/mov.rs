@@ -5,7 +5,7 @@ use crate::{
 };
 
 use super::{
-    DisassemblyResult, EffectiveAddressingMode, InstructionExecutionResult, OperationSize,
+    DisassemblyResult, EffectiveAddressingMode, InstructionExecutionResult, OperationSize, PcResult,
 };
 
 // Instruction State
@@ -34,19 +34,30 @@ pub fn step<'a>(
     
     match size {
         OperationSize::Byte => {
-            let data = Cpu::get_ea_value_unsigned_byte(src_ea_mode, src_ea_register, instr_address + 2, reg, mem);
+            let ea_value = Cpu::get_ea_value_unsigned_byte(src_ea_mode, src_ea_register, instr_address + 2, reg, mem);
+            let set_result = Cpu::set_ea_value_unsigned_byte(dst_ea_mode, dst_ea_register, instr_address + 2 + (ea_value.num_extension_words << 1), ea_value.value, reg, mem);
+            reg.reg_sr = set_result.status_register_result.merge_status_register(reg.reg_sr);
+            InstructionExecutionResult::Done {
+                pc_result: PcResult::Increment(2 + (ea_value.num_extension_words << 1) + (set_result.num_extension_words << 1)),
+            }
         }
         OperationSize::Word => {
-            let data = Cpu::get_ea_value_unsigned_word(src_ea_mode, src_ea_register, instr_address + 2, reg, mem);
+            let ea_value = Cpu::get_ea_value_unsigned_word(src_ea_mode, src_ea_register, instr_address + 2, reg, mem);
+            let set_result = Cpu::set_ea_value_unsigned_word(dst_ea_mode, dst_ea_register, instr_address + 2 + (ea_value.num_extension_words << 1), ea_value.value, reg, mem);
+            reg.reg_sr = set_result.status_register_result.merge_status_register(reg.reg_sr);
+            InstructionExecutionResult::Done {
+                pc_result: PcResult::Increment(2 + (ea_value.num_extension_words << 1) + (set_result.num_extension_words << 1)),
+            }
         }
         OperationSize::Long => {
-            let get_data_result = Cpu::get_ea_value_unsigned_long(src_ea_mode, src_ea_register, instr_address + 2, reg, mem);
+            let ea_value = Cpu::get_ea_value_unsigned_long(src_ea_mode, src_ea_register, instr_address + 2, reg, mem);
             // let set_result = Cpu::set_ea_value_unsigned_long(dst_ea_mode, dst_ea_register, get_data_result.value, instr_address, reg, mem);
+            todo!();
         }
-    };
+    }
 
 
-    todo!();
+    
     // InstructionExecutionResult::Done {
     //     pc_result: PcResult::Increment(2 + (ea_value.num_extension_words << 1)),
     // }
@@ -85,9 +96,9 @@ pub fn get_disassembly<'a>(
 
     let name = match dst_ea_mode {
         EffectiveAddressingMode::ARegDirect => match size {            
+            OperationSize::Byte => panic!("AddressRegisterDirect as destination only available for Word and Long"),
             OperationSize::Word => String::from("MOVEA.W"),
             OperationSize::Long => String::from("MOVEA.L"),
-            _ => panic!("AddressRegisterDirect as destination only available for Word and Long")
         },
         _ => match size {
             OperationSize::Byte => String::from("MOVE.B"),
@@ -95,8 +106,6 @@ pub fn get_disassembly<'a>(
             OperationSize::Long => String::from("MOVE.L"),
         },
     };
-    // 
-    // let size_char =
 
     DisassemblyResult::Done {
         name,
@@ -182,7 +191,7 @@ mod tests {
         // // act
         cpu.execute_next_instruction();
         // // assert
-        assert_eq!(0xffffff00, cpu.register.reg_d[0]);
+        assert_eq!(0xffff0000, cpu.register.reg_d[0]);
         assert_eq!(0x00080002, cpu.register.reg_pc);
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
@@ -219,11 +228,11 @@ mod tests {
         // // act
         cpu.execute_next_instruction();
         // // assert
-        assert_eq!(1234, cpu.register.reg_a[1]);
+        assert_eq!(0xffff1234, cpu.register.reg_a[1]);
         assert_eq!(0x00080002, cpu.register.reg_pc);
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
-        assert_eq!(true, cpu.register.is_sr_zero_set());
+        assert_eq!(false, cpu.register.is_sr_zero_set());
         assert_eq!(false, cpu.register.is_sr_negative_set());
         assert_eq!(false, cpu.register.is_sr_extend_set());
     }

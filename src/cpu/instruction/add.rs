@@ -2,10 +2,7 @@ use std::panic;
 use crate::cpu::instruction::PcResult;
 use crate::cpu::Cpu;
 use crate::mem::Mem;
-use crate::register::{
-    Register, STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND,
-    STATUS_REGISTER_MASK_NEGATIVE, STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
-};
+use crate::register::Register;
 
 use super::{DisassemblyResult, InstructionExecutionResult};
 

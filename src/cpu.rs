@@ -17,6 +17,11 @@ pub struct EffectiveAddressValue<T> {
     pub num_extension_words: u32,
 }
 
+pub struct SetEffectiveAddressValueResult {
+    pub num_extension_words: u32,
+    pub status_register_result: StatusRegisterResult,
+}
+
 pub struct EffectiveAddressDebug {
     // pub address: u32,
     pub format: String,
@@ -55,7 +60,7 @@ pub struct Cpu {
 }
 
 impl Cpu {
-    pub fn new(mem: Mem) -> Cpu {
+    pub fn new(mut mem: Mem) -> Cpu {
         let reg_ssp = mem.get_unsigned_long(0x0);
         let reg_pc = mem.get_unsigned_long(0x4);
         let instructions = vec![
@@ -316,6 +321,26 @@ impl Cpu {
 
     pub fn get_signed_long_from_unsigned_long(long: u32) -> i32 {
         long as i32
+    }
+
+    pub fn set_unsigned_byte_in_unsigned_long(value: u8, long: u32) -> u32 {
+        (long & 0xffffff00) | (value as u32)
+    }
+
+    pub fn set_unsigned_word_in_unsigned_long(value: u16, long: u32) -> u32 {
+        (long & 0xffff0000) | (value as u32)
+    }
+
+    pub fn set_signed_byte_in_unsigned_long(value: i8, long: u32) -> u32 {
+        (long & 0xffffff00) | (value as u32)
+    }
+
+    pub fn set_signed_word_in_unsigned_long(value: i16, long: u32) -> u32 {
+        (long & 0xffff0000) | (value as u32)
+    }
+
+    pub fn set_signed_long_in_unsigned_long(value: i32, long: u32) -> u32 {
+        long as u32
     }
 
     pub fn add_unsigned_bytes(value_1: u8, value_2: u8) -> ResultWithStatusRegister<u8> {
@@ -986,6 +1011,126 @@ impl Cpu {
         }
     }
 
+    pub fn set_ea_value_unsigned_byte(
+        ea_mode: EffectiveAddressingMode,
+        ea_register: usize,
+        extension_address: u32,
+        value: u8,
+        reg: &mut Register,
+        mem: &mut Mem,
+    ) -> SetEffectiveAddressValueResult {
+        let num_extension_words = match ea_mode {
+            EffectiveAddressingMode::DRegDirect => {
+                reg.reg_d[ea_register] =
+                    Cpu::set_unsigned_byte_in_unsigned_long(value, reg.reg_d[ea_register]);
+                0
+            }
+            EffectiveAddressingMode::ARegDirect => {
+                reg.reg_a[ea_register] =
+                    Cpu::set_unsigned_byte_in_unsigned_long(value, reg.reg_a[ea_register]);
+                0
+            }
+            EffectiveAddressingMode::PcIndirectAndLotsMore if ea_register == 0b100 => {
+                // Immediate data
+                // #<xxx>
+                panic!("set_ea_value_unsigned_byte invalid EffectiveAddressingMode::PcIndirectAndLotsMore Immediate data");
+            }
+            _ => {
+                let ea = Cpu::get_ea(
+                    ea_mode,
+                    ea_register,
+                    extension_address,
+                    Some(OperationSize::Byte),
+                    reg,
+                    mem,
+                );
+                mem.set_unsigned_byte(ea.address, value);
+                ea.num_extension_words
+            }
+        };
+
+        let value_signed = value as i8;
+
+        let mut status_register = 0x0000;
+
+        match value_signed {
+            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            i8::MIN..=-1 => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+            _ => (),
+        }
+
+        SetEffectiveAddressValueResult {
+            num_extension_words,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
+        }
+    }
+
+    pub fn set_ea_value_unsigned_word(
+        ea_mode: EffectiveAddressingMode,
+        ea_register: usize,
+        extension_address: u32,
+        value: u16,
+        reg: &mut Register,
+        mem: &mut Mem,
+    ) -> SetEffectiveAddressValueResult {
+        let num_extension_words = match ea_mode {
+            EffectiveAddressingMode::DRegDirect => {
+                reg.reg_d[ea_register] =
+                    Cpu::set_unsigned_word_in_unsigned_long(value, reg.reg_d[ea_register]);
+                0
+            }
+            EffectiveAddressingMode::ARegDirect => {
+                reg.reg_a[ea_register] =
+                    Cpu::set_unsigned_word_in_unsigned_long(value, reg.reg_a[ea_register]);
+                0
+            }
+            EffectiveAddressingMode::PcIndirectAndLotsMore if ea_register == 0b100 => {
+                // Immediate data
+                // #<xxx>
+                panic!("set_ea_value_unsigned_word invalid EffectiveAddressingMode::PcIndirectAndLotsMore Immediate data");
+            }
+            _ => {
+                let ea = Cpu::get_ea(
+                    ea_mode,
+                    ea_register,
+                    extension_address,
+                    Some(OperationSize::Word),
+                    reg,
+                    mem,
+                );
+                mem.set_unsigned_word(ea.address, value);
+                ea.num_extension_words
+            }
+        };
+
+        let value_signed = value as i16;
+
+        let mut status_register = 0x0000;
+
+        match value_signed {
+            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            i16::MIN..=-1 => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+            _ => (),
+        }
+
+        SetEffectiveAddressValueResult {
+            num_extension_words,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
+        }
+    }
+
     pub fn print_registers(self: &mut Cpu) {
         for n in 0..8 {
             print!(" D{} {:#010X}", n, self.register.reg_d[n]);
@@ -1438,7 +1583,7 @@ mod tests {
                         | STATUS_REGISTER_MASK_ZERO
                         | STATUS_REGISTER_MASK_NEGATIVE
                 }
-            },            
+            },
             result
         );
     }

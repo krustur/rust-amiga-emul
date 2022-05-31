@@ -23,6 +23,20 @@ impl Mem {
         &self.ranges[pos]
     }
 
+    fn get_range_mut(self: &mut Mem, address: u32) -> &mut memrange::MemRange {
+        // TODO: How to handle addresses not in Ranges?
+        // TODO: How to handle custom regs etc.?
+        let pos = self
+            .ranges
+            .iter()
+            .position(|x| address >= x.start_address && address <= x.end_address);
+        let pos = match pos {
+            None => panic!("Could not find MemRange for address: {:010x}", address),
+            Some(pos) => pos,
+        };
+        &mut self.ranges[pos]
+    }
+
     /// Get's a unsigned long (u32) from specified memory address
     ///
     /// # Arguments
@@ -45,6 +59,11 @@ impl Mem {
         result
     }
 
+    pub fn set_unsigned_long(self: &mut Mem, address: u32, value: u32) {
+        let range = self.get_range_mut(address);
+        let result = range.set_unsigned_long(address, value);
+    } 
+
     /// Get's a unsigned word (u16) from specified memory address
     ///
     /// # Arguments
@@ -55,6 +74,7 @@ impl Mem {
         let result = range.get_unsigned_word(address);
         result
     }
+
     /// Get's a signed word (i16) from specified memory address
     ///
     /// # Arguments
@@ -65,6 +85,11 @@ impl Mem {
         let result = range.get_signed_word(address);
         result
     }
+
+    pub fn set_unsigned_word(self: &mut Mem, address: u32, value: u16) {
+        let range = self.get_range_mut(address);
+        let result = range.set_unsigned_word(address, value);
+    } 
 
     /// Get's a unsigned byte (u8) from specified memory address
     ///
@@ -87,13 +112,20 @@ impl Mem {
         let result = range.get_signed_byte(address);
         result
     }
+
+    pub fn set_unsigned_byte(self: &mut Mem, address: u32, value: u8) {
+        let range = self.get_range_mut(address);
+        let result = range.set_unsigned_byte(address, value);
+    } 
+
+    
     /// Prints out content of memory in given range as hex dump
     ///
     /// # Arguments
     ///
     /// * `start_address` - Start address of memory to print
     /// * `end_address` - End address of memory to print
-    pub fn print_range(self: &Mem, start_address: u32, end_address: u32) {
+    pub fn print_range(self: &mut Mem, start_address: u32, end_address: u32) {
         let mut col_cnt = 0;
         let mut address = start_address;
         while address <= end_address {
