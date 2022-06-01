@@ -409,13 +409,37 @@ mod tests {
         assert_eq!(false, cpu.register.is_sr_extend_set());
     }
 
-
-    // let code = [0x11, 0xf9, 0x00, 0x09, 0x00, 0x00, 0x90, 0x00a].to_vec(); // MOVE.B ($90000).L,(-$7000).W
-    // let code = [0x11, 0xf9, 0x00, 0x09, 0x00, 0x00, 0x90, 0x00a].to_vec(); // MOVE.B ($90000).L,(-$7000).W
-    // let code = [0x11, 0xf9, 0x00, 0x09, 0x00, 0x00, 0x90, 0x00a].to_vec(); // MOVE.B ($90000).L,(-$7000).W
-    // let code = [0x11, 0xf9, 0x00, 0x09, 0x00, 0x00, 0x90, 0x00a].to_vec(); // MOVE.B ($90000).L,(-$7000).W
-    // let code = [0x11, 0xf9, 0x00, 0x09, 0x00, 0x00, 0x90, 0x00a].to_vec(); // MOVE.B ($90000).L,(-$7000).W
-    // let code = [0x11, 0xf9, 0x00, 0x09, 0x00, 0x00, 0x90, 0x00a].to_vec(); // MOVE.B ($90000).L,(-$7000).W
-
-
+    #[test]
+    fn absolute_long_addressing_mode_to_address_short_addressing_mode() {
+        // arrange
+        let code = [0x11, 0xf9, 0x00, 0x08, 0x00, 0x08, 0x90, 0x00, 0xff].to_vec(); // MOVE.B ($80008).L,(-$7000).W
+                                                                                             // DC.B $FF
+        let mem_range = MemRange::from_bytes(0xffff9000, [0x88].to_vec());
+        let mut cpu = crate::instr_test_setup(code, Some(mem_range));
+        cpu.register.reg_d[7] = 0xffffff00;
+        cpu.register.reg_a[6] = 0xffff9001 - 0x7c + 0x100; 
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_OVERFLOW;
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            DisassemblyResult::Done {
+                name: String::from("MOVE.B"),
+                operands_format: String::from("($00080008).L,($9000).W [$FFFF9000]"),
+                instr_address: 0x080000,
+                next_instr_address: 0x080008
+            },
+            debug_result
+        );
+        // // act
+        cpu.execute_next_instruction();
+        // // assert
+        assert_eq!(0x00080008, cpu.register.reg_pc);
+        assert_eq!(0xff, cpu.memory.get_unsigned_byte(0xffff9000));
+        assert_eq!(false, cpu.register.is_sr_carry_set());
+        assert_eq!(false, cpu.register.is_sr_coverflow_set());
+        assert_eq!(false, cpu.register.is_sr_zero_set());
+        assert_eq!(true, cpu.register.is_sr_negative_set());
+        assert_eq!(false, cpu.register.is_sr_extend_set());
+    }
 }
