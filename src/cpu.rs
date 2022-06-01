@@ -557,7 +557,11 @@ impl Cpu {
                     // Absolute Short Addressing Mode
                     // (xxx).W
                     let extension_word = mem.get_signed_word(extension_address);
-                    let format = format!("(${:04X}).W", extension_word);
+                    let address = Cpu::sign_extend_i16(extension_word);
+                    let format = match extension_word < 0 {
+                        false => format!("(${:04X}).W", extension_word),
+                        true => format!("(${:04X}).W [${:08X}]", extension_word, address),
+                    };
                     EffectiveAddressDebug {
                         format: format,
                         num_extension_words: 1,

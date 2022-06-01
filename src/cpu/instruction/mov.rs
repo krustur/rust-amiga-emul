@@ -213,10 +213,7 @@ mod tests {
         cpu.register.reg_a[1] = 0xffffffff;
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
             | STATUS_REGISTER_MASK_OVERFLOW
-            // | STATUS_REGISTER_MASK_ZERO
-            | STATUS_REGISTER_MASK_NEGATIVE
-            // | STATUS_REGISTER_MASK_EXTEND
-            ;
+            | STATUS_REGISTER_MASK_NEGATIVE;
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -249,11 +246,7 @@ mod tests {
         cpu.register.reg_a[1] = 0x00090000;
         cpu.register.reg_a[2] = 0x00090001;
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
-            | STATUS_REGISTER_MASK_OVERFLOW
-            // | STATUS_REGISTER_MASK_ZERO
-            // | STATUS_REGISTER_MASK_NEGATIVE
-            // | STATUS_REGISTER_MASK_EXTEND
-            ;
+            | STATUS_REGISTER_MASK_OVERFLOW;
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -288,11 +281,7 @@ mod tests {
         cpu.register.reg_a[2] = 0x00090004;
         cpu.register.reg_a[3] = 0x00090004;
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
-            | STATUS_REGISTER_MASK_OVERFLOW
-            // | STATUS_REGISTER_MASK_ZERO
-            // | STATUS_REGISTER_MASK_NEGATIVE
-            // | STATUS_REGISTER_MASK_EXTEND
-            ;
+            | STATUS_REGISTER_MASK_OVERFLOW;
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -310,7 +299,6 @@ mod tests {
         assert_eq!(0x00090000, cpu.register.reg_a[2]);
         assert_eq!(0x00090008, cpu.register.reg_a[3]);
         assert_eq!(0x00080002, cpu.register.reg_pc);
-    
         assert_eq!(0xfffffff0, cpu.memory.get_unsigned_long(0x00090004));
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
@@ -328,11 +316,7 @@ mod tests {
         cpu.register.reg_a[3] = 0x00090000 - 0x7ff0;
         cpu.register.reg_a[4] = 0x00090008;
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
-            | STATUS_REGISTER_MASK_OVERFLOW
-            // | STATUS_REGISTER_MASK_ZERO
-            // | STATUS_REGISTER_MASK_NEGATIVE
-            // | STATUS_REGISTER_MASK_EXTEND
-            ;
+            | STATUS_REGISTER_MASK_OVERFLOW;
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -350,7 +334,6 @@ mod tests {
         assert_eq!(0x00088010, cpu.register.reg_a[3]);
         assert_eq!(0x00090004, cpu.register.reg_a[4]);
         assert_eq!(0x00080004, cpu.register.reg_pc);
-    
         assert_eq!(0x12345678, cpu.memory.get_unsigned_long(0x00090004));
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
@@ -369,11 +352,7 @@ mod tests {
         cpu.register.reg_a[4] = 0x0008f800 + 0x80; // $80 displacement is -128 => +128 => 0x80
         cpu.register.reg_a[5] = 0x00090004 + 0x7ff0; // $8010 displacement is -32752 => +32752 => 0x7ff0
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
-            | STATUS_REGISTER_MASK_OVERFLOW
-            // | STATUS_REGISTER_MASK_ZERO
-            // | STATUS_REGISTER_MASK_NEGATIVE
-            // | STATUS_REGISTER_MASK_EXTEND
-            ;
+            | STATUS_REGISTER_MASK_OVERFLOW;
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -388,10 +367,7 @@ mod tests {
         // // act
         cpu.execute_next_instruction();
         // // assert
-        // assert_eq!(0x00088010, cpu.register.reg_a[4]);
-        // assert_eq!(0x00090004, cpu.register.reg_a[5]);
         assert_eq!(0x00080006, cpu.register.reg_pc);
-    
         assert_eq!(0x12345678, cpu.memory.get_unsigned_long(0x00090004));
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
@@ -399,4 +375,47 @@ mod tests {
         assert_eq!(false, cpu.register.is_sr_negative_set());
         assert_eq!(false, cpu.register.is_sr_extend_set());
     }
+
+    #[test]
+    fn absolute_short_addressing_mode_to_address_reg_indirect_with_index() {
+        // arrange
+        let code = [0x1d, 0xb8, 0x90, 0x00, 0x70, 0x7c].to_vec(); // MOVE.B ($9000).W,($7C,A6,D7.W)
+        let mem_range = MemRange::from_bytes(0xffff9000, [0x00, 0xff].to_vec());
+        let mut cpu = crate::instr_test_setup(code, Some(mem_range));
+        cpu.register.reg_d[7] = 0xffffff00;
+        cpu.register.reg_a[6] = 0xffff9001 - 0x7c + 0x100; 
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_OVERFLOW;
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            DisassemblyResult::Done {
+                name: String::from("MOVE.B"),
+                operands_format: String::from("($9000).W [$FFFF9000],($7C,A6,D7.W) [124]"),
+                instr_address: 0x080000,
+                next_instr_address: 0x080006
+            },
+            debug_result
+        );
+        // // act
+        cpu.execute_next_instruction();
+        // // assert
+        assert_eq!(0x00080006, cpu.register.reg_pc);
+        assert_eq!(0x00, cpu.memory.get_unsigned_byte(0xffff9001));
+        assert_eq!(false, cpu.register.is_sr_carry_set());
+        assert_eq!(false, cpu.register.is_sr_coverflow_set());
+        assert_eq!(true, cpu.register.is_sr_zero_set());
+        assert_eq!(false, cpu.register.is_sr_negative_set());
+        assert_eq!(false, cpu.register.is_sr_extend_set());
+    }
+
+
+    // let code = [0x11, 0xf9, 0x00, 0x09, 0x00, 0x00, 0x90, 0x00a].to_vec(); // MOVE.B ($90000).L,(-$7000).W
+    // let code = [0x11, 0xf9, 0x00, 0x09, 0x00, 0x00, 0x90, 0x00a].to_vec(); // MOVE.B ($90000).L,(-$7000).W
+    // let code = [0x11, 0xf9, 0x00, 0x09, 0x00, 0x00, 0x90, 0x00a].to_vec(); // MOVE.B ($90000).L,(-$7000).W
+    // let code = [0x11, 0xf9, 0x00, 0x09, 0x00, 0x00, 0x90, 0x00a].to_vec(); // MOVE.B ($90000).L,(-$7000).W
+    // let code = [0x11, 0xf9, 0x00, 0x09, 0x00, 0x00, 0x90, 0x00a].to_vec(); // MOVE.B ($90000).L,(-$7000).W
+    // let code = [0x11, 0xf9, 0x00, 0x09, 0x00, 0x00, 0x90, 0x00a].to_vec(); // MOVE.B ($90000).L,(-$7000).W
+
+
 }
