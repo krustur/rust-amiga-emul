@@ -338,7 +338,7 @@ mod tests {
         assert_eq!(
             DisassemblyResult::Done {
                 name: String::from("MOVE.L"),
-                operands_format: String::from("($7FF0,A3),-(A4)"),
+                operands_format: String::from("($7FF0,A3) [32752],-(A4)"),
                 instr_address: 0x080000,
                 next_instr_address: 0x080004
             },
@@ -362,11 +362,12 @@ mod tests {
     #[test]
     fn address_reg_indirect_with_index_to_address_reg_indirect_with_displacement() {
         // arrange
-        let code = [0x2b, 0x74, 0x0e, 0x80, 0x80, 0x10].to_vec(); // MOVE.L (-$80,A4,D0.L*8),-$7FF0(A5)
+        let code = [0x2b, 0x74, 0x0e, 0x80, 0x80, 0x10].to_vec(); // MOVE.L ($80,A4,D0.L*8),$8010(A5)
         let mem_range = MemRange::from_bytes(0x00090000, [0x12, 0x34, 0x56, 0x78, 0x00, 0x00, 0x00, 0x00].to_vec());
         let mut cpu = crate::instr_test_setup(code, Some(mem_range));
-        cpu.register.reg_a[3] = 0x00090000 - 0x7ff0;
-        cpu.register.reg_a[4] = 0x00090008;
+        cpu.register.reg_d[0] = 0x00000100;
+        cpu.register.reg_a[4] = 0x0008f800 + 0x80; // $80 displacement is -128 => +128 => 0x80
+        cpu.register.reg_a[5] = 0x00090004 + 0x7ff0; // $8010 displacement is -32752 => +32752 => 0x7ff0
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
             | STATUS_REGISTER_MASK_OVERFLOW
             // | STATUS_REGISTER_MASK_ZERO
@@ -378,7 +379,7 @@ mod tests {
         assert_eq!(
             DisassemblyResult::Done {
                 name: String::from("MOVE.L"),
-                operands_format: String::from("(-$80,A4,D0.L*8),-$7FF0(A5)"),
+                operands_format: String::from("($80,A4,D0.L*8) [-128],($8010,A5) [-32752]"),
                 instr_address: 0x080000,
                 next_instr_address: 0x080006
             },
@@ -387,8 +388,8 @@ mod tests {
         // // act
         cpu.execute_next_instruction();
         // // assert
-        assert_eq!(0x00088010, cpu.register.reg_a[3]);
-        assert_eq!(0x00090004, cpu.register.reg_a[4]);
+        // assert_eq!(0x00088010, cpu.register.reg_a[4]);
+        // assert_eq!(0x00090004, cpu.register.reg_a[5]);
         assert_eq!(0x00080006, cpu.register.reg_pc);
     
         assert_eq!(0x12345678, cpu.memory.get_unsigned_long(0x00090004));

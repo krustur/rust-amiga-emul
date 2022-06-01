@@ -60,7 +60,7 @@ pub struct Cpu {
 }
 
 impl Cpu {
-    pub fn new(mut mem: Mem) -> Cpu {
+    pub fn new(mem: Mem) -> Cpu {
         let reg_ssp = mem.get_unsigned_long(0x0);
         let reg_pc = mem.get_unsigned_long(0x4);
         let instructions = vec![
@@ -515,20 +515,19 @@ impl Cpu {
             }
             EffectiveAddressingMode::ARegIndirectWithDisplacement => {
                 let extension_word = mem.get_signed_word(extension_address);
-                let format = format!("(${:04X},A{})", extension_word, ea_register);
+                let format = format!(
+                    "(${:04X},A{}) [{}]",
+                    extension_word, ea_register, extension_word
+                );
                 EffectiveAddressDebug {
                     format: format,
                     num_extension_words: 1,
                 }
             }
             EffectiveAddressingMode::ARegIndirectWithIndex => {
-                // panic!("get_ea_format() UNKNOWN_EA {:?} {}", ea_mode, ea_register);
                 let extension_word = mem.get_unsigned_word(extension_address);
                 let displacement = (extension_word & 0x00ff) as i8;
-                let displacement_sign = match displacement {
-                    i8::MIN..=-1 => String::from("-"),
-                    _ => String::from(""),
-                };
+                let register = Cpu::extract_register_index_from_bit_pos(extension_word, 12);
                 let register_type = match extension_word & 0x8000 {
                     0x8000 => 'A',
                     _ => 'D',
@@ -537,17 +536,16 @@ impl Cpu {
                     0x0800 => 'L',
                     _ => 'W',
                 };
-                let register = Cpu::extract_register_index_from_bit_pos(extension_word, 12);
                 let scale_factor = Cpu::extract_scale_factor_from_bit_pos(extension_word, 9);
                 let format = format!(
-                    "({}${:02X},A{},{}{}.{}{})",
-                    displacement_sign,
+                    "(${:02X},A{},{}{}.{}{}) [{}]",
                     displacement,
                     ea_register,
                     register_type,
                     register,
                     index_size,
-                    scale_factor
+                    scale_factor,
+                    displacement
                 );
                 EffectiveAddressDebug {
                     format: format,
@@ -687,17 +685,44 @@ impl Cpu {
             }
             EffectiveAddressingMode::ARegIndirectWithDisplacement => {
                 let extension_word = mem.get_signed_word(extension_address);
-                let address = reg.reg_a[ea_register] + Cpu::sign_extend_i16(extension_word);
+                let (address, _) = reg.reg_a[ea_register].overflowing_add(Cpu::sign_extend_i16(extension_word));
                 EffectiveAddress {
                     address: address,
                     num_extension_words: 1,
                 }
             }
             EffectiveAddressingMode::ARegIndirectWithIndex => {
-                panic!(
-                    "get_ea_value_unsigned_long() UNKNOWN_EA {:?} {}",
-                    ea_mode, ea_register
-                );
+                let extension_word = mem.get_unsigned_word(extension_address);
+                let displacement = (extension_word & 0x00ff) as i8;
+                let register = Cpu::extract_register_index_from_bit_pos(extension_word, 12);
+                let register = match extension_word & 0x8000 {
+                    0x8000 => reg.reg_a[register],
+                    _ => reg.reg_d[register],
+                };
+                let register = match extension_word & 0x0800 {
+                    0x0800 => register,
+                    _ => Cpu::sign_extend_i16((register & 0x0000ffff) as i16),
+                };
+                let scale_factor = Cpu::extract_scale_factor_from_bit_pos(extension_word, 9);
+                let register = match scale_factor {
+                    ScaleFactor::One => register,
+                    ScaleFactor::Two => register << 1,
+                    ScaleFactor::Four => register << 2,
+                    ScaleFactor::Eight => register << 3,
+                };
+                println!("{}", register);
+
+                let displacement = Cpu::sign_extend_i8(displacement);
+                println!("{}+{}+{}", reg.reg_a[ea_register], displacement, register);
+                println!("{:08x}+{:08x}+{:08x}", reg.reg_a[ea_register], displacement, register);
+                let (address, _) = reg.reg_a[ea_register].overflowing_add(displacement);
+                let (address, _) = address.overflowing_add(register);
+
+
+                EffectiveAddress {
+                    address: address,
+                    num_extension_words: 1,
+                }
             }
             EffectiveAddressingMode::PcIndirectAndLotsMore => match ea_register {
                 0b000 => {

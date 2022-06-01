@@ -106,9 +106,6 @@ impl fmt::Display for ScaleFactor {
             ScaleFactor::Eight => {
                 write!(f, "*8")
             }            
-            _ => {
-                write!(f, "")
-            }
         }
         // write!(f, "{}", self.format)
     }
