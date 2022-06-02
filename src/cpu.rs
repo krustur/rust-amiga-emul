@@ -585,8 +585,8 @@ impl Cpu {
                     // Program Counter Indirect with Displacement Mode
                     // (d16,PC)
                     let extension_word = mem.get_signed_word(extension_address);
-                    let ea = Cpu::get_address_with_i16_displacement(reg.reg_pc + 2, extension_word);
-                    let format = format!("({:#06x},PC)", extension_word);
+                    let address = Cpu::get_address_with_i16_displacement(reg.reg_pc + 2, extension_word);
+                    let format = format!("(${:04X},PC) [${:08X}]", extension_word, address);
 
                     EffectiveAddressDebug {
                         format: format,

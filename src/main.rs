@@ -14,10 +14,10 @@ mod register;
 static ROM_FILE_PATH: &str = "D:\\Amiga\\AmigaOS 3.1.4 for 68k Amiga 1200\\OS314_A1200\\ROMs\\emulation_or_maprom\\kick.a1200.46.143";
 
 fn main() {
-    
-    
+
+
     println!("Begin emulation!");
-    
+
     // Incorrect, but let's load the ROM to address 0x0 for now
     let rom_cheat =
         memrange::MemRange::from_file(0x000000, 512 * 1024, ROM_FILE_PATH)
@@ -105,9 +105,9 @@ fn instr_test_setup<'a>(code: Vec<u8>, mem_range: Option<memrange::MemRange>) ->
         let rom_cheat =
         memrange::MemRange::from_file(0x000000, 512 * 1024, ROM_FILE_PATH)
             .unwrap();
-        
+
         let mut mem_ranges = Vec::new();
-        let code = memrange::MemRange::from_bytes(0x080000, code);
+        let code = memrange::MemRange::from_bytes(0xC00000, code);
         mem_ranges.push(rom_cheat);
         mem_ranges.push(code);
         if let Some(mem_range) = mem_range {
@@ -115,6 +115,6 @@ fn instr_test_setup<'a>(code: Vec<u8>, mem_range: Option<memrange::MemRange>) ->
         }
         let mem = mem::Mem::new(mem_ranges);
         let mut cpu = cpu::Cpu::new(mem);
-        cpu.register.reg_pc = 0x080000;
+        cpu.register.reg_pc = 0xC00000;
         cpu
 }

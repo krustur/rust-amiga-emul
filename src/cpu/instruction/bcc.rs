@@ -94,16 +94,16 @@ mod tests {
         assert_eq!(
             DisassemblyResult::Done {
                 name: String::from("BCC.B"),
-                operands_format: String::from("$02 [$00080004]"),
-                instr_address: 0x080000,
-                next_instr_address: 0x080002
+                operands_format: String::from("$02 [$00C00004]"),
+                instr_address: 0xC00000,
+                next_instr_address: 0xC00002
             },
             debug_result
         );                             
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x080004, cpu.register.reg_pc);
+        assert_eq!(0xC00004, cpu.register.reg_pc);
     }
 
     #[test]
@@ -117,15 +117,15 @@ mod tests {
         assert_eq!(
             DisassemblyResult::Done {
                 name: String::from("BCC.B"),
-                operands_format: String::from("$02 [$00080004]"),
-                instr_address: 0x080000,
-                next_instr_address: 0x080002
+                operands_format: String::from("$02 [$00C00004]"),
+                instr_address: 0xC00000,
+                next_instr_address: 0xC00002
             },
             debug_result
         );
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x080002, cpu.register.reg_pc);
+        assert_eq!(0xC00002, cpu.register.reg_pc);
     }
 }

@@ -105,9 +105,9 @@ mod tests {
         assert_eq!(
             DisassemblyResult::Done {
                 name: String::from("DBCC"),
-                operands_format: String::from("D0,$0004 [$00080006]"),
-                instr_address: 0x80000,
-                next_instr_address: 0x080004
+                operands_format: String::from("D0,$0004 [$00C00006]"),
+                instr_address: 0xC00000,
+                next_instr_address: 0xC00004
             },
             debug_result
         );
@@ -115,7 +115,7 @@ mod tests {
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0xffff0000, cpu.register.reg_d[0]);
-        assert_eq!(0x080006, cpu.register.reg_pc);
+        assert_eq!(0xC00006, cpu.register.reg_pc);
     }
 
     #[test]
@@ -130,9 +130,9 @@ mod tests {
         assert_eq!(
             DisassemblyResult::Done {
                 name: String::from("DBCC"),
-                operands_format: String::from("D1,$0004 [$00080006]"),
-                instr_address: 0x80000,
-                next_instr_address: 0x080004
+                operands_format: String::from("D1,$0004 [$00C00006]"),
+                instr_address: 0xC00000,
+                next_instr_address: 0xc00004
             },
             debug_result
         );
@@ -140,7 +140,7 @@ mod tests {
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0xffffffff, cpu.register.reg_d[1]);
-        assert_eq!(0x080004, cpu.register.reg_pc);
+        assert_eq!(0xc00004, cpu.register.reg_pc);
     }
 
     #[test]
@@ -155,9 +155,9 @@ mod tests {
         assert_eq!(
             DisassemblyResult::Done {
                 name: String::from("DBCC"),
-                operands_format: String::from("D2,$0004 [$00080006]"),
-                instr_address: 0x80000,
-                next_instr_address: 0x080004
+                operands_format: String::from("D2,$0004 [$00C00006]"),
+                instr_address: 0xC00000,
+                next_instr_address: 0xC00004
             },
             debug_result
         );
@@ -165,6 +165,6 @@ mod tests {
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0xffff0001, cpu.register.reg_d[2]);
-        assert_eq!(0x080004, cpu.register.reg_pc);
+        assert_eq!(0xC00004, cpu.register.reg_pc);
     }
 }

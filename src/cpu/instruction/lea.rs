@@ -76,8 +76,8 @@ mod tests {
             DisassemblyResult::Done {
                 name: String::from("LEA"),
                 operands_format: String::from("($0500).W,A0"),
-                instr_address: 0x080000,
-                next_instr_address: 0x080004
+                instr_address: 0xC00000,
+                next_instr_address: 0xC00004
             },
             debug_result
         );
@@ -106,8 +106,8 @@ mod tests {
              DisassemblyResult::Done {
                  name: String::from("LEA"),
                  operands_format: String::from("($00F80000).L,A1"),
-                 instr_address: 0x080000,
-                 next_instr_address: 0x080006
+                 instr_address: 0xC00000,
+                 next_instr_address: 0xC00006
              },
              debug_result
          );

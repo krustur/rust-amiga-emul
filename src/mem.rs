@@ -6,6 +6,27 @@ pub struct Mem {
 
 impl Mem {
     pub fn new(ranges: Vec<memrange::MemRange>) -> Mem {
+        for (pos, range) in ranges.iter().enumerate() {
+            // println!("MemRange: ${:08X}-${:08X}", range.start_address, range.end_address);
+            for (other_pos, other_range) in ranges.iter().enumerate() {
+                if pos != other_pos {
+                    // println!("Checking {} with {}", pos, other_pos);
+                    //        x----------------------x          <-- other
+                    //                     x--------------x     <-- other_range (A)
+                    //   x------------x                         <-- other_range (B)
+                    //     x-----------------------------x      <-- other_range (C)
+                    // (A):
+                    if (range.start_address >= other_range.start_address && range.start_address <= other_range.end_address) ||
+                    // (B):
+                        (range.end_address <= other_range.end_address && range.end_address >= other_range.start_address) ||
+                    // (C):
+                        (range.start_address <= other_range.start_address && range.end_address >= other_range.end_address) 
+                    {
+                        panic!("Found overlapping MemRanges:\n ${:08X}-${:08X}\n ${:08X}-${:08X}", range.start_address, range.end_address, other_range.start_address, other_range.end_address);
+                    }
+                }
+            }
+        }
         Mem { ranges: ranges }
     }
 
@@ -46,7 +67,7 @@ impl Mem {
         let range = self.get_range(address);
         let result = range.get_unsigned_long(address);
         result
-    } 
+    }
 
     /// Get's a signed long (i32) from specified memory address
     ///
@@ -62,7 +83,7 @@ impl Mem {
     pub fn set_unsigned_long(self: &mut Mem, address: u32, value: u32) {
         let range = self.get_range_mut(address);
         let result = range.set_unsigned_long(address, value);
-    } 
+    }
 
     /// Get's a unsigned word (u16) from specified memory address
     ///
@@ -89,7 +110,7 @@ impl Mem {
     pub fn set_unsigned_word(self: &mut Mem, address: u32, value: u16) {
         let range = self.get_range_mut(address);
         let result = range.set_unsigned_word(address, value);
-    } 
+    }
 
     /// Get's a unsigned byte (u8) from specified memory address
     ///
@@ -116,9 +137,8 @@ impl Mem {
     pub fn set_unsigned_byte(self: &mut Mem, address: u32, value: u8) {
         let range = self.get_range_mut(address);
         let result = range.set_unsigned_byte(address, value);
-    } 
+    }
 
-    
     /// Prints out content of memory in given range as hex dump
     ///
     /// # Arguments

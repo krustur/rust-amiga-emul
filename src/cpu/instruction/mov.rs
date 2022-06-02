@@ -150,8 +150,8 @@ mod tests {
             DisassemblyResult::Done {
                 name: String::from("MOVE.B"),
                 operands_format: String::from("D0,($00090000).L"),
-                instr_address: 0x080000,
-                next_instr_address: 0x080006
+                instr_address: 0xC00000,
+                next_instr_address: 0xC00006
             },
             debug_result
         );
@@ -159,7 +159,7 @@ mod tests {
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0x34, cpu.memory.get_unsigned_byte(0x00090000));
-        assert_eq!(0x00080006, cpu.register.reg_pc);
+        assert_eq!(0x00C00006, cpu.register.reg_pc);
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
         assert_eq!(false, cpu.register.is_sr_zero_set());
@@ -186,8 +186,8 @@ mod tests {
             DisassemblyResult::Done {
                 name: String::from("MOVE.W"),
                 operands_format: String::from("A0,D0"),
-                instr_address: 0x080000,
-                next_instr_address: 0x080002
+                instr_address: 0xC00000,
+                next_instr_address: 0xC00002
             },
             debug_result
         );
@@ -195,7 +195,7 @@ mod tests {
         cpu.execute_next_instruction();
         // // assert
         assert_eq!(0xffff0000, cpu.register.reg_d[0]);
-        assert_eq!(0x00080002, cpu.register.reg_pc);
+        assert_eq!(0x00C00002, cpu.register.reg_pc);
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
         assert_eq!(true, cpu.register.is_sr_zero_set());
@@ -220,8 +220,8 @@ mod tests {
             DisassemblyResult::Done {
                 name: String::from("MOVEA.W"),
                 operands_format: String::from("(A0),A1"),
-                instr_address: 0x080000,
-                next_instr_address: 0x080002
+                instr_address: 0xC00000,
+                next_instr_address: 0xC00002
             },
             debug_result
         );
@@ -229,7 +229,7 @@ mod tests {
         cpu.execute_next_instruction();
         // // assert
         assert_eq!(0xffff1234, cpu.register.reg_a[1]);
-        assert_eq!(0x00080002, cpu.register.reg_pc);
+        assert_eq!(0x00C00002, cpu.register.reg_pc);
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
         assert_eq!(false, cpu.register.is_sr_zero_set());
@@ -253,8 +253,8 @@ mod tests {
             DisassemblyResult::Done {
                 name: String::from("MOVE.B"),
                 operands_format: String::from("(A1)+,(A2)"),
-                instr_address: 0x080000,
-                next_instr_address: 0x080002
+                instr_address: 0xC00000,
+                next_instr_address: 0xC00002
             },
             debug_result
         );
@@ -262,7 +262,7 @@ mod tests {
         cpu.execute_next_instruction();
         // // assert
         assert_eq!(0x00090001, cpu.register.reg_a[1]);
-        assert_eq!(0x00080002, cpu.register.reg_pc);
+        assert_eq!(0x00C00002, cpu.register.reg_pc);
     
         assert_eq!(0xf0, cpu.memory.get_unsigned_byte(0x00090001));
         assert_eq!(false, cpu.register.is_sr_carry_set());
@@ -288,8 +288,8 @@ mod tests {
             DisassemblyResult::Done {
                 name: String::from("MOVE.L"),
                 operands_format: String::from("-(A2),(A3)+"),
-                instr_address: 0x080000,
-                next_instr_address: 0x080002
+                instr_address: 0xC00000,
+                next_instr_address: 0xC00002
             },
             debug_result
         );
@@ -298,7 +298,7 @@ mod tests {
         // // assert
         assert_eq!(0x00090000, cpu.register.reg_a[2]);
         assert_eq!(0x00090008, cpu.register.reg_a[3]);
-        assert_eq!(0x00080002, cpu.register.reg_pc);
+        assert_eq!(0x00C00002, cpu.register.reg_pc);
         assert_eq!(0xfffffff0, cpu.memory.get_unsigned_long(0x00090004));
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
@@ -323,8 +323,8 @@ mod tests {
             DisassemblyResult::Done {
                 name: String::from("MOVE.L"),
                 operands_format: String::from("($7FF0,A3) [32752],-(A4)"),
-                instr_address: 0x080000,
-                next_instr_address: 0x080004
+                instr_address: 0xC00000,
+                next_instr_address: 0xC00004
             },
             debug_result
         );
@@ -333,7 +333,7 @@ mod tests {
         // // assert
         assert_eq!(0x00088010, cpu.register.reg_a[3]);
         assert_eq!(0x00090004, cpu.register.reg_a[4]);
-        assert_eq!(0x00080004, cpu.register.reg_pc);
+        assert_eq!(0x00C00004, cpu.register.reg_pc);
         assert_eq!(0x12345678, cpu.memory.get_unsigned_long(0x00090004));
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
@@ -359,15 +359,15 @@ mod tests {
             DisassemblyResult::Done {
                 name: String::from("MOVE.L"),
                 operands_format: String::from("($80,A4,D0.L*8) [-128],($8010,A5) [-32752]"),
-                instr_address: 0x080000,
-                next_instr_address: 0x080006
+                instr_address: 0xC00000,
+                next_instr_address: 0xC00006
             },
             debug_result
         );
         // // act
         cpu.execute_next_instruction();
         // // assert
-        assert_eq!(0x00080006, cpu.register.reg_pc);
+        assert_eq!(0x00C00006, cpu.register.reg_pc);
         assert_eq!(0x12345678, cpu.memory.get_unsigned_long(0x00090004));
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
@@ -392,15 +392,15 @@ mod tests {
             DisassemblyResult::Done {
                 name: String::from("MOVE.B"),
                 operands_format: String::from("($9000).W [$FFFF9000],($7C,A6,D7.W) [124]"),
-                instr_address: 0x080000,
-                next_instr_address: 0x080006
+                instr_address: 0xC00000,
+                next_instr_address: 0xC00006
             },
             debug_result
         );
         // // act
         cpu.execute_next_instruction();
         // // assert
-        assert_eq!(0x00080006, cpu.register.reg_pc);
+        assert_eq!(0x00C00006, cpu.register.reg_pc);
         assert_eq!(0x00, cpu.memory.get_unsigned_byte(0xffff9001));
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
@@ -412,7 +412,7 @@ mod tests {
     #[test]
     fn absolute_long_addressing_mode_to_address_short_addressing_mode() {
         // arrange
-        let code = [0x11, 0xf9, 0x00, 0x08, 0x00, 0x08, 0x90, 0x00, 0xff].to_vec(); // MOVE.B ($80008).L,(-$7000).W
+        let code = [0x11, 0xf9, 0x00, 0xC0, 0x00, 0x08, 0x90, 0x00, 0xff].to_vec(); // MOVE.B ($C00008).L,(9000).W
                                                                                              // DC.B $FF
         let mem_range = MemRange::from_bytes(0xffff9000, [0x88].to_vec());
         let mut cpu = crate::instr_test_setup(code, Some(mem_range));
@@ -425,17 +425,49 @@ mod tests {
         assert_eq!(
             DisassemblyResult::Done {
                 name: String::from("MOVE.B"),
-                operands_format: String::from("($00080008).L,($9000).W [$FFFF9000]"),
-                instr_address: 0x080000,
-                next_instr_address: 0x080008
+                operands_format: String::from("($00C00008).L,($9000).W [$FFFF9000]"),
+                instr_address: 0xC00000,
+                next_instr_address: 0xC00008
             },
             debug_result
         );
         // // act
         cpu.execute_next_instruction();
         // // assert
-        assert_eq!(0x00080008, cpu.register.reg_pc);
+        assert_eq!(0x00C00008, cpu.register.reg_pc);
         assert_eq!(0xff, cpu.memory.get_unsigned_byte(0xffff9000));
+        assert_eq!(false, cpu.register.is_sr_carry_set());
+        assert_eq!(false, cpu.register.is_sr_coverflow_set());
+        assert_eq!(false, cpu.register.is_sr_zero_set());
+        assert_eq!(true, cpu.register.is_sr_negative_set());
+        assert_eq!(false, cpu.register.is_sr_extend_set());
+    }
+
+    #[test]
+    fn program_counter_inderect_with_displacement_mode_to_address_long_addressing_modex() {
+        // arrange
+        let code = [0x33, 0xfa, 0x80, 0x00, 0x00, 0xC0, 0x00, 0x08, 0x00, 0x00].to_vec(); // MOVE.W ($8000,PC),($C00008).L
+                                                                                                   // DC.B $00,$00
+        let mem_range = MemRange::from_bytes(0x00BF8002, [0xab, 0xba].to_vec());
+        let mut cpu = crate::instr_test_setup(code, Some(mem_range));        
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_OVERFLOW;
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            DisassemblyResult::Done {
+                name: String::from("MOVE.W"),
+                operands_format: String::from("($8000,PC) [$00BF8002],($00C00008).L"),
+                instr_address: 0xC00000,
+                next_instr_address: 0xC00008
+            },
+            debug_result
+        );
+        // // act
+        cpu.execute_next_instruction();
+        // // assert
+        assert_eq!(0x00C00008, cpu.register.reg_pc);
+        assert_eq!(0xabba, cpu.memory.get_unsigned_word(0x00BF8002));
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
         assert_eq!(false, cpu.register.is_sr_zero_set());

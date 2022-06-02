@@ -137,7 +137,7 @@ mod tests {
         let code = [0xd0, 0x10, 0x01].to_vec(); // ADD.B (A0),D0
                                                          // DC.B 0x01
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_a[0] = 0x00080002;
+        cpu.register.reg_a[0] = 0x00C00002;
         cpu.register.reg_d[1] = 0x00000001;
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
             | STATUS_REGISTER_MASK_OVERFLOW
@@ -150,8 +150,8 @@ mod tests {
             DisassemblyResult::Done {
                 name: String::from("ADD.B"),
                 operands_format: String::from("(A0),D0"),
-                instr_address: 0x80000,
-                next_instr_address: 0x080002
+                instr_address: 0xC00000,
+                next_instr_address: 0xC00002
             },
             debug_result
         );
@@ -172,7 +172,7 @@ mod tests {
         let code = [0xd0, 0x10, 0x01].to_vec(); // ADD.B (A0),D0
                                                          // DC.B 0x01
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_a[0] = 0x00080002;
+        cpu.register.reg_a[0] = 0x00C00002;
         cpu.register.reg_d[0] = 0x0000007f;
         cpu.register.reg_d[1] = 0x00000001;
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
@@ -186,8 +186,8 @@ mod tests {
             DisassemblyResult::Done {
                 name: String::from("ADD.B"),
                 operands_format: String::from("(A0),D0"),
-                instr_address: 0x80000,
-                next_instr_address: 0x080002
+                instr_address: 0xC00000,
+                next_instr_address: 0xC00002
             },
             debug_result
         );
@@ -208,7 +208,7 @@ mod tests {
         let code = [0xd0, 0x10, 0x01].to_vec(); // ADD.B (A0),D0
                                                          // DC.B 0x01
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_a[0] = 0x00080002;
+        cpu.register.reg_a[0] = 0x00C00002;
         cpu.register.reg_d[0] = 0x000000ff;
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
             | STATUS_REGISTER_MASK_OVERFLOW
@@ -221,8 +221,8 @@ mod tests {
             DisassemblyResult::Done {
                 name: String::from("ADD.B"),
                 operands_format: String::from("(A0),D0"),
-                instr_address: 0x80000,
-                next_instr_address: 0x080002
+                instr_address: 0xC00000,
+                next_instr_address: 0xC00002
             },
             debug_result
         );
@@ -243,7 +243,7 @@ mod tests {
         let code = [0xd0, 0x50, 0x00, 0x01].to_vec(); // ADD.W (A0),D0
                                                                // DC.W 0x01
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_a[0] = 0x00080002;
+        cpu.register.reg_a[0] = 0x00C00002;
         cpu.register.reg_d[1] = 0x00000001;
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
             | STATUS_REGISTER_MASK_OVERFLOW
@@ -256,8 +256,8 @@ mod tests {
             DisassemblyResult::Done {
                 name: String::from("ADD.W"),
                 operands_format: String::from("(A0),D0"),
-                instr_address: 0x80000,
-                next_instr_address: 0x080002
+                instr_address: 0xC00000,
+                next_instr_address: 0xC00002
             },
             debug_result
         );
@@ -278,7 +278,7 @@ mod tests {
         let code = [0xd0, 0x50, 0x00, 0x01].to_vec(); // ADD.W (A0),D0
                                                                // DC.W 0x01
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_a[0] = 0x00080002;
+        cpu.register.reg_a[0] = 0x00C00002;
         cpu.register.reg_d[0] = 0x00007fff;
         cpu.register.reg_d[1] = 0x00000001;
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
@@ -292,8 +292,8 @@ mod tests {
             DisassemblyResult::Done {
                 name: String::from("ADD.W"),
                 operands_format: String::from("(A0),D0"),
-                instr_address: 0x80000,
-                next_instr_address: 0x080002
+                instr_address: 0xC00000,
+                next_instr_address: 0xC00002
             },
             debug_result
         );
@@ -314,7 +314,7 @@ mod tests {
         let code = [0xd0, 0x50, 0x00, 0x01].to_vec(); // ADD.W (A0),D0
                                                                // DC.W 0x01
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_a[0] = 0x00080002;
+        cpu.register.reg_a[0] = 0x00C00002;
         cpu.register.reg_d[0] = 0x0000ffff;
         cpu.register.reg_d[1] = 0x00000001;
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
@@ -328,8 +328,8 @@ mod tests {
             DisassemblyResult::Done {
                 name: String::from("ADD.W"),
                 operands_format: String::from("(A0),D0"),
-                instr_address: 0x80000,
-                next_instr_address: 0x080002
+                instr_address: 0xC00000,
+                next_instr_address: 0xC00002
             },
             debug_result
         );

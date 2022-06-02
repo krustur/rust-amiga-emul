@@ -111,8 +111,8 @@ mod tests {
             DisassemblyResult::Done {
                 name: String::from("MOVEQ"),
                 operands_format: String::from("#29,D0"),
-                instr_address: 0x080000,
-                next_instr_address: 0x080002
+                instr_address: 0xC00000,
+                next_instr_address: 0xC00002
             },
             debug_result
         );
@@ -138,8 +138,8 @@ mod tests {
             DisassemblyResult::Done {
                 name: String::from("MOVEQ"),
                 operands_format: String::from("#-1,D1"),
-                instr_address: 0x080000,
-                next_instr_address: 0x080002
+                instr_address: 0xC00000,
+                next_instr_address: 0xC00002
             },
             debug_result
         );
@@ -166,8 +166,8 @@ mod tests {
             DisassemblyResult::Done {
                 name: String::from("MOVEQ"),
                 operands_format: String::from("#0,D2"),
-                instr_address: 0x080000,
-                next_instr_address: 0x080002
+                instr_address: 0xC00000,
+                next_instr_address: 0xC00002
             },
             debug_result
         );
