@@ -1,8 +1,4 @@
-use crate::{
-    cpu::Cpu,
-    mem::Mem,
-    register::Register,
-};
+use crate::{cpu::Cpu, mem::Mem, register::Register};
 
 use super::{
     DisassemblyResult, EffectiveAddressingMode, InstructionExecutionResult, OperationSize, PcResult,
@@ -22,45 +18,84 @@ pub fn step<'a>(
     reg: &mut Register,
     mem: &mut Mem,
 ) -> InstructionExecutionResult {
-    let src_ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
-    let src_ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos_3(instr_word);
+    let src_ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos_3_and_reg_pos_0(instr_word);
 
-    let dst_ea_register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
-    let dst_ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos(instr_word, 6);
+    let dst_ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos(instr_word, 6, 9);
 
     let size = Cpu::extract_size011110_from_bit_pos(instr_word, 12);
-    
-    
-    
+
     match size {
         OperationSize::Byte => {
-            let ea_value = Cpu::get_ea_value_unsigned_byte(src_ea_mode, src_ea_register, instr_address + 2, reg, mem);
-            let set_result = Cpu::set_ea_value_unsigned_byte(dst_ea_mode, dst_ea_register, instr_address + 2 + (ea_value.num_extension_words << 1), ea_value.value, reg, mem);
-            reg.reg_sr = set_result.status_register_result.merge_status_register(reg.reg_sr);
+            let ea_value = Cpu::get_ea_value_unsigned_byte(
+                src_ea_mode,
+                instr_address + 2,
+                reg,
+                mem,
+            );
+            let set_result = Cpu::set_ea_value_unsigned_byte(
+                dst_ea_mode,
+                instr_address + 2 + (ea_value.num_extension_words << 1),
+                ea_value.value,
+                reg,
+                mem,
+            );
+            reg.reg_sr = set_result
+                .status_register_result
+                .merge_status_register(reg.reg_sr);
             InstructionExecutionResult::Done {
-                pc_result: PcResult::Increment(2 + (ea_value.num_extension_words << 1) + (set_result.num_extension_words << 1)),
+                pc_result: PcResult::Increment(
+                    2 + (ea_value.num_extension_words << 1) + (set_result.num_extension_words << 1),
+                ),
             }
         }
         OperationSize::Word => {
-            let ea_value = Cpu::get_ea_value_unsigned_word(src_ea_mode, src_ea_register, instr_address + 2, reg, mem);
-            let set_result = Cpu::set_ea_value_unsigned_word(dst_ea_mode, dst_ea_register, instr_address + 2 + (ea_value.num_extension_words << 1), ea_value.value, reg, mem);
-            reg.reg_sr = set_result.status_register_result.merge_status_register(reg.reg_sr);
+            let ea_value = Cpu::get_ea_value_unsigned_word(
+                src_ea_mode,
+                instr_address + 2,
+                reg,
+                mem,
+            );
+            let set_result = Cpu::set_ea_value_unsigned_word(
+                dst_ea_mode,
+                instr_address + 2 + (ea_value.num_extension_words << 1),
+                ea_value.value,
+                reg,
+                mem,
+            );
+            reg.reg_sr = set_result
+                .status_register_result
+                .merge_status_register(reg.reg_sr);
             InstructionExecutionResult::Done {
-                pc_result: PcResult::Increment(2 + (ea_value.num_extension_words << 1) + (set_result.num_extension_words << 1)),
+                pc_result: PcResult::Increment(
+                    2 + (ea_value.num_extension_words << 1) + (set_result.num_extension_words << 1),
+                ),
             }
         }
         OperationSize::Long => {
-            let ea_value = Cpu::get_ea_value_unsigned_long(src_ea_mode, src_ea_register, instr_address + 2, reg, mem);
-            let set_result = Cpu::set_ea_value_unsigned_long(dst_ea_mode, dst_ea_register, instr_address + 2 + (ea_value.num_extension_words << 1), ea_value.value, reg, mem);
-            reg.reg_sr = set_result.status_register_result.merge_status_register(reg.reg_sr);
+            let ea_value = Cpu::get_ea_value_unsigned_long(
+                src_ea_mode,
+                instr_address + 2,
+                reg,
+                mem,
+            );
+            let set_result = Cpu::set_ea_value_unsigned_long(
+                dst_ea_mode,
+                instr_address + 2 + (ea_value.num_extension_words << 1),
+                ea_value.value,
+                reg,
+                mem,
+            );
+            reg.reg_sr = set_result
+                .status_register_result
+                .merge_status_register(reg.reg_sr);
             InstructionExecutionResult::Done {
-                pc_result: PcResult::Increment(2 + (ea_value.num_extension_words << 1) + (set_result.num_extension_words << 1)),
+                pc_result: PcResult::Increment(
+                    2 + (ea_value.num_extension_words << 1) + (set_result.num_extension_words << 1),
+                ),
             }
         }
     }
 
-
-    
     // InstructionExecutionResult::Done {
     //     pc_result: PcResult::Increment(2 + (ea_value.num_extension_words << 1)),
     // }
@@ -72,17 +107,14 @@ pub fn get_disassembly<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> DisassemblyResult {
-    let src_ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
-    let src_ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos_3(instr_word);
+    let src_ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos_3_and_reg_pos_0(instr_word);
 
-    let dst_ea_register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
-    let dst_ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos(instr_word, 6);
+    let dst_ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos(instr_word, 6, 9);
 
     let size = Cpu::extract_size011110_from_bit_pos(instr_word, 12);
 
     let src_ea_debug = Cpu::get_ea_format(
         src_ea_mode,
-        src_ea_register,
         instr_address + 2,
         Some(size),
         reg,
@@ -90,7 +122,6 @@ pub fn get_disassembly<'a>(
     );
     let dst_ea_debug = Cpu::get_ea_format(
         dst_ea_mode,
-        dst_ea_register,
         instr_address + 2 + (src_ea_debug.num_extension_words << 1),
         Some(size),
         reg,
@@ -98,8 +129,10 @@ pub fn get_disassembly<'a>(
     );
 
     let name = match dst_ea_mode {
-        EffectiveAddressingMode::ARegDirect => match size {            
-            OperationSize::Byte => panic!("AddressRegisterDirect as destination only available for Word and Long"),
+        EffectiveAddressingMode::ARegDirect{register} => match size {
+            OperationSize::Byte => {
+                panic!("AddressRegisterDirect as destination only available for Word and Long")
+            }
             OperationSize::Word => String::from("MOVEA.W"),
             OperationSize::Long => String::from("MOVEA.L"),
         },
@@ -245,8 +278,7 @@ mod tests {
         let mut cpu = crate::instr_test_setup(code, Some(mem_range));
         cpu.register.reg_a[1] = 0x00090000;
         cpu.register.reg_a[2] = 0x00090001;
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
-            | STATUS_REGISTER_MASK_OVERFLOW;
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_OVERFLOW;
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -263,7 +295,7 @@ mod tests {
         // // assert
         assert_eq!(0x00090001, cpu.register.reg_a[1]);
         assert_eq!(0x00C00002, cpu.register.reg_pc);
-    
+
         assert_eq!(0xf0, cpu.memory.get_unsigned_byte(0x00090001));
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
@@ -276,12 +308,14 @@ mod tests {
     fn address_reg_indirect_with_pre_decrement_to_address_reg_indirect_with_post_increment() {
         // arrange
         let code = [0x26, 0xe2].to_vec(); // MOVE.B -(A2),(A3)+
-        let mem_range = MemRange::from_bytes(0x00090000, [0xff, 0xff, 0xff, 0xf0, 0x00, 0x00, 0x00, 0x00].to_vec());
+        let mem_range = MemRange::from_bytes(
+            0x00090000,
+            [0xff, 0xff, 0xff, 0xf0, 0x00, 0x00, 0x00, 0x00].to_vec(),
+        );
         let mut cpu = crate::instr_test_setup(code, Some(mem_range));
         cpu.register.reg_a[2] = 0x00090004;
         cpu.register.reg_a[3] = 0x00090004;
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
-            | STATUS_REGISTER_MASK_OVERFLOW;
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_OVERFLOW;
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -311,12 +345,14 @@ mod tests {
     fn address_reg_indirect_with_displacement_to_address_reg_indirect_with_pre_decrement() {
         // arrange
         let code = [0x29, 0x2b, 0x7f, 0xf0].to_vec(); // MOVE.L ($7FF0,A3),-(A4)
-        let mem_range = MemRange::from_bytes(0x00090000, [0x12, 0x34, 0x56, 0x78, 0x00, 0x00, 0x00, 0x00].to_vec());
+        let mem_range = MemRange::from_bytes(
+            0x00090000,
+            [0x12, 0x34, 0x56, 0x78, 0x00, 0x00, 0x00, 0x00].to_vec(),
+        );
         let mut cpu = crate::instr_test_setup(code, Some(mem_range));
         cpu.register.reg_a[3] = 0x00090000 - 0x7ff0;
         cpu.register.reg_a[4] = 0x00090008;
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
-            | STATUS_REGISTER_MASK_OVERFLOW;
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_OVERFLOW;
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -346,13 +382,15 @@ mod tests {
     fn address_reg_indirect_with_index_to_address_reg_indirect_with_displacement() {
         // arrange
         let code = [0x2b, 0x74, 0x0e, 0x80, 0x80, 0x10].to_vec(); // MOVE.L ($80,A4,D0.L*8),$8010(A5)
-        let mem_range = MemRange::from_bytes(0x00090000, [0x12, 0x34, 0x56, 0x78, 0x00, 0x00, 0x00, 0x00].to_vec());
+        let mem_range = MemRange::from_bytes(
+            0x00090000,
+            [0x12, 0x34, 0x56, 0x78, 0x00, 0x00, 0x00, 0x00].to_vec(),
+        );
         let mut cpu = crate::instr_test_setup(code, Some(mem_range));
         cpu.register.reg_d[0] = 0x00000100;
         cpu.register.reg_a[4] = 0x0008f800 + 0x80; // $80 displacement is -128 => +128 => 0x80
         cpu.register.reg_a[5] = 0x00090004 + 0x7ff0; // $8010 displacement is -32752 => +32752 => 0x7ff0
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
-            | STATUS_REGISTER_MASK_OVERFLOW;
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_OVERFLOW;
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -383,9 +421,8 @@ mod tests {
         let mem_range = MemRange::from_bytes(0xffff9000, [0x00, 0xff].to_vec());
         let mut cpu = crate::instr_test_setup(code, Some(mem_range));
         cpu.register.reg_d[7] = 0xffffff00;
-        cpu.register.reg_a[6] = 0xffff9001 - 0x7c + 0x100; 
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
-            | STATUS_REGISTER_MASK_OVERFLOW;
+        cpu.register.reg_a[6] = 0xffff9001 - 0x7c + 0x100;
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_OVERFLOW;
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -413,13 +450,12 @@ mod tests {
     fn absolute_long_addressing_mode_to_address_short_addressing_mode() {
         // arrange
         let code = [0x11, 0xf9, 0x00, 0xC0, 0x00, 0x08, 0x90, 0x00, 0xff].to_vec(); // MOVE.B ($C00008).L,(9000).W
-                                                                                             // DC.B $FF
+                                                                                    // DC.B $FF
         let mem_range = MemRange::from_bytes(0xffff9000, [0x88].to_vec());
         let mut cpu = crate::instr_test_setup(code, Some(mem_range));
         cpu.register.reg_d[7] = 0xffffff00;
-        cpu.register.reg_a[6] = 0xffff9001 - 0x7c + 0x100; 
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
-            | STATUS_REGISTER_MASK_OVERFLOW;
+        cpu.register.reg_a[6] = 0xffff9001 - 0x7c + 0x100;
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_OVERFLOW;
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -444,14 +480,13 @@ mod tests {
     }
 
     #[test]
-    fn program_counter_inderect_with_displacement_mode_to_address_long_addressing_modex() {
+    fn program_counter_inderect_with_displacement_mode_to_address_long_addressing_mode() {
         // arrange
         let code = [0x33, 0xfa, 0x80, 0x00, 0x00, 0xC0, 0x00, 0x08, 0x00, 0x00].to_vec(); // MOVE.W ($8000,PC),($C00008).L
-                                                                                                   // DC.B $00,$00
+                                                                                          // DC.B $00,$00
         let mem_range = MemRange::from_bytes(0x00BF8002, [0xab, 0xba].to_vec());
-        let mut cpu = crate::instr_test_setup(code, Some(mem_range));        
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
-            | STATUS_REGISTER_MASK_OVERFLOW;
+        let mut cpu = crate::instr_test_setup(code, Some(mem_range));
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_OVERFLOW;
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -474,4 +509,35 @@ mod tests {
         assert_eq!(true, cpu.register.is_sr_negative_set());
         assert_eq!(false, cpu.register.is_sr_extend_set());
     }
+
+    // #[test]
+    // fn program_counter_inderect_with_displacement_mode_to_address_long_addressing_modexd() {
+    //     // arrange
+    //     let code = [0x2E, 0x3B, 0x5C, 0x80, 0x00, 0x00].to_vec(); // MOVE.L ($80,PC,D5.L*4),D7
+    //                                                               // DC.B $00,$00
+    //     let mem_range = MemRange::from_bytes(0x00BF8002, [0xab, 0xba].to_vec());
+    //     let mut cpu = crate::instr_test_setup(code, Some(mem_range));
+    //     cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_OVERFLOW;
+    //     // act assert - debug
+    //     let debug_result = cpu.get_next_disassembly();
+    //     assert_eq!(
+    //         DisassemblyResult::Done {
+    //             name: String::from("MOVE.L"),
+    //             operands_format: String::from("($80,PC,D5.L*4) [$00BF8002],D7"),
+    //             instr_address: 0xC00000,
+    //             next_instr_address: 0xC00008
+    //         },
+    //         debug_result
+    //     );
+    //     // // act
+    //     cpu.execute_next_instruction();
+    //     // // assert
+    //     assert_eq!(0x00C00008, cpu.register.reg_pc);
+    //     assert_eq!(0xabba, cpu.memory.get_unsigned_word(0x00BF8002));
+    //     assert_eq!(false, cpu.register.is_sr_carry_set());
+    //     assert_eq!(false, cpu.register.is_sr_coverflow_set());
+    //     assert_eq!(false, cpu.register.is_sr_zero_set());
+    //     assert_eq!(true, cpu.register.is_sr_negative_set());
+    //     assert_eq!(false, cpu.register.is_sr_extend_set());
+    // }
 }

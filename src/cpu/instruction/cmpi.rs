@@ -41,13 +41,12 @@ pub fn get_disassembly<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> DisassemblyResult {
-    let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
-    let ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos_3(instr_word);
+    let ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos_3_and_reg_pos_0(instr_word);
     let size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
     // let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
     // let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
 
-    let ea_format = Cpu::get_ea_format(ea_mode, ea_register, instr_address + 2, None, reg, mem);
+    let ea_format = Cpu::get_ea_format(ea_mode, instr_address + 2, None, reg, mem);
 
     let (name, num_immediate_words, immediate_data) = match size {
         OperationSize::Byte => (

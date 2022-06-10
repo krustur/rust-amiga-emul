@@ -28,8 +28,7 @@ pub fn step<'a>(
     mem: &mut Mem,
     // ea: u32,
 ) -> InstructionExecutionResult {
-    let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
-    let ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos_3(instr_word);
+    let ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos_3_and_reg_pos_0(instr_word);
     let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
     let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
 
@@ -45,7 +44,7 @@ pub fn step<'a>(
 
     match opmode {
         BYTE_WITH_DN_AS_DEST => {
-            let ea_value = Cpu::get_ea_value_unsigned_byte(ea_mode, ea_register, instr_address + 2, reg, mem);
+            let ea_value = Cpu::get_ea_value_unsigned_byte(ea_mode, instr_address + 2, reg, mem);
             let reg_value = (reg.reg_d[register] & 0x000000ff) as u8;
             let add_result = Cpu::add_unsigned_bytes(ea_value.value, reg_value);
             
@@ -57,7 +56,7 @@ pub fn step<'a>(
             };
         }
         WORD_WITH_DN_AS_DEST => {
-            let ea_value = Cpu::get_ea_value_unsigned_word(ea_mode, ea_register, instr_address + 2, reg, mem);
+            let ea_value = Cpu::get_ea_value_unsigned_word(ea_mode, instr_address + 2, reg, mem);
             let reg_value = (reg.reg_d[register] & 0x0000ffff) as u16;
             let add_result = Cpu::add_unsigned_words(ea_value.value, reg_value);
               
@@ -69,7 +68,7 @@ pub fn step<'a>(
             };
         }
         LONG_WITH_DN_AS_DEST => {
-            let ea_value = Cpu::get_ea_value_unsigned_long(ea_mode, ea_register, instr_address + 2, reg, mem);
+            let ea_value = Cpu::get_ea_value_unsigned_long(ea_mode, instr_address + 2, reg, mem);
             let reg_value = reg.reg_d[register];
             let add_result = Cpu::add_unsigned_longs(ea_value.value, reg_value);
             
@@ -90,11 +89,10 @@ pub fn get_disassembly<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> DisassemblyResult {
-    let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
-    let ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos_3(instr_word);
+    let ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos_3_and_reg_pos_0(instr_word);
     let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
     let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
-    let ea_format = Cpu::get_ea_format(ea_mode, ea_register, instr_address + 2, None, reg, mem);
+    let ea_format = Cpu::get_ea_format(ea_mode, instr_address + 2, None, reg, mem);
     match opmode {
         BYTE_WITH_DN_AS_DEST => {
             return DisassemblyResult::Done {

@@ -21,10 +21,9 @@ pub fn step<'a>(
     mem: &mut Mem,
 ) -> InstructionExecutionResult {
     // TODO: Tests
-    let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
-    let ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos_3(instr_word);
+    let ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos_3_and_reg_pos_0(instr_word);
     let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
-    let ea_value = Cpu::get_ea(ea_mode, ea_register, instr_address + 2, None, reg, mem);
+    let ea_value = Cpu::get_ea(ea_mode, instr_address + 2, None, reg, mem);
 
     reg.reg_a[register] = ea_value.address;
     InstructionExecutionResult::Done {
@@ -39,11 +38,10 @@ pub fn get_disassembly<'a>(
     mem: &Mem,
 ) -> DisassemblyResult {
     // TODO: Tests
-    let ea_register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
-    let ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos_3(instr_word);
+    let ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos_3_and_reg_pos_0(instr_word);
     let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
 
-    let ea_format = Cpu::get_ea_format(ea_mode, ea_register, instr_address + 2, None, reg, mem);
+    let ea_format = Cpu::get_ea_format(ea_mode, instr_address + 2, None, reg, mem);
     DisassemblyResult::Done {
         name: String::from("LEA"),
         operands_format: format!("{},A{}", ea_format, register),

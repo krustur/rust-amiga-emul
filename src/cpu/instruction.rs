@@ -41,18 +41,28 @@ pub enum DisassemblyResult {
     PassOn,
 }
 
-#[derive(Copy, Clone, FromPrimitive, Debug, std::cmp::PartialEq)]
+#[derive(Copy, Clone, Debug, std::cmp::PartialEq)]
 pub enum EffectiveAddressingMode {
-    DRegDirect = 0b000,
-    ARegDirect = 0b001,
-    ARegIndirect = 0b010,
-    ARegIndirectWithPostIncrement = 0b011,
-    ARegIndirectWithPreDecrement = 0b100,
-    ARegIndirectWithDisplacement = 0b101,
-    // TODO: Figure these out
-    // ARegIndirectWithIndex           = 0b110,
-    ARegIndirectWithIndex = 0b110,
-    PcIndirectAndLotsMore = 0b111,
+    DRegDirect { register: usize },                            // 0b000
+    ARegDirect { register: usize },                            // 0b001
+    ARegIndirect { register: usize },                          // 0b010
+    ARegIndirectWithPostIncrement { register: usize },         // 0b011
+    ARegIndirectWithPreDecrement { register: usize },          // 0b100
+    ARegIndirectWithDisplacement { register: usize },          // 0b101
+    ARegIndirectWithIndexOrMemoryIndirect { register: usize }, // 0b110
+    // ARegIndirectWithIndex8BitDisplacement{register: usize}, // 0b110       (d8, An, Xn.SIZE*SCALE)
+    // ARegIndirectWithIndexBaseDisplacement{register: usize}, // 0b110       (bd, An, Xn.SIZE*SCALE)
+    // MemoryIndirectPostIndexed{register: usize},             // 0b110       ([bd, An], Xn.SIZE*SCALE,od)
+    // MemoryIndirectPreIndexed{register: usize},              // 0b110       ([bd, An, Xn.SIZE*SCALE],od)
+    PcIndirectWithDisplacement,            // 0b111 0b010 (d16, PC)
+    PcIndirectWithIndexOrPcMemoryIndirect, // 0b110 0b011
+    // PcIndirectWithIndex8BitDisplacement{register: usize},   // 0b111 0b011 (d8, PC, Xn.SIZE*SCALE)
+    // PcIndirectWithIndexBaseDisplacement{register: usize},   // 0b111 0b011 (bd, PC, Xn.SIZE*SCALE)
+    // PcMemoryInderectPostIndexed{register: usize},           // 0b111 0b011 ([bd, PC], Xn.SIZE*SCALE,od)
+    // PcMemoryInderectPreIndexed{register: usize},            // 0b111 0b011 ([bd, PC, Xn.SIZE*SCALE],od)
+    AbsoluteShortAddressing, // 0b111 0b000
+    AbsolutLongAddressing,   // 0b111 0b001
+    ImmediateData,           // 0b111 0b100
 }
 
 #[derive(FromPrimitive, Debug, Copy, Clone)]
@@ -77,7 +87,7 @@ pub enum ScaleFactor {
     One = 0b00,
     Two = 0b01,
     Four = 0b10,
-    Eight = 0b11
+    Eight = 0b11,
 }
 
 impl ScaleFactor {
@@ -105,12 +115,11 @@ impl fmt::Display for ScaleFactor {
             }
             ScaleFactor::Eight => {
                 write!(f, "*8")
-            }            
+            }
         }
         // write!(f, "{}", self.format)
     }
 }
-
 
 #[derive(FromPrimitive, Debug)]
 pub enum ConditionalTest {
@@ -122,7 +131,7 @@ pub enum ConditionalTest {
     HI = 0b0010,
     /// Low or Same (C) | (Z)
     LS = 0b0011,
-    /// Carry Clear (!C) 
+    /// Carry Clear (!C)
     CC = 0b0100,
     /// Carry Set (C)
     CS = 0b0101,
@@ -147,7 +156,6 @@ pub enum ConditionalTest {
 
     /// Less or Equal (Z) | (N & !V) | (!N & V)
     LE = 0b1111,
-    
 }
 
 impl fmt::Display for ConditionalTest {
@@ -217,12 +225,8 @@ pub struct Instruction {
         reg: &mut Register,
         mem: &mut Mem,
     ) -> InstructionExecutionResult,
-    pub get_debug: fn(
-        instr_address: u32,
-        instr_word: u16,
-        reg: &Register,
-        mem: &Mem,
-    ) -> DisassemblyResult,
+    pub get_debug:
+        fn(instr_address: u32, instr_word: u16, reg: &Register, mem: &Mem) -> DisassemblyResult,
 }
 
 impl Instruction {
