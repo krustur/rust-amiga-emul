@@ -1,5 +1,7 @@
+use std::convert::TryInto;
+
 use crate::{
-    cpu::{instruction::EffectiveAddressingData, Cpu},
+    cpu::instruction::{EffectiveAddressingData, EffectiveAddressingMode},
     mem::Mem,
 };
 
@@ -51,15 +53,9 @@ impl ProgramCounter {
         word
     }
 
-    pub fn get_first_unsigned_word(&self, mem: &Mem) -> u16 {
-        let word = mem.get_unsigned_word(self.address);
-        word
-    }
-
     pub fn fetch_next_unsigned_word(&mut self, mem: &Mem) -> u16 {
         let word = mem.get_unsigned_word(self.address_next);
         self.address_next += 2;
-        println!("self.address_next: {}", self.address_next);
         word
     }
 
@@ -82,8 +78,6 @@ impl ProgramCounter {
     }
 
     pub fn get_next_pc(&self) -> ProgramCounter {
-        println!("self.address: {}", self.address);
-        println!("self.address_next: {}", self.address_next);
         ProgramCounter {
             address: self.address_next,
             address_next: self.address_next,
@@ -103,27 +97,53 @@ impl ProgramCounter {
         mem: &Mem,
     ) -> EffectiveAddressingData {
         let instr_word = self.fetch_next_unsigned_word(mem);
-        let ea_mode =
-            Cpu::extract_effective_addressing_mode_from_bit_pos_3_and_reg_pos_0(instr_word);
-        EffectiveAddressingData::create(instr_word, ea_mode)
+        self.get_effective_addressing_data_from_instr_word_bit_pos(instr_word, mem, 3, 0)
     }
 
-    pub fn get_effective_addressing_data_from_bit_pos(
+    pub fn get_effective_addressing_data_from_instr_word_bit_pos(
         &mut self,
+        instr_word: u16,
         mem: &Mem,
         bit_pos: u8,
         reg_bit_pos: u8,
     ) -> EffectiveAddressingData {
-        let instr_word = self.get_first_unsigned_word(mem);
-        let ea_mode =
-            Cpu::extract_effective_addressing_mode_from_bit_pos(instr_word, bit_pos, reg_bit_pos);
+        let ea_mode = (instr_word >> bit_pos) & 0x0007;
+        let register = (instr_word >> reg_bit_pos) & 0x0007;
+        let register = register.try_into().unwrap();
+        let ea_mode = match ea_mode {
+            0b000 => EffectiveAddressingMode::DRegDirect {
+                register: (register),
+            },
+            0b001 => EffectiveAddressingMode::ARegDirect {
+                register: (register),
+            },
+            0b010 => EffectiveAddressingMode::ARegIndirect {
+                register: (register),
+            },
+            0b011 => EffectiveAddressingMode::ARegIndirectWithPostIncrement {
+                register: (register),
+            },
+            0b100 => EffectiveAddressingMode::ARegIndirectWithPreDecrement {
+                register: (register),
+            },
+            0b101 => EffectiveAddressingMode::ARegIndirectWithDisplacement {
+                register: (register),
+            },
+            0b110 => EffectiveAddressingMode::ARegIndirectWithIndexOrMemoryIndirect {
+                register: (register),
+            },
+            0b111 => match register {
+                0b010 => EffectiveAddressingMode::PcIndirectWithDisplacement,
+                0b011 => EffectiveAddressingMode::PcIndirectWithIndexOrPcMemoryIndirect,
+                0b000 => EffectiveAddressingMode::AbsoluteShortAddressing,
+                0b001 => EffectiveAddressingMode::AbsolutLongAddressing,
+                0b100 => EffectiveAddressingMode::ImmediateData,
+                _ => panic!("Unable to extract EffectiveAddressingMode"),
+            },
+            _ => panic!("Unable to extract EffectiveAddressingMode"),
+        };
         EffectiveAddressingData::create(instr_word, ea_mode)
     }
-    // pub fn get_instruction(&mut self, mem: &Mem) -> u16 {
-    //     let instr_word = mem.get_unsigned_word(self.address_temp);
-    //     self.address_temp += 2;
-    //     instr_word
-    // }
 }
 
 pub struct Register {

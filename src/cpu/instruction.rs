@@ -74,26 +74,28 @@ impl DisassemblyResult {
 
 #[derive(Copy, Clone, Debug, std::cmp::PartialEq)]
 pub enum EffectiveAddressingMode {
-    DRegDirect { register: usize },                            // 0b000
-    ARegDirect { register: usize },                            // 0b001
-    ARegIndirect { register: usize },                          // 0b010
-    ARegIndirectWithPostIncrement { register: usize },         // 0b011
-    ARegIndirectWithPreDecrement { register: usize },          // 0b100
-    ARegIndirectWithDisplacement { register: usize },          // 0b101
-    ARegIndirectWithIndexOrMemoryIndirect { register: usize }, // 0b110
+    DRegDirect { register: usize }, //                            0b000       Dn
+    ARegDirect { register: usize }, //                            0b001       An
+    ARegIndirect { register: usize }, //                          0b010       (An)
+    ARegIndirectWithPostIncrement { register: usize }, //         0b011       (An)+
+    ARegIndirectWithPreDecrement { register: usize }, //          0b100       (-An)
+    ARegIndirectWithDisplacement { register: usize }, //          0b101       (d16,An)
+    ARegIndirectWithIndexOrMemoryIndirect { register: usize }, // 0b110       -
+    // TODO: 020+ CPU's below
     // ARegIndirectWithIndex8BitDisplacement{register: usize}, // 0b110       (d8, An, Xn.SIZE*SCALE)
     // ARegIndirectWithIndexBaseDisplacement{register: usize}, // 0b110       (bd, An, Xn.SIZE*SCALE)
     // MemoryIndirectPostIndexed{register: usize},             // 0b110       ([bd, An], Xn.SIZE*SCALE,od)
     // MemoryIndirectPreIndexed{register: usize},              // 0b110       ([bd, An, Xn.SIZE*SCALE],od)
-    PcIndirectWithDisplacement,            // 0b111 0b010 (d16, PC)
-    PcIndirectWithIndexOrPcMemoryIndirect, // 0b110 0b011
+    PcIndirectWithDisplacement, //                                0b111 0b010 (d16, PC)
+    PcIndirectWithIndexOrPcMemoryIndirect, //                     0b110 0b011 -
+    // TODO: 020+ CPU's below
     // PcIndirectWithIndex8BitDisplacement{register: usize},   // 0b111 0b011 (d8, PC, Xn.SIZE*SCALE)
     // PcIndirectWithIndexBaseDisplacement{register: usize},   // 0b111 0b011 (bd, PC, Xn.SIZE*SCALE)
     // PcMemoryInderectPostIndexed{register: usize},           // 0b111 0b011 ([bd, PC], Xn.SIZE*SCALE,od)
     // PcMemoryInderectPreIndexed{register: usize},            // 0b111 0b011 ([bd, PC, Xn.SIZE*SCALE],od)
-    AbsoluteShortAddressing, // 0b111 0b000
-    AbsolutLongAddressing,   // 0b111 0b001
-    ImmediateData,           // 0b111 0b100
+    AbsoluteShortAddressing, //                                   0b111 0b000 (xxx).W
+    AbsolutLongAddressing,   //                                   0b111 0b001 (xxx).L
+    ImmediateData,           //                                   0b111 0b100 #<xxx>
 }
 
 pub struct EffectiveAddressingData {

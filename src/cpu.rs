@@ -233,53 +233,10 @@ impl Cpu {
         address
     }
 
-    pub fn extract_effective_addressing_mode_from_bit_pos_3_and_reg_pos_0(
-        word: u16,
-    ) -> EffectiveAddressingMode {
-        Cpu::extract_effective_addressing_mode_from_bit_pos(word, 3, 0)
-    }
+    fn get_address_with_u32_displacement(address: u32, displacement: u32) -> u32 {
+        let address = address.wrapping_add(displacement);
 
-    pub fn extract_effective_addressing_mode_from_bit_pos(
-        word: u16,
-        bit_pos: u8,
-        reg_bit_pos: u8,
-    ) -> EffectiveAddressingMode {
-        let ea_mode = (word >> bit_pos) & 0x0007;
-        let register = (word >> reg_bit_pos) & 0x0007;
-        let register = register.try_into().unwrap();
-        let ea_mode = match ea_mode {
-            0b000 => EffectiveAddressingMode::DRegDirect {
-                register: (register),
-            },
-            0b001 => EffectiveAddressingMode::ARegDirect {
-                register: (register),
-            },
-            0b010 => EffectiveAddressingMode::ARegIndirect {
-                register: (register),
-            },
-            0b011 => EffectiveAddressingMode::ARegIndirectWithPostIncrement {
-                register: (register),
-            },
-            0b100 => EffectiveAddressingMode::ARegIndirectWithPreDecrement {
-                register: (register),
-            },
-            0b101 => EffectiveAddressingMode::ARegIndirectWithDisplacement {
-                register: (register),
-            },
-            0b110 => EffectiveAddressingMode::ARegIndirectWithIndexOrMemoryIndirect {
-                register: (register),
-            },
-            0b111 => match register {
-                0b010 => EffectiveAddressingMode::PcIndirectWithDisplacement,
-                0b011 => EffectiveAddressingMode::PcIndirectWithIndexOrPcMemoryIndirect,
-                0b000 => EffectiveAddressingMode::AbsoluteShortAddressing,
-                0b001 => EffectiveAddressingMode::AbsolutLongAddressing,
-                0b100 => EffectiveAddressingMode::ImmediateData,
-                _ => panic!("Unable to extract EffectiveAddressingMode"),
-            },
-            _ => panic!("Unable to extract EffectiveAddressingMode"),
-        };
-        ea_mode
+        address
     }
 
     fn extract_conditional_test_pos_8(word: u16) -> ConditionalTest {
@@ -643,15 +600,15 @@ impl Cpu {
                 // ([bd,PC],Xn,SIZE*SCALE,od)
                 let extension_word = pc.fetch_next_unsigned_word(mem);
                 let register = Cpu::extract_register_index_from_bit_pos(extension_word, 12);
-                let register_type = match extension_word & 0x8000 {
-                    0x8000 => 'A',
-                    _ => 'D',
-                };
-                let index_size = match extension_word & 0x0800 {
-                    0x0800 => 'L',
-                    _ => 'W',
+                let (index_size, index_size_format) = match extension_word & 0x0800 {
+                    0x0800 => (4, 'L'),
+                    _ => (2, 'W'),
                 };
                 let scale_factor = Cpu::extract_scale_factor_from_bit_pos(extension_word, 9);
+                let (register_type_format, register_displacement) = match extension_word & 0x8000 {
+                    0x8000 => ('A', reg.reg_a[register] * index_size),
+                    _ => ('D', reg.reg_d[register] * index_size),
+                };
                 let extension_word_format = match extension_word & 0x0100 {
                     0x0100 => 'F', // full
                     _ => 'B',      // brief
@@ -660,18 +617,26 @@ impl Cpu {
                     todo!("Full extension word format not implemented")
                 }
                 let displacement = (extension_word & 0x00ff) as i8;
-                let format = format!(
-                    "(${:02X},PC,{}{}.{}{}) [{}]",
-                    displacement, register_type, register, index_size, scale_factor, displacement
+                let address = Cpu::get_address_with_i8_displacement(
+                    reg.reg_pc.get_address() + 2,
+                    displacement,
                 );
+                let address =
+                    Cpu::get_address_with_u32_displacement(address, register_displacement);
+                let format = format!(
+                    "(${:02X},PC,{}{}.{}{}) [${:08X}]",
+                    displacement,
+                    register_type_format,
+                    register,
+                    index_size_format,
+                    scale_factor,
+                    address
+                );
+
                 EffectiveAddressDebug {
                     format: format,
                     num_extension_words: 1,
                 }
-                // panic!(
-                //     "get_ea_format() Unhandled PcIndirectAndLotsMore 0b011 {:?} {}",
-                //     ea_mode, ea_register
-                // );
             }
             EffectiveAddressingMode::ImmediateData => {
                 // Immediate data
@@ -841,10 +806,36 @@ impl Cpu {
                 // (bd,PC,Xn,SIZE*SCALE)
                 // ([bd,PC],Xn,SIZE*SCALE,od)
                 // ([bd,PC],Xn,SIZE*SCALE,od)
-                panic!(
-                    "get_ea() Unhandled PcIndirectAndLotsMore 0b011 {:?}",
-                    ea_mode
+                let extension_word = pc.fetch_next_unsigned_word(mem);
+                let register = Cpu::extract_register_index_from_bit_pos(extension_word, 12);
+                let index_size = match extension_word & 0x0800 {
+                    0x0800 => 4,
+                    _ => 2,
+                };
+                let scale_factor = Cpu::extract_scale_factor_from_bit_pos(extension_word, 9);
+                let register_displacement = match extension_word & 0x8000 {
+                    0x8000 => reg.reg_a[register] * index_size,
+                    _ => reg.reg_d[register] * index_size,
+                };
+                let extension_word_format = match extension_word & 0x0100 {
+                    0x0100 => 'F', // full
+                    _ => 'B',      // brief
+                };
+                if extension_word_format == 'F' {
+                    todo!("Full extension word format not implemented")
+                }
+                let displacement = (extension_word & 0x00ff) as i8;
+                let address = Cpu::get_address_with_i8_displacement(
+                    reg.reg_pc.get_address() + 2,
+                    displacement,
                 );
+                let address =
+                    Cpu::get_address_with_u32_displacement(address, register_displacement);
+
+                EffectiveAddress {
+                    address: address,
+                    num_extension_words: 1,
+                }
             }
             EffectiveAddressingMode::ImmediateData => {
                 // Immediate data
