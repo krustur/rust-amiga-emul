@@ -64,12 +64,11 @@ pub fn get_disassembly<'a>(
 
     let displacement_8bit = (instr_word & 0x00ff) as i8;
 
-    let (size_format, num_extension_words, operands_format) = match displacement_8bit {
-        0x00 => (String::from("W"), 1, String::from("0x666")),
-        -1 => (String::from("L"), 2, String::from("0x666")), // 0xff
+    let (size_format, operands_format) = match displacement_8bit {
+        0x00 => (String::from("W"), String::from("0x666")),
+        -1 => (String::from("L"), String::from("0x666")), // 0xff
         _ => (
             String::from("B"),
-            0,
             format!(
                 "${:02X} [${:08X}]",
                 displacement_8bit,
