@@ -1,7 +1,7 @@
 use std::fmt;
 
 use crate::mem::Mem;
-use crate::register::Register;
+use crate::register::{ProgramCounter, Register};
 use num_derive::FromPrimitive;
 
 pub mod add;
@@ -20,7 +20,7 @@ pub mod subq;
 
 #[derive(Copy, Clone)]
 pub enum PcResult {
-    Increment(u32),
+    Increment,
     Set(u32),
 }
 
@@ -33,12 +33,43 @@ pub enum InstructionExecutionResult {
 #[derive(Debug, PartialEq)]
 pub enum DisassemblyResult {
     Done {
+        address: u32,
+        address_next: u32,
         name: String,
         operands_format: String,
-        instr_address: u32,
-        next_instr_address: u32,
+        // pc: ProgramCounter,
+        // next_pc: ProgramCounter,
     },
     PassOn,
+}
+
+impl DisassemblyResult {
+    pub fn from_pc(
+        pc: &ProgramCounter,
+        name: String,
+        operands_format: String,
+    ) -> DisassemblyResult {
+        DisassemblyResult::Done {
+            address: pc.get_address(),
+            address_next: pc.get_address_next(),
+            name,
+            operands_format,
+        }
+    }
+
+    pub fn from_address_and_address_next(
+        address: u32,
+        address_next: u32,
+        name: String,
+        operands_format: String,
+    ) -> DisassemblyResult {
+        DisassemblyResult::Done {
+            address,
+            address_next,
+            name,
+            operands_format,
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug, std::cmp::PartialEq)]
@@ -63,6 +94,20 @@ pub enum EffectiveAddressingMode {
     AbsoluteShortAddressing, // 0b111 0b000
     AbsolutLongAddressing,   // 0b111 0b001
     ImmediateData,           // 0b111 0b100
+}
+
+pub struct EffectiveAddressingData {
+    instr_word: u16,
+    ea_mode: EffectiveAddressingMode,
+}
+
+impl EffectiveAddressingData {
+    pub fn create(instr_word: u16, ea_mode: EffectiveAddressingMode) -> EffectiveAddressingData {
+        EffectiveAddressingData {
+            instr_word,
+            ea_mode,
+        }
+    }
 }
 
 #[derive(FromPrimitive, Debug, Copy, Clone)]
@@ -218,15 +263,12 @@ pub struct Instruction {
     pub name: String,
     pub mask: u16,
     pub opcode: u16,
-    // pub instruction_format: InstructionFormat,
     pub step: fn(
-        instr_address: u32,
-        instr_word: u16,
+        pc: &mut ProgramCounter,
         reg: &mut Register,
         mem: &mut Mem,
     ) -> InstructionExecutionResult,
-    pub get_debug:
-        fn(instr_address: u32, instr_word: u16, reg: &Register, mem: &Mem) -> DisassemblyResult,
+    pub get_debug: fn(pc: &mut ProgramCounter, reg: &Register, mem: &Mem) -> DisassemblyResult,
 }
 
 impl Instruction {
@@ -235,17 +277,11 @@ impl Instruction {
         mask: u16,
         opcode: u16,
         step: fn(
-            instr_address: u32,
-            instr_word: u16,
+            pc: &mut ProgramCounter,
             reg: &mut Register,
             mem: &mut Mem,
         ) -> InstructionExecutionResult,
-        get_debug: fn(
-            instr_address: u32,
-            instr_word: u16,
-            reg: &Register,
-            mem: &Mem,
-        ) -> DisassemblyResult,
+        get_debug: fn(pc: &mut ProgramCounter, reg: &Register, mem: &Mem) -> DisassemblyResult,
     ) -> Instruction {
         let instr = Instruction {
             name: name,

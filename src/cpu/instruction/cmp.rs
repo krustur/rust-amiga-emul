@@ -1,7 +1,7 @@
 use crate::{
     cpu::Cpu,
     mem::Mem,
-    register::Register,
+    register::{ProgramCounter, Register},
 };
 
 use super::{DisassemblyResult, InstructionExecutionResult};
@@ -21,8 +21,7 @@ const CMPA_LONG: usize = 0b111;
 // get_disassembly tests: TODO
 
 pub fn step<'a>(
-    instr_address: u32,
-    instr_word: u16,
+    pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
 ) -> InstructionExecutionResult {
@@ -42,16 +41,16 @@ pub fn step<'a>(
 }
 
 pub fn get_disassembly<'a>(
-    instr_address: u32,
-    instr_word: u16,
+    pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
 ) -> DisassemblyResult {
-    let ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos_3_and_reg_pos_0(instr_word);
-    let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
-    let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
+    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(mem);
+    let ea_mode = ea_data.ea_mode;
+    let opmode = Cpu::extract_op_mode_from_bit_pos_6(ea_data.instr_word);
+    let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9);
 
-    let ea_format = Cpu::get_ea_format(ea_mode, instr_address + 2, None, reg, mem);
+    let ea_format = Cpu::get_ea_format(ea_mode, pc, None, reg, mem);
 
     let (name, register_type) = match opmode {
         CMP_BYTE => (String::from("CMP.B"), 'D'),
@@ -62,12 +61,11 @@ pub fn get_disassembly<'a>(
         _ => (String::from("unknown CMP"), 'X'),
     };
 
-    DisassemblyResult::Done {
+    DisassemblyResult::from_pc(
+        pc,
         name,
-        operands_format: format!("{},{}{}", ea_format, register_type, register),
-        instr_address,
-        next_instr_address: instr_address + 2,
-    }
+        format!("{},{}{}", ea_format, register_type, register),
+    )
 }
 
 // #[cfg(test)]

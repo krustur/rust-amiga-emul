@@ -4,7 +4,7 @@ use crate::{
         Cpu,
     },
     mem::Mem,
-    register::Register,
+    register::{ProgramCounter, Register},
 };
 
 use super::InstructionExecutionResult;
@@ -18,41 +18,41 @@ use super::InstructionExecutionResult;
 // get_disassembly tests: TODO
 
 pub fn step<'a>(
-    instr_address: u32,
-    instr_word: u16,
+    pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
 ) -> InstructionExecutionResult {
+    let instr_word = pc.fetch_next_unsigned_word(mem);
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
-    let condition = Cpu::evaluate_condition(reg, &conditional_test);
+    let condition_result = Cpu::evaluate_condition(reg, &conditional_test);
+    let displacement_16bit = pc.fetch_next_signed_word(mem);
 
-    let result = match condition {
+    let result = match condition_result {
         false => {
             let register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
-            let reg_word =reg.reg_d[register].wrapping_sub(1) & 0xffff;
+            let reg_word = reg.reg_d[register].wrapping_sub(1) & 0xffff;
             reg.reg_d[register] = (reg.reg_d[register] & 0xffff0000) | reg_word;
 
-            let x = match reg.reg_d[register] & 0xffff {
+            match reg.reg_d[register] & 0xffff {
                 0x0000ffff => {
                     InstructionExecutionResult::Done {
                         // -1
-                        pc_result: PcResult::Increment(4),
+                        pc_result: PcResult::Increment,
                     }
                 }
                 _ => {
-                    let displacement_16bit = mem.get_signed_word(instr_address + 2);
-                    let branch_to =
-                        Cpu::get_address_with_i16_displacement(reg.reg_pc + 2, displacement_16bit);
+                    let branch_to = Cpu::get_address_with_i16_displacement(
+                        pc.get_address() + 2,
+                        displacement_16bit,
+                    );
                     InstructionExecutionResult::Done {
                         pc_result: PcResult::Set(branch_to),
                     }
                 }
-            };
-
-            x
+            }
         }
         true => InstructionExecutionResult::Done {
-            pc_result: PcResult::Increment(4),
+            pc_result: PcResult::Increment,
         },
     };
 
@@ -60,27 +60,27 @@ pub fn step<'a>(
 }
 
 pub fn get_disassembly<'a>(
-    instr_address: u32,
-    instr_word: u16,
+    pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
 ) -> DisassemblyResult {
+    let instr_word = pc.fetch_next_unsigned_word(mem);
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
     let register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
 
-    let displacement_16bit = mem.get_signed_word(instr_address + 2);
+    let displacement_16bit = pc.fetch_next_signed_word(mem);
 
-    let branch_to = Cpu::get_address_with_i16_displacement(instr_address + 2, displacement_16bit);
+    let branch_to =
+        Cpu::get_address_with_i16_displacement(pc.get_address() + 2, displacement_16bit);
 
-    let result = DisassemblyResult::Done {
-        name: format!("DB{:?}", conditional_test),
-        operands_format: format!(
+    let result = DisassemblyResult::from_pc(
+        pc,
+        format!("DB{:?}", conditional_test),
+        format!(
             "D{},${:04X} [${:08X}]",
             register, displacement_16bit, branch_to
         ),
-        instr_address,
-        next_instr_address: instr_address + 4,
-    };
+    );
 
     result
 }
@@ -103,19 +103,19 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::Done {
-                name: String::from("DBCC"),
-                operands_format: String::from("D0,$0004 [$00C00006]"),
-                instr_address: 0xC00000,
-                next_instr_address: 0xC00004
-            },
+            DisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00004,
+                String::from("DBCC"),
+                String::from("D0,$0004 [$00C00006]")
+            ),
             debug_result
         );
         // act
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0xffff0000, cpu.register.reg_d[0]);
-        assert_eq!(0xC00006, cpu.register.reg_pc);
+        assert_eq!(0xC00006, cpu.register.reg_pc.get_address());
     }
 
     #[test]
@@ -128,19 +128,19 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::Done {
-                name: String::from("DBCC"),
-                operands_format: String::from("D1,$0004 [$00C00006]"),
-                instr_address: 0xC00000,
-                next_instr_address: 0xc00004
-            },
+            DisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00004,
+                String::from("DBCC"),
+                String::from("D1,$0004 [$00C00006]")
+            ),
             debug_result
         );
         // act
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0xffffffff, cpu.register.reg_d[1]);
-        assert_eq!(0xc00004, cpu.register.reg_pc);
+        assert_eq!(0xc00004, cpu.register.reg_pc.get_address());
     }
 
     #[test]
@@ -153,18 +153,18 @@ mod tests {
                                       // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::Done {
-                name: String::from("DBCC"),
-                operands_format: String::from("D2,$0004 [$00C00006]"),
-                instr_address: 0xC00000,
-                next_instr_address: 0xC00004
-            },
+            DisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00004,
+                String::from("DBCC"),
+                String::from("D2,$0004 [$00C00006]")
+            ),
             debug_result
         );
         // act
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0xffff0001, cpu.register.reg_d[2]);
-        assert_eq!(0xC00004, cpu.register.reg_pc);
+        assert_eq!(0xC00004, cpu.register.reg_pc.get_address());
     }
 }

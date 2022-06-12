@@ -1,7 +1,7 @@
 use crate::{
     cpu::instruction::PcResult,
     mem::Mem,
-    register::Register,
+    register::{ProgramCounter, Register},
 };
 
 use super::{DisassemblyResult, InstructionExecutionResult};
@@ -15,28 +15,21 @@ use super::{DisassemblyResult, InstructionExecutionResult};
 // get_disassembly tests: TODO
 
 pub fn step<'a>(
-    instr_address: u32,
-    instr_word: u16,
+    pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
 ) -> InstructionExecutionResult {
     InstructionExecutionResult::Done {
-        pc_result: PcResult::Increment(2),
+        pc_result: PcResult::Increment,
     }
 }
 
 pub fn get_disassembly<'a>(
-    instr_address: u32,
-    instr_word: u16,
+    pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
 ) -> DisassemblyResult {
-    DisassemblyResult::Done {
-        name: String::from("NOP"),
-        operands_format: String::from(""),
-        instr_address,
-        next_instr_address: instr_address + 2,
-    }
+    DisassemblyResult::from_pc(pc, String::from("NOP"), String::from(""))
 }
 
 // #[cfg(test)]

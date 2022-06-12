@@ -1,7 +1,7 @@
 use crate::{
     cpu::Cpu,
     mem::Mem,
-    register::Register,
+    register::{ProgramCounter, Register},
 };
 
 use super::{DisassemblyResult, InstructionExecutionResult};
@@ -15,37 +15,30 @@ use super::{DisassemblyResult, InstructionExecutionResult};
 // get_disassembly tests: TODO
 
 pub fn step<'a>(
-    instr_address: u32,
-    instr_word: u16,
+    pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
 ) -> InstructionExecutionResult {
-    
-    let ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos_3_and_reg_pos_0(instr_word);
-    let ea_value = Cpu::get_ea_value_unsigned_long(ea_mode, instr_address + 2, reg, mem);
+    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(mem);
+    let ea_mode = ea_data.ea_mode;
+    let ea_value = Cpu::get_ea_value_unsigned_long(ea_mode, pc, reg, mem);
 
     // reg.reg_a[register] = ea_value.address;
     // InstructionExecutionResult::Done {
-    //     pc_result: PcResult::Increment(2 + (ea_value.num_extension_words << 1)),
+    //     pc_result: PcResult::Increment,
     // }
     todo!();
 }
 
 pub fn get_disassembly<'a>(
-    instr_address: u32,
-    instr_word: u16,
+    pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
 ) -> DisassemblyResult {
-    let ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos_3_and_reg_pos_0(instr_word);
-
-    let ea_debug = Cpu::get_ea_format(ea_mode, instr_address + 2, None, reg, mem);
-    DisassemblyResult::Done {
-        name: String::from("JMP"),
-        operands_format: ea_debug.format,
-        instr_address,
-        next_instr_address: instr_address + 2 + (ea_debug.num_extension_words << 1),
-    }
+    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(mem);
+    let ea_mode = ea_data.ea_mode;
+    let ea_debug = Cpu::get_ea_format(ea_mode, pc, None, reg, mem);
+    DisassemblyResult::from_pc(pc, String::from("JMP"), ea_debug.format)
 }
 
 // #[cfg(test)]

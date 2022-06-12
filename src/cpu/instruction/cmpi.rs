@@ -1,7 +1,7 @@
 use crate::{
     cpu::Cpu,
     mem::Mem,
-    register::Register,
+    register::{ProgramCounter, Register},
 };
 
 use super::{DisassemblyResult, InstructionExecutionResult, OperationSize};
@@ -15,8 +15,7 @@ use super::{DisassemblyResult, InstructionExecutionResult, OperationSize};
 // get_disassembly tests: TODO
 
 pub fn step<'a>(
-    instr_address: u32,
-    instr_word: u16,
+    pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
 ) -> InstructionExecutionResult {
@@ -36,42 +35,40 @@ pub fn step<'a>(
 }
 
 pub fn get_disassembly<'a>(
-    instr_address: u32,
-    instr_word: u16,
+    pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
 ) -> DisassemblyResult {
-    let ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos_3_and_reg_pos_0(instr_word);
-    let size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
+    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(mem);
+    let ea_mode = ea_data.ea_mode;
+    let size = Cpu::extract_size000110_from_bit_pos_6(ea_data.instr_word);
     // let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
     // let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
 
-    let ea_format = Cpu::get_ea_format(ea_mode, instr_address + 2, None, reg, mem);
+    let ea_format = Cpu::get_ea_format(ea_mode, pc, None, reg, mem);
 
     let (name, num_immediate_words, immediate_data) = match size {
-        OperationSize::Byte => (
-            String::from("CMPI.B"),
-            1,
-            format!("#${:02X}", mem.get_unsigned_byte(instr_address + 3)),
-        ),
+        OperationSize::Byte => {
+            pc.skip_byte();
+            (
+                String::from("CMPI.B"),
+                1,
+                format!("#${:02X}", pc.fetch_next_unsigned_byte(mem)),
+            )
+        }
         OperationSize::Word => (
             String::from("CMPI.W"),
             1,
-            format!("#${:04X}", mem.get_unsigned_word(instr_address + 2)),
+            format!("#${:04X}", pc.fetch_next_unsigned_word(mem)),
         ),
         OperationSize::Long => (
             String::from("CMPI.L"),
             2,
-            format!("#${:08X}", mem.get_unsigned_long(instr_address + 2)),
+            format!("#${:08X}", pc.fetch_next_unsigned_long(mem)),
         ),
     };
 
-    DisassemblyResult::Done {
-        name,
-        operands_format: format!("{},{}", immediate_data, ea_format),
-        instr_address,
-        next_instr_address: instr_address + 2 + (num_immediate_words << 1),
-    }
+    DisassemblyResult::from_pc(pc, name, format!("{},{}", immediate_data, ea_format))
 }
 
 // #[cfg(test)]

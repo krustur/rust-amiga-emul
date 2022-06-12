@@ -1,6 +1,6 @@
 use crate::cpu::instruction::DisassemblyResult;
 use crate::mem::Mem;
-use crate::register::{Register, STATUS_REGISTER_MASK_ZERO};
+use crate::register::{ProgramCounter, Register, STATUS_REGISTER_MASK_ZERO};
 use crate::{cpu::instruction::PcResult, cpu::Cpu, register::STATUS_REGISTER_MASK_NEGATIVE};
 use byteorder::ReadBytesExt;
 
@@ -15,12 +15,12 @@ use super::InstructionExecutionResult;
 // get_disassembly tests: TODO
 
 pub fn step<'a>(
-    instr_address: u32,
-    instr_word: u16,
+    pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
 ) -> InstructionExecutionResult {
     // TODO: Condition codes
+    let instr_word = pc.fetch_next_unsigned_word(mem);
     let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
     let mut instr_bytes = &instr_word.to_be_bytes()[1..2];
     let operand = instr_bytes.read_i8().unwrap();
@@ -42,17 +42,17 @@ pub fn step<'a>(
         // operands_format: &operands_format,
         // comment: &instr_comment,
         // op_size: OperationSize::Long,
-        pc_result: PcResult::Increment(2),
+        pc_result: PcResult::Increment,
     }
 }
 
 pub fn get_disassembly<'a>(
-    instr_address: u32,
-    instr_word: u16,
+    pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
 ) -> DisassemblyResult {
     // TODO: Condition codes
+    let instr_word = pc.fetch_next_unsigned_word(mem);
     let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
     let mut instr_bytes = &instr_word.to_be_bytes()[1..2];
     let operand = instr_bytes.read_i8().unwrap();
@@ -67,15 +67,7 @@ pub fn get_disassembly<'a>(
     let instr_comment = format!("moving {:#010x} into D{}", operand, register);
     let status_register_mask = 0xfff0;
 
-    DisassemblyResult::Done {
-        name: String::from("MOVEQ"),
-        operands_format: operands_format,
-        // comment: &instr_comment,
-        // op_size: OperationSize::Long,
-        // pc_result: PcResult::Increment(2),
-        instr_address,
-        next_instr_address: instr_address + 2,
-    }
+    DisassemblyResult::from_pc(pc, String::from("MOVEQ"), operands_format)
 }
 
 #[cfg(test)]
@@ -108,12 +100,12 @@ mod tests {
         assert_eq!(false, cpu.register.is_sr_negative_set());
         assert_eq!(false, cpu.register.is_sr_extend_set());
         assert_eq!(
-            DisassemblyResult::Done {
-                name: String::from("MOVEQ"),
-                operands_format: String::from("#29,D0"),
-                instr_address: 0xC00000,
-                next_instr_address: 0xC00002
-            },
+            DisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("MOVEQ"),
+                String::from("#29,D0")
+            ),
             debug_result
         );
     }
@@ -135,12 +127,12 @@ mod tests {
         assert_eq!(false, cpu.register.is_sr_zero_set());
         assert_eq!(true, cpu.register.is_sr_negative_set());
         assert_eq!(
-            DisassemblyResult::Done {
-                name: String::from("MOVEQ"),
-                operands_format: String::from("#-1,D1"),
-                instr_address: 0xC00000,
-                next_instr_address: 0xC00002
-            },
+            DisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("MOVEQ"),
+                String::from("#-1,D1")
+            ),
             debug_result
         );
     }
@@ -163,12 +155,12 @@ mod tests {
         assert_eq!(true, cpu.register.is_sr_zero_set());
         assert_eq!(false, cpu.register.is_sr_negative_set());
         assert_eq!(
-            DisassemblyResult::Done {
-                name: String::from("MOVEQ"),
-                operands_format: String::from("#0,D2"),
-                instr_address: 0xC00000,
-                next_instr_address: 0xC00002
-            },
+            DisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("MOVEQ"),
+                String::from("#0,D2")
+            ),
             debug_result
         );
     }

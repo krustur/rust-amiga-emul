@@ -1,7 +1,7 @@
 use crate::{
     cpu::{instruction::PcResult, Cpu},
     mem::Mem,
-    register::Register,
+    register::{ProgramCounter, Register},
 };
 
 use super::{DisassemblyResult, InstructionExecutionResult};
@@ -15,47 +15,50 @@ use super::{DisassemblyResult, InstructionExecutionResult};
 // get_disassembly tests: TODO
 
 pub fn step<'a>(
-    instr_address: u32,
-    instr_word: u16,
+    pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
 ) -> InstructionExecutionResult {
     // TODO: Tests
-    let ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos_3_and_reg_pos_0(instr_word);
-    let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
-    let ea_value = Cpu::get_ea(ea_mode, instr_address + 2, None, reg, mem);
+    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(mem);
+    let ea_mode = ea_data.ea_mode;
+    let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9);
+    let ea_value = Cpu::get_ea(ea_mode, pc, None, reg, mem);
 
     reg.reg_a[register] = ea_value.address;
     InstructionExecutionResult::Done {
-        pc_result: PcResult::Increment(2 + (ea_value.num_extension_words << 1)),
+        pc_result: PcResult::Increment,
     }
 }
 
 pub fn get_disassembly<'a>(
-    instr_address: u32,
-    instr_word: u16,
+    pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
 ) -> DisassemblyResult {
     // TODO: Tests
-    let ea_mode = Cpu::extract_effective_addressing_mode_from_bit_pos_3_and_reg_pos_0(instr_word);
-    let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
+    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(mem);
+    let ea_mode = ea_data.ea_mode;
+    let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9);
 
-    let ea_format = Cpu::get_ea_format(ea_mode, instr_address + 2, None, reg, mem);
-    DisassemblyResult::Done {
-        name: String::from("LEA"),
-        operands_format: format!("{},A{}", ea_format, register),
-        instr_address,
-        next_instr_address: instr_address + 2 + (ea_format.num_extension_words << 1),
-    }
+    let ea_format = Cpu::get_ea_format(ea_mode, pc, None, reg, mem);
+    DisassemblyResult::from_pc(
+        pc,
+        String::from("LEA"),
+        format!("{},A{}", ea_format, register),
+    )
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{register::{
-        STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE,
-        STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
-    }, cpu::instruction::DisassemblyResult, memrange::MemRange};
+    use crate::{
+        cpu::instruction::DisassemblyResult,
+        memrange::MemRange,
+        register::{
+            STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE,
+            STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
+        },
+    };
 
     #[test]
     fn absolute_short_addressing_mode_to_a0() {
@@ -71,12 +74,12 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::Done {
-                name: String::from("LEA"),
-                operands_format: String::from("($0500).W,A0"),
-                instr_address: 0xC00000,
-                next_instr_address: 0xC00004
-            },
+            DisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00004,
+                String::from("LEA"),
+                String::from("($0500).W,A0")
+            ),
             debug_result
         );
         // act
@@ -98,17 +101,17 @@ mod tests {
         let mut cpu = crate::instr_test_setup(code, Some(mem_range));
         cpu.register.reg_a[0] = 0x00000000;
         cpu.register.reg_sr = 0x0000;
-         // act assert - debug
-         let debug_result = cpu.get_next_disassembly();
-         assert_eq!(
-             DisassemblyResult::Done {
-                 name: String::from("LEA"),
-                 operands_format: String::from("($00F80000).L,A1"),
-                 instr_address: 0xC00000,
-                 next_instr_address: 0xC00006
-             },
-             debug_result
-         );
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            DisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00006,
+                String::from("LEA"),
+                String::from("($00F80000).L,A1")
+            ),
+            debug_result
+        );
         // // act
         cpu.execute_next_instruction();
         // // assert

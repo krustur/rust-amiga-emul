@@ -62,7 +62,8 @@ pub struct Cpu {
 impl Cpu {
     pub fn new(mem: Mem) -> Cpu {
         let reg_ssp = mem.get_unsigned_long(0x0);
-        let reg_pc = mem.get_unsigned_long(0x4);
+        let pc_address = mem.get_unsigned_long(0x4);
+        let reg_pc = ProgramCounter::from_address(pc_address);
         let instructions = vec![
             Instruction::new(
                 String::from("ADD"),
@@ -232,13 +233,13 @@ impl Cpu {
         address
     }
 
-    fn extract_effective_addressing_mode_from_bit_pos_3_and_reg_pos_0(
+    pub fn extract_effective_addressing_mode_from_bit_pos_3_and_reg_pos_0(
         word: u16,
     ) -> EffectiveAddressingMode {
         Cpu::extract_effective_addressing_mode_from_bit_pos(word, 3, 0)
     }
 
-    fn extract_effective_addressing_mode_from_bit_pos(
+    pub fn extract_effective_addressing_mode_from_bit_pos(
         word: u16,
         bit_pos: u8,
         reg_bit_pos: u8,
@@ -499,7 +500,7 @@ impl Cpu {
 
     pub fn get_ea_format(
         ea_mode: EffectiveAddressingMode,
-        extension_address: u32,
+        pc: &mut ProgramCounter,
         operation_size: Option<OperationSize>,
         reg: &Register,
         mem: &Mem,
@@ -541,7 +542,7 @@ impl Cpu {
                 }
             }
             EffectiveAddressingMode::ARegIndirectWithDisplacement { register } => {
-                let extension_word = mem.get_signed_word(extension_address);
+                let extension_word = pc.fetch_next_signed_word(mem);
                 let format = format!(
                     "(${:04X},A{}) [{}]",
                     extension_word, register, extension_word
@@ -554,7 +555,7 @@ impl Cpu {
             EffectiveAddressingMode::ARegIndirectWithIndexOrMemoryIndirect {
                 register: ea_register,
             } => {
-                let extension_word = mem.get_unsigned_word(extension_address);
+                let extension_word = pc.fetch_next_unsigned_word(mem);
                 let register = Cpu::extract_register_index_from_bit_pos(extension_word, 12);
                 let register_type = match extension_word & 0x8000 {
                     0x8000 => 'A',
@@ -591,9 +592,11 @@ impl Cpu {
             EffectiveAddressingMode::PcIndirectWithDisplacement => {
                 // Program Counter Indirect with Displacement Mode
                 // (d16,PC)
-                let extension_word = mem.get_signed_word(extension_address);
-                let address =
-                    Cpu::get_address_with_i16_displacement(reg.reg_pc + 2, extension_word);
+                let extension_word = pc.fetch_next_signed_word(mem);
+                let address = Cpu::get_address_with_i16_displacement(
+                    reg.reg_pc.get_address() + 2,
+                    extension_word,
+                );
                 let format = format!("(${:04X},PC) [${:08X}]", extension_word, address);
 
                 EffectiveAddressDebug {
@@ -604,7 +607,7 @@ impl Cpu {
             EffectiveAddressingMode::AbsoluteShortAddressing => {
                 // Absolute Short Addressing Mode
                 // (xxx).W
-                let extension_word = mem.get_signed_word(extension_address);
+                let extension_word = pc.fetch_next_signed_word(mem);
                 let address = Cpu::sign_extend_i16(extension_word);
                 let format = match extension_word < 0 {
                     false => format!("(${:04X}).W", extension_word),
@@ -622,7 +625,7 @@ impl Cpu {
                 // let second_extension_word = mem.get_unsigned_word(instr_address + 4);
                 // let address =
                 //     u32::from(first_extension_word) << 16 | u32::from(second_extension_word);
-                let address = mem.get_unsigned_long(extension_address);
+                let address = pc.fetch_next_unsigned_long(mem);
                 let format = format!("(${:08X}).L", address);
                 EffectiveAddressDebug {
                     format: format,
@@ -638,7 +641,7 @@ impl Cpu {
                 // (bd,PC,Xn,SIZE*SCALE)
                 // ([bd,PC],Xn,SIZE*SCALE,od)
                 // ([bd,PC],Xn,SIZE*SCALE,od)
-                let extension_word = mem.get_unsigned_word(extension_address);
+                let extension_word = pc.fetch_next_unsigned_word(mem);
                 let register = Cpu::extract_register_index_from_bit_pos(extension_word, 12);
                 let register_type = match extension_word & 0x8000 {
                     0x8000 => 'A',
@@ -659,12 +662,7 @@ impl Cpu {
                 let displacement = (extension_word & 0x00ff) as i8;
                 let format = format!(
                     "(${:02X},PC,{}{}.{}{}) [{}]",
-                    displacement,
-                    register_type,
-                    register,
-                    index_size,
-                    scale_factor,
-                    displacement
+                    displacement, register_type, register, index_size, scale_factor, displacement
                 );
                 EffectiveAddressDebug {
                     format: format,
@@ -682,7 +680,8 @@ impl Cpu {
                     None => panic!("Must have operation_size for Immediate data!"),
                     Some(operation_size) => match operation_size {
                         OperationSize::Byte => {
-                            let extension_word = mem.get_signed_byte(extension_address + 1);
+                            pc.skip_byte();
+                            let extension_word = pc.fetch_next_signed_byte(mem);
                             EffectiveAddressDebug {
                                 format: format!("#{}", extension_word),
                                 num_extension_words: 1,
@@ -698,13 +697,13 @@ impl Cpu {
                         },
                     },
                 }
-            }            
+            }
         }
     }
 
     pub fn get_ea(
         ea_mode: EffectiveAddressingMode,
-        extension_address: u32,
+        pc: &mut ProgramCounter,
         operation_size: Option<OperationSize>,
         reg: &mut Register,
         mem: &Mem,
@@ -748,7 +747,7 @@ impl Cpu {
                 }
             }
             EffectiveAddressingMode::ARegIndirectWithDisplacement { register } => {
-                let extension_word = mem.get_signed_word(extension_address);
+                let extension_word = pc.fetch_next_signed_word(mem);
                 let (address, _) =
                     reg.reg_a[register].overflowing_add(Cpu::sign_extend_i16(extension_word));
                 EffectiveAddress {
@@ -759,7 +758,7 @@ impl Cpu {
             EffectiveAddressingMode::ARegIndirectWithIndexOrMemoryIndirect {
                 register: ea_register,
             } => {
-                let extension_word = mem.get_unsigned_word(extension_address);
+                let extension_word = pc.fetch_next_unsigned_word(mem);
                 let displacement = (extension_word & 0x00ff) as i8;
                 let register = Cpu::extract_register_index_from_bit_pos(extension_word, 12);
                 let register = match extension_word & 0x8000 {
@@ -803,9 +802,11 @@ impl Cpu {
             EffectiveAddressingMode::PcIndirectWithDisplacement => {
                 // Program Counter Indirect with Displacement Mode
                 // (d16,PC)
-                let extension_word = mem.get_signed_word(extension_address);
-                let address =
-                    Cpu::get_address_with_i16_displacement(reg.reg_pc + 2, extension_word);
+                let extension_word = pc.fetch_next_signed_word(mem);
+                let address = Cpu::get_address_with_i16_displacement(
+                    reg.reg_pc.get_address() + 2,
+                    extension_word,
+                );
                 EffectiveAddress {
                     address: address,
                     num_extension_words: 1,
@@ -814,7 +815,7 @@ impl Cpu {
             EffectiveAddressingMode::AbsoluteShortAddressing => {
                 // Absolute Short Addressing Mode
                 // (xxx).W
-                let extension_word = mem.get_signed_word(extension_address);
+                let extension_word = pc.fetch_next_signed_word(mem);
                 let address = Cpu::sign_extend_i16(extension_word);
                 // let ea_format = format!("({:#06x}).W", extension_word);
                 EffectiveAddress {
@@ -825,7 +826,7 @@ impl Cpu {
             EffectiveAddressingMode::AbsolutLongAddressing => {
                 // Absolute Long Addressing Mode
                 // (xxx).L
-                let address = mem.get_unsigned_long(extension_address);
+                let address = pc.fetch_next_unsigned_long(mem);
                 EffectiveAddress {
                     address: address,
                     num_extension_words: 2,
@@ -855,7 +856,7 @@ impl Cpu {
 
     pub fn get_ea_value_unsigned_byte(
         ea_mode: EffectiveAddressingMode,
-        extension_address: u32,
+        pc: &mut ProgramCounter,
         reg: &mut Register,
         mem: &Mem,
     ) -> EffectiveAddressValue<u8> {
@@ -877,20 +878,15 @@ impl Cpu {
             EffectiveAddressingMode::ImmediateData => {
                 // Immediate data
                 // #<xxx>
-                let extension_word = mem.get_unsigned_byte(extension_address + 1);
+                pc.skip_byte();
+                let extension_word = pc.fetch_next_unsigned_byte(mem);
                 EffectiveAddressValue {
                     value: extension_word,
                     num_extension_words: 1,
                 }
             }
             _ => {
-                let ea = Cpu::get_ea(
-                    ea_mode,
-                    extension_address,
-                    Some(OperationSize::Byte),
-                    reg,
-                    mem,
-                );
+                let ea = Cpu::get_ea(ea_mode, pc, Some(OperationSize::Byte), reg, mem);
                 let value = mem.get_unsigned_byte(ea.address);
                 EffectiveAddressValue {
                     num_extension_words: ea.num_extension_words,
@@ -902,7 +898,7 @@ impl Cpu {
 
     pub fn get_ea_value_signed_byte(
         ea_mode: EffectiveAddressingMode,
-        extension_address: u32,
+        pc: &mut ProgramCounter,
         reg: &mut Register,
         mem: &Mem,
     ) -> EffectiveAddressValue<i8> {
@@ -924,20 +920,15 @@ impl Cpu {
             EffectiveAddressingMode::ImmediateData => {
                 // Immediate data
                 // #<xxx>
-                let extension_word = mem.get_signed_byte(extension_address + 1);
+                pc.skip_byte();
+                let extension_word = pc.fetch_next_signed_byte(mem);
                 EffectiveAddressValue {
                     value: extension_word,
                     num_extension_words: 1,
                 }
             }
             _ => {
-                let ea = Cpu::get_ea(
-                    ea_mode,
-                    extension_address,
-                    Some(OperationSize::Byte),
-                    reg,
-                    mem,
-                );
+                let ea = Cpu::get_ea(ea_mode, pc, Some(OperationSize::Byte), reg, mem);
                 let value = mem.get_signed_byte(ea.address);
                 EffectiveAddressValue {
                     num_extension_words: ea.num_extension_words,
@@ -949,7 +940,7 @@ impl Cpu {
 
     pub fn get_ea_value_unsigned_word(
         ea_mode: EffectiveAddressingMode,
-        extension_address: u32,
+        pc: &mut ProgramCounter,
         reg: &mut Register,
         mem: &Mem,
     ) -> EffectiveAddressValue<u16> {
@@ -971,20 +962,16 @@ impl Cpu {
             EffectiveAddressingMode::ImmediateData => {
                 // Immediate data
                 // #<xxx>
-                let extension_word = mem.get_unsigned_word(extension_address + 1);
+                // BUG: skip_byte() is a copy-paste-from-byte bug?
+                pc.skip_byte();
+                let extension_word = pc.fetch_next_unsigned_word(mem);
                 EffectiveAddressValue {
                     value: extension_word,
                     num_extension_words: 1,
                 }
             }
             _ => {
-                let ea = Cpu::get_ea(
-                    ea_mode,
-                    extension_address,
-                    Some(OperationSize::Word),
-                    reg,
-                    mem,
-                );
+                let ea = Cpu::get_ea(ea_mode, pc, Some(OperationSize::Word), reg, mem);
                 let value = mem.get_unsigned_word(ea.address);
                 EffectiveAddressValue {
                     num_extension_words: ea.num_extension_words,
@@ -996,7 +983,7 @@ impl Cpu {
 
     pub fn get_ea_value_signed_word(
         ea_mode: EffectiveAddressingMode,
-        extension_address: u32,
+        pc: &mut ProgramCounter,
         reg: &mut Register,
         mem: &Mem,
     ) -> EffectiveAddressValue<i16> {
@@ -1018,20 +1005,16 @@ impl Cpu {
             EffectiveAddressingMode::ImmediateData => {
                 // Immediate data
                 // #<xxx>
-                let extension_word = mem.get_signed_word(extension_address + 1);
+                // BUG: skip_byte() is a copy-paste-from-byte bug?
+                pc.skip_byte();
+                let extension_word = pc.fetch_next_signed_word(mem);
                 EffectiveAddressValue {
                     value: extension_word,
                     num_extension_words: 1,
                 }
             }
             _ => {
-                let ea = Cpu::get_ea(
-                    ea_mode,
-                    extension_address,
-                    Some(OperationSize::Word),
-                    reg,
-                    mem,
-                );
+                let ea = Cpu::get_ea(ea_mode, pc, Some(OperationSize::Word), reg, mem);
                 let value = mem.get_signed_word(ea.address);
                 EffectiveAddressValue {
                     num_extension_words: ea.num_extension_words,
@@ -1043,7 +1026,7 @@ impl Cpu {
 
     pub fn get_ea_value_unsigned_long(
         ea_mode: EffectiveAddressingMode,
-        extension_address: u32,
+        pc: &mut ProgramCounter,
         reg: &mut Register,
         mem: &Mem,
     ) -> EffectiveAddressValue<u32> {
@@ -1065,20 +1048,16 @@ impl Cpu {
             EffectiveAddressingMode::ImmediateData => {
                 // Immediate data
                 // #<xxx>
-                let extension_word = mem.get_unsigned_long(extension_address + 1);
+                // BUG: skip_byte() is a copy-paste-from-byte bug?
+                pc.skip_byte();
+                let extension_word = pc.fetch_next_unsigned_long(mem);
                 EffectiveAddressValue {
                     value: extension_word,
                     num_extension_words: 1,
                 }
             }
             _ => {
-                let ea = Cpu::get_ea(
-                    ea_mode,
-                    extension_address,
-                    Some(OperationSize::Long),
-                    reg,
-                    mem,
-                );
+                let ea = Cpu::get_ea(ea_mode, pc, Some(OperationSize::Long), reg, mem);
                 let value = mem.get_unsigned_long(ea.address);
                 EffectiveAddressValue {
                     num_extension_words: ea.num_extension_words,
@@ -1090,7 +1069,7 @@ impl Cpu {
 
     pub fn get_ea_value_signed_long(
         ea_mode: EffectiveAddressingMode,
-        extension_address: u32,
+        pc: &mut ProgramCounter,
         reg: &mut Register,
         mem: &Mem,
     ) -> EffectiveAddressValue<i32> {
@@ -1112,20 +1091,16 @@ impl Cpu {
             EffectiveAddressingMode::ImmediateData => {
                 // Immediate data
                 // #<xxx>
-                let extension_word = mem.get_signed_long(extension_address + 1);
+                // BUG: skip_byte() is a copy-paste-from-byte bug?
+                pc.skip_byte();
+                let extension_word = pc.fetch_next_signed_long(mem);
                 EffectiveAddressValue {
                     value: extension_word,
                     num_extension_words: 1,
                 }
             }
             _ => {
-                let ea = Cpu::get_ea(
-                    ea_mode,
-                    extension_address,
-                    Some(OperationSize::Long),
-                    reg,
-                    mem,
-                );
+                let ea = Cpu::get_ea(ea_mode, pc, Some(OperationSize::Long), reg, mem);
                 let value = mem.get_signed_long(ea.address);
                 EffectiveAddressValue {
                     num_extension_words: ea.num_extension_words,
@@ -1137,7 +1112,7 @@ impl Cpu {
 
     pub fn set_ea_value_unsigned_byte(
         ea_mode: EffectiveAddressingMode,
-        extension_address: u32,
+        pc: &mut ProgramCounter,
         value: u8,
         reg: &mut Register,
         mem: &mut Mem,
@@ -1159,13 +1134,7 @@ impl Cpu {
                 panic!("set_ea_value_unsigned_byte invalid EffectiveAddressingMode::ImmediateData");
             }
             _ => {
-                let ea = Cpu::get_ea(
-                    ea_mode,
-                    extension_address,
-                    Some(OperationSize::Byte),
-                    reg,
-                    mem,
-                );
+                let ea = Cpu::get_ea(ea_mode, pc, Some(OperationSize::Byte), reg, mem);
                 mem.set_unsigned_byte(ea.address, value);
                 ea.num_extension_words
             }
@@ -1195,7 +1164,7 @@ impl Cpu {
 
     pub fn set_ea_value_unsigned_word(
         ea_mode: EffectiveAddressingMode,
-        extension_address: u32,
+        pc: &mut ProgramCounter,
         value: u16,
         reg: &mut Register,
         mem: &mut Mem,
@@ -1220,7 +1189,7 @@ impl Cpu {
                 let ea = Cpu::get_ea(
                     ea_mode,
                     // ea_register,
-                    extension_address,
+                    pc,
                     Some(OperationSize::Word),
                     reg,
                     mem,
@@ -1254,7 +1223,7 @@ impl Cpu {
 
     pub fn set_ea_value_unsigned_long(
         ea_mode: EffectiveAddressingMode,
-        extension_address: u32,
+        pc: &mut ProgramCounter,
         value: u32,
         reg: &mut Register,
         mem: &mut Mem,
@@ -1274,13 +1243,7 @@ impl Cpu {
                 panic!("set_ea_value_unsigned_word invalid EffectiveAddressingMode::ImmediateData");
             }
             _ => {
-                let ea = Cpu::get_ea(
-                    ea_mode,
-                    extension_address,
-                    Some(OperationSize::Long),
-                    reg,
-                    mem,
-                );
+                let ea = Cpu::get_ea(ea_mode, pc, Some(OperationSize::Long), reg, mem);
                 mem.set_unsigned_long(ea.address, value);
                 ea.num_extension_words
             }
@@ -1344,7 +1307,7 @@ impl Cpu {
             print!("-");
         }
         println!();
-        print!(" PC {:#010X}", self.register.reg_pc);
+        print!(" PC {:#010X}", self.register.reg_pc.get_address());
         println!();
     }
 
@@ -1415,8 +1378,8 @@ impl Cpu {
     }
 
     pub fn execute_next_instruction(self: &mut Cpu) {
-        let instr_addr = self.register.reg_pc;
-        let instr_word = self.memory.get_unsigned_word(instr_addr);
+        let mut pc = self.register.reg_pc.clone();
+        let instr_word = pc.peek_next_unsigned_word(&self.memory);
 
         let instruction_pos = self
             .instructions
@@ -1425,29 +1388,30 @@ impl Cpu {
         let instruction = match instruction_pos {
             None => panic!(
                 "{:#010x} Unidentified instruction {:#06X}",
-                instr_addr, instr_word
+                pc.get_address(),
+                instr_word
             ),
             Some(instruction_pos) => &self.instructions[instruction_pos],
         };
 
         let step = instruction.step;
-        let exec_result = step(instr_addr, instr_word, &mut self.register, &mut self.memory);
+        let exec_result = step(&mut pc, &mut self.register, &mut self.memory);
 
         if let InstructionExecutionResult::Done { pc_result } = &exec_result {
             self.register.reg_pc = match pc_result {
-                PcResult::Set(new_pc) => *new_pc,
-                PcResult::Increment(pc_increment) => self.register.reg_pc + pc_increment,
+                PcResult::Set(new_pc) => ProgramCounter::from_address(*new_pc),
+                PcResult::Increment => pc.get_next_pc(),
             }
         }
     }
 
     pub fn get_next_disassembly(self: &mut Cpu) -> DisassemblyResult {
-        let result = self.get_disassembly(self.register.reg_pc);
+        let result = self.get_disassembly(&mut self.register.reg_pc.clone());
         result
     }
 
-    pub fn get_disassembly(self: &mut Cpu, instr_addr: u32) -> DisassemblyResult {
-        let instr_word = self.memory.get_unsigned_word(instr_addr);
+    pub fn get_disassembly(self: &mut Cpu, pc: &mut ProgramCounter) -> DisassemblyResult {
+        let instr_word = pc.peek_next_unsigned_word(&self.memory);
 
         let instruction_pos = self
             .instructions
@@ -1456,29 +1420,34 @@ impl Cpu {
         let instruction = match instruction_pos {
             None => panic!(
                 "{:#010x} Unidentified instruction {:#06X}",
-                instr_addr, instr_word
+                pc.get_address(),
+                instr_word
             ),
             Some(instruction_pos) => &self.instructions[instruction_pos],
         };
 
         let get_debug = instruction.get_debug;
-        let debug_result = get_debug(instr_addr, instr_word, &mut self.register, &mut self.memory);
+        let debug_result = get_debug(pc, &mut self.register, &mut self.memory);
 
         debug_result
     }
 
     pub fn print_disassembly(self: &mut Cpu, disassembly_result: &DisassemblyResult) {
         if let DisassemblyResult::Done {
+            address,
+            address_next: next_address,
             name,
-            instr_address,
             operands_format,
-            next_instr_address,
+            // pc,
+            // next_instr_address,
         } = &disassembly_result
         {
             let instr_format = format!("{} {}", name, operands_format);
+            let instr_address = *address;
+            let next_instr_address = *next_address;
             print!("{:#010X} ", instr_address);
-            for i in (*instr_address..*instr_address + 8).step_by(2) {
-                if i < *next_instr_address {
+            for i in (instr_address..instr_address + 8).step_by(2) {
+                if i < next_instr_address {
                     let op_mem = self.memory.get_unsigned_word(i);
                     print!("{:04X} ", op_mem);
                 } else {
