@@ -2,17 +2,17 @@ use crate::cpu::instruction::DisassemblyResult;
 use crate::mem::Mem;
 use crate::register::{ProgramCounter, Register, STATUS_REGISTER_MASK_ZERO};
 use crate::{cpu::instruction::PcResult, cpu::Cpu, register::STATUS_REGISTER_MASK_NEGATIVE};
-use byteorder::ReadBytesExt;
 
 use super::InstructionExecutionResult;
 
 // Instruction State
 // =================
-// step-logic: TODO
-// step cc: TODO (none)
-// step tests: TODO
+// step: TODO
+// step cc: TODO
 // get_disassembly: TODO
-// get_disassembly tests: TODO
+
+// 020+ step: TODO
+// 020+ get_disassembly: TODO
 
 pub fn step<'a>(
     pc: &mut ProgramCounter,
@@ -20,22 +20,24 @@ pub fn step<'a>(
     mem: &mut Mem,
 ) -> InstructionExecutionResult {
     // TODO: Condition codes
-    let instr_word = pc.fetch_next_unsigned_word(mem);
+    let instr_word = pc.fetch_next_word(mem);
     let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
-    let mut instr_bytes = &instr_word.to_be_bytes()[1..2];
-    let operand = instr_bytes.read_i8().unwrap();
+    // let mut instr_bytes = &instr_word.to_be_bytes()[1..2];
+    // let operand = instr_bytes.read_i8().unwrap();
+    let data = (instr_word & 0x00ff) as u8;
+    // println!("data: {}", data);
     let mut status_register_flags = 0x0000;
-    match operand {
+    match data {
         0 => status_register_flags |= STATUS_REGISTER_MASK_ZERO,
-        i8::MIN..=-1 => status_register_flags |= STATUS_REGISTER_MASK_NEGATIVE,
+        0x80..=0xff => status_register_flags |= STATUS_REGISTER_MASK_NEGATIVE,
         _ => (),
     }
-    let operand = Cpu::sign_extend_i8(operand);
-    let operands_format = format!("#{},D{}", operand, register);
-    let instr_comment = format!("moving {:#010x} into D{}", operand, register);
+    let data = Cpu::sign_extend_byte(data);
+    // let operands_format = format!("#{},D{}", data, register);
+    // let instr_comment = format!("moving {:#010x} into D{}", operand, register);
     let status_register_mask = 0xfff0;
 
-    reg.reg_d[register] = operand;
+    reg.reg_d[register] = data;
     reg.reg_sr = (reg.reg_sr & status_register_mask) | status_register_flags;
     InstructionExecutionResult::Done {
         // name: "MOVEQ",
@@ -52,10 +54,11 @@ pub fn get_disassembly<'a>(
     mem: &Mem,
 ) -> DisassemblyResult {
     // TODO: Condition codes
-    let instr_word = pc.fetch_next_unsigned_word(mem);
+    let instr_word = pc.fetch_next_word(mem);
     let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
-    let mut instr_bytes = &instr_word.to_be_bytes()[1..2];
-    let operand = instr_bytes.read_i8().unwrap();
+    // let mut instr_bytes = &instr_word.to_be_bytes()[1..2];
+    let data = (instr_word & 0x00ff) as u8;
+    // let operand = instr_bytes.read_i8().unwrap();
     // let mut status_register_flags = 0x0000;
     // match operand {
     //     0 => status_register_flags |= STATUS_REGISTER_MASK_ZERO,
@@ -63,8 +66,10 @@ pub fn get_disassembly<'a>(
     //     _ => (),
     // }
     // let operand = Cpu::sign_extend_i8(operand);
-    let operands_format = format!("#{},D{}", operand, register);
-    let instr_comment = format!("moving {:#010x} into D{}", operand, register);
+    let data = Cpu::sign_extend_byte(data);
+    let data_signed = Cpu::get_signed_long_from_long(data);
+    let operands_format = format!("#{},D{}", data_signed, register);
+    // let instr_comment = format!("moving {:#010x} into D{}", data, register);
     let status_register_mask = 0xfff0;
 
     DisassemblyResult::from_pc(pc, String::from("MOVEQ"), operands_format)

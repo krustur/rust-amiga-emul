@@ -8,11 +8,12 @@ use super::{DisassemblyResult, InstructionExecutionResult};
 
 // Instruction State
 // =================
-// step-logic: DONE
-// step cc: DONE (none)
-// step tests: TODO
-// get_disassembly: DONE
-// get_disassembly tests: TODO
+// step: TODO
+// step cc: TODO
+// get_disassembly: TODO
+
+// 020+ step: TODO
+// 020+ get_disassembly: TODO
 
 pub fn step<'a>(
     pc: &mut ProgramCounter,

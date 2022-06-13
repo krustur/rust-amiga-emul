@@ -8,11 +8,12 @@ use super::{DisassemblyResult, InstructionExecutionResult, OperationSize};
 
 // Instruction State
 // =================
-// step-logic: TODO
-// step cc: TODO (none)
-// step tests: TODO
+// step: TODO
+// step cc: TODO
 // get_disassembly: TODO
-// get_disassembly tests: TODO
+
+// 020+ step: TODO
+// 020+ get_disassembly: TODO
 
 pub fn step<'a>(
     pc: &mut ProgramCounter,
@@ -53,18 +54,18 @@ pub fn get_disassembly<'a>(
             (
                 String::from("CMPI.B"),
                 1,
-                format!("#${:02X}", pc.fetch_next_unsigned_byte(mem)),
+                format!("#${:02X}", pc.fetch_next_byte(mem)),
             )
         }
         OperationSize::Word => (
             String::from("CMPI.W"),
             1,
-            format!("#${:04X}", pc.fetch_next_unsigned_word(mem)),
+            format!("#${:04X}", pc.fetch_next_word(mem)),
         ),
         OperationSize::Long => (
             String::from("CMPI.L"),
             2,
-            format!("#${:08X}", pc.fetch_next_unsigned_long(mem)),
+            format!("#${:08X}", pc.fetch_next_long(mem)),
         ),
     };
 

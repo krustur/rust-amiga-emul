@@ -42,7 +42,7 @@ fn main() {
                 // pc,
                 // next_instr_address,
             } => {
-                disassembly_pc = ProgramCounter::from_address(*address);
+                disassembly_pc = ProgramCounter::from_address(*next_address);
             }
             DisassemblyResult::PassOn => {}
         }

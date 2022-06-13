@@ -11,21 +11,22 @@ use super::InstructionExecutionResult;
 
 // Instruction State
 // =================
-// step-logic: TODO
-// step cc: TODO (none)
-// step tests: TODO
+// step: TODO
+// step cc: TODO
 // get_disassembly: TODO
-// get_disassembly tests: TODO
+
+// 020+ step: TODO
+// 020+ get_disassembly: TODO
 
 pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
 ) -> InstructionExecutionResult {
-    let instr_word = pc.fetch_next_unsigned_word(mem);
+    let instr_word = pc.fetch_next_word(mem);
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
     let condition_result = Cpu::evaluate_condition(reg, &conditional_test);
-    let displacement_16bit = pc.fetch_next_signed_word(mem);
+    let displacement_16bit = pc.fetch_next_word(mem);
 
     let result = match condition_result {
         false => {
@@ -41,7 +42,7 @@ pub fn step<'a>(
                     }
                 }
                 _ => {
-                    let branch_to = Cpu::get_address_with_i16_displacement(
+                    let branch_to = Cpu::get_address_with_word_displacement_sign_extended(
                         pc.get_address() + 2,
                         displacement_16bit,
                     );
@@ -64,14 +65,16 @@ pub fn get_disassembly<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> DisassemblyResult {
-    let instr_word = pc.fetch_next_unsigned_word(mem);
+    let instr_word = pc.fetch_next_word(mem);
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
     let register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
 
-    let displacement_16bit = pc.fetch_next_signed_word(mem);
+    let displacement_16bit = pc.fetch_next_word(mem);
 
-    let branch_to =
-        Cpu::get_address_with_i16_displacement(pc.get_address() + 2, displacement_16bit);
+    let branch_to = Cpu::get_address_with_word_displacement_sign_extended(
+        pc.get_address() + 2,
+        displacement_16bit,
+    );
 
     let result = DisassemblyResult::from_pc(
         pc,

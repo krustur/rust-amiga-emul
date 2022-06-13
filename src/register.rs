@@ -36,43 +36,25 @@ impl ProgramCounter {
         self.address_next += 1;
     }
 
-    pub fn fetch_next_unsigned_byte(&mut self, mem: &Mem) -> u8 {
-        let word = mem.get_unsigned_byte(self.address_next);
+    pub fn fetch_next_byte(&mut self, mem: &Mem) -> u8 {
+        let word = mem.get_byte(self.address_next);
         self.address_next += 1;
         word
     }
 
-    pub fn fetch_next_signed_byte(&mut self, mem: &Mem) -> i8 {
-        let word = mem.get_signed_byte(self.address_next);
-        self.address_next += 1;
+    pub fn peek_next_word(&self, mem: &Mem) -> u16 {
+        let word = mem.get_word(self.address_next);
         word
     }
 
-    pub fn peek_next_unsigned_word(&self, mem: &Mem) -> u16 {
-        let word = mem.get_unsigned_word(self.address_next);
-        word
-    }
-
-    pub fn fetch_next_unsigned_word(&mut self, mem: &Mem) -> u16 {
-        let word = mem.get_unsigned_word(self.address_next);
+    pub fn fetch_next_word(&mut self, mem: &Mem) -> u16 {
+        let word = mem.get_word(self.address_next);
         self.address_next += 2;
         word
     }
 
-    pub fn fetch_next_signed_word(&mut self, mem: &Mem) -> i16 {
-        let word = mem.get_signed_word(self.address_next);
-        self.address_next += 2;
-        word
-    }
-
-    pub fn fetch_next_unsigned_long(&mut self, mem: &Mem) -> u32 {
-        let word = mem.get_unsigned_long(self.address_next);
-        self.address_next += 4;
-        word
-    }
-
-    pub fn fetch_next_signed_long(&mut self, mem: &Mem) -> i32 {
-        let word = mem.get_signed_long(self.address_next);
+    pub fn fetch_next_long(&mut self, mem: &Mem) -> u32 {
+        let word = mem.get_long(self.address_next);
         self.address_next += 4;
         word
     }
@@ -96,7 +78,7 @@ impl ProgramCounter {
         &mut self,
         mem: &Mem,
     ) -> EffectiveAddressingData {
-        let instr_word = self.fetch_next_unsigned_word(mem);
+        let instr_word = self.fetch_next_word(mem);
         self.get_effective_addressing_data_from_instr_word_bit_pos(instr_word, mem, 3, 0)
     }
 

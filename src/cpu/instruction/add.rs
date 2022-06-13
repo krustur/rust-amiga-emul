@@ -8,11 +8,12 @@ use super::{DisassemblyResult, InstructionExecutionResult};
 
 // Instruction State
 // =================
-// step-logic: TODO
-// step cc: TODO (none)
-// step tests: TODO
+// step: TODO
+// step cc: TODO
 // get_disassembly: TODO
-// get_disassembly tests: TODO
+
+// 020+ step: TODO
+// 020+ get_disassembly: TODO
 
 const BYTE_WITH_DN_AS_DEST: usize = 0b000;
 const WORD_WITH_DN_AS_DEST: usize = 0b001;
@@ -45,9 +46,9 @@ pub fn step<'a>(
 
     match opmode {
         BYTE_WITH_DN_AS_DEST => {
-            let ea_value = Cpu::get_ea_value_unsigned_byte(ea_mode, pc, reg, mem);
+            let ea_value = Cpu::get_ea_value_byte(ea_mode, pc, reg, mem);
             let reg_value = (reg.reg_d[register] & 0x000000ff) as u8;
-            let add_result = Cpu::add_unsigned_bytes(ea_value.value, reg_value);
+            let add_result = Cpu::add_bytes(ea_value.value, reg_value);
 
             reg.reg_d[register] = (reg.reg_d[register] & 0xffffff00) | (add_result.result as u32);
             reg.reg_sr = add_result
@@ -59,9 +60,9 @@ pub fn step<'a>(
             };
         }
         WORD_WITH_DN_AS_DEST => {
-            let ea_value = Cpu::get_ea_value_unsigned_word(ea_mode, pc, reg, mem);
+            let ea_value = Cpu::get_ea_value_word(ea_mode, pc, reg, mem);
             let reg_value = (reg.reg_d[register] & 0x0000ffff) as u16;
-            let add_result = Cpu::add_unsigned_words(ea_value.value, reg_value);
+            let add_result = Cpu::add_words(ea_value.value, reg_value);
 
             reg.reg_d[register] = (reg.reg_d[register] & 0xffff0000) | (add_result.result as u32);
             reg.reg_sr = add_result
@@ -73,9 +74,9 @@ pub fn step<'a>(
             };
         }
         LONG_WITH_DN_AS_DEST => {
-            let ea_value = Cpu::get_ea_value_unsigned_long(ea_mode, pc, reg, mem);
+            let ea_value = Cpu::get_ea_value_long(ea_mode, pc, reg, mem);
             let reg_value = reg.reg_d[register];
-            let add_result = Cpu::add_unsigned_longs(ea_value.value, reg_value);
+            let add_result = Cpu::add_longs(ea_value.value, reg_value);
 
             reg.reg_d[register] = add_result.result;
             reg.reg_sr = add_result

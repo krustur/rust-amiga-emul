@@ -8,27 +8,28 @@ use super::{ConditionalTest, DisassemblyResult, InstructionExecutionResult};
 
 // Instruction State
 // =================
-// step-logic: TODO
-// step cc: TODO (none)
-// step tests: TODO
+// step: TODO
+// step cc: TODO
 // get_disassembly: TODO
-// get_disassembly tests: TODO
+
+// 020+ step: TODO
+// 020+ get_disassembly: TODO
 
 pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
 ) -> InstructionExecutionResult {
-    let instr_word = pc.fetch_next_unsigned_word(mem);
+    let instr_word = pc.fetch_next_word(mem);
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
     let condition = Cpu::evaluate_condition(reg, &conditional_test);
 
-    let displacement_8bit = (instr_word & 0x00ff) as i8;
+    let displacement_8bit = (instr_word & 0x00ff) as u8;
 
     let result = match displacement_8bit {
         0x00 => todo!("16 bit displacement"),
-        -1 => todo!("32 bit displacement"), // 0xff
-        _ => branch_8bit(pc, conditional_test, condition, displacement_8bit), //,
+        0xff => todo!("32 bit displacement"),
+        _ => branch_8bit(pc, conditional_test, condition, displacement_8bit),
     };
 
     result
@@ -39,9 +40,12 @@ fn branch_8bit<'a>(
     pc: &ProgramCounter,
     conditional_test: ConditionalTest,
     condition: bool,
-    displacement_8bit: i8,
+    displacement_8bit: u8,
 ) -> InstructionExecutionResult {
-    let branch_to = Cpu::get_address_with_i8_displacement(pc.get_address() + 2, displacement_8bit);
+    let branch_to = Cpu::get_address_with_byte_displacement_sign_extended(
+        pc.get_address() + 2,
+        displacement_8bit,
+    );
 
     match condition {
         true => InstructionExecutionResult::Done {
@@ -59,20 +63,23 @@ pub fn get_disassembly<'a>(
     mem: &Mem,
 ) -> DisassemblyResult {
     // TODO: Condition codes
-    let instr_word = pc.fetch_next_unsigned_word(mem);
+    let instr_word = pc.fetch_next_word(mem);
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
 
-    let displacement_8bit = (instr_word & 0x00ff) as i8;
+    let displacement_8bit = (instr_word & 0x00ff) as u8;
 
     let (size_format, operands_format) = match displacement_8bit {
         0x00 => (String::from("W"), String::from("0x666")),
-        -1 => (String::from("L"), String::from("0x666")), // 0xff
+        0xff => (String::from("L"), String::from("0x666")),
         _ => (
             String::from("B"),
             format!(
                 "${:02X} [${:08X}]",
                 displacement_8bit,
-                Cpu::get_address_with_i8_displacement(pc.get_address() + 2, displacement_8bit)
+                Cpu::get_address_with_byte_displacement_sign_extended(
+                    pc.get_address() + 2,
+                    displacement_8bit
+                )
             ),
         ), //,
     };

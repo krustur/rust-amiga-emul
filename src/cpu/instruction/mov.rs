@@ -10,11 +10,12 @@ use super::{
 
 // Instruction State
 // =================
-// step-logic: TODO
-// step cc: TODO (none)
-// step tests: TODO
+// step: DONE
+// step cc: DONE
 // get_disassembly: DONE
-// get_disassembly tests: TODO
+
+// 020+ step: TODO
+// 020+ get_disassembly: TODO
 
 pub fn step<'a>(
     pc: &mut ProgramCounter,
@@ -30,40 +31,26 @@ pub fn step<'a>(
 
     let size = Cpu::extract_size011110_from_bit_pos(src_ea_data.instr_word, 12);
 
-    match size {
+    let set_result = match size {
         OperationSize::Byte => {
-            let ea_value = Cpu::get_ea_value_unsigned_byte(src_ea_mode, pc, reg, mem);
-            let set_result =
-                Cpu::set_ea_value_unsigned_byte(dst_ea_mode, pc, ea_value.value, reg, mem);
-            reg.reg_sr = set_result
-                .status_register_result
-                .merge_status_register(reg.reg_sr);
-            InstructionExecutionResult::Done {
-                pc_result: PcResult::Increment,
-            }
+            let ea_value = Cpu::get_ea_value_byte(src_ea_mode, pc, reg, mem);
+            Cpu::set_ea_value_byte(dst_ea_mode, pc, ea_value.value, reg, mem)
         }
         OperationSize::Word => {
-            let ea_value = Cpu::get_ea_value_unsigned_word(src_ea_mode, pc, reg, mem);
-            let set_result =
-                Cpu::set_ea_value_unsigned_word(dst_ea_mode, pc, ea_value.value, reg, mem);
-            reg.reg_sr = set_result
-                .status_register_result
-                .merge_status_register(reg.reg_sr);
-            InstructionExecutionResult::Done {
-                pc_result: PcResult::Increment,
-            }
+            let ea_value = Cpu::get_ea_value_word(src_ea_mode, pc, reg, mem);
+            Cpu::set_ea_value_word(dst_ea_mode, pc, ea_value.value, reg, mem)
         }
         OperationSize::Long => {
-            let ea_value = Cpu::get_ea_value_unsigned_long(src_ea_mode, pc, reg, mem);
-            let set_result =
-                Cpu::set_ea_value_unsigned_long(dst_ea_mode, pc, ea_value.value, reg, mem);
-            reg.reg_sr = set_result
-                .status_register_result
-                .merge_status_register(reg.reg_sr);
-            InstructionExecutionResult::Done {
-                pc_result: PcResult::Increment,
-            }
+            let ea_value = Cpu::get_ea_value_long(src_ea_mode, pc, reg, mem);
+            Cpu::set_ea_value_long(dst_ea_mode, pc, ea_value.value, reg, mem)
         }
+    };
+
+    reg.reg_sr = set_result
+        .status_register_result
+        .merge_status_register(reg.reg_sr);
+    InstructionExecutionResult::Done {
+        pc_result: PcResult::Increment,
     }
 }
 
@@ -143,7 +130,7 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x34, cpu.memory.get_unsigned_byte(0x00090000));
+        assert_eq!(0x34, cpu.memory.get_byte(0x00090000));
         assert_eq!(0x00C00006, cpu.register.reg_pc.get_address());
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
@@ -248,7 +235,7 @@ mod tests {
         assert_eq!(0x00090001, cpu.register.reg_a[1]);
         assert_eq!(0x00C00002, cpu.register.reg_pc.get_address());
 
-        assert_eq!(0xf0, cpu.memory.get_unsigned_byte(0x00090001));
+        assert_eq!(0xf0, cpu.memory.get_byte(0x00090001));
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
         assert_eq!(false, cpu.register.is_sr_zero_set());
@@ -285,7 +272,7 @@ mod tests {
         assert_eq!(0x00090000, cpu.register.reg_a[2]);
         assert_eq!(0x00090008, cpu.register.reg_a[3]);
         assert_eq!(0x00C00002, cpu.register.reg_pc.get_address());
-        assert_eq!(0xfffffff0, cpu.memory.get_unsigned_long(0x00090004));
+        assert_eq!(0xfffffff0, cpu.memory.get_long(0x00090004));
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
         assert_eq!(false, cpu.register.is_sr_zero_set());
@@ -322,7 +309,7 @@ mod tests {
         assert_eq!(0x00088010, cpu.register.reg_a[3]);
         assert_eq!(0x00090004, cpu.register.reg_a[4]);
         assert_eq!(0x00C00004, cpu.register.reg_pc.get_address());
-        assert_eq!(0x12345678, cpu.memory.get_unsigned_long(0x00090004));
+        assert_eq!(0x12345678, cpu.memory.get_long(0x00090004));
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
         assert_eq!(false, cpu.register.is_sr_zero_set());
@@ -358,7 +345,7 @@ mod tests {
         cpu.execute_next_instruction();
         // // assert
         assert_eq!(0x00C00006, cpu.register.reg_pc.get_address());
-        assert_eq!(0x12345678, cpu.memory.get_unsigned_long(0x00090004));
+        assert_eq!(0x12345678, cpu.memory.get_long(0x00090004));
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
         assert_eq!(false, cpu.register.is_sr_zero_set());
@@ -390,7 +377,7 @@ mod tests {
         cpu.execute_next_instruction();
         // // assert
         assert_eq!(0x00C00006, cpu.register.reg_pc.get_address());
-        assert_eq!(0x00, cpu.memory.get_unsigned_byte(0xffff9001));
+        assert_eq!(0x00, cpu.memory.get_byte(0xffff9001));
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
         assert_eq!(true, cpu.register.is_sr_zero_set());
@@ -423,7 +410,7 @@ mod tests {
         cpu.execute_next_instruction();
         // // assert
         assert_eq!(0x00C00008, cpu.register.reg_pc.get_address());
-        assert_eq!(0xff, cpu.memory.get_unsigned_byte(0xffff9000));
+        assert_eq!(0xff, cpu.memory.get_byte(0xffff9000));
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
         assert_eq!(false, cpu.register.is_sr_zero_set());
@@ -454,7 +441,7 @@ mod tests {
         cpu.execute_next_instruction();
         // // assert
         assert_eq!(0x00C00008, cpu.register.reg_pc.get_address());
-        assert_eq!(0xabba, cpu.memory.get_unsigned_word(0x00BF8002));
+        assert_eq!(0xabba, cpu.memory.get_word(0x00BF8002));
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
         assert_eq!(false, cpu.register.is_sr_zero_set());
@@ -486,7 +473,7 @@ mod tests {
         cpu.execute_next_instruction();
         // // assert
         assert_eq!(0x00C00004, cpu.register.reg_pc.get_address());
-        assert_eq!(0xabbabaab, cpu.memory.get_unsigned_long(0x50BFFF82));
+        assert_eq!(0xabbabaab, cpu.memory.get_long(0x50BFFF82));
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
         assert_eq!(false, cpu.register.is_sr_zero_set());

@@ -8,11 +8,12 @@ use super::{DisassemblyResult, InstructionExecutionResult};
 
 // Instruction State
 // =================
-// step-logic: TODO
-// step cc: DONE (none)
-// step tests: TODO
-// get_disassembly: DONE
-// get_disassembly tests: TODO
+// step: TODO
+// step cc: TODO
+// get_disassembly: TODO
+
+// 020+ step: TODO
+// 020+ get_disassembly: TODO
 
 pub fn step<'a>(
     pc: &mut ProgramCounter,
@@ -21,7 +22,7 @@ pub fn step<'a>(
 ) -> InstructionExecutionResult {
     let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(mem);
     let ea_mode = ea_data.ea_mode;
-    let ea_value = Cpu::get_ea_value_unsigned_long(ea_mode, pc, reg, mem);
+    let ea_value = Cpu::get_ea_value_long(ea_mode, pc, reg, mem);
 
     // reg.reg_a[register] = ea_value.address;
     // InstructionExecutionResult::Done {

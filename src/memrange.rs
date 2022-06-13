@@ -27,7 +27,7 @@ impl MemRange {
         Ok(mem)
     }
 
-    pub fn from_bytes<'a>(start_address: u32, bytes: Vec<u8>) -> MemRange{
+    pub fn from_bytes<'a>(start_address: u32, bytes: Vec<u8>) -> MemRange {
         let length = bytes.len().to_u32().unwrap();
         let mem = MemRange {
             start_address: start_address,
@@ -47,29 +47,22 @@ impl MemRange {
         return index.try_into().unwrap();
     }
 
-    pub fn get_unsigned_long(self: &MemRange, address: u32) -> u32 {
+    pub fn get_long(self: &MemRange, address: u32) -> u32 {
         let index = self.remap_address_to_index(address);
         let mut bytes = &self.bytes[index..index + 4];
         let result = bytes.read_u32::<BigEndian>().unwrap();
         result
     }
 
-    pub fn get_signed_long(self: &MemRange, address: u32) -> i32 {
-        let index = self.remap_address_to_index(address);
-        let mut bytes = &self.bytes[index..index + 4];
-        let result = bytes.read_i32::<BigEndian>().unwrap();
-        result
-    }
-
-    pub fn set_unsigned_long(self: &mut MemRange, address: u32, value: u32) {
+    pub fn set_long(self: &mut MemRange, address: u32, value: u32) {
         let index = self.remap_address_to_index(address);
         self.bytes[index] = ((value >> 24) & 0x000000ff) as u8;
-        self.bytes[index+1] = ((value >> 16) & 0x000000ff) as u8;
-        self.bytes[index+2] = ((value >> 8) & 0x000000ff) as u8;
-        self.bytes[index+3] = ((value) & 0x000000ff) as u8;
+        self.bytes[index + 1] = ((value >> 16) & 0x000000ff) as u8;
+        self.bytes[index + 2] = ((value >> 8) & 0x000000ff) as u8;
+        self.bytes[index + 3] = ((value) & 0x000000ff) as u8;
     }
 
-    pub fn get_unsigned_word(self: &MemRange, address: u32) -> u16 {
+    pub fn get_word(self: &MemRange, address: u32) -> u16 {
         let index = self.remap_address_to_index(address);
         let mut bytes = &self.bytes[index..index + 2];
         let result = bytes.read_u16::<BigEndian>().unwrap();
@@ -79,37 +72,21 @@ impl MemRange {
         result
     }
 
-    pub fn get_signed_word(self: &MemRange, address: u32) -> i16 {
-        let index = self.remap_address_to_index(address);
-        let mut bytes = &self.bytes[index..index + 2];
-        let result = bytes.read_i16::<BigEndian>().unwrap();
-        result
-    }
-
-    pub fn set_unsigned_word(self: &mut MemRange, address: u32, value: u16) {
+    pub fn set_word(self: &mut MemRange, address: u32, value: u16) {
         let index = self.remap_address_to_index(address);
         self.bytes[index] = ((value >> 8) & 0x000000ff) as u8;
-        self.bytes[index+1] = ((value) & 0x000000ff) as u8;
+        self.bytes[index + 1] = ((value) & 0x000000ff) as u8;
     }
 
-    pub fn get_unsigned_byte(self: &MemRange, address: u32) -> u8 {
+    pub fn get_byte(self: &MemRange, address: u32) -> u8 {
         let index = self.remap_address_to_index(address);
         let mut bytes = &self.bytes[index..index + 1];
         let result = bytes.read_u8().unwrap();
         result
     }
 
-    pub fn get_signed_byte(self: &MemRange, address: u32) -> i8 {
-        let index = self.remap_address_to_index(address);
-        let mut bytes = &self.bytes[index..index + 1];
-        let result = bytes.read_i8().unwrap();
-        result
-    }
-
-    pub fn set_unsigned_byte(self: &mut MemRange, address: u32, value: u8) {
+    pub fn set_byte(self: &mut MemRange, address: u32, value: u8) {
         let index = self.remap_address_to_index(address);
         self.bytes[index] = ((value) & 0x000000ff) as u8;
     }
-
-    
 }
