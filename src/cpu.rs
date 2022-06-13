@@ -308,12 +308,12 @@ impl Cpu {
         (long & 0x0000ffff) as u16
     }
 
-    pub fn get_signed_byte_from_long(long: u32) -> i8 {
-        (long & 0x000000ff) as i8
+    pub fn get_signed_byte_from_byte(byte: u8) -> i8 {
+        byte as i8
     }
 
-    pub fn get_signed_word_from_long(long: u32) -> i16 {
-        (long & 0x0000ffff) as i16
+    pub fn get_signed_word_from_word(long: u16) -> i16 {
+        long as i16
     }
 
     pub fn get_signed_long_from_long(long: u32) -> i32 {
@@ -330,8 +330,8 @@ impl Cpu {
 
     pub fn add_bytes(value_1: u8, value_2: u8) -> ResultWithStatusRegister<u8> {
         let (result, carry) = value_2.overflowing_add(value_1);
-        let value_1_signed = value_1 as i8;
-        let value_2_signed = value_2 as i8;
+        let value_1_signed = Cpu::get_signed_byte_from_byte(value_1);
+        let value_2_signed = Cpu::get_signed_byte_from_byte(value_2);
 
         let (result_signed, overflow) = value_2_signed.overflowing_add(value_1_signed);
 
@@ -377,8 +377,8 @@ impl Cpu {
 
     pub fn add_words(value_1: u16, value_2: u16) -> ResultWithStatusRegister<u16> {
         let (result, carry) = value_2.overflowing_add(value_1);
-        let value_1_signed = value_1 as i16;
-        let value_2_signed = value_2 as i16;
+        let value_1_signed = Cpu::get_signed_word_from_word(value_1);
+        let value_2_signed = Cpu::get_signed_word_from_word(value_2);
 
         let (result_signed, overflow) = value_2_signed.overflowing_add(value_1_signed);
 
@@ -412,8 +412,8 @@ impl Cpu {
 
     pub fn add_longs(value_1: u32, value_2: u32) -> ResultWithStatusRegister<u32> {
         let (result, carry) = value_2.overflowing_add(value_1);
-        let value_1_signed = value_1 as i32;
-        let value_2_signed = value_2 as i32;
+        let value_1_signed = Cpu::get_signed_long_from_long(value_1);
+        let value_2_signed = Cpu::get_signed_long_from_long(value_2);
 
         let (result_signed, overflow) = value_2_signed.overflowing_add(value_1_signed);
 
@@ -504,7 +504,8 @@ impl Cpu {
                 if extension_word_format == 'F' {
                     todo!("Full extension word format not implemented")
                 }
-                let displacement = (extension_word & 0x00ff) as i8;
+                let displacement =
+                    Cpu::get_signed_byte_from_byte(Cpu::get_byte_from_word(extension_word));
                 let format = format!(
                     "(${:02X},A{},{}{}.{}{}) [{}]",
                     displacement,
@@ -898,7 +899,7 @@ impl Cpu {
             }
         };
 
-        let value_signed = value as i8;
+        let value_signed = Cpu::get_signed_byte_from_byte(value);
 
         let mut status_register = 0x0000;
 
@@ -951,7 +952,7 @@ impl Cpu {
             }
         };
 
-        let value_signed = value as i16;
+        let value_signed = Cpu::get_signed_word_from_word(value);
 
         let mut status_register = 0x0000;
 
@@ -997,7 +998,7 @@ impl Cpu {
             }
         };
 
-        let value_signed = value as i32;
+        let value_signed = Cpu::get_signed_long_from_long(value);
 
         let mut status_register = 0x0000;
 
@@ -1364,50 +1365,50 @@ mod tests {
     }
 
     #[test]
-    fn get_signed_byte_from_long_x78() {
-        let res = Cpu::get_signed_byte_from_long(0x12345678);
+    fn get_signed_byte_from_byte_x78() {
+        let res = Cpu::get_signed_byte_from_byte(0x78);
         assert_eq!(0x78, res);
     }
 
     #[test]
-    fn get_signed_byte_from_long_xff() {
-        let res = Cpu::get_signed_byte_from_long(0xffffffff);
+    fn get_signed_byte_from_byte_xff() {
+        let res = Cpu::get_signed_byte_from_byte(0xff);
         assert_eq!(-1, res);
     }
 
     #[test]
-    fn get_signed_byte_from_long_x80() {
-        let res = Cpu::get_signed_byte_from_long(0xffffff80);
+    fn get_signed_byte_from_byte_x80() {
+        let res = Cpu::get_signed_byte_from_byte(0x80);
         assert_eq!(-128, res);
     }
 
     #[test]
-    fn get_signed_byte_from_long_x00() {
-        let res = Cpu::get_signed_byte_from_long(0x88880000);
-        assert_eq!(0x00, res);
+    fn get_signed_byte_from_byte_x00() {
+        let res = Cpu::get_signed_byte_from_byte(0x00);
+        assert_eq!(0x00000000, res);
     }
 
     #[test]
-    fn get_signed_word_from_long_x5678() {
-        let res = Cpu::get_signed_word_from_long(0x12345678);
+    fn get_signed_word_from_word_x5678() {
+        let res = Cpu::get_signed_word_from_word(0x5678);
         assert_eq!(0x5678, res);
     }
 
     #[test]
-    fn get_signed_word_from_long_xffff() {
-        let res = Cpu::get_signed_word_from_long(0xffffffff);
+    fn get_signed_word_from_word_xffff() {
+        let res = Cpu::get_signed_word_from_word(0xffff);
         assert_eq!(-1, res);
     }
 
     #[test]
-    fn get_signed_word_from_long_x8000() {
-        let res = Cpu::get_signed_word_from_long(0xffff8000);
+    fn get_signed_word_from_word_x8000() {
+        let res = Cpu::get_signed_word_from_word(0x8000);
         assert_eq!(-32768, res);
     }
 
     #[test]
-    fn get_signed_word_from_long_x0000() {
-        let res = Cpu::get_signed_word_from_long(0x88880000);
+    fn get_signed_word_from_word_x0000() {
+        let res = Cpu::get_signed_word_from_word(0x0000);
         assert_eq!(0x0000, res);
     }
 
