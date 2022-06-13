@@ -47,7 +47,7 @@ pub fn step<'a>(
     match opmode {
         BYTE_WITH_DN_AS_DEST => {
             let ea_value = Cpu::get_ea_value_byte(ea_mode, pc, reg, mem);
-            let reg_value = (reg.reg_d[register] & 0x000000ff) as u8;
+            let reg_value = Cpu::get_byte_from_long(reg.reg_d[register]);
             let add_result = Cpu::add_bytes(ea_value.value, reg_value);
 
             reg.reg_d[register] = (reg.reg_d[register] & 0xffffff00) | (add_result.result as u32);
@@ -61,7 +61,7 @@ pub fn step<'a>(
         }
         WORD_WITH_DN_AS_DEST => {
             let ea_value = Cpu::get_ea_value_word(ea_mode, pc, reg, mem);
-            let reg_value = (reg.reg_d[register] & 0x0000ffff) as u16;
+            let reg_value = Cpu::get_word_from_long(reg.reg_d[register]);
             let add_result = Cpu::add_words(ea_value.value, reg_value);
 
             reg.reg_d[register] = (reg.reg_d[register] & 0xffff0000) | (add_result.result as u32);

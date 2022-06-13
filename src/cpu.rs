@@ -300,6 +300,10 @@ impl Cpu {
         (long & 0x000000ff) as u8
     }
 
+    pub fn get_byte_from_word(word: u16) -> u8 {
+        (word & 0x00ff) as u8
+    }
+
     pub fn get_word_from_long(long: u32) -> u16 {
         (long & 0x0000ffff) as u16
     }
@@ -575,7 +579,7 @@ impl Cpu {
                 if extension_word_format == 'F' {
                     todo!("Full extension word format not implemented")
                 }
-                let displacement = (extension_word & 0x00ff) as u8;
+                let displacement = Cpu::get_byte_from_word(extension_word);
                 let address = Cpu::get_address_with_byte_displacement_sign_extended(
                     reg.reg_pc.get_address() + 2,
                     displacement,
@@ -665,7 +669,7 @@ impl Cpu {
                 register: ea_register,
             } => {
                 let extension_word = pc.fetch_next_word(mem);
-                let displacement = (extension_word & 0x00ff) as u8;
+                let displacement = Cpu::get_byte_from_word(extension_word);
                 let register = Cpu::extract_register_index_from_bit_pos(extension_word, 12);
                 let register = match extension_word & 0x8000 {
                     0x8000 => reg.reg_a[register],
@@ -673,7 +677,7 @@ impl Cpu {
                 };
                 let register = match extension_word & 0x0800 {
                     0x0800 => register,
-                    _ => Cpu::sign_extend_word((register & 0x0000ffff) as u16),
+                    _ => Cpu::sign_extend_word(Cpu::get_word_from_long(register)),
                 };
                 let scale_factor = Cpu::extract_scale_factor_from_bit_pos(extension_word, 9);
                 let extension_word_format = match extension_word & 0x0100 {
@@ -753,7 +757,7 @@ impl Cpu {
                 if extension_word_format == 'F' {
                     todo!("Full extension word format not implemented")
                 }
-                let displacement = (extension_word & 0x00ff) as u8;
+                let displacement = Cpu::get_byte_from_word(extension_word);
                 let address = Cpu::get_address_with_byte_displacement_sign_extended(
                     reg.reg_pc.get_address() + 2,
                     displacement,
@@ -886,7 +890,7 @@ impl Cpu {
             EffectiveAddressingMode::ImmediateData => {
                 // Immediate data
                 // #<xxx>
-                panic!("set_ea_value_unsigned_byte invalid EffectiveAddressingMode::ImmediateData");
+                panic!("set_ea_value_byte invalid EffectiveAddressingMode::ImmediateData");
             }
             _ => {
                 let ea = Cpu::get_ea(ea_mode, pc, Some(OperationSize::Byte), reg, mem);
@@ -932,7 +936,7 @@ impl Cpu {
             EffectiveAddressingMode::ImmediateData => {
                 // Immediate data
                 // #<xxx>
-                panic!("set_ea_value_unsigned_word invalid EffectiveAddressingMode::ImmediateData");
+                panic!("set_ea_value_word invalid EffectiveAddressingMode::ImmediateData");
             }
             _ => {
                 let ea = Cpu::get_ea(
@@ -1324,6 +1328,24 @@ mod tests {
     }
 
     #[test]
+    fn get_byte_from_word_x78() {
+        let res = Cpu::get_byte_from_word(0x5678);
+        assert_eq!(0x78, res);
+    }
+
+    #[test]
+    fn get_byte_from_word_xff() {
+        let res = Cpu::get_byte_from_word(0xffff);
+        assert_eq!(0xff, res);
+    }
+
+    #[test]
+    fn get_byte_from_word_x00() {
+        let res = Cpu::get_byte_from_word(0x8800);
+        assert_eq!(0x00, res);
+    }
+
+    #[test]
     fn get_word_from_long_x5678() {
         let res = Cpu::get_word_from_long(0x12345678);
         assert_eq!(0x5678, res);
@@ -1366,55 +1388,55 @@ mod tests {
     }
 
     #[test]
-    fn get_signed_word_from_unsigned_long_x5678() {
+    fn get_signed_word_from_long_x5678() {
         let res = Cpu::get_signed_word_from_long(0x12345678);
         assert_eq!(0x5678, res);
     }
 
     #[test]
-    fn get_signed_word_from_unsigned_long_xffff() {
+    fn get_signed_word_from_long_xffff() {
         let res = Cpu::get_signed_word_from_long(0xffffffff);
         assert_eq!(-1, res);
     }
 
     #[test]
-    fn get_signed_word_from_unsigned_long_x8000() {
+    fn get_signed_word_from_long_x8000() {
         let res = Cpu::get_signed_word_from_long(0xffff8000);
         assert_eq!(-32768, res);
     }
 
     #[test]
-    fn get_signed_word_from_unsigned_long_x0000() {
+    fn get_signed_word_from_long_x0000() {
         let res = Cpu::get_signed_word_from_long(0x88880000);
         assert_eq!(0x0000, res);
     }
 
     #[test]
-    fn get_signed_long_from_unsigned_long_x12345678() {
+    fn get_signed_long_from_long_x12345678() {
         let res = Cpu::get_signed_long_from_long(0x12345678);
         assert_eq!(0x12345678, res);
     }
 
     #[test]
-    fn get_signed_long_from_unsigned_long_xffffffff() {
+    fn get_signed_long_from_long_xffffffff() {
         let res = Cpu::get_signed_long_from_long(0xffffffff);
         assert_eq!(-1, res);
     }
 
     #[test]
-    fn get_signed_long_from_unsigned_long_x80000000() {
+    fn get_signed_long_from_long_x80000000() {
         let res = Cpu::get_signed_long_from_long(0x80000000);
         assert_eq!(-2147483648, res);
     }
 
     #[test]
-    fn get_signed_long_from_unsigned_long_x00000000() {
+    fn get_signed_long_from_long_x00000000() {
         let res = Cpu::get_signed_long_from_long(0x00000000);
         assert_eq!(0x00000000, res);
     }
 
     #[test]
-    fn add_unsigned_bytes_unsigned_overflow_set_carry_and_extend() {
+    fn add_bytes_unsigned_overflow_set_carry_and_extend() {
         let result = Cpu::add_bytes(0xf0, 0x20);
         assert_eq!(
             ResultWithStatusRegister {
@@ -1433,7 +1455,7 @@ mod tests {
     }
 
     #[test]
-    fn add_unsigned_bytes_signed_overflow_set_overflow() {
+    fn add_bytes_signed_overflow_set_overflow() {
         let result = Cpu::add_bytes(0x70, 0x10);
         assert_eq!(
             ResultWithStatusRegister {
@@ -1452,7 +1474,7 @@ mod tests {
     }
 
     #[test]
-    fn add_unsigned_bytes_both_overflow_set_carry_and_extend_and_overflow() {
+    fn add_bytes_both_overflow_set_carry_and_extend_and_overflow() {
         // for i in 0 .. 255 {
         //     Cpu::add_unsigned_bytes(i, 3);
         // }

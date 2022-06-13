@@ -24,7 +24,7 @@ pub fn step<'a>(
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
     let condition = Cpu::evaluate_condition(reg, &conditional_test);
 
-    let displacement_8bit = (instr_word & 0x00ff) as u8;
+    let displacement_8bit = Cpu::get_byte_from_word(instr_word);
 
     let result = match displacement_8bit {
         0x00 => todo!("16 bit displacement"),
@@ -66,7 +66,7 @@ pub fn get_disassembly<'a>(
     let instr_word = pc.fetch_next_word(mem);
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
 
-    let displacement_8bit = (instr_word & 0x00ff) as u8;
+    let displacement_8bit = Cpu::get_byte_from_word(instr_word);
 
     let (size_format, operands_format) = match displacement_8bit {
         0x00 => (String::from("W"), String::from("0x666")),

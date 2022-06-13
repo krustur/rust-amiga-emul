@@ -24,7 +24,7 @@ pub fn step<'a>(
     let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
     // let mut instr_bytes = &instr_word.to_be_bytes()[1..2];
     // let operand = instr_bytes.read_i8().unwrap();
-    let data = (instr_word & 0x00ff) as u8;
+    let data = Cpu::get_byte_from_word(instr_word);
     // println!("data: {}", data);
     let mut status_register_flags = 0x0000;
     match data {
@@ -57,7 +57,7 @@ pub fn get_disassembly<'a>(
     let instr_word = pc.fetch_next_word(mem);
     let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
     // let mut instr_bytes = &instr_word.to_be_bytes()[1..2];
-    let data = (instr_word & 0x00ff) as u8;
+    let data = Cpu::get_byte_from_word(instr_word);
     // let operand = instr_bytes.read_i8().unwrap();
     // let mut status_register_flags = 0x0000;
     // match operand {
