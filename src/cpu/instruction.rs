@@ -5,6 +5,7 @@ use crate::register::{ProgramCounter, Register};
 use num_derive::FromPrimitive;
 
 pub mod add;
+pub mod addi;
 pub mod addq;
 pub mod addx;
 pub mod bcc;

@@ -74,6 +74,13 @@ impl Cpu {
                 instruction::add::get_disassembly,
             ),
             Instruction::new(
+                String::from("ADDI"),
+                0xff00,
+                0x0600,
+                instruction::addi::step,
+                instruction::addi::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("DBcc"),
                 0xf0f8,
                 0x50c8,
