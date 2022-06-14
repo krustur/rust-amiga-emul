@@ -15,6 +15,11 @@ pub struct EffectiveAddressValue<T> {
     pub value: T,
 }
 
+pub struct EffectiveAddressValueWithAddress<T> {
+    pub value: T,
+    pub address: u32,
+}
+
 pub struct SetEffectiveAddressValueResult {
     pub status_register_result: StatusRegisterResult,
 }
@@ -329,23 +334,11 @@ impl Cpu {
     }
 
     pub fn add_bytes(value_1: u8, value_2: u8) -> ResultWithStatusRegister<u8> {
-        let (result, carry) = value_2.overflowing_add(value_1);
         let value_1_signed = Cpu::get_signed_byte_from_byte(value_1);
         let value_2_signed = Cpu::get_signed_byte_from_byte(value_2);
 
+        let (result, carry) = value_2.overflowing_add(value_1);
         let (result_signed, overflow) = value_2_signed.overflowing_add(value_1_signed);
-
-        // let carrys = match carry {
-        //     false => String::from(""),
-        //     true => String::from("carry"),
-        // };
-        // let overflows = match overflow {
-        //     false => String::from(""),
-        //     true => String::from("overflow"),
-        // };
-
-        // println!("value_1:        {:4}, value_2:        {:4}, result:        {:4} {:5}", value_1, value_2, result, carrys);
-        // println!("value_1_signed: {:4}, value_2_signed: {:4}, result_signed: {:4} {:5}", value_1_signed, value_2_signed, result_signed, overflows);
 
         let mut status_register = 0x0000;
         match carry {
@@ -376,10 +369,10 @@ impl Cpu {
     }
 
     pub fn add_words(value_1: u16, value_2: u16) -> ResultWithStatusRegister<u16> {
-        let (result, carry) = value_2.overflowing_add(value_1);
         let value_1_signed = Cpu::get_signed_word_from_word(value_1);
         let value_2_signed = Cpu::get_signed_word_from_word(value_2);
 
+        let (result, carry) = value_2.overflowing_add(value_1);
         let (result_signed, overflow) = value_2_signed.overflowing_add(value_1_signed);
 
         let mut status_register = 0x0000;
@@ -411,10 +404,10 @@ impl Cpu {
     }
 
     pub fn add_longs(value_1: u32, value_2: u32) -> ResultWithStatusRegister<u32> {
-        let (result, carry) = value_2.overflowing_add(value_1);
         let value_1_signed = Cpu::get_signed_long_from_long(value_1);
         let value_2_signed = Cpu::get_signed_long_from_long(value_2);
 
+        let (result, carry) = value_2.overflowing_add(value_1);
         let (result_signed, overflow) = value_2_signed.overflowing_add(value_1_signed);
 
         let mut status_register = 0x0000;
@@ -454,26 +447,32 @@ impl Cpu {
     ) -> EffectiveAddressDebug {
         match ea_mode {
             EffectiveAddressingMode::DRegDirect { register } => {
+                // Dn
                 let format = format!("D{}", register);
                 EffectiveAddressDebug { format: format }
             }
             EffectiveAddressingMode::ARegDirect { register } => {
+                // An
                 let format = format!("A{}", register);
                 EffectiveAddressDebug { format: format }
             }
             EffectiveAddressingMode::ARegIndirect { register } => {
+                // (An)
                 let format = format!("(A{})", register);
                 EffectiveAddressDebug { format: format }
             }
             EffectiveAddressingMode::ARegIndirectWithPostIncrement { register } => {
+                // (An)+
                 let format = format!("(A{})+", register);
                 EffectiveAddressDebug { format: format }
             }
             EffectiveAddressingMode::ARegIndirectWithPreDecrement { register } => {
+                // (-An)
                 let format = format!("-(A{})", register);
                 EffectiveAddressDebug { format: format }
             }
             EffectiveAddressingMode::ARegIndirectWithDisplacement { register } => {
+                // (d16,An)
                 let extension_word = pc.fetch_next_word(mem);
                 let format = format!(
                     "(${:04X},A{}) [{}]",
@@ -486,6 +485,10 @@ impl Cpu {
             EffectiveAddressingMode::ARegIndirectWithIndexOrMemoryIndirect {
                 register: ea_register,
             } => {
+                // ARegIndirectWithIndex8BitDisplacement (d8, An, Xn.SIZE*SCALE)
+                // ARegIndirectWithIndexBaseDisplacement (bd, An, Xn.SIZE*SCALE)
+                // MemoryIndirectPostIndexed             ([bd, An], Xn.SIZE*SCALE,od)
+                // MemoryIndirectPreIndexed              ([bd, An, Xn.SIZE*SCALE],od)
                 let extension_word = pc.fetch_next_word(mem);
                 let register = Cpu::extract_register_index_from_bit_pos(extension_word, 12);
                 let register_type = match extension_word & 0x8000 {
@@ -519,7 +522,6 @@ impl Cpu {
                 EffectiveAddressDebug { format: format }
             }
             EffectiveAddressingMode::PcIndirectWithDisplacement => {
-                // Program Counter Indirect with Displacement Mode
                 // (d16,PC)
                 let extension_word = pc.fetch_next_word(mem);
                 let address = Cpu::get_address_with_word_displacement_sign_extended(
@@ -531,7 +533,6 @@ impl Cpu {
                 EffectiveAddressDebug { format: format }
             }
             EffectiveAddressingMode::AbsoluteShortAddressing => {
-                // Absolute Short Addressing Mode
                 // (xxx).W
                 let extension_word = pc.fetch_next_word(mem);
                 let address = Cpu::sign_extend_word(extension_word);
@@ -543,25 +544,16 @@ impl Cpu {
                 EffectiveAddressDebug { format: format }
             }
             EffectiveAddressingMode::AbsolutLongAddressing => {
-                // Absolute Long Addressing Mode
                 // (xxx).L
-                // let first_extension_word = mem.get_unsigned_word(instr_address + 2);
-                // let second_extension_word = mem.get_unsigned_word(instr_address + 4);
-                // let address =
-                //     u32::from(first_extension_word) << 16 | u32::from(second_extension_word);
                 let address = pc.fetch_next_long(mem);
                 let format = format!("(${:08X}).L", address);
                 EffectiveAddressDebug { format: format }
             }
             EffectiveAddressingMode::PcIndirectWithIndexOrPcMemoryIndirect => {
-                // Program Counter Indirect with Index (8-Bit Displacement) Mode
-                // Program Counter Indirect with Index (Base Displacement) Mode
-                // Program Counter Memory Indirect Postindexed Mode
-                // Program Counter Memory Indirect Preindexed Mode
-                // (d8,PC,Xn)
-                // (bd,PC,Xn,SIZE*SCALE)
-                // ([bd,PC],Xn,SIZE*SCALE,od)
-                // ([bd,PC],Xn,SIZE*SCALE,od)
+                // PcIndirectWithIndex8BitDisplacement (d8, PC, Xn.SIZE*SCALE)
+                // PcIndirectWithIndexBaseDisplacement (bd, PC, Xn.SIZE*SCALE)
+                // PcMemoryInderectPostIndexed         ([bd, PC], Xn.SIZE*SCALE,od)
+                // PcMemoryInderectPreIndexed          ([bd, PC, Xn.SIZE*SCALE],od)
                 let extension_word = pc.fetch_next_word(mem);
                 let register = Cpu::extract_register_index_from_bit_pos(extension_word, 12);
                 let (index_size, index_size_format) = match extension_word & 0x0800 {
@@ -600,7 +592,6 @@ impl Cpu {
                 EffectiveAddressDebug { format: format }
             }
             EffectiveAddressingMode::ImmediateData => {
-                // Immediate data
                 // #<xxx>
                 match operation_size {
                     None => panic!("Must have operation_size for Immediate data!"),
@@ -609,12 +600,15 @@ impl Cpu {
                             pc.skip_byte();
                             let extension_word = pc.fetch_next_byte(mem);
                             EffectiveAddressDebug {
-                                format: format!("#{}", extension_word),
+                                format: format!("#${:02X}", extension_word),
                             }
                         }
-                        OperationSize::Word => EffectiveAddressDebug {
-                            format: String::from("todo word"),
-                        },
+                        OperationSize::Word => {
+                            let extension_word = pc.fetch_next_word(mem);
+                            EffectiveAddressDebug {
+                                format: format!("#${:04X}", extension_word),
+                            }
+                        }
                         OperationSize::Long => EffectiveAddressDebug {
                             format: String::from("todo long"),
                         },
@@ -633,16 +627,20 @@ impl Cpu {
     ) -> EffectiveAddress {
         match ea_mode {
             EffectiveAddressingMode::DRegDirect { register } => {
+                // Dn
                 panic!("Cannot get Effective Address for 'Data Register Direct' EA mode");
             }
             EffectiveAddressingMode::ARegDirect { register } => {
+                // An
                 panic!("Cannot get Effective Address for 'Address Register Direct' EA mode");
             }
             EffectiveAddressingMode::ARegIndirect { register } => {
+                // (An)
                 let address = reg.reg_a[register];
                 EffectiveAddress { address: address }
             }
             EffectiveAddressingMode::ARegIndirectWithPostIncrement { register } => {
+                // (An)+
                 let address = reg.reg_a[register];
                 let size_in_bytes = match operation_size {
                     None => panic!("Must have operation_size for ARegIndirectWithPostIncrement!"),
@@ -652,6 +650,7 @@ impl Cpu {
                 EffectiveAddress { address: address }
             }
             EffectiveAddressingMode::ARegIndirectWithPreDecrement { register } => {
+                // (-An)
                 let size_in_bytes = match operation_size {
                     None => panic!("Must have operation_size for ARegIndirectWithPreDecrement!"),
                     Some(operation_size) => operation_size.size_in_bytes(),
@@ -661,6 +660,7 @@ impl Cpu {
                 EffectiveAddress { address: address }
             }
             EffectiveAddressingMode::ARegIndirectWithDisplacement { register } => {
+                // (d16,An)
                 let extension_word = pc.fetch_next_word(mem);
                 let (address, _) =
                     reg.reg_a[register].overflowing_add(Cpu::sign_extend_word(extension_word));
@@ -669,6 +669,10 @@ impl Cpu {
             EffectiveAddressingMode::ARegIndirectWithIndexOrMemoryIndirect {
                 register: ea_register,
             } => {
+                // ARegIndirectWithIndex8BitDisplacement (d8, An, Xn.SIZE*SCALE)
+                // ARegIndirectWithIndexBaseDisplacement (bd, An, Xn.SIZE*SCALE)
+                // MemoryIndirectPostIndexed             ([bd, An], Xn.SIZE*SCALE,od)
+                // MemoryIndirectPreIndexed              ([bd, An, Xn.SIZE*SCALE],od)
                 let extension_word = pc.fetch_next_word(mem);
                 let displacement = Cpu::get_byte_from_word(extension_word);
                 let register = Cpu::extract_register_index_from_bit_pos(extension_word, 12);
@@ -694,21 +698,14 @@ impl Cpu {
                     ScaleFactor::Four => register << 2,
                     ScaleFactor::Eight => register << 3,
                 };
-                // println!("{}", register);
 
                 let displacement = Cpu::sign_extend_byte(displacement);
-                // println!("{}+{}+{}", reg.reg_a[ea_register], displacement, register);
-                // println!(
-                //     "{:08x}+{:08x}+{:08x}",
-                //     reg.reg_a[ea_register], displacement, register
-                // );
                 let (address, _) = reg.reg_a[ea_register].overflowing_add(displacement);
                 let (address, _) = address.overflowing_add(register);
 
                 EffectiveAddress { address: address }
             }
             EffectiveAddressingMode::PcIndirectWithDisplacement => {
-                // Program Counter Indirect with Displacement Mode
                 // (d16,PC)
                 let extension_word = pc.fetch_next_word(mem);
                 let address = Cpu::get_address_with_word_displacement_sign_extended(
@@ -718,28 +715,21 @@ impl Cpu {
                 EffectiveAddress { address: address }
             }
             EffectiveAddressingMode::AbsoluteShortAddressing => {
-                // Absolute Short Addressing Mode
                 // (xxx).W
                 let extension_word = pc.fetch_next_word(mem);
                 let address = Cpu::sign_extend_word(extension_word);
-                // let ea_format = format!("({:#06x}).W", extension_word);
                 EffectiveAddress { address: address }
             }
             EffectiveAddressingMode::AbsolutLongAddressing => {
-                // Absolute Long Addressing Mode
                 // (xxx).L
                 let address = pc.fetch_next_long(mem);
                 EffectiveAddress { address: address }
             }
             EffectiveAddressingMode::PcIndirectWithIndexOrPcMemoryIndirect => {
-                // Program Counter Indirect with Index (8-Bit Displacement) Mode
-                // Program Counter Indirect with Index (Base Displacement) Mode
-                // Program Counter Memory Indirect Postindexed Mode
-                // Program Counter Memory Indirect Preindexed Mode
-                // (d8,PC,Xn)
-                // (bd,PC,Xn,SIZE*SCALE)
-                // ([bd,PC],Xn,SIZE*SCALE,od)
-                // ([bd,PC],Xn,SIZE*SCALE,od)
+                // PcIndirectWithIndex8BitDisplacement (d8, PC, Xn.SIZE*SCALE)
+                // PcIndirectWithIndexBaseDisplacement (bd, PC, Xn.SIZE*SCALE)
+                // PcMemoryInderectPostIndexed         ([bd, PC], Xn.SIZE*SCALE,od)
+                // PcMemoryInderectPreIndexed          ([bd, PC, Xn.SIZE*SCALE],od)
                 let extension_word = pc.fetch_next_word(mem);
                 let register = Cpu::extract_register_index_from_bit_pos(extension_word, 12);
                 let index_size = match extension_word & 0x0800 {
@@ -769,7 +759,6 @@ impl Cpu {
                 EffectiveAddress { address: address }
             }
             EffectiveAddressingMode::ImmediateData => {
-                // Immediate data
                 // #<xxx>
                 panic!("Cannot get Effective Address for 'Data Register Direct' EA mode");
             }
@@ -784,15 +773,16 @@ impl Cpu {
     ) -> EffectiveAddressValue<u8> {
         match ea_mode {
             EffectiveAddressingMode::DRegDirect { register } => {
+                // Dn
                 let value = Cpu::get_byte_from_long(reg.reg_d[register]);
                 EffectiveAddressValue { value: value }
             }
             EffectiveAddressingMode::ARegDirect { register } => {
+                // An
                 let value = Cpu::get_byte_from_long(reg.reg_a[register]);
                 EffectiveAddressValue { value: value }
             }
             EffectiveAddressingMode::ImmediateData => {
-                // Immediate data
                 // #<xxx>
                 pc.skip_byte();
                 let extension_word = pc.fetch_next_byte(mem);
@@ -816,15 +806,16 @@ impl Cpu {
     ) -> EffectiveAddressValue<u16> {
         match ea_mode {
             EffectiveAddressingMode::DRegDirect { register } => {
+                // Dn
                 let value = Cpu::get_word_from_long(reg.reg_d[register]);
                 EffectiveAddressValue { value: value }
             }
             EffectiveAddressingMode::ARegDirect { register } => {
+                // An
                 let value = Cpu::get_word_from_long(reg.reg_a[register]);
                 EffectiveAddressValue { value: value }
             }
             EffectiveAddressingMode::ImmediateData => {
-                // Immediate data
                 // #<xxx>
                 // BUG: skip_byte() is a copy-paste-from-byte bug?
                 pc.skip_byte();
@@ -849,15 +840,16 @@ impl Cpu {
     ) -> EffectiveAddressValue<u32> {
         match ea_mode {
             EffectiveAddressingMode::DRegDirect { register } => {
+                // Dn
                 let value = reg.reg_d[register];
                 EffectiveAddressValue { value: value }
             }
             EffectiveAddressingMode::ARegDirect { register } => {
+                // An
                 let value = reg.reg_a[register];
                 EffectiveAddressValue { value: value }
             }
             EffectiveAddressingMode::ImmediateData => {
-                // Immediate data
                 // #<xxx>
                 // BUG: skip_byte() is a copy-paste-from-byte bug?
                 pc.skip_byte();
@@ -874,6 +866,96 @@ impl Cpu {
         }
     }
 
+    pub fn get_ea_value_byte_with_address(
+        ea_mode: EffectiveAddressingMode,
+        pc: &mut ProgramCounter,
+        reg: &mut Register,
+        mem: &Mem,
+    ) -> EffectiveAddressValueWithAddress<u8> {
+        match ea_mode {
+            EffectiveAddressingMode::DRegDirect { register } => {
+                // Dn
+                panic!("get_ea_value_byte_with_address invalid ea_mode DRegDirect");
+            }
+            EffectiveAddressingMode::ARegDirect { register } => {
+                // An
+                panic!("get_ea_value_byte_with_address invalid ea_mode ARegDirect");
+            }
+            EffectiveAddressingMode::ImmediateData => {
+                // #<xxx>
+                panic!("get_ea_value_byte_with_address invalid ea_mode ImmediateData");
+            }
+            _ => {
+                let ea = Cpu::get_ea(ea_mode, pc, Some(OperationSize::Byte), reg, mem);
+                let value = mem.get_byte(ea.address);
+                EffectiveAddressValueWithAddress {
+                    value: value,
+                    address: ea.address,
+                }
+            }
+        }
+    }
+
+    pub fn get_ea_value_word_with_address(
+        ea_mode: EffectiveAddressingMode,
+        pc: &mut ProgramCounter,
+        reg: &mut Register,
+        mem: &Mem,
+    ) -> EffectiveAddressValueWithAddress<u16> {
+        match ea_mode {
+            EffectiveAddressingMode::DRegDirect { register } => {
+                // Dn
+                panic!("get_ea_value_byte_with_address invalid ea_mode DRegDirect");
+            }
+            EffectiveAddressingMode::ARegDirect { register } => {
+                // An
+                panic!("get_ea_value_byte_with_address invalid ea_mode ARegDirect");
+            }
+            EffectiveAddressingMode::ImmediateData => {
+                // #<xxx>
+                panic!("get_ea_value_byte_with_address invalid ea_mode ImmediateData");
+            }
+            _ => {
+                let ea = Cpu::get_ea(ea_mode, pc, Some(OperationSize::Byte), reg, mem);
+                let value = mem.get_word(ea.address);
+                EffectiveAddressValueWithAddress {
+                    value: value,
+                    address: ea.address,
+                }
+            }
+        }
+    }
+
+    pub fn get_ea_value_long_with_address(
+        ea_mode: EffectiveAddressingMode,
+        pc: &mut ProgramCounter,
+        reg: &mut Register,
+        mem: &Mem,
+    ) -> EffectiveAddressValueWithAddress<u32> {
+        match ea_mode {
+            EffectiveAddressingMode::DRegDirect { register } => {
+                // Dn
+                panic!("get_ea_value_byte_with_address invalid ea_mode DRegDirect");
+            }
+            EffectiveAddressingMode::ARegDirect { register } => {
+                // An
+                panic!("get_ea_value_byte_with_address invalid ea_mode ARegDirect");
+            }
+            EffectiveAddressingMode::ImmediateData => {
+                // #<xxx>
+                panic!("get_ea_value_byte_with_address invalid ea_mode ImmediateData");
+            }
+            _ => {
+                let ea = Cpu::get_ea(ea_mode, pc, Some(OperationSize::Byte), reg, mem);
+                let value = mem.get_long(ea.address);
+                EffectiveAddressValueWithAddress {
+                    value: value,
+                    address: ea.address,
+                }
+            }
+        }
+    }
+
     pub fn set_ea_value_byte(
         ea_mode: EffectiveAddressingMode,
         pc: &mut ProgramCounter,
@@ -883,13 +965,14 @@ impl Cpu {
     ) -> SetEffectiveAddressValueResult {
         match ea_mode {
             EffectiveAddressingMode::DRegDirect { register } => {
+                // Dn
                 reg.reg_d[register] = Cpu::set_byte_in_long(value, reg.reg_d[register]);
             }
             EffectiveAddressingMode::ARegDirect { register } => {
+                // An
                 reg.reg_a[register] = Cpu::set_byte_in_long(value, reg.reg_a[register]);
             }
             EffectiveAddressingMode::ImmediateData => {
-                // Immediate data
                 // #<xxx>
                 panic!("set_ea_value_byte invalid EffectiveAddressingMode::ImmediateData");
             }
@@ -929,25 +1012,19 @@ impl Cpu {
     ) -> SetEffectiveAddressValueResult {
         match ea_mode {
             EffectiveAddressingMode::DRegDirect { register } => {
+                // Dn
                 reg.reg_d[register] = Cpu::set_word_in_long(value, reg.reg_d[register]);
             }
             EffectiveAddressingMode::ARegDirect { register } => {
+                // An
                 reg.reg_a[register] = Cpu::set_word_in_long(value, reg.reg_a[register]);
             }
             EffectiveAddressingMode::ImmediateData => {
-                // Immediate data
                 // #<xxx>
                 panic!("set_ea_value_word invalid EffectiveAddressingMode::ImmediateData");
             }
             _ => {
-                let ea = Cpu::get_ea(
-                    ea_mode,
-                    // ea_register,
-                    pc,
-                    Some(OperationSize::Word),
-                    reg,
-                    mem,
-                );
+                let ea = Cpu::get_ea(ea_mode, pc, Some(OperationSize::Word), reg, mem);
                 mem.set_word(ea.address, value);
             }
         };
@@ -982,13 +1059,14 @@ impl Cpu {
     ) -> SetEffectiveAddressValueResult {
         match ea_mode {
             EffectiveAddressingMode::DRegDirect { register } => {
+                // Dn
                 reg.reg_d[register] = value;
             }
             EffectiveAddressingMode::ARegDirect { register } => {
+                // An
                 reg.reg_a[register] = value;
             }
             EffectiveAddressingMode::ImmediateData => {
-                // Immediate data
                 // #<xxx>
                 panic!("set_ea_value_long invalid EffectiveAddressingMode::ImmediateData");
             }
