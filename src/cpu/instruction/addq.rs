@@ -134,6 +134,40 @@ mod tests {
     }
 
     #[test]
+    fn addq_data_to_data_register_direct_byte_overflow() {
+        // arrange
+        let code = [0x5a, 0x18, /* DC */ 0x7e].to_vec(); // ADDQ.B #$5,(A0)+
+                                                         // DC.B $7e
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.reg_a[0] = 0xC00002;
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_OVERFLOW
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_NEGATIVE
+            | STATUS_REGISTER_MASK_EXTEND;
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            DisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("ADDQ.B"),
+                String::from("#$5,(A0)+")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x83, cpu.memory.get_byte(0xC00002));
+        assert_eq!(false, cpu.register.is_sr_carry_set());
+        assert_eq!(true, cpu.register.is_sr_coverflow_set());
+        assert_eq!(false, cpu.register.is_sr_zero_set());
+        assert_eq!(true, cpu.register.is_sr_negative_set());
+        assert_eq!(false, cpu.register.is_sr_extend_set());
+    }
+
+    #[test]
     fn addq_data_to_data_register_direct_word() {
         // arrange
         let code = [0x50, 0x5b, /* DC */ 0x60, 0x20].to_vec(); // ADDQ.W #$8,(A3)+
@@ -164,6 +198,74 @@ mod tests {
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
         assert_eq!(false, cpu.register.is_sr_zero_set());
         assert_eq!(false, cpu.register.is_sr_negative_set());
+        assert_eq!(false, cpu.register.is_sr_extend_set());
+    }
+
+    #[test]
+    fn addq_data_to_data_register_direct_word_carry() {
+        // arrange
+        let code = [0x56, 0x5b, /* DC */ 0xff, 0xfe].to_vec(); // ADDQ.W #$3,(A3)+
+                                                               // DC.W $fffe
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.reg_a[3] = 0xC00002;
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_OVERFLOW
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_NEGATIVE
+            | STATUS_REGISTER_MASK_EXTEND;
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            DisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("ADDQ.W"),
+                String::from("#$3,(A3)+")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x0001, cpu.memory.get_word(0xC00002));
+        assert_eq!(true, cpu.register.is_sr_carry_set());
+        assert_eq!(false, cpu.register.is_sr_coverflow_set());
+        assert_eq!(false, cpu.register.is_sr_zero_set());
+        assert_eq!(false, cpu.register.is_sr_negative_set());
+        assert_eq!(true, cpu.register.is_sr_extend_set());
+    }
+
+    #[test]
+    fn addq_data_to_data_register_direct_word_negative() {
+        // arrange
+        let code = [0x56, 0x5b, /* DC */ 0xff, 0xf0].to_vec(); // ADDQ.W #$3,(A3)+
+                                                               // DC.W $fffe
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.reg_a[3] = 0xC00002;
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_OVERFLOW
+            // | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_NEGATIVE
+            | STATUS_REGISTER_MASK_EXTEND;
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            DisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("ADDQ.W"),
+                String::from("#$3,(A3)+")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0xfff3, cpu.memory.get_word(0xC00002));
+        assert_eq!(false, cpu.register.is_sr_carry_set());
+        assert_eq!(false, cpu.register.is_sr_coverflow_set());
+        assert_eq!(false, cpu.register.is_sr_zero_set());
+        assert_eq!(true, cpu.register.is_sr_negative_set());
         assert_eq!(false, cpu.register.is_sr_extend_set());
     }
 
@@ -200,4 +302,73 @@ mod tests {
         assert_eq!(false, cpu.register.is_sr_negative_set());
         assert_eq!(false, cpu.register.is_sr_extend_set());
     }
+
+    #[test]
+    fn addq_data_to_data_register_direct_long_zero() {
+        // arrange
+        let code = [0x50, 0x9d, /* DC */ 0xff, 0xff, 0xff, 0xf8].to_vec(); // ADDQ.L #$8,(A5)+
+                                                                           // DC.W $fffffff8
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.reg_a[5] = 0xC00002;
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_OVERFLOW
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_NEGATIVE
+            | STATUS_REGISTER_MASK_EXTEND;
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            DisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("ADDQ.L"),
+                String::from("#$8,(A5)+")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00000000, cpu.memory.get_long(0xC00002));
+        assert_eq!(true, cpu.register.is_sr_carry_set());
+        assert_eq!(false, cpu.register.is_sr_coverflow_set());
+        assert_eq!(true, cpu.register.is_sr_zero_set());
+        assert_eq!(false, cpu.register.is_sr_negative_set());
+        assert_eq!(true, cpu.register.is_sr_extend_set());
+    }
+
+    // #[test]
+    // fn addq_data_to_address_register_direct_word() {
+    //     // arrange
+    //     let code = [0x50, 0x48].to_vec(); // ADDQ.L #$8,A0
+    //     let mut cpu = crate::instr_test_setup(code, None);
+    //     cpu.register.reg_a[5] = 0xC00002;
+    //     cpu.register.reg_sr = 0x0000;
+    //     /*STATUS_REGISTER_MASK_CARRY
+    //     | STATUS_REGISTER_MASK_OVERFLOW
+    //     | STATUS_REGISTER_MASK_ZERO
+    //     | STATUS_REGISTER_MASK_NEGATIVE
+    //     | STATUS_REGISTER_MASK_EXTEND;
+    //     */
+    //     // act assert - debug
+    //     let debug_result = cpu.get_next_disassembly();
+    //     assert_eq!(
+    //         DisassemblyResult::from_address_and_address_next(
+    //             0xC00000,
+    //             0xC00002,
+    //             String::from("ADDQ.W"),
+    //             String::from("#$8,A0")
+    //         ),
+    //         debug_result
+    //     );
+    //     // act
+    //     cpu.execute_next_instruction();
+    //     // assert
+    //     assert_eq!(0x00000000, cpu.memory.get_long(0xC00002));
+    //     assert_eq!(false, cpu.register.is_sr_carry_set());
+    //     assert_eq!(false, cpu.register.is_sr_coverflow_set());
+    //     assert_eq!(false, cpu.register.is_sr_zero_set());
+    //     assert_eq!(false, cpu.register.is_sr_negative_set());
+    //     assert_eq!(false, cpu.register.is_sr_extend_set());
+    // }
 }
