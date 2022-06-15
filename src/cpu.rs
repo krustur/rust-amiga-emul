@@ -308,6 +308,14 @@ impl Cpu {
         }
     }
 
+    pub fn extract_3_bit_data_1_to_8_from_word_at_pos(word: u16, bit_pos: u8) -> u8 {
+        let data = ((word >> bit_pos) & 0b111) as u8;
+        match data {
+            0 => 8,
+            _ => data,
+        }
+    }
+
     pub fn get_byte_from_long(long: u32) -> u8 {
         (long & 0x000000ff) as u8
     }
