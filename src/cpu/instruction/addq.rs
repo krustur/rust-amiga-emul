@@ -1,22 +1,21 @@
 use crate::{
-    cpu::{instruction::PcResult, Cpu},
+    cpu::{instruction::PcResult, Cpu, StatusRegisterResult},
     mem::Mem,
     register::{ProgramCounter, Register},
 };
 
-use super::{DisassemblyResult, InstructionExecutionResult, OperationSize};
+use super::{
+    DisassemblyResult, EffectiveAddressingMode, InstructionExecutionResult, OperationSize,
+};
 
 // Instruction State
 // =================
-// step: TODO
-// step cc: TODO
-// get_disassembly: TODO
+// step: DONE
+// step cc: DONE
+// get_disassembly: DONE
 
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
-
-// TODO: test Areg writes doesn't alter CCs
-// TODO: test Areg writes alters entire Long
 
 pub fn step<'a>(
     pc: &mut ProgramCounter,
@@ -40,15 +39,33 @@ pub fn step<'a>(
         }
         OperationSize::Word => {
             let ea_value = ea_data.get_value_word(pc, reg, mem, false);
-            let add_result = Cpu::add_words(data as u16, ea_value);
-            ea_data.set_value_word(pc, reg, mem, add_result.result, true);
-            add_result.status_register_result
+            if let EffectiveAddressingMode::ARegDirect { ea_register } = ea_data.ea_mode {
+                let ea_value = Cpu::sign_extend_word(ea_value);
+                let add_result = Cpu::add_longs(data as u32, ea_value);
+                ea_data.set_value_long(pc, reg, mem, add_result.result, true);
+                // add_result.status_register_result
+                StatusRegisterResult {
+                    status_register: 0x0000,
+                    status_register_mask: 0x0000,
+                }
+            } else {
+                let add_result = Cpu::add_words(data as u16, ea_value);
+                ea_data.set_value_word(pc, reg, mem, add_result.result, true);
+                add_result.status_register_result
+            }
         }
         OperationSize::Long => {
             let ea_value = ea_data.get_value_long(pc, reg, mem, false);
             let add_result = Cpu::add_longs(data as u32, ea_value);
             ea_data.set_value_long(pc, reg, mem, add_result.result, true);
-            add_result.status_register_result
+            if let EffectiveAddressingMode::ARegDirect { ea_register } = ea_data.ea_mode {
+                StatusRegisterResult {
+                    status_register: 0x0000,
+                    status_register_mask: 0x0000,
+                }
+            } else {
+                add_result.status_register_result
+            }
         }
     };
 
@@ -339,38 +356,73 @@ mod tests {
         assert_eq!(true, cpu.register.is_sr_extend_set());
     }
 
-    // #[test]
-    // fn addq_data_to_address_register_direct_word() {
-    //     // arrange
-    //     let code = [0x50, 0x48].to_vec(); // ADDQ.W #$8,A0
-    //     let mut cpu = crate::instr_test_setup(code, None);
-    //     cpu.register.reg_a[0] = 0xfffffffe;
-    //     cpu.register.reg_sr = 0x0000;
-    //     /*STATUS_REGISTER_MASK_CARRY
-    //     | STATUS_REGISTER_MASK_OVERFLOW
-    //     | STATUS_REGISTER_MASK_ZERO
-    //     | STATUS_REGISTER_MASK_NEGATIVE
-    //     | STATUS_REGISTER_MASK_EXTEND;
-    //     */
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
-    //     assert_eq!(
-    //         DisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("ADDQ.W"),
-    //             String::from("#$8,A0")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x00000006, cpu.register.reg_a[0]);
-    //     assert_eq!(false, cpu.register.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.is_sr_coverflow_set());
-    //     assert_eq!(false, cpu.register.is_sr_zero_set());
-    //     assert_eq!(false, cpu.register.is_sr_negative_set());
-    //     assert_eq!(false, cpu.register.is_sr_extend_set());
-    // }
+    #[test]
+    fn addq_data_to_address_register_direct_word() {
+        // arrange
+        let code = [0x50, 0x48].to_vec(); // ADDQ.W #$8,A0
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.reg_a[0] = 0xfffffffe;
+        cpu.register.reg_sr = 0x0000;
+        /*STATUS_REGISTER_MASK_CARRY
+        | STATUS_REGISTER_MASK_OVERFLOW
+        | STATUS_REGISTER_MASK_ZERO
+        | STATUS_REGISTER_MASK_NEGATIVE
+        | STATUS_REGISTER_MASK_EXTEND;
+        */
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            DisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("ADDQ.W"),
+                String::from("#$8,A0")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00000006, cpu.register.reg_a[0]);
+        assert_eq!(false, cpu.register.is_sr_carry_set());
+        assert_eq!(false, cpu.register.is_sr_coverflow_set());
+        assert_eq!(false, cpu.register.is_sr_zero_set());
+        assert_eq!(false, cpu.register.is_sr_negative_set());
+        assert_eq!(false, cpu.register.is_sr_extend_set());
+    }
+
+    #[test]
+    fn addq_data_to_address_register_direct_long() {
+        // arrange
+        let code = [0x50, 0x89].to_vec(); // ADDQ.L #$8,A1
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.reg_a[1] = 0xfffffffe;
+        cpu.register.reg_sr = 0x0000;
+        /*STATUS_REGISTER_MASK_CARRY
+        | STATUS_REGISTER_MASK_OVERFLOW
+        | STATUS_REGISTER_MASK_ZERO
+        | STATUS_REGISTER_MASK_NEGATIVE
+        | STATUS_REGISTER_MASK_EXTEND;
+        */
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            DisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("ADDQ.L"),
+                String::from("#$8,A1")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00000006, cpu.register.reg_a[1]);
+        assert_eq!(false, cpu.register.is_sr_carry_set());
+        assert_eq!(false, cpu.register.is_sr_coverflow_set());
+        assert_eq!(false, cpu.register.is_sr_zero_set());
+        assert_eq!(false, cpu.register.is_sr_negative_set());
+        assert_eq!(false, cpu.register.is_sr_extend_set());
+    }
 }
