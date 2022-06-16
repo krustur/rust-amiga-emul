@@ -22,27 +22,34 @@ pub fn step<'a>(
     reg: &mut Register,
     mem: &mut Mem,
 ) -> InstructionExecutionResult {
-    let src_ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(mem);
+    let instr_word = pc.peek_next_word(mem);
+    let size = Cpu::extract_size011110_from_bit_pos(instr_word, 12);
+    let src_ea_data =
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size));
     let src_ea_mode = src_ea_data.ea_mode;
 
-    let dst_ea_data =
-        pc.get_effective_addressing_data_from_instr_word_bit_pos(src_ea_data.instr_word, mem, 6, 9);
+    let dst_ea_data = pc.get_effective_addressing_data_from_instr_word_bit_pos(
+        src_ea_data.instr_word,
+        reg,
+        mem,
+        Some(size),
+        6,
+        9,
+    );
     let dst_ea_mode = dst_ea_data.ea_mode;
-
-    let size = Cpu::extract_size011110_from_bit_pos(src_ea_data.instr_word, 12);
 
     let set_result = match size {
         OperationSize::Byte => {
-            let ea_value = Cpu::get_ea_value_byte(src_ea_mode, pc, reg, mem);
-            Cpu::set_ea_value_byte(dst_ea_mode, pc, ea_value.value, reg, mem)
+            let ea_value = src_ea_data.get_value_byte(pc, reg, mem, true);
+            dst_ea_data.set_value_byte(pc, reg, mem, ea_value, true)
         }
         OperationSize::Word => {
-            let ea_value = Cpu::get_ea_value_word(src_ea_mode, pc, reg, mem);
-            Cpu::set_ea_value_word(dst_ea_mode, pc, ea_value.value, reg, mem)
+            let ea_value = src_ea_data.get_value_word(pc, reg, mem, true);
+            dst_ea_data.set_value_word(pc, reg, mem, ea_value, true)
         }
         OperationSize::Long => {
-            let ea_value = Cpu::get_ea_value_long(src_ea_mode, pc, reg, mem);
-            Cpu::set_ea_value_long(dst_ea_mode, pc, ea_value.value, reg, mem)
+            let ea_value = src_ea_data.get_value_long(pc, reg, mem, true);
+            dst_ea_data.set_value_long(pc, reg, mem, ea_value, true)
         }
     };
 
@@ -59,11 +66,20 @@ pub fn get_disassembly<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> DisassemblyResult {
-    let src_ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(mem);
+    let instr_word = pc.peek_next_word(mem);
+    let size = Cpu::extract_size011110_from_bit_pos(instr_word, 12);
+    let src_ea_data =
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size));
     let src_ea_mode = src_ea_data.ea_mode;
 
-    let dst_ea_data =
-        pc.get_effective_addressing_data_from_instr_word_bit_pos(src_ea_data.instr_word, mem, 6, 9);
+    let dst_ea_data = pc.get_effective_addressing_data_from_instr_word_bit_pos(
+        src_ea_data.instr_word,
+        reg,
+        mem,
+        Some(size),
+        6,
+        9,
+    );
     let dst_ea_mode = dst_ea_data.ea_mode;
 
     let size = Cpu::extract_size011110_from_bit_pos(src_ea_data.instr_word, 12);
@@ -72,7 +88,9 @@ pub fn get_disassembly<'a>(
     let dst_ea_debug = Cpu::get_ea_format(dst_ea_mode, pc, Some(size), reg, mem);
 
     let name = match dst_ea_mode {
-        EffectiveAddressingMode::ARegDirect { register } => match size {
+        EffectiveAddressingMode::ARegDirect {
+            ea_register: register,
+        } => match size {
             OperationSize::Byte => {
                 panic!("AddressRegisterDirect as destination only available for Word and Long")
             }
@@ -232,10 +250,14 @@ mod tests {
         // // act
         cpu.execute_next_instruction();
         // // assert
-        assert_eq!(0x00090001, cpu.register.reg_a[1]);
-        assert_eq!(0x00C00002, cpu.register.reg_pc.get_address());
+        assert_eq!(0x00090001, cpu.register.reg_a[1], "AReg post increment");
+        assert_eq!(
+            0x00C00002,
+            cpu.register.reg_pc.get_address(),
+            "PC increment"
+        );
 
-        assert_eq!(0xf0, cpu.memory.get_byte(0x00090001));
+        assert_eq!(0xf0, cpu.memory.get_byte(0x00090001), "Result");
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
         assert_eq!(false, cpu.register.is_sr_zero_set());
@@ -246,7 +268,7 @@ mod tests {
     #[test]
     fn address_reg_indirect_with_pre_decrement_to_address_reg_indirect_with_post_increment() {
         // arrange
-        let code = [0x26, 0xe2].to_vec(); // MOVE.B -(A2),(A3)+
+        let code = [0x26, 0xe2].to_vec(); // MOVE.L -(A2),(A3)+
         let mem_range = MemRange::from_bytes(
             0x00090000,
             [0xff, 0xff, 0xff, 0xf0, 0x00, 0x00, 0x00, 0x00].to_vec(),
@@ -269,10 +291,14 @@ mod tests {
         // // act
         cpu.execute_next_instruction();
         // // assert
-        assert_eq!(0x00090000, cpu.register.reg_a[2]);
-        assert_eq!(0x00090008, cpu.register.reg_a[3]);
-        assert_eq!(0x00C00002, cpu.register.reg_pc.get_address());
-        assert_eq!(0xfffffff0, cpu.memory.get_long(0x00090004));
+        assert_eq!(0x00090000, cpu.register.reg_a[2], "AReg pre decrement");
+        assert_eq!(0x00090008, cpu.register.reg_a[3], "AReg post increment");
+        assert_eq!(
+            0x00C00002,
+            cpu.register.reg_pc.get_address(),
+            "PC increment"
+        );
+        assert_eq!(0xfffffff0, cpu.memory.get_long(0x00090004), "Result");
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_coverflow_set());
         assert_eq!(false, cpu.register.is_sr_zero_set());
@@ -307,14 +333,18 @@ mod tests {
         cpu.execute_next_instruction();
         // // assert
         assert_eq!(0x00088010, cpu.register.reg_a[3]);
-        assert_eq!(0x00090004, cpu.register.reg_a[4]);
-        assert_eq!(0x00C00004, cpu.register.reg_pc.get_address());
-        assert_eq!(0x12345678, cpu.memory.get_long(0x00090004));
-        assert_eq!(false, cpu.register.is_sr_carry_set());
-        assert_eq!(false, cpu.register.is_sr_coverflow_set());
-        assert_eq!(false, cpu.register.is_sr_zero_set());
-        assert_eq!(false, cpu.register.is_sr_negative_set());
-        assert_eq!(false, cpu.register.is_sr_extend_set());
+        assert_eq!(0x00090004, cpu.register.reg_a[4], "AReg pre decrement");
+        assert_eq!(
+            0x00C00004,
+            cpu.register.reg_pc.get_address(),
+            "PC increment"
+        );
+        assert_eq!(0x12345678, cpu.memory.get_long(0x00090004), "Result");
+        assert_eq!(false, cpu.register.is_sr_carry_set(), "Carry");
+        assert_eq!(false, cpu.register.is_sr_coverflow_set(), "Overflow");
+        assert_eq!(false, cpu.register.is_sr_zero_set(), "Zero");
+        assert_eq!(false, cpu.register.is_sr_negative_set(), "Negative");
+        assert_eq!(false, cpu.register.is_sr_extend_set(), "Extend");
     }
 
     #[test]

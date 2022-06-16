@@ -1,10 +1,9 @@
 use crate::{
-    cpu::Cpu,
     mem::Mem,
     register::{ProgramCounter, Register},
 };
 
-use super::{DisassemblyResult, InstructionExecutionResult, OperationSize};
+use super::{DisassemblyResult, InstructionExecutionResult};
 
 // Instruction State
 // =================
@@ -40,36 +39,37 @@ pub fn get_disassembly<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> DisassemblyResult {
-    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(mem);
-    let ea_mode = ea_data.ea_mode;
-    let size = Cpu::extract_size000110_from_bit_pos_6(ea_data.instr_word);
-    // let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
-    // let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
+    todo!();
+    // let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem);
+    // let ea_mode = ea_data.ea_mode;
+    // let size = Cpu::extract_size000110_from_bit_pos_6(ea_data.instr_word);
+    // // let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
+    // // let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
 
-    let ea_format = Cpu::get_ea_format(ea_mode, pc, None, reg, mem);
+    // let ea_format = Cpu::get_ea_format(ea_mode, pc, None, reg, mem);
 
-    let (name, num_immediate_words, immediate_data) = match size {
-        OperationSize::Byte => {
-            pc.skip_byte();
-            (
-                String::from("CMPI.B"),
-                1,
-                format!("#${:02X}", pc.fetch_next_byte(mem)),
-            )
-        }
-        OperationSize::Word => (
-            String::from("CMPI.W"),
-            1,
-            format!("#${:04X}", pc.fetch_next_word(mem)),
-        ),
-        OperationSize::Long => (
-            String::from("CMPI.L"),
-            2,
-            format!("#${:08X}", pc.fetch_next_long(mem)),
-        ),
-    };
+    // let (name, num_immediate_words, immediate_data) = match size {
+    //     OperationSize::Byte => {
+    //         pc.skip_byte();
+    //         (
+    //             String::from("CMPI.B"),
+    //             1,
+    //             format!("#${:02X}", pc.fetch_next_byte(mem)),
+    //         )
+    //     }
+    //     OperationSize::Word => (
+    //         String::from("CMPI.W"),
+    //         1,
+    //         format!("#${:04X}", pc.fetch_next_word(mem)),
+    //     ),
+    //     OperationSize::Long => (
+    //         String::from("CMPI.L"),
+    //         2,
+    //         format!("#${:08X}", pc.fetch_next_long(mem)),
+    //     ),
+    // };
 
-    DisassemblyResult::from_pc(pc, name, format!("{},{}", immediate_data, ea_format))
+    // DisassemblyResult::from_pc(pc, name, format!("{},{}", immediate_data, ea_format))
 }
 
 // #[cfg(test)]

@@ -20,30 +20,32 @@ pub fn step<'a>(
     reg: &mut Register,
     mem: &mut Mem,
 ) -> InstructionExecutionResult {
-    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(mem);
+    let instr_word = pc.peek_next_word(mem);
+    let size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
+    let ea_data =
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size));
     let ea_mode = ea_data.ea_mode;
-    let size = Cpu::extract_size000110_from_bit_pos_6(ea_data.instr_word);
     let status_register_result = match size {
         OperationSize::Byte => {
             pc.skip_byte();
             let data = pc.fetch_next_byte(mem);
-            let ea_value = Cpu::get_ea_value_byte(ea_mode, pc, reg, mem);
-            let add_result = Cpu::add_bytes(data, ea_value.value);
-            Cpu::set_ea_value_byte(ea_mode, pc, add_result.result, reg, mem);
+            let ea_value = ea_data.get_value_byte(pc, reg, mem, false);
+            let add_result = Cpu::add_bytes(data, ea_value);
+            ea_data.set_value_byte(pc, reg, mem, add_result.result, true);
             add_result.status_register_result
         }
         OperationSize::Word => {
             let data = pc.fetch_next_word(mem);
-            let ea_value = Cpu::get_ea_value_word(ea_mode, pc, reg, mem);
-            let add_result = Cpu::add_words(data, ea_value.value);
-            Cpu::set_ea_value_word(ea_mode, pc, add_result.result, reg, mem);
+            let ea_value = ea_data.get_value_word(pc, reg, mem, false);
+            let add_result = Cpu::add_words(data, ea_value);
+            ea_data.set_value_word(pc, reg, mem, add_result.result, true);
             add_result.status_register_result
         }
         OperationSize::Long => {
             let data = pc.fetch_next_long(mem);
-            let ea_value = Cpu::get_ea_value_long(ea_mode, pc, reg, mem);
-            let add_result = Cpu::add_longs(data, ea_value.value);
-            Cpu::set_ea_value_long(ea_mode, pc, add_result.result, reg, mem);
+            let ea_value = ea_data.get_value_long(pc, reg, mem, false);
+            let add_result = Cpu::add_longs(data, ea_value);
+            ea_data.set_value_long(pc, reg, mem, add_result.result, true);
             add_result.status_register_result
         }
     };
@@ -60,7 +62,10 @@ pub fn get_disassembly<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> DisassemblyResult {
-    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(mem);
+    let instr_word = pc.peek_next_word(mem);
+    let size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
+    let ea_data =
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size));
     let ea_mode = ea_data.ea_mode;
     let size = Cpu::extract_size000110_from_bit_pos_6(ea_data.instr_word);
     let ea_format = Cpu::get_ea_format(ea_mode, pc, None, reg, mem);

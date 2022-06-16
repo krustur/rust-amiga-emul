@@ -1,7 +1,7 @@
 use std::fmt;
 
 use crate::mem::Mem;
-use crate::register::{ProgramCounter, Register};
+use crate::register::{ProgramCounter, Register, RegisterType};
 use num_derive::FromPrimitive;
 
 pub mod add;
@@ -38,8 +38,6 @@ pub enum DisassemblyResult {
         address_next: u32,
         name: String,
         operands_format: String,
-        // pc: ProgramCounter,
-        // next_pc: ProgramCounter,
     },
     PassOn,
 }
@@ -75,45 +73,98 @@ impl DisassemblyResult {
 
 #[derive(Copy, Clone, Debug, std::cmp::PartialEq)]
 pub enum EffectiveAddressingMode {
-    DRegDirect { register: usize }, //                            0b000       Dn
-    ARegDirect { register: usize }, //                            0b001       An
-    ARegIndirect { register: usize }, //                          0b010       (An)
-    ARegIndirectWithPostIncrement { register: usize }, //         0b011       (An)+
-    ARegIndirectWithPreDecrement { register: usize }, //          0b100       (-An)
-    ARegIndirectWithDisplacement { register: usize }, //          0b101       (d16,An)
-    ARegIndirectWithIndexOrMemoryIndirect { register: usize }, // 0b110       -
+    DRegDirect {
+        //                                   0b000       Dn
+        ea_register: usize,
+    },
+    ARegDirect {
+        //                                   0b001       An
+        ea_register: usize,
+    },
+    ARegIndirect {
+        //                   0b010       (An)
+        ea_register: usize,
+        ea_address: u32,
+    },
+    ARegIndirectWithPostIncrement {
+        //  0b011       (An)+
+        operation_size: OperationSize,
+        ea_register: usize,
+        ea_address: u32,
+    },
+    ARegIndirectWithPreDecrement {
+        //   0b100       (-An)
+        operation_size: OperationSize,
+        ea_register: usize,
+        ea_address: u32,
+    },
+    ARegIndirectWithDisplacement {
+        //   0b101       (d16,An)
+        ea_register: usize,
+        ea_address: u32,
+        ea_displacement: u16,
+    },
+    ARegIndirectWithIndexOrMemoryIndirect {
+        // 0b110       -
+        ea_register: usize,
+        ea_address: u32,
+        extension_word: u16,
+        displacement: u8,
+        register_type: RegisterType,
+        register: usize,
+        index_size: OperationSize,
+        scale_factor: ScaleFactor,
+    },
     // TODO: 020+ CPU's below
     // ARegIndirectWithIndex8BitDisplacement{register: usize}, // 0b110       (d8, An, Xn.SIZE*SCALE)
     // ARegIndirectWithIndexBaseDisplacement{register: usize}, // 0b110       (bd, An, Xn.SIZE*SCALE)
     // MemoryIndirectPostIndexed{register: usize},             // 0b110       ([bd, An], Xn.SIZE*SCALE,od)
     // MemoryIndirectPreIndexed{register: usize},              // 0b110       ([bd, An, Xn.SIZE*SCALE],od)
-    PcIndirectWithDisplacement, //                                0b111 0b010 (d16, PC)
-    PcIndirectWithIndexOrPcMemoryIndirect, //                     0b110 0b011 -
+    PcIndirectWithDisplacement {
+        //                                0b111 0b010 (d16, PC)
+        ea_address: u32,
+        displacement: u16,
+    },
+    PcIndirectWithIndexOrPcMemoryIndirect {
+        //                     0b110 0b011 -
+        ea_register: usize,
+        ea_address: u32,
+        extension_word: u16,
+        displacement: u8,
+        register_type: RegisterType,
+        register: usize,
+        index_size: OperationSize,
+        scale_factor: ScaleFactor,
+    },
     // TODO: 020+ CPU's below
     // PcIndirectWithIndex8BitDisplacement{register: usize},   // 0b111 0b011 (d8, PC, Xn.SIZE*SCALE)
     // PcIndirectWithIndexBaseDisplacement{register: usize},   // 0b111 0b011 (bd, PC, Xn.SIZE*SCALE)
     // PcMemoryInderectPostIndexed{register: usize},           // 0b111 0b011 ([bd, PC], Xn.SIZE*SCALE,od)
     // PcMemoryInderectPreIndexed{register: usize},            // 0b111 0b011 ([bd, PC, Xn.SIZE*SCALE],od)
-    AbsoluteShortAddressing, //                                   0b111 0b000 (xxx).W
-    AbsolutLongAddressing,   //                                   0b111 0b001 (xxx).L
-    ImmediateData,           //                                   0b111 0b100 #<xxx>
+    AbsoluteShortAddressing {
+        //                                   0b111 0b000 (xxx).W
+        ea_address: u32,
+        displacement: u16,
+    },
+    AbsolutLongAddressing {
+        //                                   0b111 0b001 (xxx).L
+        ea_address: u32,
+    },
+    ImmediateDataByte {
+        //                                   0b111 0b100 #<xxx>
+        data: u8,
+    },
+    ImmediateDataWord {
+        //                                   0b111 0b100 #<xxx>
+        data: u16,
+    },
+    ImmediateDataLong {
+        //                                   0b111 0b100 #<xxx>
+        data: u32,
+    },
 }
 
-pub struct EffectiveAddressingData {
-    instr_word: u16,
-    ea_mode: EffectiveAddressingMode,
-}
-
-impl EffectiveAddressingData {
-    pub fn create(instr_word: u16, ea_mode: EffectiveAddressingMode) -> EffectiveAddressingData {
-        EffectiveAddressingData {
-            instr_word,
-            ea_mode,
-        }
-    }
-}
-
-#[derive(FromPrimitive, Debug, Copy, Clone)]
+#[derive(FromPrimitive, Debug, Copy, Clone, PartialEq)]
 pub enum OperationSize {
     Byte = 0b00,
     Word = 0b01,
@@ -128,9 +179,17 @@ impl OperationSize {
             OperationSize::Long => 4,
         }
     }
+
+    pub fn get_format(&self) -> char {
+        match self {
+            OperationSize::Byte => 'B',
+            OperationSize::Word => 'W',
+            OperationSize::Long => 'L',
+        }
+    }
 }
 
-#[derive(FromPrimitive, Debug, Copy, Clone)]
+#[derive(FromPrimitive, Debug, Copy, Clone, PartialEq)]
 pub enum ScaleFactor {
     One = 0b00,
     Two = 0b01,

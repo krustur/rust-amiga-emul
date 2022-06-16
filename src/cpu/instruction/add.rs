@@ -4,7 +4,7 @@ use crate::register::Register;
 use crate::{cpu::instruction::PcResult, register::ProgramCounter};
 use std::panic;
 
-use super::{DisassemblyResult, InstructionExecutionResult};
+use super::{DisassemblyResult, InstructionExecutionResult, OperationSize};
 
 // Instruction State
 // =================
@@ -27,68 +27,70 @@ pub fn step<'a>(
     reg: &mut Register,
     mem: &mut Mem,
 ) -> InstructionExecutionResult {
-    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(mem);
-    let ea_mode = ea_data.ea_mode;
-    let opmode = Cpu::extract_op_mode_from_bit_pos_6(ea_data.instr_word);
-    let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9);
-
-    let opsize = match opmode {
-        BYTE_WITH_DN_AS_DEST => 1,
-        WORD_WITH_DN_AS_DEST => 2,
-        LONG_WITH_DN_AS_DEST => 4,
-        BYTE_WITH_EA_AS_DEST => 1,
-        WORD_WITH_EA_AS_DEST => 2,
-        LONG_WITH_EA_AS_DEST => 4,
-        _ => panic!("What"),
+    let instr_word = pc.peek_next_word(mem);
+    let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
+    let operation_size = match opmode {
+        BYTE_WITH_DN_AS_DEST => OperationSize::Byte,
+        WORD_WITH_DN_AS_DEST => OperationSize::Word,
+        LONG_WITH_DN_AS_DEST => OperationSize::Long,
+        BYTE_WITH_EA_AS_DEST => OperationSize::Byte,
+        WORD_WITH_EA_AS_DEST => OperationSize::Word,
+        LONG_WITH_EA_AS_DEST => OperationSize::Long,
+        _ => panic!("Unrecognized opmode"),
     };
+
+    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
+        reg,
+        mem,
+        Some(operation_size),
+    );
+    let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9);
 
     let status_register_result = match opmode {
         BYTE_WITH_DN_AS_DEST => {
-            let ea_value = Cpu::get_ea_value_byte(ea_mode, pc, reg, mem);
+            let ea_value = ea_data.get_value_byte(pc, reg, mem, true);
+            // let ea_value = Cpu::get_ea_value_byte(ea_mode, pc, reg, mem);
             let reg_value = Cpu::get_byte_from_long(reg.reg_d[register]);
-            let add_result = Cpu::add_bytes(ea_value.value, reg_value);
+            let add_result = Cpu::add_bytes(ea_value, reg_value);
 
             reg.reg_d[register] = (reg.reg_d[register] & 0xffffff00) | (add_result.result as u32);
             add_result.status_register_result
         }
         WORD_WITH_DN_AS_DEST => {
-            let ea_value = Cpu::get_ea_value_word(ea_mode, pc, reg, mem);
+            let ea_value = ea_data.get_value_word(pc, reg, mem, true);
             let reg_value = Cpu::get_word_from_long(reg.reg_d[register]);
-            let add_result = Cpu::add_words(ea_value.value, reg_value);
+            let add_result = Cpu::add_words(ea_value, reg_value);
 
             reg.reg_d[register] = (reg.reg_d[register] & 0xffff0000) | (add_result.result as u32);
             add_result.status_register_result
         }
         LONG_WITH_DN_AS_DEST => {
-            let ea_value = Cpu::get_ea_value_long(ea_mode, pc, reg, mem);
+            let ea_value = ea_data.get_value_long(pc, reg, mem, true);
             let reg_value = reg.reg_d[register];
-            let add_result = Cpu::add_longs(ea_value.value, reg_value);
+            let add_result = Cpu::add_longs(ea_value, reg_value);
 
             reg.reg_d[register] = add_result.result;
             add_result.status_register_result
         }
         BYTE_WITH_EA_AS_DEST => {
-            let ea_value = Cpu::get_ea_value_byte_with_address(ea_mode, pc, reg, mem);
+            let ea_value = ea_data.get_value_byte(pc, reg, mem, false);
             let reg_value = Cpu::get_byte_from_long(reg.reg_d[register]);
-            let add_result = Cpu::add_bytes(ea_value.value, reg_value);
-
-            mem.set_byte(ea_value.address, add_result.result);
+            let add_result = Cpu::add_bytes(ea_value, reg_value);
+            ea_data.set_value_byte(pc, reg, mem, add_result.result, true);
             add_result.status_register_result
         }
         WORD_WITH_EA_AS_DEST => {
-            let ea_value = Cpu::get_ea_value_word_with_address(ea_mode, pc, reg, mem);
+            let ea_value = ea_data.get_value_word(pc, reg, mem, false);
             let reg_value = Cpu::get_word_from_long(reg.reg_d[register]);
-            let add_result = Cpu::add_words(ea_value.value, reg_value);
-
-            mem.set_word(ea_value.address, add_result.result);
+            let add_result = Cpu::add_words(ea_value, reg_value);
+            ea_data.set_value_word(pc, reg, mem, add_result.result, true);
             add_result.status_register_result
         }
         LONG_WITH_EA_AS_DEST => {
-            let ea_value = Cpu::get_ea_value_long_with_address(ea_mode, pc, reg, mem);
+            let ea_value = ea_data.get_value_long(pc, reg, mem, false);
             let reg_value = reg.reg_d[register];
-            let add_result = Cpu::add_longs(ea_value.value, reg_value);
-
-            mem.set_long(ea_value.address, add_result.result);
+            let add_result = Cpu::add_longs(ea_value, reg_value);
+            ea_data.set_value_long(pc, reg, mem, add_result.result, true);
             add_result.status_register_result
         }
         _ => panic!("Unhandled ea_opmode"),
@@ -106,7 +108,23 @@ pub fn get_disassembly<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> DisassemblyResult {
-    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(mem);
+    let instr_word = pc.peek_next_word(mem);
+    let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
+    let operation_size = match opmode {
+        BYTE_WITH_DN_AS_DEST => OperationSize::Byte,
+        WORD_WITH_DN_AS_DEST => OperationSize::Word,
+        LONG_WITH_DN_AS_DEST => OperationSize::Long,
+        BYTE_WITH_EA_AS_DEST => OperationSize::Byte,
+        WORD_WITH_EA_AS_DEST => OperationSize::Word,
+        LONG_WITH_EA_AS_DEST => OperationSize::Long,
+        _ => panic!("Unrecognized opmode"),
+    };
+
+    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
+        reg,
+        mem,
+        Some(operation_size),
+    );
     let ea_mode = ea_data.ea_mode;
     let opmode = Cpu::extract_op_mode_from_bit_pos_6(ea_data.instr_word);
     let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9);

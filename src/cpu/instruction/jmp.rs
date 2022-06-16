@@ -1,5 +1,4 @@
 use crate::{
-    cpu::Cpu,
     mem::Mem,
     register::{ProgramCounter, Register},
 };
@@ -20,9 +19,9 @@ pub fn step<'a>(
     reg: &mut Register,
     mem: &mut Mem,
 ) -> InstructionExecutionResult {
-    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(mem);
-    let ea_mode = ea_data.ea_mode;
-    let ea_value = Cpu::get_ea_value_long(ea_mode, pc, reg, mem);
+    // let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem);
+    // let ea_mode = ea_data.ea_mode;
+    // let ea_value = Cpu::get_ea_value_long(ea_mode, pc, reg, mem);
 
     // reg.reg_a[register] = ea_value.address;
     // InstructionExecutionResult::Done {
@@ -36,10 +35,12 @@ pub fn get_disassembly<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> DisassemblyResult {
-    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(mem);
-    let ea_mode = ea_data.ea_mode;
-    let ea_debug = Cpu::get_ea_format(ea_mode, pc, None, reg, mem);
-    DisassemblyResult::from_pc(pc, String::from("JMP"), ea_debug.format)
+    todo!();
+
+    // let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem);
+    // let ea_mode = ea_data.ea_mode;
+    // let ea_debug = Cpu::get_ea_format(ea_mode, pc, None, reg, mem);
+    // DisassemblyResult::from_pc(pc, String::from("JMP"), ea_debug.format)
 }
 
 // #[cfg(test)]

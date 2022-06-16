@@ -21,12 +21,11 @@ pub fn step<'a>(
     mem: &mut Mem,
 ) -> InstructionExecutionResult {
     // TODO: Tests
-    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(mem);
-    let ea_mode = ea_data.ea_mode;
+    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, None);
     let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9);
-    let ea_value = Cpu::get_ea(ea_mode, pc, None, reg, mem);
+    let ea_address = ea_data.get_address(pc, None, reg, mem);
 
-    reg.reg_a[register] = ea_value.address;
+    reg.reg_a[register] = ea_address;
     InstructionExecutionResult::Done {
         pc_result: PcResult::Increment,
     }
@@ -38,7 +37,7 @@ pub fn get_disassembly<'a>(
     mem: &Mem,
 ) -> DisassemblyResult {
     // TODO: Tests
-    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(mem);
+    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, None);
     let ea_mode = ea_data.ea_mode;
     let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9);
 

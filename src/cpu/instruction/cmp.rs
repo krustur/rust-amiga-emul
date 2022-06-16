@@ -1,5 +1,4 @@
 use crate::{
-    cpu::Cpu,
     mem::Mem,
     register::{ProgramCounter, Register},
 };
@@ -46,27 +45,28 @@ pub fn get_disassembly<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> DisassemblyResult {
-    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(mem);
-    let ea_mode = ea_data.ea_mode;
-    let opmode = Cpu::extract_op_mode_from_bit_pos_6(ea_data.instr_word);
-    let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9);
+    todo!();
+    // let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem);
+    // let ea_mode = ea_data.ea_mode;
+    // let opmode = Cpu::extract_op_mode_from_bit_pos_6(ea_data.instr_word);
+    // let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9);
 
-    let ea_format = Cpu::get_ea_format(ea_mode, pc, None, reg, mem);
+    // let ea_format = Cpu::get_ea_format(ea_mode, pc, None, reg, mem);
 
-    let (name, register_type) = match opmode {
-        CMP_BYTE => (String::from("CMP.B"), 'D'),
-        CMP_WORD => (String::from("CMP.W"), 'D'),
-        CMP_LONG => (String::from("CMP.L"), 'D'),
-        CMPA_WORD => (String::from("CMPA.W"), 'A'),
-        CMPA_LONG => (String::from("CMPA.L"), 'A'),
-        _ => (String::from("unknown CMP"), 'X'),
-    };
+    // let (name, register_type) = match opmode {
+    //     CMP_BYTE => (String::from("CMP.B"), 'D'),
+    //     CMP_WORD => (String::from("CMP.W"), 'D'),
+    //     CMP_LONG => (String::from("CMP.L"), 'D'),
+    //     CMPA_WORD => (String::from("CMPA.W"), 'A'),
+    //     CMPA_LONG => (String::from("CMPA.L"), 'A'),
+    //     _ => (String::from("unknown CMP"), 'X'),
+    // };
 
-    DisassemblyResult::from_pc(
-        pc,
-        name,
-        format!("{},{}{}", ea_format, register_type, register),
-    )
+    // DisassemblyResult::from_pc(
+    //     pc,
+    //     name,
+    //     format!("{},{}{}", ea_format, register_type, register),
+    // )
 }
 
 // #[cfg(test)]

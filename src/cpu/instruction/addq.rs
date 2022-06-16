@@ -23,32 +23,31 @@ pub fn step<'a>(
     reg: &mut Register,
     mem: &mut Mem,
 ) -> InstructionExecutionResult {
-    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(mem);
+    let instr_word = pc.peek_next_word(mem);
+    let size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
+    let ea_data =
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size));
     let ea_mode = ea_data.ea_mode;
 
-    let size = Cpu::extract_size000110_from_bit_pos_6(ea_data.instr_word);
     let ea_format = Cpu::get_ea_format(ea_mode, pc, None, reg, mem);
     let data = Cpu::extract_3_bit_data_1_to_8_from_word_at_pos(ea_data.instr_word, 9);
     let status_register_result = match size {
         OperationSize::Byte => {
-            let ea_value = Cpu::get_ea_value_byte_with_address(ea_mode, pc, reg, mem);
-            let add_result = Cpu::add_bytes(data, ea_value.value);
-            mem.set_byte(ea_value.address, add_result.result);
-
+            let ea_value = ea_data.get_value_byte(pc, reg, mem, false);
+            let add_result = Cpu::add_bytes(data, ea_value);
+            ea_data.set_value_byte(pc, reg, mem, add_result.result, true);
             add_result.status_register_result
         }
         OperationSize::Word => {
-            let ea_value = Cpu::get_ea_value_word_with_address(ea_mode, pc, reg, mem);
-            let add_result = Cpu::add_words(data as u16, ea_value.value);
-            mem.set_word(ea_value.address, add_result.result);
-
+            let ea_value = ea_data.get_value_word(pc, reg, mem, false);
+            let add_result = Cpu::add_words(data as u16, ea_value);
+            ea_data.set_value_word(pc, reg, mem, add_result.result, true);
             add_result.status_register_result
         }
         OperationSize::Long => {
-            let ea_value = Cpu::get_ea_value_long_with_address(ea_mode, pc, reg, mem);
-            let add_result = Cpu::add_longs(data as u32, ea_value.value);
-            mem.set_long(ea_value.address, add_result.result);
-
+            let ea_value = ea_data.get_value_long(pc, reg, mem, false);
+            let add_result = Cpu::add_longs(data as u32, ea_value);
+            ea_data.set_value_long(pc, reg, mem, add_result.result, true);
             add_result.status_register_result
         }
     };
@@ -65,9 +64,11 @@ pub fn get_disassembly<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> DisassemblyResult {
-    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(mem);
+    let instr_word = pc.peek_next_word(mem);
+    let size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
+    let ea_data =
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size));
     let ea_mode = ea_data.ea_mode;
-    let size = Cpu::extract_size000110_from_bit_pos_6(ea_data.instr_word);
     let ea_format = Cpu::get_ea_format(ea_mode, pc, None, reg, mem);
     let data = Cpu::extract_3_bit_data_1_to_8_from_word_at_pos(ea_data.instr_word, 9);
     match size {
@@ -167,6 +168,7 @@ mod tests {
         assert_eq!(false, cpu.register.is_sr_extend_set());
     }
 
+    /////////////////////////////////////////
     #[test]
     fn addq_data_to_data_register_direct_word() {
         // arrange
@@ -340,9 +342,9 @@ mod tests {
     // #[test]
     // fn addq_data_to_address_register_direct_word() {
     //     // arrange
-    //     let code = [0x50, 0x48].to_vec(); // ADDQ.L #$8,A0
+    //     let code = [0x50, 0x48].to_vec(); // ADDQ.W #$8,A0
     //     let mut cpu = crate::instr_test_setup(code, None);
-    //     cpu.register.reg_a[5] = 0xC00002;
+    //     cpu.register.reg_a[0] = 0xfffffffe;
     //     cpu.register.reg_sr = 0x0000;
     //     /*STATUS_REGISTER_MASK_CARRY
     //     | STATUS_REGISTER_MASK_OVERFLOW
@@ -364,7 +366,7 @@ mod tests {
     //     // act
     //     cpu.execute_next_instruction();
     //     // assert
-    //     assert_eq!(0x00000000, cpu.memory.get_long(0xC00002));
+    //     assert_eq!(0x00000006, cpu.register.reg_a[0]);
     //     assert_eq!(false, cpu.register.is_sr_carry_set());
     //     assert_eq!(false, cpu.register.is_sr_coverflow_set());
     //     assert_eq!(false, cpu.register.is_sr_zero_set());
