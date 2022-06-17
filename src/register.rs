@@ -297,7 +297,10 @@ impl ProgramCounter {
                             let data = self.fetch_next_word(mem);
                             EffectiveAddressingMode::ImmediateDataWord { data }
                         }
-                        OperationSize::Long => todo!(),
+                        OperationSize::Long => {
+                            let data = self.fetch_next_long(mem);
+                            EffectiveAddressingMode::ImmediateDataLong { data }
+                        }
                     },
                 },
                 _ => panic!("Unable to extract EffectiveAddressingMode"),

@@ -23,6 +23,12 @@ pub struct StatusRegisterResult {
 }
 
 impl StatusRegisterResult {
+    pub fn cleared() -> StatusRegisterResult {
+        StatusRegisterResult {
+            status_register: 0x0000,
+            status_register_mask: 0x0000,
+        }
+    }
     pub fn merge_status_register(&self, status_register: u16) -> u16 {
         (status_register & !self.status_register_mask)
             | (self.status_register & self.status_register_mask)

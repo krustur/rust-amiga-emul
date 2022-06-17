@@ -43,11 +43,7 @@ pub fn step<'a>(
                 let ea_value = Cpu::sign_extend_word(ea_value);
                 let add_result = Cpu::add_longs(data as u32, ea_value);
                 ea_data.set_value_long(pc, reg, mem, add_result.result, true);
-                // add_result.status_register_result
-                StatusRegisterResult {
-                    status_register: 0x0000,
-                    status_register_mask: 0x0000,
-                }
+                StatusRegisterResult::cleared()
             } else {
                 let add_result = Cpu::add_words(data as u16, ea_value);
                 ea_data.set_value_word(pc, reg, mem, add_result.result, true);
@@ -59,10 +55,7 @@ pub fn step<'a>(
             let add_result = Cpu::add_longs(data as u32, ea_value);
             ea_data.set_value_long(pc, reg, mem, add_result.result, true);
             if let EffectiveAddressingMode::ARegDirect { ea_register } = ea_data.ea_mode {
-                StatusRegisterResult {
-                    status_register: 0x0000,
-                    status_register_mask: 0x0000,
-                }
+                StatusRegisterResult::cleared()
             } else {
                 add_result.status_register_result
             }

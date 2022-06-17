@@ -1,4 +1,4 @@
-use crate::cpu::Cpu;
+use crate::cpu::{Cpu, StatusRegisterResult};
 use crate::mem::Mem;
 use crate::register::Register;
 use crate::{cpu::instruction::PcResult, register::ProgramCounter};
@@ -21,6 +21,8 @@ const LONG_WITH_DN_AS_DEST: usize = 0b010;
 const BYTE_WITH_EA_AS_DEST: usize = 0b100;
 const WORD_WITH_EA_AS_DEST: usize = 0b101;
 const LONG_WITH_EA_AS_DEST: usize = 0b110;
+const WORD_WITH_AN_AS_DEST: usize = 0b011;
+const LONG_WITH_AN_AS_DEST: usize = 0b111;
 
 pub fn step<'a>(
     pc: &mut ProgramCounter,
@@ -36,6 +38,8 @@ pub fn step<'a>(
         BYTE_WITH_EA_AS_DEST => OperationSize::Byte,
         WORD_WITH_EA_AS_DEST => OperationSize::Word,
         LONG_WITH_EA_AS_DEST => OperationSize::Long,
+        WORD_WITH_AN_AS_DEST => OperationSize::Word,
+        LONG_WITH_AN_AS_DEST => OperationSize::Long,
         _ => panic!("Unrecognized opmode"),
     };
 
@@ -49,7 +53,6 @@ pub fn step<'a>(
     let status_register_result = match opmode {
         BYTE_WITH_DN_AS_DEST => {
             let ea_value = ea_data.get_value_byte(pc, reg, mem, true);
-            // let ea_value = Cpu::get_ea_value_byte(ea_mode, pc, reg, mem);
             let reg_value = Cpu::get_byte_from_long(reg.reg_d[register]);
             let add_result = Cpu::add_bytes(ea_value, reg_value);
 
@@ -93,6 +96,23 @@ pub fn step<'a>(
             ea_data.set_value_long(pc, reg, mem, add_result.result, true);
             add_result.status_register_result
         }
+        WORD_WITH_AN_AS_DEST => {
+            let ea_value = ea_data.get_value_word(pc, reg, mem, true);
+            let ea_value = Cpu::sign_extend_word(ea_value);
+            let reg_value = reg.reg_a[register];
+            let add_result = Cpu::add_longs(ea_value, reg_value);
+
+            reg.reg_a[register] = add_result.result;
+            StatusRegisterResult::cleared()
+        }
+        LONG_WITH_AN_AS_DEST => {
+            let ea_value = ea_data.get_value_long(pc, reg, mem, true);
+            let reg_value = reg.reg_a[register];
+            let add_result = Cpu::add_longs(ea_value, reg_value);
+
+            reg.reg_a[register] = add_result.result;
+            StatusRegisterResult::cleared()
+        }
         _ => panic!("Unhandled ea_opmode"),
     };
 
@@ -117,6 +137,8 @@ pub fn get_disassembly<'a>(
         BYTE_WITH_EA_AS_DEST => OperationSize::Byte,
         WORD_WITH_EA_AS_DEST => OperationSize::Word,
         LONG_WITH_EA_AS_DEST => OperationSize::Long,
+        WORD_WITH_AN_AS_DEST => OperationSize::Word,
+        LONG_WITH_AN_AS_DEST => OperationSize::Long,
         _ => panic!("Unrecognized opmode"),
     };
 
@@ -159,6 +181,16 @@ pub fn get_disassembly<'a>(
             pc,
             String::from("ADD.L"),
             format!("D{},{}", register, ea_format),
+        ),
+        WORD_WITH_AN_AS_DEST => DisassemblyResult::from_pc(
+            pc,
+            String::from("ADDA.W"),
+            format!("{},A{}", ea_format, register),
+        ),
+        LONG_WITH_AN_AS_DEST => DisassemblyResult::from_pc(
+            pc,
+            String::from("ADDA.L"),
+            format!("{},A{}", ea_format, register),
         ),
         _ => panic!("Unhandled ea_opmode: {}", opmode),
     }
@@ -523,6 +555,64 @@ mod tests {
         assert_eq!(true, cpu.register.is_sr_coverflow_set());
         assert_eq!(false, cpu.register.is_sr_zero_set());
         assert_eq!(true, cpu.register.is_sr_negative_set());
+        assert_eq!(false, cpu.register.is_sr_extend_set());
+    }
+
+    #[test]
+    fn immediate_data_to_address_register_direct_word() {
+        // arrange
+        let code = [0xd0, 0xfc, 0x44, 0x11].to_vec(); // ADDA.W #$4411,A0
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.reg_a[0] = 0xffffff00;
+        cpu.register.reg_sr = 0x0000;
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            DisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00004,
+                String::from("ADDA.W"),
+                String::from("#$4411,A0")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00004311, cpu.register.reg_a[0]);
+        assert_eq!(false, cpu.register.is_sr_carry_set());
+        assert_eq!(false, cpu.register.is_sr_coverflow_set());
+        assert_eq!(false, cpu.register.is_sr_zero_set());
+        assert_eq!(false, cpu.register.is_sr_negative_set());
+        assert_eq!(false, cpu.register.is_sr_extend_set());
+    }
+
+    #[test]
+    fn immediate_data_to_address_register_direct_long() {
+        // arrange
+        let code = [0xdf, 0xfc, 0x88, 0x88, 0x88, 0x88].to_vec(); // ADDA.L #$88888888,A7
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.reg_a[7] = 0x22220000;
+        cpu.register.reg_sr = 0x0000;
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            DisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00006,
+                String::from("ADDA.L"),
+                String::from("#$88888888,A7")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0xaaaa8888, cpu.register.reg_a[7]);
+        assert_eq!(false, cpu.register.is_sr_carry_set());
+        assert_eq!(false, cpu.register.is_sr_coverflow_set());
+        assert_eq!(false, cpu.register.is_sr_zero_set());
+        assert_eq!(false, cpu.register.is_sr_negative_set());
         assert_eq!(false, cpu.register.is_sr_extend_set());
     }
 }
