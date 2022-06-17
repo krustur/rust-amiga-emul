@@ -752,19 +752,26 @@ impl Cpu {
             .instructions
             .iter()
             .position(|x| (instr_word & x.mask) == x.opcode);
-        let instruction = match instruction_pos {
-            None => panic!(
-                "{:#010x} Unidentified instruction {:#06X}",
-                pc.get_address(),
-                instr_word
-            ),
-            Some(instruction_pos) => &self.instructions[instruction_pos],
-        };
 
-        let get_debug = instruction.get_debug;
-        let debug_result = get_debug(pc, &mut self.register, &mut self.memory);
+        match instruction_pos {
+            Some(instruction_pos) => {
+                let instruction = &self.instructions[instruction_pos];
 
-        debug_result
+                let get_debug = instruction.get_debug;
+                let debug_result = get_debug(pc, &mut self.register, &mut self.memory);
+
+                debug_result
+            }
+            None => {
+                pc.skip_byte();
+                pc.skip_byte();
+                DisassemblyResult::from_pc(
+                    pc,
+                    String::from("DC.W"),
+                    format!("#${:04X}", instr_word),
+                )
+            }
+        }
     }
 
     pub fn print_disassembly(self: &mut Cpu, disassembly_result: &DisassemblyResult) {
@@ -773,8 +780,6 @@ impl Cpu {
             address_next: next_address,
             name,
             operands_format,
-            // pc,
-            // next_instr_address,
         } = &disassembly_result
         {
             let instr_format = format!("{} {}", name, operands_format);
@@ -1614,5 +1619,23 @@ mod tests {
         register.reg_sr = STATUS_REGISTER_MASK_OVERFLOW | extra_flags;
         let res = Cpu::evaluate_condition(&mut register, &ConditionalTest::VS);
         assert_eq!(true, res);
+    }
+
+    #[test]
+    fn declare_word_when_get_disassembly_for_unknown_instruction_word() {
+        // arrange
+        let code = [0x49, 0x54].to_vec(); // DC.W $4954
+        let mut cpu = crate::instr_test_setup(code, None);
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            DisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("DC.W"),
+                String::from("#$4954")
+            ),
+            debug_result
+        );
     }
 }
