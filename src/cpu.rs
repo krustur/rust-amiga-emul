@@ -865,8 +865,7 @@ impl Cpu {
             Some(instruction_pos) => &self.instructions[instruction_pos],
         };
 
-        let step = instruction.step;
-        let exec_result = step(&mut pc, &mut self.register, &mut self.memory);
+        let exec_result = (instruction.step)(&mut pc, &mut self.register, &mut self.memory);
 
         if let InstructionExecutionResult::Done { pc_result } = &exec_result {
             self.register.reg_pc = match pc_result {
@@ -893,10 +892,10 @@ impl Cpu {
             Some(instruction_pos) => {
                 let instruction = &self.instructions[instruction_pos];
 
-                let get_debug = instruction.get_disassembly;
-                let debug_result = get_debug(pc, &mut self.register, &mut self.memory);
+                let get_disassembly_result =
+                    (instruction.get_disassembly)(pc, &mut self.register, &mut self.memory);
 
-                debug_result
+                get_disassembly_result
             }
             None => {
                 pc.skip_byte();
