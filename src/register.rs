@@ -19,6 +19,14 @@ pub enum RegisterType {
     Address,
 }
 
+impl RegisterType {
+    pub fn get_format(&self) -> char {
+        match self {
+            RegisterType::Address => 'A',
+            RegisterType::Data => 'D',
+        }
+    }
+}
 #[derive(Debug, PartialEq, Clone)]
 pub struct ProgramCounter {
     address: u32,

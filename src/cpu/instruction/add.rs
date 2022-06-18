@@ -56,7 +56,7 @@ pub fn step<'a>(
             let reg_value = Cpu::get_byte_from_long(reg.reg_d[register]);
             let add_result = Cpu::add_bytes(ea_value, reg_value);
 
-            reg.reg_d[register] = (reg.reg_d[register] & 0xffffff00) | (add_result.result as u32);
+            reg.reg_d[register] = Cpu::set_byte_in_long(add_result.result, reg.reg_d[register]);
             add_result.status_register_result
         }
         WORD_WITH_DN_AS_DEST => {
@@ -64,7 +64,7 @@ pub fn step<'a>(
             let reg_value = Cpu::get_word_from_long(reg.reg_d[register]);
             let add_result = Cpu::add_words(ea_value, reg_value);
 
-            reg.reg_d[register] = (reg.reg_d[register] & 0xffff0000) | (add_result.result as u32);
+            reg.reg_d[register] = Cpu::set_word_in_long(add_result.result, reg.reg_d[register]);
             add_result.status_register_result
         }
         LONG_WITH_DN_AS_DEST => {
