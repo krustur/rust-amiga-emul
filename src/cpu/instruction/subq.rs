@@ -1,4 +1,7 @@
-use crate::{mem::Mem, register::Register};
+use crate::{
+    mem::Mem,
+    register::{ProgramCounter, Register},
+};
 
 use super::{GetDisassemblyResult, StepResult};
 
@@ -11,13 +14,7 @@ use super::{GetDisassemblyResult, StepResult};
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
-pub fn common_step<'a>(
-    instr_address: u32,
-    instr_word: u16,
-    reg: &mut Register,
-    mem: &mut Mem,
-    ea: u32,
-) -> StepResult {
+pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> StepResult {
     todo!("SUBQ common_exec_func");
     // TODO: Tests
     // let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
@@ -32,13 +29,10 @@ pub fn common_step<'a>(
     // }
 }
 
-pub fn common_get_debug<'a>(
-    instr_address: u32,
-    instr_word: u16,
+pub fn get_disassembly<'a>(
+    pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
-    ea_format: String,
-    ea: u32,
 ) -> GetDisassemblyResult {
     todo!("SUBQ common_exec_func");
     // TODO: Tests

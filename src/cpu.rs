@@ -117,36 +117,13 @@ impl Cpu {
                 instruction::lea::step,
                 instruction::lea::get_disassembly,
             ),
-            // Instruction::new(
-            //     String::from("Scc"),
-            //     0xf0c0,
-            //     0x50c0,
-            //     // InstructionFormat::Uncommon {
-            //     step: instruction::todo::step,
-            //     get_debug: instruction::todo::get_debug,
-            //     // },
-            // ),
-            // Instruction::new(
-            //     String::from("SUBQ"),
-            //     0xf100,
-            //     0x5100,
-            //     // InstructionFormat::EffectiveAddress {
-            //     step: instruction::subq::common_step,
-            //     get_debug: instruction::subq::common_get_debug,
-            //     //     areg_direct_step: instruction::subq::areg_direct_step,
-            //     //     areg_direct_get_debug: instruction::subq::areg_direct_get_debug,
-            //     // },
-            // ),
-
-            // Instruction::new(
-            //     String::from("TRAPcc"),
-            //     0xf0f8,
-            //     0x50f8,
-            //     // InstructionFormat::Uncommon {
-            //     step: instruction::todo::step,
-            //     get_debug: instruction::todo::get_debug,
-            //     // },
-            // ),
+            Instruction::new(
+                String::from("SUBQ"),
+                0xf100,
+                0x5100,
+                instruction::subq::step,
+                instruction::subq::get_disassembly,
+            ),
             Instruction::new(
                 String::from("MOVE"),
                 0xc000,
