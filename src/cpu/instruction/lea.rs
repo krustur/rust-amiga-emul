@@ -1,10 +1,10 @@
 use crate::{
-    cpu::{instruction::PcResult, Cpu},
+    cpu::Cpu,
     mem::Mem,
     register::{ProgramCounter, Register},
 };
 
-use super::{GetDisassemblyResult, InstructionExecutionResult};
+use super::{GetDisassemblyResult, StepResult};
 
 // Instruction State
 // =================
@@ -15,20 +15,14 @@ use super::{GetDisassemblyResult, InstructionExecutionResult};
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
-pub fn step<'a>(
-    pc: &mut ProgramCounter,
-    reg: &mut Register,
-    mem: &mut Mem,
-) -> InstructionExecutionResult {
+pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> StepResult {
     // TODO: Tests
     let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, None);
     let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9);
     let ea_address = ea_data.get_address(pc, None, reg, mem);
 
     reg.reg_a[register] = ea_address;
-    InstructionExecutionResult::Done {
-        pc_result: PcResult::Increment,
-    }
+    StepResult::Done {}
 }
 
 pub fn get_disassembly<'a>(

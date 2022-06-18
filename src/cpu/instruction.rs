@@ -19,15 +19,15 @@ pub mod moveq;
 pub mod nop;
 pub mod subq;
 
-#[derive(Copy, Clone)]
-pub enum PcResult {
-    Increment,
-    Set(u32),
-}
+// #[derive(Copy, Clone)]
+// pub enum PcResult {
+//     Increment,
+//     Set(u32),
+// }
 
 #[derive(Copy, Clone)]
-pub enum InstructionExecutionResult {
-    Done { pc_result: PcResult },
+pub enum StepResult {
+    Done,
     PassOn,
 }
 
@@ -322,11 +322,7 @@ pub struct Instruction {
     pub name: String,
     pub mask: u16,
     pub opcode: u16,
-    pub step: fn(
-        pc: &mut ProgramCounter,
-        reg: &mut Register,
-        mem: &mut Mem,
-    ) -> InstructionExecutionResult,
+    pub step: fn(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> StepResult,
     pub get_disassembly:
         fn(pc: &mut ProgramCounter, reg: &Register, mem: &Mem) -> GetDisassemblyResult,
 }
@@ -336,11 +332,7 @@ impl Instruction {
         name: String,
         mask: u16,
         opcode: u16,
-        step: fn(
-            pc: &mut ProgramCounter,
-            reg: &mut Register,
-            mem: &mut Mem,
-        ) -> InstructionExecutionResult,
+        step: fn(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> StepResult,
         get_disassembly: fn(
             pc: &mut ProgramCounter,
             reg: &Register,

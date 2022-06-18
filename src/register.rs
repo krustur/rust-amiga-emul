@@ -48,6 +48,20 @@ impl ProgramCounter {
         }
     }
 
+    pub fn branch_byte(&mut self, displacement: u8) {
+        self.address_next = Cpu::get_address_with_byte_displacement_sign_extended(
+            self.address.wrapping_add(2),
+            displacement,
+        )
+    }
+
+    pub fn branch_word(&mut self, displacement: u16) {
+        self.address_next = Cpu::get_address_with_word_displacement_sign_extended(
+            self.address.wrapping_add(2),
+            displacement,
+        )
+    }
+
     pub fn skip_byte(&mut self) {
         self.address_next += 1;
     }

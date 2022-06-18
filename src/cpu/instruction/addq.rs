@@ -1,12 +1,10 @@
 use crate::{
-    cpu::{instruction::PcResult, Cpu, StatusRegisterResult},
+    cpu::{Cpu, StatusRegisterResult},
     mem::Mem,
     register::{ProgramCounter, Register},
 };
 
-use super::{
-    EffectiveAddressingMode, GetDisassemblyResult, InstructionExecutionResult, OperationSize,
-};
+use super::{EffectiveAddressingMode, GetDisassemblyResult, OperationSize, StepResult};
 
 // Instruction State
 // =================
@@ -17,11 +15,7 @@ use super::{
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
-pub fn step<'a>(
-    pc: &mut ProgramCounter,
-    reg: &mut Register,
-    mem: &mut Mem,
-) -> InstructionExecutionResult {
+pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> StepResult {
     let instr_word = pc.peek_next_word(mem);
     let size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
     let ea_data =
@@ -64,9 +58,7 @@ pub fn step<'a>(
 
     reg.reg_sr = status_register_result.merge_status_register(reg.reg_sr);
 
-    InstructionExecutionResult::Done {
-        pc_result: PcResult::Increment,
-    }
+    StepResult::Done {}
 }
 
 pub fn get_disassembly<'a>(

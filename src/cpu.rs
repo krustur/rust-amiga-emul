@@ -867,17 +867,12 @@ impl Cpu {
 
         let exec_result = (instruction.step)(&mut pc, &mut self.register, &mut self.memory);
 
-        if let InstructionExecutionResult::Done { pc_result } = &exec_result {
-            self.register.reg_pc = match pc_result {
-                PcResult::Set(new_pc) => ProgramCounter::from_address(*new_pc),
-                PcResult::Increment => pc.get_next_pc(),
-            }
-        }
+        self.register.reg_pc = pc.get_next_pc();
     }
 
     pub fn get_next_disassembly(self: &mut Cpu) -> GetDisassemblyResult {
-        let result = self.get_disassembly(&mut self.register.reg_pc.clone());
-        result
+        let get_disassembly_result = self.get_disassembly(&mut self.register.reg_pc.clone());
+        get_disassembly_result
     }
 
     pub fn get_disassembly(self: &mut Cpu, pc: &mut ProgramCounter) -> GetDisassemblyResult {

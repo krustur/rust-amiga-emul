@@ -1,10 +1,9 @@
 use crate::{
-    cpu::instruction::PcResult,
     mem::Mem,
     register::{ProgramCounter, Register},
 };
 
-use super::{GetDisassemblyResult, InstructionExecutionResult};
+use super::{GetDisassemblyResult, StepResult};
 
 // Instruction State
 // =================
@@ -15,14 +14,8 @@ use super::{GetDisassemblyResult, InstructionExecutionResult};
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
-pub fn step<'a>(
-    pc: &mut ProgramCounter,
-    reg: &mut Register,
-    mem: &mut Mem,
-) -> InstructionExecutionResult {
-    InstructionExecutionResult::Done {
-        pc_result: PcResult::Increment,
-    }
+pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> StepResult {
+    StepResult::Done {}
 }
 
 pub fn get_disassembly<'a>(

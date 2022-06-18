@@ -3,7 +3,7 @@ use crate::{
     register::{ProgramCounter, Register},
 };
 
-use super::{GetDisassemblyResult, InstructionExecutionResult};
+use super::{GetDisassemblyResult, StepResult};
 
 const CMP_BYTE: usize = 0b000;
 const CMP_WORD: usize = 0b001;
@@ -20,11 +20,7 @@ const CMPA_LONG: usize = 0b111;
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
-pub fn step<'a>(
-    pc: &mut ProgramCounter,
-    reg: &mut Register,
-    mem: &mut Mem,
-) -> InstructionExecutionResult {
+pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> StepResult {
     todo!();
     // let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
     // let condition = Cpu::evaluate_condition(reg, &conditional_test);

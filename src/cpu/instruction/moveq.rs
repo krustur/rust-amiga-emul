@@ -1,9 +1,9 @@
 use crate::cpu::instruction::GetDisassemblyResult;
 use crate::mem::Mem;
 use crate::register::{ProgramCounter, Register, STATUS_REGISTER_MASK_ZERO};
-use crate::{cpu::instruction::PcResult, cpu::Cpu, register::STATUS_REGISTER_MASK_NEGATIVE};
+use crate::{cpu::Cpu, register::STATUS_REGISTER_MASK_NEGATIVE};
 
-use super::InstructionExecutionResult;
+use super::StepResult;
 
 // Instruction State
 // =================
@@ -14,11 +14,7 @@ use super::InstructionExecutionResult;
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
-pub fn step<'a>(
-    pc: &mut ProgramCounter,
-    reg: &mut Register,
-    mem: &mut Mem,
-) -> InstructionExecutionResult {
+pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> StepResult {
     // TODO: Condition codes
     let instr_word = pc.fetch_next_word(mem);
     let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
@@ -39,12 +35,11 @@ pub fn step<'a>(
 
     reg.reg_d[register] = data;
     reg.reg_sr = (reg.reg_sr & status_register_mask) | status_register_flags;
-    InstructionExecutionResult::Done {
+    StepResult::Done {
         // name: "MOVEQ",
         // operands_format: &operands_format,
         // comment: &instr_comment,
         // op_size: OperationSize::Long,
-        pc_result: PcResult::Increment,
     }
 }
 

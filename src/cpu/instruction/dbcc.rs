@@ -1,13 +1,10 @@
 use crate::{
-    cpu::{
-        instruction::{GetDisassemblyResult, PcResult},
-        Cpu,
-    },
+    cpu::{instruction::GetDisassemblyResult, Cpu},
     mem::Mem,
     register::{ProgramCounter, Register},
 };
 
-use super::InstructionExecutionResult;
+use super::StepResult;
 
 // Instruction State
 // =================
@@ -18,11 +15,7 @@ use super::InstructionExecutionResult;
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
-pub fn step<'a>(
-    pc: &mut ProgramCounter,
-    reg: &mut Register,
-    mem: &mut Mem,
-) -> InstructionExecutionResult {
+pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> StepResult {
     let instr_word = pc.fetch_next_word(mem);
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
     let condition_result = Cpu::evaluate_condition(reg, &conditional_test);
@@ -31,30 +24,23 @@ pub fn step<'a>(
     let result = match condition_result {
         false => {
             let register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
-            let reg_word = reg.reg_d[register].wrapping_sub(1) & 0xffff;
-            reg.reg_d[register] = (reg.reg_d[register] & 0xffff0000) | reg_word;
+            let reg_word = Cpu::get_word_from_long(reg.reg_d[register]);
+            let reg_word = reg_word.wrapping_sub(1);
+            reg.reg_d[register] = Cpu::set_word_in_long(reg_word, reg.reg_d[register]);
 
             match reg.reg_d[register] & 0xffff {
                 0x0000ffff => {
-                    InstructionExecutionResult::Done {
-                        // -1
-                        pc_result: PcResult::Increment,
-                    }
+                    // == -1 => loop done, next instruction
+                    StepResult::Done {}
                 }
                 _ => {
-                    let branch_to = Cpu::get_address_with_word_displacement_sign_extended(
-                        pc.get_address() + 2,
-                        displacement_16bit,
-                    );
-                    InstructionExecutionResult::Done {
-                        pc_result: PcResult::Set(branch_to),
-                    }
+                    // != -1 => loop not done, branch
+                    pc.branch_word(displacement_16bit);
+                    StepResult::Done {}
                 }
             }
         }
-        true => InstructionExecutionResult::Done {
-            pc_result: PcResult::Increment,
-        },
+        true => StepResult::Done {},
     };
 
     result
@@ -124,7 +110,7 @@ mod tests {
     #[test]
     fn step_dbcc_when_carry_set_and_reg_equal_to_zero() {
         // arrange
-        let code = [0x54, 0xc9, 0x00, 0x04].to_vec(); // DBCC D1,0x0004
+        let code = [0x54, 0xc9, 0x00, 0x04].to_vec(); // DBCC D1,$0004
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.reg_d[1] = 0xffff0000;
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY;
@@ -149,7 +135,7 @@ mod tests {
     #[test]
     fn step_dbcc_when_carry_clear() {
         // arrange
-        let code = [0x54, 0xca, 0x00, 0x04].to_vec(); // DBCC D2,0x0004
+        let code = [0x54, 0xca, 0x00, 0x04].to_vec(); // DBCC D2,$0004
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.reg_d[2] = 0xffff0001;
         cpu.register.reg_sr = 0x0000; //STATUS_REGISTER_MASK_CARRY;
