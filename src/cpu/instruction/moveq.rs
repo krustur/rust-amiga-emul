@@ -1,4 +1,4 @@
-use crate::cpu::instruction::DisassemblyResult;
+use crate::cpu::instruction::GetDisassemblyResult;
 use crate::mem::Mem;
 use crate::register::{ProgramCounter, Register, STATUS_REGISTER_MASK_ZERO};
 use crate::{cpu::instruction::PcResult, cpu::Cpu, register::STATUS_REGISTER_MASK_NEGATIVE};
@@ -52,7 +52,7 @@ pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
-) -> DisassemblyResult {
+) -> GetDisassemblyResult {
     // TODO: Condition codes
     let instr_word = pc.fetch_next_word(mem);
     let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
@@ -72,13 +72,13 @@ pub fn get_disassembly<'a>(
     // let instr_comment = format!("moving {:#010x} into D{}", data, register);
     let status_register_mask = 0xfff0;
 
-    DisassemblyResult::from_pc(pc, String::from("MOVEQ"), operands_format)
+    GetDisassemblyResult::from_pc(pc, String::from("MOVEQ"), operands_format)
 }
 
 #[cfg(test)]
 mod tests {
     use crate::{
-        cpu::instruction::DisassemblyResult,
+        cpu::instruction::GetDisassemblyResult,
         register::{
             STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_NEGATIVE,
             STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
@@ -105,7 +105,7 @@ mod tests {
         assert_eq!(false, cpu.register.is_sr_negative_set());
         assert_eq!(false, cpu.register.is_sr_extend_set());
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("MOVEQ"),
@@ -132,7 +132,7 @@ mod tests {
         assert_eq!(false, cpu.register.is_sr_zero_set());
         assert_eq!(true, cpu.register.is_sr_negative_set());
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("MOVEQ"),
@@ -160,7 +160,7 @@ mod tests {
         assert_eq!(true, cpu.register.is_sr_zero_set());
         assert_eq!(false, cpu.register.is_sr_negative_set());
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("MOVEQ"),

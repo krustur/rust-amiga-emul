@@ -52,7 +52,7 @@ impl Cpu {
                 0xf130,
                 0xd100,
                 instruction::addx::step,
-                instruction::addx::get_debug,
+                instruction::addx::get_disassembly,
             ),
             Instruction::new(
                 String::from("ADD"),
@@ -876,12 +876,12 @@ impl Cpu {
         }
     }
 
-    pub fn get_next_disassembly(self: &mut Cpu) -> DisassemblyResult {
+    pub fn get_next_disassembly(self: &mut Cpu) -> GetDisassemblyResult {
         let result = self.get_disassembly(&mut self.register.reg_pc.clone());
         result
     }
 
-    pub fn get_disassembly(self: &mut Cpu, pc: &mut ProgramCounter) -> DisassemblyResult {
+    pub fn get_disassembly(self: &mut Cpu, pc: &mut ProgramCounter) -> GetDisassemblyResult {
         let instr_word = pc.peek_next_word(&self.memory);
 
         let instruction_pos = self
@@ -893,7 +893,7 @@ impl Cpu {
             Some(instruction_pos) => {
                 let instruction = &self.instructions[instruction_pos];
 
-                let get_debug = instruction.get_debug;
+                let get_debug = instruction.get_disassembly;
                 let debug_result = get_debug(pc, &mut self.register, &mut self.memory);
 
                 debug_result
@@ -901,7 +901,7 @@ impl Cpu {
             None => {
                 pc.skip_byte();
                 pc.skip_byte();
-                DisassemblyResult::from_pc(
+                GetDisassemblyResult::from_pc(
                     pc,
                     String::from("DC.W"),
                     format!("#${:04X}", instr_word),
@@ -910,28 +910,23 @@ impl Cpu {
         }
     }
 
-    pub fn print_disassembly(self: &mut Cpu, disassembly_result: &DisassemblyResult) {
-        if let DisassemblyResult::Done {
-            address,
-            address_next: next_address,
-            name,
-            operands_format,
-        } = &disassembly_result
-        {
-            let instr_format = format!("{} {}", name, operands_format);
-            let instr_address = *address;
-            let next_instr_address = *next_address;
-            print!("{:#010X} ", instr_address);
-            for i in (instr_address..instr_address + 8).step_by(2) {
-                if i < next_instr_address {
-                    let op_mem = self.memory.get_word(i);
-                    print!("{:04X} ", op_mem);
-                } else {
-                    print!("     ");
-                }
+    pub fn print_disassembly(self: &mut Cpu, disassembly_result: &GetDisassemblyResult) {
+        let instr_format = format!(
+            "{} {}",
+            disassembly_result.name, disassembly_result.operands_format
+        );
+        let instr_address = disassembly_result.address;
+        let next_instr_address = disassembly_result.address_next;
+        print!("{:#010X} ", instr_address);
+        for i in (instr_address..instr_address + 8).step_by(2) {
+            if i < next_instr_address {
+                let op_mem = self.memory.get_word(i);
+                print!("{:04X} ", op_mem);
+            } else {
+                print!("     ");
             }
-            println!("{: <30}", instr_format);
         }
+        println!("{: <30}", instr_format);
     }
 
     // fn get_instruction(self: &mut Cpu, instr_addr: u32, instr_word: u16) -> &Instruction {
@@ -1765,7 +1760,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("DC.W"),

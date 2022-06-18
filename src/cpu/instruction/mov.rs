@@ -5,7 +5,8 @@ use crate::{
 };
 
 use super::{
-    DisassemblyResult, EffectiveAddressingMode, InstructionExecutionResult, OperationSize, PcResult,
+    EffectiveAddressingMode, GetDisassemblyResult, InstructionExecutionResult, OperationSize,
+    PcResult,
 };
 
 // Instruction State
@@ -65,7 +66,7 @@ pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
-) -> DisassemblyResult {
+) -> GetDisassemblyResult {
     let instr_word = pc.peek_next_word(mem);
     let size = Cpu::extract_size011110_from_bit_pos(instr_word, 12);
     let src_ea_data =
@@ -104,7 +105,7 @@ pub fn get_disassembly<'a>(
         },
     };
 
-    DisassemblyResult::from_pc(
+    GetDisassemblyResult::from_pc(
         pc,
         name,
         format!("{},{}", src_ea_debug.format, dst_ea_debug.format),
@@ -114,7 +115,7 @@ pub fn get_disassembly<'a>(
 #[cfg(test)]
 mod tests {
     use crate::{
-        cpu::instruction::DisassemblyResult,
+        cpu::instruction::GetDisassemblyResult,
         memrange::MemRange,
         register::{
             STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE,
@@ -137,7 +138,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00006,
                 String::from("MOVE.B"),
@@ -173,7 +174,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("MOVE.W"),
@@ -207,7 +208,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("MOVEA.W"),
@@ -239,7 +240,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("MOVE.B"),
@@ -280,7 +281,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("MOVE.L"),
@@ -321,7 +322,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00004,
                 String::from("MOVE.L"),
@@ -363,7 +364,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00006,
                 String::from("MOVE.L"),
@@ -395,7 +396,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00006,
                 String::from("MOVE.B"),
@@ -428,7 +429,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00008,
                 String::from("MOVE.B"),
@@ -459,7 +460,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00008,
                 String::from("MOVE.W"),
@@ -491,7 +492,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00004,
                 String::from("MOVE.L"),

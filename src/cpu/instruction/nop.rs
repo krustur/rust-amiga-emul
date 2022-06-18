@@ -4,7 +4,7 @@ use crate::{
     register::{ProgramCounter, Register},
 };
 
-use super::{DisassemblyResult, InstructionExecutionResult};
+use super::{GetDisassemblyResult, InstructionExecutionResult};
 
 // Instruction State
 // =================
@@ -29,8 +29,8 @@ pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
-) -> DisassemblyResult {
-    DisassemblyResult::from_pc(pc, String::from("NOP"), String::from(""))
+) -> GetDisassemblyResult {
+    GetDisassemblyResult::from_pc(pc, String::from("NOP"), String::from(""))
 }
 
 // #[cfg(test)]

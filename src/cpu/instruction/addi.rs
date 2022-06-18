@@ -13,7 +13,7 @@ use crate::{
     register::{ProgramCounter, Register},
 };
 
-use super::{DisassemblyResult, InstructionExecutionResult, PcResult};
+use super::{GetDisassemblyResult, InstructionExecutionResult, PcResult};
 
 pub fn step<'a>(
     pc: &mut ProgramCounter,
@@ -61,7 +61,7 @@ pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
-) -> DisassemblyResult {
+) -> GetDisassemblyResult {
     let instr_word = pc.peek_next_word(mem);
     let size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
     let ea_data =
@@ -73,7 +73,7 @@ pub fn get_disassembly<'a>(
         OperationSize::Byte => {
             pc.skip_byte();
             let data = pc.fetch_next_byte(mem);
-            DisassemblyResult::from_pc(
+            GetDisassemblyResult::from_pc(
                 pc,
                 String::from("ADDI.B"),
                 format!("#${:02X},{}", data, ea_format),
@@ -81,7 +81,7 @@ pub fn get_disassembly<'a>(
         }
         OperationSize::Word => {
             let data = pc.fetch_next_word(mem);
-            DisassemblyResult::from_pc(
+            GetDisassemblyResult::from_pc(
                 pc,
                 String::from("ADDI.W"),
                 format!("#${:04X},{}", data, ea_format),
@@ -89,7 +89,7 @@ pub fn get_disassembly<'a>(
         }
         OperationSize::Long => {
             let data = pc.fetch_next_long(mem);
-            DisassemblyResult::from_pc(
+            GetDisassemblyResult::from_pc(
                 pc,
                 String::from("ADDI.L"),
                 format!("#${:04X},{}", data, ea_format),
@@ -101,7 +101,7 @@ pub fn get_disassembly<'a>(
 #[cfg(test)]
 mod tests {
     use crate::{
-        cpu::instruction::DisassemblyResult,
+        cpu::instruction::GetDisassemblyResult,
         register::{
             STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE,
             STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
@@ -122,7 +122,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00004,
                 String::from("ADDI.B"),
@@ -155,7 +155,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00004,
                 String::from("ADDI.W"),
@@ -188,7 +188,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00006,
                 String::from("ADDI.L"),

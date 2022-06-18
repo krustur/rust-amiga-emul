@@ -1,6 +1,6 @@
 use crate::{mem::Mem, register::Register};
 
-use super::{DisassemblyResult, InstructionExecutionResult};
+use super::{GetDisassemblyResult, InstructionExecutionResult};
 
 // Instruction State
 // =================
@@ -39,7 +39,7 @@ pub fn common_get_debug<'a>(
     mem: &Mem,
     ea_format: String,
     ea: u32,
-) -> DisassemblyResult {
+) -> GetDisassemblyResult {
     todo!("SUBQ common_exec_func");
     // TODO: Tests
     // let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);

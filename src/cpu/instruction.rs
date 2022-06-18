@@ -32,23 +32,20 @@ pub enum InstructionExecutionResult {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum DisassemblyResult {
-    Done {
-        address: u32,
-        address_next: u32,
-        name: String,
-        operands_format: String,
-    },
-    PassOn,
+pub struct GetDisassemblyResult {
+    pub address: u32,
+    pub address_next: u32,
+    pub name: String,
+    pub operands_format: String,
 }
 
-impl DisassemblyResult {
+impl GetDisassemblyResult {
     pub fn from_pc(
         pc: &ProgramCounter,
         name: String,
         operands_format: String,
-    ) -> DisassemblyResult {
-        DisassemblyResult::Done {
+    ) -> GetDisassemblyResult {
+        GetDisassemblyResult {
             address: pc.get_address(),
             address_next: pc.get_address_next(),
             name,
@@ -61,8 +58,8 @@ impl DisassemblyResult {
         address_next: u32,
         name: String,
         operands_format: String,
-    ) -> DisassemblyResult {
-        DisassemblyResult::Done {
+    ) -> GetDisassemblyResult {
+        GetDisassemblyResult {
             address,
             address_next,
             name,
@@ -330,7 +327,8 @@ pub struct Instruction {
         reg: &mut Register,
         mem: &mut Mem,
     ) -> InstructionExecutionResult,
-    pub get_debug: fn(pc: &mut ProgramCounter, reg: &Register, mem: &Mem) -> DisassemblyResult,
+    pub get_disassembly:
+        fn(pc: &mut ProgramCounter, reg: &Register, mem: &Mem) -> GetDisassemblyResult,
 }
 
 impl Instruction {
@@ -343,14 +341,18 @@ impl Instruction {
             reg: &mut Register,
             mem: &mut Mem,
         ) -> InstructionExecutionResult,
-        get_debug: fn(pc: &mut ProgramCounter, reg: &Register, mem: &Mem) -> DisassemblyResult,
+        get_disassembly: fn(
+            pc: &mut ProgramCounter,
+            reg: &Register,
+            mem: &Mem,
+        ) -> GetDisassemblyResult,
     ) -> Instruction {
         let instr = Instruction {
             name: name,
             mask: mask,
             opcode: opcode,
             step: step,
-            get_debug: get_debug,
+            get_disassembly,
         };
         instr
     }

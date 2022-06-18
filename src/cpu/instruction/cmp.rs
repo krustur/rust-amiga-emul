@@ -3,7 +3,7 @@ use crate::{
     register::{ProgramCounter, Register},
 };
 
-use super::{DisassemblyResult, InstructionExecutionResult};
+use super::{GetDisassemblyResult, InstructionExecutionResult};
 
 const CMP_BYTE: usize = 0b000;
 const CMP_WORD: usize = 0b001;
@@ -44,7 +44,7 @@ pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
-) -> DisassemblyResult {
+) -> GetDisassemblyResult {
     todo!();
     // let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem);
     // let ea_mode = ea_data.ea_mode;

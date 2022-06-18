@@ -4,7 +4,7 @@ use crate::{
     register::{ProgramCounter, Register, RegisterType},
 };
 
-use super::{DisassemblyResult, InstructionExecutionResult, OperationSize};
+use super::{GetDisassemblyResult, InstructionExecutionResult, OperationSize};
 
 // Instruction State
 // =================
@@ -100,7 +100,11 @@ pub fn step<'a>(
     }
 }
 
-pub fn get_debug<'a>(pc: &mut ProgramCounter, reg: &Register, mem: &Mem) -> DisassemblyResult {
+pub fn get_disassembly<'a>(
+    pc: &mut ProgramCounter,
+    reg: &Register,
+    mem: &Mem,
+) -> GetDisassemblyResult {
     let instr_word = pc.fetch_next_word(mem);
     let register_type = match instr_word & 0x0008 {
         0x0008 => RegisterType::Address,
@@ -110,7 +114,7 @@ pub fn get_debug<'a>(pc: &mut ProgramCounter, reg: &Register, mem: &Mem) -> Disa
     let destination_register_index = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
     let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
     match register_type {
-        RegisterType::Data => DisassemblyResult::from_pc(
+        RegisterType::Data => GetDisassemblyResult::from_pc(
             pc,
             format!("ADDX.{}", operation_size.get_format(),),
             format!(
@@ -121,7 +125,7 @@ pub fn get_debug<'a>(pc: &mut ProgramCounter, reg: &Register, mem: &Mem) -> Disa
                 destination_register_index,
             ),
         ),
-        RegisterType::Address => DisassemblyResult::from_pc(
+        RegisterType::Address => GetDisassemblyResult::from_pc(
             pc,
             format!("ADDX.{}", operation_size.get_format(),),
             format!(
@@ -138,7 +142,7 @@ pub fn get_debug<'a>(pc: &mut ProgramCounter, reg: &Register, mem: &Mem) -> Disa
 #[cfg(test)]
 mod tests {
     use crate::{
-        cpu::instruction::DisassemblyResult,
+        cpu::instruction::GetDisassemblyResult,
         register::{
             STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE,
             STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
@@ -161,7 +165,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.B"),
@@ -191,7 +195,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.B"),
@@ -221,7 +225,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.B"),
@@ -251,7 +255,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.B"),
@@ -281,7 +285,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.B"),
@@ -311,7 +315,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.B"),
@@ -346,7 +350,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.W"),
@@ -376,7 +380,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.W"),
@@ -406,7 +410,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.W"),
@@ -436,7 +440,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.W"),
@@ -466,7 +470,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.W"),
@@ -496,7 +500,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.W"),
@@ -531,7 +535,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.L"),
@@ -561,7 +565,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.L"),
@@ -591,7 +595,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.L"),
@@ -621,7 +625,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.L"),
@@ -651,7 +655,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.L"),
@@ -681,7 +685,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.L"),
@@ -717,7 +721,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.B"),
@@ -754,7 +758,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.B"),
@@ -790,7 +794,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.W"),
@@ -827,7 +831,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.W"),
@@ -866,7 +870,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.L"),
@@ -906,7 +910,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.L"),

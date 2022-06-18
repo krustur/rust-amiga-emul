@@ -2,7 +2,7 @@
 #![allow(unused_must_use)]
 #![allow(unused_variables)]
 
-use crate::{cpu::instruction::DisassemblyResult, register::ProgramCounter};
+use crate::register::ProgramCounter;
 
 mod cpu;
 mod mem;
@@ -33,19 +33,9 @@ fn main() {
     let mut disassembly_pc = cpu.register.reg_pc.clone();
     for i in 0..30 {
         let disassembly_result = cpu.get_disassembly(&mut disassembly_pc);
-        match &disassembly_result {
-            DisassemblyResult::Done {
-                address,
-                address_next: next_address,
-                name,
-                operands_format,
-                // pc,
-                // next_instr_address,
-            } => {
-                disassembly_pc = ProgramCounter::from_address(*next_address);
-            }
-            DisassemblyResult::PassOn => {}
-        }
+
+        disassembly_pc = ProgramCounter::from_address(disassembly_result.address_next);
+
         cpu.print_disassembly(&disassembly_result);
     }
 

@@ -1,6 +1,6 @@
 use crate::{
     cpu::{
-        instruction::{DisassemblyResult, PcResult},
+        instruction::{GetDisassemblyResult, PcResult},
         Cpu,
     },
     mem::Mem,
@@ -64,7 +64,7 @@ pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
-) -> DisassemblyResult {
+) -> GetDisassemblyResult {
     let instr_word = pc.fetch_next_word(mem);
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
     let register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
@@ -76,7 +76,7 @@ pub fn get_disassembly<'a>(
         displacement_16bit,
     );
 
-    let result = DisassemblyResult::from_pc(
+    let result = GetDisassemblyResult::from_pc(
         pc,
         format!("DB{:?}", conditional_test),
         format!(
@@ -90,7 +90,7 @@ pub fn get_disassembly<'a>(
 
 #[cfg(test)]
 mod tests {
-    use crate::{cpu::instruction::DisassemblyResult, register::STATUS_REGISTER_MASK_CARRY};
+    use crate::{cpu::instruction::GetDisassemblyResult, register::STATUS_REGISTER_MASK_CARRY};
 
     // DBCC C set/reg gt 0 => decrease reg and branch (not -1)
     // DBCC C set/reg eq 0 => decrease reg and no branch (-1)
@@ -106,7 +106,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00004,
                 String::from("DBCC"),
@@ -131,7 +131,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00004,
                 String::from("DBCC"),
@@ -156,7 +156,7 @@ mod tests {
                                       // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00004,
                 String::from("DBCC"),

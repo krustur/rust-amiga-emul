@@ -4,7 +4,7 @@ use crate::{
     register::{ProgramCounter, Register},
 };
 
-use super::{DisassemblyResult, InstructionExecutionResult};
+use super::{GetDisassemblyResult, InstructionExecutionResult};
 
 // Instruction State
 // =================
@@ -35,14 +35,14 @@ pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
-) -> DisassemblyResult {
+) -> GetDisassemblyResult {
     // TODO: Tests
     let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, None);
     let ea_mode = ea_data.ea_mode;
     let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9);
 
     let ea_format = Cpu::get_ea_format(ea_mode, pc, None, reg, mem);
-    DisassemblyResult::from_pc(
+    GetDisassemblyResult::from_pc(
         pc,
         String::from("LEA"),
         format!("{},A{}", ea_format, register),
@@ -52,7 +52,7 @@ pub fn get_disassembly<'a>(
 #[cfg(test)]
 mod tests {
     use crate::{
-        cpu::instruction::DisassemblyResult,
+        cpu::instruction::GetDisassemblyResult,
         memrange::MemRange,
         register::{
             STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE,
@@ -74,7 +74,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00004,
                 String::from("LEA"),
@@ -104,7 +104,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00006,
                 String::from("LEA"),

@@ -4,7 +4,7 @@ use crate::{
     register::{ProgramCounter, Register},
 };
 
-use super::{ConditionalTest, DisassemblyResult, InstructionExecutionResult};
+use super::{ConditionalTest, GetDisassemblyResult, InstructionExecutionResult};
 
 // Instruction State
 // =================
@@ -61,7 +61,7 @@ pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
-) -> DisassemblyResult {
+) -> GetDisassemblyResult {
     // TODO: Condition codes
     let instr_word = pc.fetch_next_word(mem);
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
@@ -84,7 +84,7 @@ pub fn get_disassembly<'a>(
         ), //,
     };
 
-    DisassemblyResult::from_pc(
+    GetDisassemblyResult::from_pc(
         pc,
         format!("B{}.{}", conditional_test, size_format),
         operands_format,
@@ -93,7 +93,7 @@ pub fn get_disassembly<'a>(
 
 #[cfg(test)]
 mod tests {
-    use crate::{cpu::instruction::DisassemblyResult, register::STATUS_REGISTER_MASK_CARRY};
+    use crate::{cpu::instruction::GetDisassemblyResult, register::STATUS_REGISTER_MASK_CARRY};
 
     #[test]
     fn step_bcc_b_when_carry_clear() {
@@ -104,7 +104,7 @@ mod tests {
                                       // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("BCC.B"),
@@ -127,7 +127,7 @@ mod tests {
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
-            DisassemblyResult::from_address_and_address_next(
+            GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
                 String::from("BCC.B"),
