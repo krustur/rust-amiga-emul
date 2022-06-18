@@ -87,7 +87,7 @@ mod tests {
         // assert
         assert_eq!(0x500, cpu.register.reg_a[0]);
         assert_eq!(true, cpu.register.is_sr_carry_set());
-        assert_eq!(true, cpu.register.is_sr_coverflow_set());
+        assert_eq!(true, cpu.register.is_sr_overflow_set());
         assert_eq!(true, cpu.register.is_sr_zero_set());
         assert_eq!(true, cpu.register.is_sr_negative_set());
         assert_eq!(true, cpu.register.is_sr_extend_set());
@@ -117,7 +117,7 @@ mod tests {
         // // assert
         assert_eq!(0x00F80000, cpu.register.reg_a[1]);
         assert_eq!(false, cpu.register.is_sr_carry_set());
-        assert_eq!(false, cpu.register.is_sr_coverflow_set());
+        assert_eq!(false, cpu.register.is_sr_overflow_set());
         assert_eq!(false, cpu.register.is_sr_zero_set());
         assert_eq!(false, cpu.register.is_sr_negative_set());
         assert_eq!(false, cpu.register.is_sr_extend_set());

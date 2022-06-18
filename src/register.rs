@@ -341,7 +341,7 @@ impl Register {
         return (self.reg_sr & STATUS_REGISTER_MASK_CARRY) == STATUS_REGISTER_MASK_CARRY;
     }
 
-    pub fn is_sr_coverflow_set(&self) -> bool {
+    pub fn is_sr_overflow_set(&self) -> bool {
         return (self.reg_sr & STATUS_REGISTER_MASK_OVERFLOW) == STATUS_REGISTER_MASK_OVERFLOW;
     }
 
