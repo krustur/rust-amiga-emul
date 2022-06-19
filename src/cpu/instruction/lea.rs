@@ -4,7 +4,7 @@ use crate::{
     register::{ProgramCounter, Register},
 };
 
-use super::{GetDisassemblyResult, StepResult};
+use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResult};
 
 // Instruction State
 // =================
@@ -15,32 +15,38 @@ use super::{GetDisassemblyResult, StepResult};
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
-pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> StepResult {
+pub fn step<'a>(
+    pc: &mut ProgramCounter,
+    reg: &mut Register,
+    mem: &mut Mem,
+) -> Result<StepResult, StepError> {
     // TODO: Tests
-    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, None);
-    let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9);
+    let ea_data =
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, None)?;
+    let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;
     let ea_address = ea_data.get_address(pc, None, reg, mem);
 
     reg.reg_a[register] = ea_address;
-    StepResult::Done {}
+    Ok(StepResult::Done {})
 }
 
 pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
-) -> GetDisassemblyResult {
+) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     // TODO: Tests
-    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, None);
+    let ea_data =
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, None)?;
     let ea_mode = ea_data.ea_mode;
-    let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9);
+    let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;
 
     let ea_format = Cpu::get_ea_format(ea_mode, pc, None, reg, mem);
-    GetDisassemblyResult::from_pc(
+    Ok(GetDisassemblyResult::from_pc(
         pc,
         String::from("LEA"),
         format!("{},A{}", ea_format, register),
-    )
+    ))
 }
 
 #[cfg(test)]

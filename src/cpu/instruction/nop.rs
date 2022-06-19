@@ -3,7 +3,7 @@ use crate::{
     register::{ProgramCounter, Register},
 };
 
-use super::{GetDisassemblyResult, StepResult};
+use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResult};
 
 // Instruction State
 // =================
@@ -14,16 +14,24 @@ use super::{GetDisassemblyResult, StepResult};
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
-pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> StepResult {
-    StepResult::Done {}
+pub fn step<'a>(
+    pc: &mut ProgramCounter,
+    reg: &mut Register,
+    mem: &mut Mem,
+) -> Result<StepResult, StepError> {
+    Ok(StepResult::Done {})
 }
 
 pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
-) -> GetDisassemblyResult {
-    GetDisassemblyResult::from_pc(pc, String::from("NOP"), String::from(""))
+) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
+    Ok(GetDisassemblyResult::from_pc(
+        pc,
+        String::from("NOP"),
+        String::from(""),
+    ))
 }
 
 // #[cfg(test)]

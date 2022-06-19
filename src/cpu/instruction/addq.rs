@@ -4,7 +4,10 @@ use crate::{
     register::{ProgramCounter, Register},
 };
 
-use super::{EffectiveAddressingMode, GetDisassemblyResult, OperationSize, StepResult};
+use super::{
+    EffectiveAddressingMode, GetDisassemblyResult, GetDisassemblyResultError, OperationSize,
+    StepError, StepResult,
+};
 
 // Instruction State
 // =================
@@ -15,11 +18,15 @@ use super::{EffectiveAddressingMode, GetDisassemblyResult, OperationSize, StepRe
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
-pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> StepResult {
+pub fn step<'a>(
+    pc: &mut ProgramCounter,
+    reg: &mut Register,
+    mem: &mut Mem,
+) -> Result<StepResult, StepError> {
     let instr_word = pc.peek_next_word(mem);
     let size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
     let ea_data =
-        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size));
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size))?;
     let ea_mode = ea_data.ea_mode;
 
     let ea_format = Cpu::get_ea_format(ea_mode, pc, None, reg, mem);
@@ -58,37 +65,37 @@ pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> S
 
     reg.reg_sr = status_register_result.merge_status_register(reg.reg_sr);
 
-    StepResult::Done {}
+    Ok(StepResult::Done {})
 }
 
 pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
-) -> GetDisassemblyResult {
+) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let instr_word = pc.peek_next_word(mem);
     let size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
     let ea_data =
-        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size));
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size))?;
     let ea_mode = ea_data.ea_mode;
     let ea_format = Cpu::get_ea_format(ea_mode, pc, None, reg, mem);
     let data = Cpu::extract_3_bit_data_1_to_8_from_word_at_pos(ea_data.instr_word, 9);
     match size {
-        OperationSize::Byte => GetDisassemblyResult::from_pc(
+        OperationSize::Byte => Ok(GetDisassemblyResult::from_pc(
             pc,
             String::from("ADDQ.B"),
             format!("#${:X},{}", data, ea_format),
-        ),
-        OperationSize::Word => GetDisassemblyResult::from_pc(
+        )),
+        OperationSize::Word => Ok(GetDisassemblyResult::from_pc(
             pc,
             String::from("ADDQ.W"),
             format!("#${:X},{}", data, ea_format),
-        ),
-        OperationSize::Long => GetDisassemblyResult::from_pc(
+        )),
+        OperationSize::Long => Ok(GetDisassemblyResult::from_pc(
             pc,
             String::from("ADDQ.L"),
             format!("#${:X},{}", data, ea_format),
-        ),
+        )),
     }
 }
 

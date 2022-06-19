@@ -13,13 +13,17 @@ use crate::{
     register::{ProgramCounter, Register},
 };
 
-use super::{GetDisassemblyResult, StepResult};
+use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResult};
 
-pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> StepResult {
+pub fn step<'a>(
+    pc: &mut ProgramCounter,
+    reg: &mut Register,
+    mem: &mut Mem,
+) -> Result<StepResult, StepError> {
     let instr_word = pc.peek_next_word(mem);
     let size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
     let ea_data =
-        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size));
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size))?;
     let ea_mode = ea_data.ea_mode;
     let status_register_result = match size {
         OperationSize::Byte => {
@@ -48,18 +52,18 @@ pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> S
 
     reg.reg_sr = status_register_result.merge_status_register(reg.reg_sr);
 
-    StepResult::Done {}
+    Ok(StepResult::Done {})
 }
 
 pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
-) -> GetDisassemblyResult {
+) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let instr_word = pc.peek_next_word(mem);
     let size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
     let ea_data =
-        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size));
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size))?;
     let ea_mode = ea_data.ea_mode;
     let size = Cpu::extract_size000110_from_bit_pos_6(ea_data.instr_word);
     let ea_format = Cpu::get_ea_format(ea_mode, pc, None, reg, mem);
@@ -67,27 +71,27 @@ pub fn get_disassembly<'a>(
         OperationSize::Byte => {
             pc.skip_byte();
             let data = pc.fetch_next_byte(mem);
-            GetDisassemblyResult::from_pc(
+            Ok(GetDisassemblyResult::from_pc(
                 pc,
                 String::from("ADDI.B"),
                 format!("#${:02X},{}", data, ea_format),
-            )
+            ))
         }
         OperationSize::Word => {
             let data = pc.fetch_next_word(mem);
-            GetDisassemblyResult::from_pc(
+            Ok(GetDisassemblyResult::from_pc(
                 pc,
                 String::from("ADDI.W"),
                 format!("#${:04X},{}", data, ea_format),
-            )
+            ))
         }
         OperationSize::Long => {
             let data = pc.fetch_next_long(mem);
-            GetDisassemblyResult::from_pc(
+            Ok(GetDisassemblyResult::from_pc(
                 pc,
                 String::from("ADDI.L"),
                 format!("#${:04X},{}", data, ea_format),
-            )
+            ))
         }
     }
 }

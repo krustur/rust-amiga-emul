@@ -4,7 +4,9 @@ use crate::{
     register::{ProgramCounter, Register, RegisterType},
 };
 
-use super::{GetDisassemblyResult, OperationSize, StepResult};
+use super::{
+    GetDisassemblyResult, GetDisassemblyResultError, OperationSize, StepError, StepResult,
+};
 
 // Instruction State
 // =================
@@ -15,14 +17,18 @@ use super::{GetDisassemblyResult, OperationSize, StepResult};
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
-pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> StepResult {
+pub fn step<'a>(
+    pc: &mut ProgramCounter,
+    reg: &mut Register,
+    mem: &mut Mem,
+) -> Result<StepResult, StepError> {
     let instr_word = pc.fetch_next_word(mem);
     let register_type = match instr_word & 0x0008 {
         0x0008 => RegisterType::Address,
         _ => RegisterType::Data,
     };
-    let source_register_index = Cpu::extract_register_index_from_bit_pos_0(instr_word);
-    let destination_register_index = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
+    let source_register_index = Cpu::extract_register_index_from_bit_pos_0(instr_word)?;
+    let destination_register_index = Cpu::extract_register_index_from_bit_pos(instr_word, 9)?;
     let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
     let status_register_result = match register_type {
         RegisterType::Data => match operation_size {
@@ -91,24 +97,24 @@ pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> S
     };
 
     reg.reg_sr = status_register_result.merge_status_register(reg.reg_sr);
-    StepResult::Done {}
+    Ok(StepResult::Done {})
 }
 
 pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
-) -> GetDisassemblyResult {
+) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let instr_word = pc.fetch_next_word(mem);
     let register_type = match instr_word & 0x0008 {
         0x0008 => RegisterType::Address,
         _ => RegisterType::Data,
     };
-    let source_register_index = Cpu::extract_register_index_from_bit_pos_0(instr_word);
-    let destination_register_index = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
+    let source_register_index = Cpu::extract_register_index_from_bit_pos_0(instr_word)?;
+    let destination_register_index = Cpu::extract_register_index_from_bit_pos(instr_word, 9)?;
     let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
     match register_type {
-        RegisterType::Data => GetDisassemblyResult::from_pc(
+        RegisterType::Data => Ok(GetDisassemblyResult::from_pc(
             pc,
             format!("ADDX.{}", operation_size.get_format(),),
             format!(
@@ -118,8 +124,8 @@ pub fn get_disassembly<'a>(
                 register_type.get_format(),
                 destination_register_index,
             ),
-        ),
-        RegisterType::Address => GetDisassemblyResult::from_pc(
+        )),
+        RegisterType::Address => Ok(GetDisassemblyResult::from_pc(
             pc,
             format!("ADDX.{}", operation_size.get_format(),),
             format!(
@@ -129,7 +135,7 @@ pub fn get_disassembly<'a>(
                 register_type.get_format(),
                 destination_register_index,
             ),
-        ),
+        )),
     }
 }
 

@@ -4,7 +4,7 @@ use crate::{
     register::{ProgramCounter, Register},
 };
 
-use super::StepResult;
+use super::{GetDisassemblyResultError, StepError, StepResult};
 
 // Instruction State
 // =================
@@ -15,7 +15,11 @@ use super::StepResult;
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
-pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> StepResult {
+pub fn step<'a>(
+    pc: &mut ProgramCounter,
+    reg: &mut Register,
+    mem: &mut Mem,
+) -> Result<StepResult, StepError> {
     let instr_word = pc.fetch_next_word(mem);
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
     let condition_result = Cpu::evaluate_condition(reg, &conditional_test);
@@ -23,7 +27,7 @@ pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> S
 
     let result = match condition_result {
         false => {
-            let register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
+            let register = Cpu::extract_register_index_from_bit_pos_0(instr_word)?;
             let reg_word = Cpu::get_word_from_long(reg.reg_d[register]);
             let reg_word = reg_word.wrapping_sub(1);
             reg.reg_d[register] = Cpu::set_word_in_long(reg_word, reg.reg_d[register]);
@@ -43,17 +47,17 @@ pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> S
         true => StepResult::Done {},
     };
 
-    result
+    Ok(result)
 }
 
 pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
-) -> GetDisassemblyResult {
+) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let instr_word = pc.fetch_next_word(mem);
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
-    let register = Cpu::extract_register_index_from_bit_pos_0(instr_word);
+    let register = Cpu::extract_register_index_from_bit_pos_0(instr_word)?;
 
     let displacement_16bit = pc.fetch_next_word(mem);
 
@@ -62,14 +66,14 @@ pub fn get_disassembly<'a>(
         displacement_16bit,
     );
 
-    let result = GetDisassemblyResult::from_pc(
+    let result = Ok(GetDisassemblyResult::from_pc(
         pc,
         format!("DB{:?}", conditional_test),
         format!(
             "D{},${:04X} [${:08X}]",
             register, displacement_16bit, branch_to
         ),
-    );
+    ));
 
     result
 }

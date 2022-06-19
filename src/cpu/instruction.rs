@@ -19,16 +19,48 @@ pub mod moveq;
 pub mod nop;
 pub mod subq;
 
-// #[derive(Copy, Clone)]
-// pub enum PcResult {
-//     Increment,
-//     Set(u32),
-// }
+pub struct InstructionError {
+    pub details: String,
+}
 
 #[derive(Copy, Clone)]
 pub enum StepResult {
     Done,
     PassOn,
+}
+
+pub enum StepError {
+    AccessFault,
+    AddressError,
+    IllegalInstruction,
+    IntegerDivideByZero,
+    // InstructionError isn't an actual hardware error. This error
+    // is probably the result of an unimplemented instruction or an
+    // instruction that is incorrectly implemented. And if not, this
+    // is most likely a normal illegal instruction - which could be
+    // the case when running a program that requires a cpu/fpu that
+    // isn't connected
+    InstructionError { details: String },
+}
+
+impl From<InstructionError> for StepError {
+    fn from(error: InstructionError) -> Self {
+        match error {
+            InstructionError { details } => StepError::InstructionError { details },
+        }
+    }
+}
+
+pub struct GetDisassemblyResultError {
+    pub details: String,
+}
+
+impl From<InstructionError> for GetDisassemblyResultError {
+    fn from(error: InstructionError) -> Self {
+        match error {
+            InstructionError { details } => GetDisassemblyResultError { details },
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -322,9 +354,16 @@ pub struct Instruction {
     pub name: String,
     pub mask: u16,
     pub opcode: u16,
-    pub step: fn(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> StepResult,
-    pub get_disassembly:
-        fn(pc: &mut ProgramCounter, reg: &Register, mem: &Mem) -> GetDisassemblyResult,
+    pub step: fn(
+        pc: &mut ProgramCounter,
+        reg: &mut Register,
+        mem: &mut Mem,
+    ) -> Result<StepResult, StepError>,
+    pub get_disassembly: fn(
+        pc: &mut ProgramCounter,
+        reg: &Register,
+        mem: &Mem,
+    ) -> Result<GetDisassemblyResult, GetDisassemblyResultError>,
 }
 
 impl Instruction {
@@ -332,12 +371,16 @@ impl Instruction {
         name: String,
         mask: u16,
         opcode: u16,
-        step: fn(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> StepResult,
+        step: fn(
+            pc: &mut ProgramCounter,
+            reg: &mut Register,
+            mem: &mut Mem,
+        ) -> Result<StepResult, StepError>,
         get_disassembly: fn(
             pc: &mut ProgramCounter,
             reg: &Register,
             mem: &Mem,
-        ) -> GetDisassemblyResult,
+        ) -> Result<GetDisassemblyResult, GetDisassemblyResultError>,
     ) -> Instruction {
         let instr = Instruction {
             name: name,

@@ -4,7 +4,7 @@ use crate::{
     register::{ProgramCounter, Register},
 };
 
-use super::{GetDisassemblyResult, StepResult};
+use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResult};
 
 // Instruction State
 // =================
@@ -15,7 +15,11 @@ use super::{GetDisassemblyResult, StepResult};
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
-pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> StepResult {
+pub fn step<'a>(
+    pc: &mut ProgramCounter,
+    reg: &mut Register,
+    mem: &mut Mem,
+) -> Result<StepResult, StepError> {
     let instr_word = pc.fetch_next_word(mem);
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
     let condition = Cpu::evaluate_condition(reg, &conditional_test);
@@ -29,9 +33,9 @@ pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> S
                 0xff => todo!("32 bit displacement"),
                 _ => pc.branch_byte(displacement_8bit),
             };
-            StepResult::Done {}
+            Ok(StepResult::Done {})
         }
-        false => StepResult::Done {},
+        false => Ok(StepResult::Done {}),
     }
 }
 
@@ -39,7 +43,7 @@ pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
-) -> GetDisassemblyResult {
+) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     // TODO: Condition codes
     let instr_word = pc.fetch_next_word(mem);
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
@@ -62,11 +66,11 @@ pub fn get_disassembly<'a>(
         ), //,
     };
 
-    GetDisassemblyResult::from_pc(
+    Ok(GetDisassemblyResult::from_pc(
         pc,
         format!("B{}.{}", conditional_test, size_format),
         operands_format,
-    )
+    ))
 }
 
 #[cfg(test)]

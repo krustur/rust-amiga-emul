@@ -3,7 +3,7 @@ use crate::{
     register::{ProgramCounter, Register},
 };
 
-use super::{GetDisassemblyResult, StepResult};
+use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResult};
 
 // Instruction State
 // =================
@@ -14,7 +14,11 @@ use super::{GetDisassemblyResult, StepResult};
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
-pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> StepResult {
+pub fn step<'a>(
+    pc: &mut ProgramCounter,
+    reg: &mut Register,
+    mem: &mut Mem,
+) -> Result<StepResult, StepError> {
     // let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem);
     // let ea_mode = ea_data.ea_mode;
     // let ea_value = Cpu::get_ea_value_long(ea_mode, pc, reg, mem);
@@ -30,7 +34,7 @@ pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
-) -> GetDisassemblyResult {
+) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     todo!();
 
     // let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem);

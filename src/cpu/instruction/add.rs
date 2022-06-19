@@ -4,7 +4,9 @@ use crate::register::ProgramCounter;
 use crate::register::Register;
 use std::panic;
 
-use super::{GetDisassemblyResult, OperationSize, StepResult};
+use super::{
+    GetDisassemblyResult, GetDisassemblyResultError, OperationSize, StepError, StepResult,
+};
 
 // Instruction State
 // =================
@@ -24,7 +26,11 @@ const LONG_WITH_EA_AS_DEST: usize = 0b110;
 const WORD_WITH_AN_AS_DEST: usize = 0b011;
 const LONG_WITH_AN_AS_DEST: usize = 0b111;
 
-pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> StepResult {
+pub fn step<'a>(
+    pc: &mut ProgramCounter,
+    reg: &mut Register,
+    mem: &mut Mem,
+) -> Result<StepResult, StepError> {
     let instr_word = pc.peek_next_word(mem);
     let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
     let operation_size = match opmode {
@@ -43,8 +49,8 @@ pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> S
         reg,
         mem,
         Some(operation_size),
-    );
-    let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9);
+    )?;
+    let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;
 
     let status_register_result = match opmode {
         BYTE_WITH_DN_AS_DEST => {
@@ -114,14 +120,14 @@ pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> S
 
     reg.reg_sr = status_register_result.merge_status_register(reg.reg_sr);
 
-    StepResult::Done {}
+    Ok(StepResult::Done {})
 }
 
 pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
-) -> GetDisassemblyResult {
+) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let instr_word = pc.peek_next_word(mem);
     let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
     let operation_size = match opmode {
@@ -140,52 +146,52 @@ pub fn get_disassembly<'a>(
         reg,
         mem,
         Some(operation_size),
-    );
+    )?;
     let ea_mode = ea_data.ea_mode;
     let opmode = Cpu::extract_op_mode_from_bit_pos_6(ea_data.instr_word);
-    let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9);
+    let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;
     let ea_format = Cpu::get_ea_format(ea_mode, pc, None, reg, mem);
     match opmode {
-        BYTE_WITH_DN_AS_DEST => GetDisassemblyResult::from_pc(
+        BYTE_WITH_DN_AS_DEST => Ok(GetDisassemblyResult::from_pc(
             pc,
             String::from("ADD.B"),
             format!("{},D{}", ea_format, register),
-        ),
-        WORD_WITH_DN_AS_DEST => GetDisassemblyResult::from_pc(
+        )),
+        WORD_WITH_DN_AS_DEST => Ok(GetDisassemblyResult::from_pc(
             pc,
             String::from("ADD.W"),
             format!("{},D{}", ea_format, register),
-        ),
-        LONG_WITH_DN_AS_DEST => GetDisassemblyResult::from_pc(
+        )),
+        LONG_WITH_DN_AS_DEST => Ok(GetDisassemblyResult::from_pc(
             pc,
             String::from("ADD.L"),
             format!("{},D{}", ea_format, register),
-        ),
-        BYTE_WITH_EA_AS_DEST => GetDisassemblyResult::from_pc(
+        )),
+        BYTE_WITH_EA_AS_DEST => Ok(GetDisassemblyResult::from_pc(
             pc,
             String::from("ADD.B"),
             format!("D{},{}", register, ea_format),
-        ),
-        WORD_WITH_EA_AS_DEST => GetDisassemblyResult::from_pc(
+        )),
+        WORD_WITH_EA_AS_DEST => Ok(GetDisassemblyResult::from_pc(
             pc,
             String::from("ADD.W"),
             format!("D{},{}", register, ea_format),
-        ),
-        LONG_WITH_EA_AS_DEST => GetDisassemblyResult::from_pc(
+        )),
+        LONG_WITH_EA_AS_DEST => Ok(GetDisassemblyResult::from_pc(
             pc,
             String::from("ADD.L"),
             format!("D{},{}", register, ea_format),
-        ),
-        WORD_WITH_AN_AS_DEST => GetDisassemblyResult::from_pc(
+        )),
+        WORD_WITH_AN_AS_DEST => Ok(GetDisassemblyResult::from_pc(
             pc,
             String::from("ADDA.W"),
             format!("{},A{}", ea_format, register),
-        ),
-        LONG_WITH_AN_AS_DEST => GetDisassemblyResult::from_pc(
+        )),
+        LONG_WITH_AN_AS_DEST => Ok(GetDisassemblyResult::from_pc(
             pc,
             String::from("ADDA.L"),
             format!("{},A{}", ea_format, register),
-        ),
+        )),
         _ => panic!("Unhandled ea_opmode: {}", opmode),
     }
 }

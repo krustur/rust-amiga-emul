@@ -2,6 +2,7 @@ use crate::cpu::instruction::*;
 use crate::mem::Mem;
 use crate::register::*;
 use byteorder::{BigEndian, ReadBytesExt};
+use core::panic;
 use num_traits::FromPrimitive;
 use std::convert::TryInto;
 
@@ -235,16 +236,52 @@ impl Cpu {
         op_mode
     }
 
-    pub fn extract_register_index_from_bit_pos(word: u16, bit_pos: u8) -> usize {
+    pub fn extract_register_index_from_bit_pos(
+        word: u16,
+        bit_pos: u8,
+    ) -> Result<usize, InstructionError> {
         let register = (word >> bit_pos) & 0x0007;
-        let register = register.try_into().unwrap();
-        register
+        let result = match register.try_into() {
+            Ok(register_index) => {
+                if register_index <= 7 {
+                    Ok(register_index)
+                } else {
+                    Err(InstructionError {
+                        details: format!(
+                            "Failed to extract register index from bit pos {}, got index: {}",
+                            bit_pos, register_index
+                        ),
+                    })
+                }
+            }
+            Err(a) => Err(InstructionError {
+                details: format!("Failed to extract register index from bit pos {}", bit_pos),
+            }),
+        };
+
+        result
     }
 
-    pub fn extract_register_index_from_bit_pos_0(word: u16) -> usize {
+    pub fn extract_register_index_from_bit_pos_0(word: u16) -> Result<usize, InstructionError> {
         let register = word & 0x0007;
-        let register = register.try_into().unwrap();
-        register
+        let result = match register.try_into() {
+            Ok(register_index) => {
+                if register_index <= 7 {
+                    Ok(register_index)
+                } else {
+                    Err(InstructionError {
+                        details: format!(
+                            "Failed to extract register index from bit pos 0, got index: {}",
+                            register_index
+                        ),
+                    })
+                }
+            }
+            Err(e) => Err(InstructionError {
+                details: format!("Failed to extract register index from bit pos 0"),
+            }),
+        };
+        result
     }
 
     pub fn extract_size000110_from_bit_pos_6(word: u16) -> OperationSize {
@@ -842,7 +879,20 @@ impl Cpu {
             Some(instruction_pos) => &self.instructions[instruction_pos],
         };
 
-        let exec_result = (instruction.step)(&mut pc, &mut self.register, &mut self.memory);
+        let step_result = (instruction.step)(&mut pc, &mut self.register, &mut self.memory);
+        match step_result {
+            Ok(step_result) => (),
+            Err(step_error) => {
+                println!("Runtime error occured when running instruction.");
+                println!(
+                    " Instruction word: ${:04X} ({}) at address ${:08X}",
+                    instr_word,
+                    instruction.name,
+                    pc.get_address()
+                );
+                self.print_registers();
+            }
+        }
 
         self.register.reg_pc = pc.get_next_pc();
     }
@@ -867,11 +917,20 @@ impl Cpu {
                 let get_disassembly_result =
                     (instruction.get_disassembly)(pc, &mut self.register, &mut self.memory);
 
-                get_disassembly_result
+                match get_disassembly_result {
+                    Ok(result) => result,
+                    Err(error) => GetDisassemblyResult::from_pc(
+                        pc,
+                        String::from("DC.W"),
+                        format!(
+                            "#${:04X} ; Error when getting disassembly from instruction: {}",
+                            instr_word, error.details
+                        ),
+                    ),
+                }
             }
             None => {
-                pc.skip_byte();
-                pc.skip_byte();
+                pc.fetch_next_word(&self.memory);
                 GetDisassemblyResult::from_pc(
                     pc,
                     String::from("DC.W"),

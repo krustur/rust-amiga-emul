@@ -3,7 +3,7 @@ use crate::mem::Mem;
 use crate::register::{ProgramCounter, Register, STATUS_REGISTER_MASK_ZERO};
 use crate::{cpu::Cpu, register::STATUS_REGISTER_MASK_NEGATIVE};
 
-use super::StepResult;
+use super::{GetDisassemblyResultError, StepError, StepResult};
 
 // Instruction State
 // =================
@@ -14,10 +14,14 @@ use super::StepResult;
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
-pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> StepResult {
+pub fn step<'a>(
+    pc: &mut ProgramCounter,
+    reg: &mut Register,
+    mem: &mut Mem,
+) -> Result<StepResult, StepError> {
     // TODO: Condition codes
     let instr_word = pc.fetch_next_word(mem);
-    let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
+    let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9)?;
     // let mut instr_bytes = &instr_word.to_be_bytes()[1..2];
     // let operand = instr_bytes.read_i8().unwrap();
     let data = Cpu::get_byte_from_word(instr_word);
@@ -35,22 +39,17 @@ pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> S
 
     reg.reg_d[register] = data;
     reg.reg_sr = (reg.reg_sr & status_register_mask) | status_register_flags;
-    StepResult::Done {
-        // name: "MOVEQ",
-        // operands_format: &operands_format,
-        // comment: &instr_comment,
-        // op_size: OperationSize::Long,
-    }
+    Ok(StepResult::Done {})
 }
 
 pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
-) -> GetDisassemblyResult {
+) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     // TODO: Condition codes
     let instr_word = pc.fetch_next_word(mem);
-    let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
+    let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9)?;
     // let mut instr_bytes = &instr_word.to_be_bytes()[1..2];
     let data = Cpu::get_byte_from_word(instr_word);
     // let operand = instr_bytes.read_i8().unwrap();
@@ -67,7 +66,11 @@ pub fn get_disassembly<'a>(
     // let instr_comment = format!("moving {:#010x} into D{}", data, register);
     let status_register_mask = 0xfff0;
 
-    GetDisassemblyResult::from_pc(pc, String::from("MOVEQ"), operands_format)
+    Ok(GetDisassemblyResult::from_pc(
+        pc,
+        String::from("MOVEQ"),
+        operands_format,
+    ))
 }
 
 #[cfg(test)]

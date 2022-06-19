@@ -3,7 +3,7 @@ use crate::{
     register::{ProgramCounter, Register},
 };
 
-use super::{GetDisassemblyResult, StepResult};
+use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResult};
 
 // Instruction State
 // =================
@@ -14,7 +14,11 @@ use super::{GetDisassemblyResult, StepResult};
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
-pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> StepResult {
+pub fn step<'a>(
+    pc: &mut ProgramCounter,
+    reg: &mut Register,
+    mem: &mut Mem,
+) -> Result<StepResult, StepError> {
     todo!("SUBQ common_exec_func");
     // TODO: Tests
     // let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
@@ -33,7 +37,7 @@ pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
-) -> GetDisassemblyResult {
+) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     todo!("SUBQ common_exec_func");
     // TODO: Tests
     // let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);

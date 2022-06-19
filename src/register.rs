@@ -1,7 +1,7 @@
 use crate::{
     cpu::{
         ea::EffectiveAddressingData,
-        instruction::{EffectiveAddressingMode, OperationSize, ScaleFactor},
+        instruction::{EffectiveAddressingMode, InstructionError, OperationSize, ScaleFactor},
         Cpu,
     },
     mem::Mem,
@@ -109,7 +109,7 @@ impl ProgramCounter {
         reg: &Register,
         mem: &Mem,
         operation_size: Option<OperationSize>,
-    ) -> EffectiveAddressingData {
+    ) -> Result<EffectiveAddressingData, InstructionError> {
         // TODO: Replace operation_size with Closure
         let instr_word = self.fetch_next_word(mem);
         self.get_effective_addressing_data_from_instr_word_bit_pos(
@@ -130,9 +130,9 @@ impl ProgramCounter {
         operation_size: Option<OperationSize>,
         bit_pos: u8,
         reg_bit_pos: u8,
-    ) -> EffectiveAddressingData {
+    ) -> Result<EffectiveAddressingData, InstructionError> {
         let ea_mode = (instr_word >> bit_pos) & 0x0007;
-        let ea_register = Cpu::extract_register_index_from_bit_pos(instr_word, reg_bit_pos);
+        let ea_register = Cpu::extract_register_index_from_bit_pos(instr_word, reg_bit_pos)?;
         let ea_mode = match ea_mode {
             0b000 => EffectiveAddressingMode::DRegDirect {
                 ea_register: (ea_register),
@@ -189,7 +189,7 @@ impl ProgramCounter {
             0b110 => {
                 let extension_word = self.fetch_next_word(mem);
                 let displacement = Cpu::get_byte_from_word(extension_word);
-                let register = Cpu::extract_register_index_from_bit_pos(extension_word, 12);
+                let register = Cpu::extract_register_index_from_bit_pos(extension_word, 12)?;
                 let (register_value, register_type) = match extension_word & 0x8000 {
                     0x8000 => (reg.reg_a[register], RegisterType::Address),
                     _ => (reg.reg_d[register], RegisterType::Data),
@@ -254,7 +254,7 @@ impl ProgramCounter {
                 0b011 => {
                     // panic!();
                     let extension_word = self.fetch_next_word(mem);
-                    let register = Cpu::extract_register_index_from_bit_pos(extension_word, 12);
+                    let register = Cpu::extract_register_index_from_bit_pos(extension_word, 12)?;
                     // BUG: Compare this with ARegIndirectWithIndexOrMemoryIndirect above. Is it really correct to use index_size_bytes below?
                     //      Scale factor is never use! Probably green cause we test with *4 and .L that have a matching size
                     let (index_size, index_size_bytes) = match extension_word & 0x0800 {
@@ -329,7 +329,7 @@ impl ProgramCounter {
             },
             _ => panic!("Unable to extract EffectiveAddressingMode"),
         };
-        EffectiveAddressingData::create(instr_word, ea_mode)
+        Ok(EffectiveAddressingData::create(instr_word, ea_mode))
     }
 }
 

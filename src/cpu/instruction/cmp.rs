@@ -3,7 +3,7 @@ use crate::{
     register::{ProgramCounter, Register},
 };
 
-use super::{GetDisassemblyResult, StepResult};
+use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResult};
 
 const CMP_BYTE: usize = 0b000;
 const CMP_WORD: usize = 0b001;
@@ -20,7 +20,11 @@ const CMPA_LONG: usize = 0b111;
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
-pub fn step<'a>(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> StepResult {
+pub fn step<'a>(
+    pc: &mut ProgramCounter,
+    reg: &mut Register,
+    mem: &mut Mem,
+) -> Result<StepResult, StepError> {
     todo!();
     // let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
     // let condition = Cpu::evaluate_condition(reg, &conditional_test);
@@ -40,7 +44,7 @@ pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
-) -> GetDisassemblyResult {
+) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     todo!();
     // let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem);
     // let ea_mode = ea_data.ea_mode;
