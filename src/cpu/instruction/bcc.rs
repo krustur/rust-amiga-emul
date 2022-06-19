@@ -8,9 +8,9 @@ use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResu
 
 // Instruction State
 // =================
-// step: TODO
-// step cc: TODO
-// get_disassembly: TODO
+// step: DONE
+// step cc: DONE (not affected)
+// get_disassembly: DONE
 
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
@@ -24,19 +24,28 @@ pub fn step<'a>(
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
     let condition = Cpu::evaluate_condition(reg, &conditional_test);
 
-    let displacement_8bit = Cpu::get_byte_from_word(instr_word);
+    let displacement = Cpu::get_byte_from_word(instr_word);
 
-    match condition {
-        true => {
-            let result = match displacement_8bit {
-                0x00 => todo!("16 bit displacement"),
-                0xff => todo!("32 bit displacement"),
-                _ => pc.branch_byte(displacement_8bit),
-            };
-            Ok(StepResult::Done {})
+    let result = match displacement {
+        0x00 => {
+            let displacement = pc.fetch_next_word(mem);
+            if condition == true {
+                pc.branch_word(displacement);
+            }
         }
-        false => Ok(StepResult::Done {}),
-    }
+        0xff => {
+            let displacement = pc.fetch_next_long(mem);
+            if condition == true {
+                pc.branch_long(displacement);
+            }
+        }
+        _ => {
+            if condition == true {
+                pc.branch_byte(displacement);
+            }
+        }
+    };
+    Ok(StepResult::Done {})
 }
 
 pub fn get_disassembly<'a>(
@@ -48,37 +57,59 @@ pub fn get_disassembly<'a>(
     let instr_word = pc.fetch_next_word(mem);
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
 
-    let displacement_8bit = Cpu::get_byte_from_word(instr_word);
+    let displacement = Cpu::get_byte_from_word(instr_word);
 
-    let (size_format, operands_format) = match displacement_8bit {
-        0x00 => (String::from("W"), String::from("0x666")),
-        0xff => (String::from("L"), String::from("0x666")),
-        _ => (
-            String::from("B"),
+    match displacement {
+        0x00 => {
+            let displacement = pc.fetch_next_word(mem);
+            Ok(GetDisassemblyResult::from_pc(
+                pc,
+                format!("B{}.W", conditional_test),
+                format!(
+                    "${:04X} [${:08X}]",
+                    displacement,
+                    pc.get_branch_word_address(displacement)
+                ),
+            ))
+        }
+        0xff => {
+            let displacement = pc.fetch_next_long(mem);
+            Ok(GetDisassemblyResult::from_pc(
+                pc,
+                format!("B{}.L", conditional_test),
+                format!(
+                    "${:08X} [${:08X}]",
+                    displacement,
+                    pc.get_branch_long_address(displacement)
+                ),
+            ))
+        }
+        _ => Ok(GetDisassemblyResult::from_pc(
+            pc,
+            format!("B{}.B", conditional_test),
             format!(
                 "${:02X} [${:08X}]",
-                displacement_8bit,
-                Cpu::get_address_with_byte_displacement_sign_extended(
-                    pc.get_address() + 2,
-                    displacement_8bit
-                )
+                displacement,
+                pc.get_branch_byte_address(displacement)
             ),
-        ), //,
-    };
-
-    Ok(GetDisassemblyResult::from_pc(
-        pc,
-        format!("B{}.{}", conditional_test, size_format),
-        operands_format,
-    ))
+        )),
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{cpu::instruction::GetDisassemblyResult, register::STATUS_REGISTER_MASK_CARRY};
+    use crate::{
+        cpu::instruction::GetDisassemblyResult,
+        register::{
+            STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_NEGATIVE,
+            STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
+        },
+    };
+
+    // byte
 
     #[test]
-    fn step_bcc_b_when_carry_clear() {
+    fn step_bcc_byte_when_carry_clear() {
         // arrange
         let code = [0x64, 0x06].to_vec(); // BCC.B $06
         let mut cpu = crate::instr_test_setup(code, None);
@@ -102,7 +133,7 @@ mod tests {
     }
 
     #[test]
-    fn step_bcc_b_when_carry_set() {
+    fn step_bcc_byte_when_carry_set() {
         // arrange
         let code = [0x64, 0x06].to_vec(); // BCC.B $06
         let mut cpu = crate::instr_test_setup(code, None);
@@ -122,5 +153,170 @@ mod tests {
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0xC00002, cpu.register.reg_pc.get_address());
+    }
+
+    #[test]
+    fn step_beq_byte_when_zero_set_negative() {
+        // arrange
+        let code = [0x67, 0xfa].to_vec(); // BEQ.B $FA
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_ZERO;
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("BEQ.B"),
+                String::from("$FA [$00BFFFFC]")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00BFFFFC, cpu.register.reg_pc.get_address());
+    }
+
+    // word
+
+    #[test]
+    fn step_beq_word_when_zero_set_negative() {
+        // arrange
+        let code = [0x67, 0x00, 0xff, 0xfa].to_vec(); // BEQ.W $FFFA
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_ZERO;
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00004,
+                String::from("BEQ.W"),
+                String::from("$FFFA [$00BFFFFC]")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00BFFFFC, cpu.register.reg_pc.get_address());
+    }
+
+    #[test]
+    fn step_beq_word_when_zero_set() {
+        // arrange
+        let code = [0x67, 0x00, 0x00, 0x60].to_vec(); // BEQ.W $0060
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_ZERO;
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00004,
+                String::from("BEQ.W"),
+                String::from("$0060 [$00C00062]")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0xC00062, cpu.register.reg_pc.get_address());
+    }
+
+    #[test]
+    fn step_beq_word_when_zero_clear_negative() {
+        // arrange
+        let code = [0x67, 0x00, 0xff, 0xfa].to_vec(); // BEQ.W $FFFA
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.reg_sr = 0x0000;
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00004,
+                String::from("BEQ.W"),
+                String::from("$FFFA [$00BFFFFC]")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00C00004, cpu.register.reg_pc.get_address());
+    }
+
+    // long
+
+    #[test]
+    fn step_bgt_long_when_true_negative() {
+        // arrange
+        let code = [0x6e, 0xff, 0xff, 0xff, 0xff, 0xfa].to_vec(); // BGT.L $FFFFFFFA
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW;
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00006,
+                String::from("BGT.L"),
+                String::from("$FFFFFFFA [$00BFFFFC]")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00BFFFFC, cpu.register.reg_pc.get_address());
+    }
+
+    #[test]
+    fn step_bgt_long_when_true() {
+        // arrange
+        let code = [0x6e, 0xff, 0x00, 0x00, 0x80, 0x00].to_vec(); // BGT.L $00008000
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.reg_sr = 0x0000;
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00006,
+                String::from("BGT.L"),
+                String::from("$00008000 [$00C08002]")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0xC08002, cpu.register.reg_pc.get_address());
+    }
+
+    #[test]
+    fn step_bgt_long_when_false() {
+        // arrange
+        let code = [0x6e, 0xff, 0x00, 0x00, 0x80, 0x00].to_vec(); // BGT.L $00008000
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_ZERO;
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00006,
+                String::from("BGT.L"),
+                String::from("$00008000 [$00C08002]")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0xC00006, cpu.register.reg_pc.get_address());
     }
 }

@@ -55,11 +55,34 @@ impl ProgramCounter {
         )
     }
 
+    pub fn get_branch_byte_address(&self, displacement: u8) -> u32 {
+        Cpu::get_address_with_byte_displacement_sign_extended(
+            self.address.wrapping_add(2),
+            displacement,
+        )
+    }
+
     pub fn branch_word(&mut self, displacement: u16) {
         self.address_next = Cpu::get_address_with_word_displacement_sign_extended(
             self.address.wrapping_add(2),
             displacement,
         )
+    }
+
+    pub fn get_branch_word_address(&self, displacement: u16) -> u32 {
+        Cpu::get_address_with_word_displacement_sign_extended(
+            self.address.wrapping_add(2),
+            displacement,
+        )
+    }
+
+    pub fn branch_long(&mut self, displacement: u32) {
+        self.address_next =
+            Cpu::get_address_with_long_displacement(self.address.wrapping_add(2), displacement)
+    }
+
+    pub fn get_branch_long_address(&self, displacement: u32) -> u32 {
+        Cpu::get_address_with_long_displacement(self.address.wrapping_add(2), displacement)
     }
 
     pub fn skip_byte(&mut self) {
@@ -282,7 +305,7 @@ impl ProgramCounter {
                         displacement,
                     );
                     let ea_address =
-                        Cpu::get_address_with_u32_displacement(address, register_displacement);
+                        Cpu::get_address_with_long_displacement(address, register_displacement);
 
                     EffectiveAddressingMode::PcIndirectWithIndexOrPcMemoryIndirect {
                         ea_register,

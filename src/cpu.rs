@@ -203,7 +203,7 @@ impl Cpu {
         address
     }
 
-    pub fn get_address_with_u32_displacement(address: u32, displacement: u32) -> u32 {
+    pub fn get_address_with_long_displacement(address: u32, displacement: u32) -> u32 {
         let address = address.wrapping_add(displacement);
 
         address
@@ -797,6 +797,7 @@ impl Cpu {
     }
 
     fn evaluate_condition(reg: &mut Register, conditional_test: &ConditionalTest) -> bool {
+        println!("conditional_test: {}", conditional_test);
         match conditional_test {
             ConditionalTest::T => true,
 
