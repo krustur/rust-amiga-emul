@@ -11,6 +11,15 @@ use super::{
     StepResult,
 };
 
+// Instruction State
+// =================
+// step: DONE
+// step cc: DONE
+// get_disassembly: DONE
+
+// 020+ step: TODO
+// 020+ get_disassembly: TODO
+
 enum CmpOpMode {
     CmpByte,
     CmpWord,
@@ -34,15 +43,6 @@ impl TryFrom<u16> for CmpOpMode {
         }
     }
 }
-
-// Instruction State
-// =================
-// step: TODO
-// step cc: TODO
-// get_disassembly: TODO
-
-// 020+ step: TODO
-// 020+ get_disassembly: TODO
 
 pub fn step<'a>(
     pc: &mut ProgramCounter,
@@ -150,7 +150,7 @@ mod tests {
     use crate::{
         cpu::instruction::GetDisassemblyResult,
         register::{
-            STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE,
+            STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_NEGATIVE,
             STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
         },
     };
