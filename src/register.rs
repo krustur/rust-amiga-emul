@@ -191,7 +191,8 @@ impl ProgramCounter {
                     Some(operation_size) => operation_size,
                 };
                 // reg.reg_a[register] -= size_in_bytes;
-                let address = reg.reg_a[ea_register] - operation_size.size_in_bytes();
+                let (address, _) =
+                    reg.reg_a[ea_register].overflowing_sub(operation_size.size_in_bytes());
                 EffectiveAddressingMode::ARegIndirectWithPreDecrement {
                     operation_size,
                     ea_register,

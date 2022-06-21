@@ -4,7 +4,7 @@ use crate::register::*;
 use byteorder::{BigEndian, ReadBytesExt};
 use core::panic;
 use num_traits::FromPrimitive;
-use std::convert::TryInto;
+use std::convert::{TryFrom, TryInto};
 
 use self::ea::EffectiveAddressDebug;
 
@@ -236,6 +236,20 @@ impl Cpu {
         op_mode
     }
 
+    fn extract_op_mode_from_bit_pos_6_new<T>(word: u16) -> Result<T, InstructionError>
+    where
+        T: TryFrom<u16>,
+    {
+        let op_mode = (word >> 6) & 0x0007;
+        let op_mode = match op_mode.try_into() {
+            Ok(a) => Ok(a),
+            Err(e) => Err(InstructionError {
+                details: format!("Failed to extract op_mode from bit pos 6"),
+            }),
+        };
+        op_mode
+    }
+
     pub fn extract_register_index_from_bit_pos(
         word: u16,
         bit_pos: u8,
@@ -344,12 +358,12 @@ impl Cpu {
         (long & 0xffff0000) | (value as u32)
     }
 
-    pub fn add_bytes(value_1: u8, value_2: u8) -> ResultWithStatusRegister<u8> {
-        let value_1_signed = Cpu::get_signed_byte_from_byte(value_1);
-        let value_2_signed = Cpu::get_signed_byte_from_byte(value_2);
+    pub fn add_bytes(source: u8, dest: u8) -> ResultWithStatusRegister<u8> {
+        let source_signed = Cpu::get_signed_byte_from_byte(source);
+        let dest_signed = Cpu::get_signed_byte_from_byte(dest);
 
-        let (result, carry) = value_1.overflowing_add(value_2);
-        let (result_signed, overflow) = value_1_signed.overflowing_add(value_2_signed);
+        let (result, carry) = source.overflowing_add(dest);
+        let (result_signed, overflow) = source_signed.overflowing_add(dest_signed);
 
         let mut status_register = 0x0000;
         match carry {
@@ -380,22 +394,22 @@ impl Cpu {
     }
 
     pub fn add_bytes_with_extend(
-        value_1: u8,
-        value_2: u8,
+        source: u8,
+        dest: u8,
         extend: bool,
     ) -> ResultWithStatusRegister<u8> {
-        let value_3 = match extend {
+        let extend = match extend {
             true => 1,
             false => 0,
         };
-        let value_1_signed = Cpu::get_signed_byte_from_byte(value_1);
-        let value_2_signed = Cpu::get_signed_byte_from_byte(value_2);
-        let value_3_signed = value_3 as i8;
+        let source_signed = Cpu::get_signed_byte_from_byte(source);
+        let dest_signed = Cpu::get_signed_byte_from_byte(dest);
+        let extend_signed = extend as i8;
 
-        let (result, carry) = value_1.overflowing_add(value_2);
-        let (result, carry2) = result.overflowing_add(value_3);
-        let (result_signed, overflow) = value_1_signed.overflowing_add(value_2_signed);
-        let (result_signed, overflow2) = result_signed.overflowing_add(value_3_signed);
+        let (result, carry) = source.overflowing_add(dest);
+        let (result, carry2) = result.overflowing_add(extend);
+        let (result_signed, overflow) = source_signed.overflowing_add(dest_signed);
+        let (result_signed, overflow2) = result_signed.overflowing_add(extend_signed);
 
         let mut status_register = 0x0000;
         match carry | carry2 {
@@ -425,12 +439,12 @@ impl Cpu {
         }
     }
 
-    pub fn add_words(value_1: u16, value_2: u16) -> ResultWithStatusRegister<u16> {
-        let value_1_signed = Cpu::get_signed_word_from_word(value_1);
-        let value_2_signed = Cpu::get_signed_word_from_word(value_2);
+    pub fn add_words(source: u16, dest: u16) -> ResultWithStatusRegister<u16> {
+        let source_signed = Cpu::get_signed_word_from_word(source);
+        let dest_signed = Cpu::get_signed_word_from_word(dest);
 
-        let (result, carry) = value_1.overflowing_add(value_2);
-        let (result_signed, overflow) = value_1_signed.overflowing_add(value_2_signed);
+        let (result, carry) = source.overflowing_add(dest);
+        let (result_signed, overflow) = source_signed.overflowing_add(dest_signed);
 
         let mut status_register = 0x0000;
         match carry {
@@ -461,22 +475,22 @@ impl Cpu {
     }
 
     pub fn add_words_with_extend(
-        value_1: u16,
-        value_2: u16,
+        source: u16,
+        dest: u16,
         extend: bool,
     ) -> ResultWithStatusRegister<u16> {
-        let value_3 = match extend {
+        let extend = match extend {
             true => 1,
             false => 0,
         };
-        let value_1_signed = Cpu::get_signed_word_from_word(value_1);
-        let value_2_signed = Cpu::get_signed_word_from_word(value_2);
-        let value_3_signed = value_3 as i16;
+        let source_signed = Cpu::get_signed_word_from_word(source);
+        let dest_signed = Cpu::get_signed_word_from_word(dest);
+        let extend_signed = extend as i16;
 
-        let (result, carry) = value_1.overflowing_add(value_2);
-        let (result, carry2) = result.overflowing_add(value_3);
-        let (result_signed, overflow) = value_1_signed.overflowing_add(value_2_signed);
-        let (result_signed, overflow2) = result_signed.overflowing_add(value_3_signed);
+        let (result, carry) = source.overflowing_add(dest);
+        let (result, carry2) = result.overflowing_add(extend);
+        let (result_signed, overflow) = source_signed.overflowing_add(dest_signed);
+        let (result_signed, overflow2) = result_signed.overflowing_add(extend_signed);
 
         let mut status_register = 0x0000;
         match carry | carry2 {
@@ -506,12 +520,12 @@ impl Cpu {
         }
     }
 
-    pub fn add_longs(value_1: u32, value_2: u32) -> ResultWithStatusRegister<u32> {
-        let value_1_signed = Cpu::get_signed_long_from_long(value_1);
-        let value_2_signed = Cpu::get_signed_long_from_long(value_2);
+    pub fn add_longs(source: u32, dest: u32) -> ResultWithStatusRegister<u32> {
+        let source_signed = Cpu::get_signed_long_from_long(source);
+        let dest_signed = Cpu::get_signed_long_from_long(dest);
 
-        let (result, carry) = value_1.overflowing_add(value_2);
-        let (result_signed, overflow) = value_1_signed.overflowing_add(value_2_signed);
+        let (result, carry) = source.overflowing_add(dest);
+        let (result_signed, overflow) = source_signed.overflowing_add(dest_signed);
 
         let mut status_register = 0x0000;
         match carry {
@@ -542,22 +556,22 @@ impl Cpu {
     }
 
     pub fn add_longs_with_extend(
-        value_1: u32,
-        value_2: u32,
+        source: u32,
+        dest: u32,
         extend: bool,
     ) -> ResultWithStatusRegister<u32> {
-        let value_3 = match extend {
+        let extend = match extend {
             true => 1,
             false => 0,
         };
-        let value_1_signed = Cpu::get_signed_long_from_long(value_1);
-        let value_2_signed = Cpu::get_signed_long_from_long(value_2);
-        let value_3_signed = value_3 as i32;
+        let source_signed = Cpu::get_signed_long_from_long(source);
+        let dest_signed = Cpu::get_signed_long_from_long(dest);
+        let extend_signed = extend as i32;
 
-        let (result, carry) = value_1.overflowing_add(value_2);
-        let (result, carry2) = result.overflowing_add(value_3);
-        let (result_signed, overflow) = value_1_signed.overflowing_add(value_2_signed);
-        let (result_signed, overflow2) = result_signed.overflowing_add(value_3_signed);
+        let (result, carry) = source.overflowing_add(dest);
+        let (result, carry2) = result.overflowing_add(extend);
+        let (result_signed, overflow) = source_signed.overflowing_add(dest_signed);
+        let (result_signed, overflow2) = result_signed.overflowing_add(extend_signed);
 
         let mut status_register = 0x0000;
         match carry | carry2 {
@@ -570,6 +584,115 @@ impl Cpu {
         }
         match result_signed {
             0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            i32::MIN..=-1 => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+            _ => (),
+        }
+
+        ResultWithStatusRegister {
+            result,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_EXTEND
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
+        }
+    }
+
+    pub fn sub_bytes(source: u8, dest: u8) -> ResultWithStatusRegister<u8> {
+        println!("source: {} - dest: {}", source, dest);
+        let source_signed = Cpu::get_signed_byte_from_byte(source);
+        let dest_signed = Cpu::get_signed_byte_from_byte(dest);
+
+        let (result, carry) = dest.overflowing_sub(source);
+        let (result_signed, overflow) = dest_signed.overflowing_sub(source_signed);
+
+        let mut status_register = 0x0000;
+        match carry {
+            true => status_register |= STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND,
+            false => (),
+        }
+        match overflow {
+            true => status_register |= STATUS_REGISTER_MASK_OVERFLOW,
+            false => (),
+        }
+        match result_signed {
+            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            i8::MIN..=-1 => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+            _ => (),
+        }
+
+        ResultWithStatusRegister {
+            result,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_EXTEND
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
+        }
+    }
+
+    pub fn sub_words(source: u16, dest: u16) -> ResultWithStatusRegister<u16> {
+        let source_signed = Cpu::get_signed_word_from_word(source);
+        let dest_signed = Cpu::get_signed_word_from_word(dest);
+
+        let (result, carry) = dest.overflowing_sub(source);
+        let (result_signed, overflow) = dest_signed.overflowing_sub(source_signed);
+
+        let mut status_register = 0x0000;
+        match carry {
+            true => status_register |= STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND,
+            false => (),
+        }
+        match overflow {
+            true => status_register |= STATUS_REGISTER_MASK_OVERFLOW,
+            false => (),
+        }
+        match result_signed {
+            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            i16::MIN..=-1 => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+            _ => (),
+        }
+
+        ResultWithStatusRegister {
+            result,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_EXTEND
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
+        }
+    }
+
+    pub fn sub_longs(source: u32, dest: u32) -> ResultWithStatusRegister<u32> {
+        let source_signed = Cpu::get_signed_long_from_long(source);
+        let dest_signed = Cpu::get_signed_long_from_long(dest);
+
+        let (result, carry) = dest.overflowing_sub(source);
+        let (result_signed, overflow) = dest_signed.overflowing_sub(source_signed);
+
+        let mut status_register = 0x0000;
+        match carry {
+            true => status_register |= STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND,
+            false => (),
+        }
+        match overflow {
+            true => status_register |= STATUS_REGISTER_MASK_OVERFLOW,
+            false => (),
+        }
+        match result_signed {
+            0 => {
+                println!("ZEROOOOO");
+                status_register |= STATUS_REGISTER_MASK_ZERO;
+            }
             i32::MIN..=-1 => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
             _ => (),
         }
