@@ -104,6 +104,10 @@ impl ProgramCounter {
         word
     }
 
+    pub fn skip_word(&mut self) {
+        self.address_next += 2;
+    }
+
     pub fn fetch_next_word(&mut self, mem: &Mem) -> u16 {
         let word = mem.get_word(self.address_next);
         self.address_next += 2;

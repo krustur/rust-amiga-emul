@@ -19,6 +19,7 @@ pub fn step<'a>(
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<StepResult, StepError> {
+    pc.skip_word();
     Ok(StepResult::Done {})
 }
 
@@ -27,6 +28,8 @@ pub fn get_disassembly<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
+    pc.skip_word();
+
     Ok(GetDisassemblyResult::from_pc(
         pc,
         String::from("NOP"),

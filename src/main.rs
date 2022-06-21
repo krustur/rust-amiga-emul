@@ -23,6 +23,19 @@ fn main() {
     let mut mem_ranges = Vec::new();
     mem_ranges.push(rom_cheat);
     mem_ranges.push(rom);
+
+    // Hack for "CDTV & CD32 Extended ROM / A4000 Diagnostics ROM"
+    // ROM code checks for $1111 at $00F00000 ()
+    let no_extended_rom_hack = memrange::MemRange::from_bytes(0x00f00000, [0x00, 0x00].to_vec());
+    mem_ranges.push(no_extended_rom_hack);
+
+    // Hack for "A600 & A1200 IDE controller"
+    // $00DA8000 -> $ 00DAFFFF = Credit Card & IDE configuration registers
+    // ROM code writes $00.B to $00DA8000
+    let no_creditcard_registers_hack =
+        memrange::MemRange::from_bytes(0x00DA8000, [0x00, 0x00].to_vec());
+    mem_ranges.push(no_creditcard_registers_hack);
+
     let mem = mem::Mem::new(mem_ranges);
 
     let mut cpu = cpu::Cpu::new(mem);
@@ -41,8 +54,8 @@ fn main() {
 
     loop {
         // cpu.print_registers();
-        // let disassembly_result = cpu.get_next_disassembly();
-        // cpu.print_disassembly(&disassembly_result);
+        let disassembly_result = cpu.get_next_disassembly();
+        cpu.print_disassembly(&disassembly_result);
         cpu.execute_next_instruction();
     }
     // cpu.print_registers();

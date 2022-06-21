@@ -44,7 +44,7 @@ impl Mem {
             .iter()
             .position(|x| address >= x.start_address && address <= x.end_address);
         let pos = match pos {
-            None => panic!("Could not find MemRange for address: {:010x}", address),
+            None => panic!("Could not find MemRange for address: ${:08X}", address),
             Some(pos) => pos,
         };
         &self.ranges[pos]
@@ -58,7 +58,7 @@ impl Mem {
             .iter()
             .position(|x| address >= x.start_address && address <= x.end_address);
         let pos = match pos {
-            None => panic!("Could not find MemRange for address: {:010x}", address),
+            None => panic!("Could not find MemRange for address: ${:08X}", address),
             Some(pos) => pos,
         };
         &mut self.ranges[pos]
