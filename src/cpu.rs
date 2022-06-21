@@ -689,10 +689,7 @@ impl Cpu {
             false => (),
         }
         match result_signed {
-            0 => {
-                println!("ZEROOOOO");
-                status_register |= STATUS_REGISTER_MASK_ZERO;
-            }
+            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
             i32::MIN..=-1 => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
             _ => (),
         }

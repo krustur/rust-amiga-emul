@@ -65,8 +65,6 @@ pub fn step<'a>(
     )?;
     let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;
 
-    let ea_format = Cpu::get_ea_format(ea_data.ea_mode, pc, None, reg, mem);
-
     let status_register_result = match operation_mode {
         CmpOpMode::CmpByte => {
             let source = ea_data.get_value_byte(pc, reg, mem, true);

@@ -1,4 +1,5 @@
 use crate::{
+    cpu::{instruction::OperationSize, Cpu},
     mem::Mem,
     register::{ProgramCounter, Register},
 };
@@ -7,9 +8,9 @@ use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResu
 
 // Instruction State
 // =================
-// step: TODO
-// step cc: TODO
-// get_disassembly: TODO
+// step: DONE
+// step cc: DONE
+// get_disassembly: DONE
 
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
@@ -19,19 +20,45 @@ pub fn step<'a>(
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<StepResult, StepError> {
-    todo!();
-    // let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
-    // let condition = Cpu::evaluate_condition(reg, &conditional_test);
+    let instr_word = pc.peek_next_word(mem);
+    let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
+    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
+        reg,
+        mem,
+        Some(operation_size),
+    )?;
 
-    // let displacement_8bit = (instr_word & 0x00ff) as i8;
+    let status_register_result = match operation_size {
+        OperationSize::Byte => {
+            pc.skip_byte();
+            let source = pc.fetch_next_byte(mem);
+            let dest = ea_data.get_value_byte(pc, reg, mem, true);
 
-    // let result = match displacement_8bit {
-    //     0x00 => todo!("16 bit displacement"),
-    //     -1 => todo!("32 bit displacement"), // 0xff
-    //     _ => branch_8bit(reg, conditional_test, condition, displacement_8bit), //,
-    // };
+            let add_result = Cpu::sub_bytes(source, dest);
 
-    // result
+            add_result.status_register_result
+        }
+        OperationSize::Word => {
+            let source = pc.fetch_next_word(mem);
+            let dest = ea_data.get_value_word(pc, reg, mem, true);
+
+            let add_result = Cpu::sub_words(source, dest);
+
+            add_result.status_register_result
+        }
+        OperationSize::Long => {
+            let source = pc.fetch_next_long(mem);
+            let dest = ea_data.get_value_long(pc, reg, mem, true);
+
+            let add_result = Cpu::sub_longs(source, dest);
+
+            add_result.status_register_result
+        }
+    };
+
+    reg.reg_sr = status_register_result.merge_status_register(reg.reg_sr);
+
+    Ok(StepResult::Done {})
 }
 
 pub fn get_disassembly<'a>(
@@ -39,89 +66,198 @@ pub fn get_disassembly<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
-    todo!();
-    // let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem);
-    // let ea_mode = ea_data.ea_mode;
-    // let size = Cpu::extract_size000110_from_bit_pos_6(ea_data.instr_word);
-    // // let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
-    // // let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);
+    let instr_word = pc.peek_next_word(mem);
+    let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
+    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
+        reg,
+        mem,
+        Some(operation_size),
+    )?;
 
-    // let ea_format = Cpu::get_ea_format(ea_mode, pc, None, reg, mem);
+    let ea_format = Cpu::get_ea_format(ea_data.ea_mode, pc, None, reg, mem);
 
-    // let (name, num_immediate_words, immediate_data) = match size {
-    //     OperationSize::Byte => {
-    //         pc.skip_byte();
-    //         (
-    //             String::from("CMPI.B"),
-    //             1,
-    //             format!("#${:02X}", pc.fetch_next_byte(mem)),
-    //         )
-    //     }
-    //     OperationSize::Word => (
-    //         String::from("CMPI.W"),
-    //         1,
-    //         format!("#${:04X}", pc.fetch_next_word(mem)),
-    //     ),
-    //     OperationSize::Long => (
-    //         String::from("CMPI.L"),
-    //         2,
-    //         format!("#${:08X}", pc.fetch_next_long(mem)),
-    //     ),
-    // };
+    let immediate_data = match operation_size {
+        OperationSize::Byte => {
+            pc.skip_byte();
+            format!("#${:02X}", pc.fetch_next_byte(mem))
+        }
+        OperationSize::Word => format!("#${:04X}", pc.fetch_next_word(mem)),
+        OperationSize::Long => format!("#${:08X}", pc.fetch_next_long(mem)),
+    };
 
-    // DisassemblyResult::from_pc(pc, name, format!("{},{}", immediate_data, ea_format))
+    Ok(GetDisassemblyResult::from_pc(
+        pc,
+        format!("CMPI.{}", operation_size.get_format()),
+        format!("{},{}", immediate_data, ea_format),
+    ))
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use crate::{register::{
-//         STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE,
-//         STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
-//     }, cpu::instruction::DisassemblyResult};
+#[cfg(test)]
+mod tests {
+    use crate::{
+        cpu::instruction::GetDisassemblyResult,
+        register::{STATUS_REGISTER_MASK_NEGATIVE, STATUS_REGISTER_MASK_ZERO},
+    };
 
-//     #[test]
-//     fn step_bcc_b_when_carry_clear() {
-//         // arrange
-//         let code = [0x64, 0x02].to_vec(); // BCC.B 2
-//         let mut cpu = crate::instr_test_setup(code, None);
-//         cpu.register.reg_sr = 0x0000; //STATUS_REGISTER_MASK_CARRY;
-//         // act assert - debug
-//         let debug_result = cpu.get_next_disassembly();
-//         assert_eq!(
-//             DisassemblyResult::Done {
-//                 name: String::from("BCC.B"),
-//                 operands_format: String::from("$02 [$00080004]"),
-//                 instr_address: 0x080000,
-//                 next_instr_address: 0x080002
-//             },
-//             debug_result
-//         );
-//         // act
-//         cpu.execute_next_instruction();
-//         // assert
-//         assert_eq!(0x080004, cpu.register.reg_pc);
-//     }
+    // cmpi byte
 
-//     #[test]
-//     fn step_bcc_b_when_carry_set() {
-//         // arrange
-//         let code = [0x64, 0x02].to_vec(); // BCC.B 2
-//         let mut cpu = crate::instr_test_setup(code, None);
-//         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY;
-//         // act assert - debug
-//         let debug_result = cpu.get_next_disassembly();
-//         assert_eq!(
-//             DisassemblyResult::Done {
-//                 name: String::from("BCC.B"),
-//                 operands_format: String::from("$02 [$00080004]"),
-//                 instr_address: 0x080000,
-//                 next_instr_address: 0x080002
-//             },
-//             debug_result
-//         );
-//         // act
-//         cpu.execute_next_instruction();
-//         // assert
-//         assert_eq!(0x080002, cpu.register.reg_pc);
-//     }
-// }
+    #[test]
+    fn cmpi_byte_set_negative() {
+        // arrange
+        let code = [0x0c, 0x00, 0x00, 0xff].to_vec(); // CMPI.B #$FF,D0
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.reg_d[0] = 0xF0;
+        cpu.register.reg_sr = 0x0000;
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00004,
+                String::from("CMPI.B"),
+                String::from("#$FF,D0")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0xF0, cpu.register.reg_d[0]);
+        assert_eq!(true, cpu.register.is_sr_negative_set());
+    }
+
+    #[test]
+    fn cmpi_byte_clear_negative() {
+        // arrange
+        let code = [0x0c, 0x00, 0x00, 0x50].to_vec(); // CMPI.B #$50,D0
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.reg_d[0] = 0x7f;
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE;
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00004,
+                String::from("CMPI.B"),
+                String::from("#$50,D0")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x7f, cpu.register.reg_d[0]);
+        assert_eq!(false, cpu.register.is_sr_negative_set());
+    }
+
+    // cmpi word
+
+    #[test]
+    fn cmpi_word_set_zero() {
+        // arrange
+        let code = [0x0c, 0x40, 0x50, 0xff].to_vec(); // CMPI.B #$50FF,D0
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.reg_d[0] = 0x50FF;
+        cpu.register.reg_sr = 0x0000;
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00004,
+                String::from("CMPI.W"),
+                String::from("#$50FF,D0")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x50FF, cpu.register.reg_d[0]);
+        assert_eq!(true, cpu.register.is_sr_zero_set());
+    }
+
+    #[test]
+    fn cmpi_word_clear_zero() {
+        // arrange
+        let code = [0x0c, 0x40, 0x50, 0x50].to_vec(); // CMPI.W #$5050,D0
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.reg_d[0] = 0x5040;
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_ZERO;
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00004,
+                String::from("CMPI.W"),
+                String::from("#$5050,D0")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x5040, cpu.register.reg_d[0]);
+        assert_eq!(false, cpu.register.is_sr_zero_set());
+    }
+
+    // cmpi long
+
+    #[test]
+    fn cmpi_long_set_zero() {
+        // arrange
+        let code = [0x0c, 0x80, 0x55, 0x55, 0x50, 0xff].to_vec(); // CMPI.B #$555550FF,D0
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.reg_d[0] = 0x555550FF;
+        cpu.register.reg_sr = 0x0000;
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00006,
+                String::from("CMPI.L"),
+                String::from("#$555550FF,D0")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x555550FF, cpu.register.reg_d[0]);
+        assert_eq!(true, cpu.register.is_sr_zero_set());
+    }
+
+    #[test]
+    fn cmpi_long_clear_zero() {
+        // arrange
+        let code = [0x0c, 0x80, 0x55, 0x55, 0x50, 0x50].to_vec(); // CMPI.L #$55555050,D0
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.reg_d[0] = 0x55555040;
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_ZERO;
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00006,
+                String::from("CMPI.L"),
+                String::from("#$55555050,D0")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x55555040, cpu.register.reg_d[0]);
+        assert_eq!(false, cpu.register.is_sr_zero_set());
+    }
+}
