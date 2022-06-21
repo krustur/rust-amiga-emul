@@ -85,6 +85,10 @@ impl ProgramCounter {
         Cpu::get_address_with_long_displacement(self.address.wrapping_add(2), displacement)
     }
 
+    pub fn jump_long(&mut self, address: u32) {
+        self.address_next = address;
+    }
+
     pub fn skip_byte(&mut self) {
         self.address_next += 1;
     }
