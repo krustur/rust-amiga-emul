@@ -917,7 +917,6 @@ impl Cpu {
     }
 
     fn evaluate_condition(reg: &mut Register, conditional_test: &ConditionalTest) -> bool {
-        println!("conditional_test: {}", conditional_test);
         match conditional_test {
             ConditionalTest::T => true,
 
