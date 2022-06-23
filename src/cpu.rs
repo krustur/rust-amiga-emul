@@ -1,6 +1,5 @@
-use crate::cpu::instruction::*;
-use crate::mem::Mem;
 use crate::register::*;
+use crate::{cpu::instruction::*, memhandler::MemHandler};
 use byteorder::{BigEndian, ReadBytesExt};
 use core::panic;
 use num_traits::FromPrimitive;
@@ -38,12 +37,12 @@ impl StatusRegisterResult {
 
 pub struct Cpu {
     pub register: Register,
-    pub memory: Mem,
+    pub memory: MemHandler,
     instructions: Vec<Instruction>,
 }
 
 impl Cpu {
-    pub fn new(mem: Mem) -> Cpu {
+    pub fn new(mem: MemHandler) -> Cpu {
         let reg_ssp = mem.get_long(0x0);
         let pc_address = mem.get_long(0x4);
         let reg_pc = ProgramCounter::from_address(pc_address);
@@ -712,7 +711,7 @@ impl Cpu {
         pc: &mut ProgramCounter,
         operation_size: Option<OperationSize>,
         reg: &Register,
-        mem: &Mem,
+        mem: &MemHandler,
     ) -> EffectiveAddressDebug {
         match ea_mode {
             EffectiveAddressingMode::DRegDirect {

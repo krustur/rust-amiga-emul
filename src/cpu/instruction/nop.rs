@@ -1,5 +1,5 @@
 use crate::{
-    mem::Mem,
+    memhandler::MemHandler,
     register::{ProgramCounter, Register},
 };
 
@@ -17,7 +17,7 @@ use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResu
 pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
-    mem: &mut Mem,
+    mem: &mut MemHandler,
 ) -> Result<StepResult, StepError> {
     pc.skip_word();
     Ok(StepResult::Done {})
@@ -26,7 +26,7 @@ pub fn step<'a>(
 pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
-    mem: &Mem,
+    mem: &MemHandler,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     pc.skip_word();
 

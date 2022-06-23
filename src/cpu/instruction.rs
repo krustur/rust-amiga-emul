@@ -1,7 +1,9 @@
 use std::fmt;
 
-use crate::mem::Mem;
-use crate::register::{ProgramCounter, Register, RegisterType};
+use crate::{
+    memhandler::MemHandler,
+    register::{ProgramCounter, Register, RegisterType},
+};
 use num_derive::FromPrimitive;
 
 pub mod add;
@@ -357,12 +359,12 @@ pub struct Instruction {
     pub step: fn(
         pc: &mut ProgramCounter,
         reg: &mut Register,
-        mem: &mut Mem,
+        mem: &mut MemHandler,
     ) -> Result<StepResult, StepError>,
     pub get_disassembly: fn(
         pc: &mut ProgramCounter,
         reg: &Register,
-        mem: &Mem,
+        mem: &MemHandler,
     ) -> Result<GetDisassemblyResult, GetDisassemblyResultError>,
 }
 
@@ -374,12 +376,12 @@ impl Instruction {
         step: fn(
             pc: &mut ProgramCounter,
             reg: &mut Register,
-            mem: &mut Mem,
+            mem: &mut MemHandler,
         ) -> Result<StepResult, StepError>,
         get_disassembly: fn(
             pc: &mut ProgramCounter,
             reg: &Register,
-            mem: &Mem,
+            mem: &MemHandler,
         ) -> Result<GetDisassemblyResult, GetDisassemblyResultError>,
     ) -> Instruction {
         let instr = Instruction {

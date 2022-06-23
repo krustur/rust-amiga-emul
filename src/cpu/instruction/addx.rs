@@ -1,6 +1,6 @@
 use crate::{
     cpu::Cpu,
-    mem::Mem,
+    memhandler::MemHandler,
     register::{ProgramCounter, Register, RegisterType},
 };
 
@@ -20,7 +20,7 @@ use super::{
 pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
-    mem: &mut Mem,
+    mem: &mut MemHandler,
 ) -> Result<StepResult, StepError> {
     let instr_word = pc.fetch_next_word(mem);
     let register_type = match instr_word & 0x0008 {
@@ -103,7 +103,7 @@ pub fn step<'a>(
 pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
-    mem: &Mem,
+    mem: &MemHandler,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let instr_word = pc.fetch_next_word(mem);
     let register_type = match instr_word & 0x0008 {

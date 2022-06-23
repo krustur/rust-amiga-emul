@@ -1,6 +1,6 @@
 use crate::{
     cpu::{Cpu, StatusRegisterResult},
-    mem::Mem,
+    memhandler::MemHandler,
     register::{ProgramCounter, Register},
 };
 
@@ -21,7 +21,7 @@ use super::{
 pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
-    mem: &mut Mem,
+    mem: &mut MemHandler,
 ) -> Result<StepResult, StepError> {
     let instr_word = pc.peek_next_word(mem);
     let size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
@@ -71,7 +71,7 @@ pub fn step<'a>(
 pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
-    mem: &Mem,
+    mem: &MemHandler,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let instr_word = pc.peek_next_word(mem);
     let size = Cpu::extract_size000110_from_bit_pos_6(instr_word);

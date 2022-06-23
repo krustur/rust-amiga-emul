@@ -1,6 +1,6 @@
 use crate::{
     cpu::Cpu,
-    mem::Mem,
+    memhandler::MemHandler,
     register::{ProgramCounter, Register},
 };
 
@@ -18,7 +18,7 @@ use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResu
 pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
-    mem: &mut Mem,
+    mem: &mut MemHandler,
 ) -> Result<StepResult, StepError> {
     let ea_data =
         pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, None)?;
@@ -31,7 +31,7 @@ pub fn step<'a>(
 pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
-    mem: &Mem,
+    mem: &MemHandler,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let ea_data =
         pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, None)?;

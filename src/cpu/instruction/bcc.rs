@@ -1,6 +1,6 @@
 use crate::{
     cpu::Cpu,
-    mem::Mem,
+    memhandler::MemHandler,
     register::{ProgramCounter, Register},
 };
 
@@ -18,7 +18,7 @@ use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResu
 pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
-    mem: &mut Mem,
+    mem: &mut MemHandler,
 ) -> Result<StepResult, StepError> {
     let instr_word = pc.fetch_next_word(mem);
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
@@ -51,7 +51,7 @@ pub fn step<'a>(
 pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
-    mem: &Mem,
+    mem: &MemHandler,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     // TODO: Condition codes
     let instr_word = pc.fetch_next_word(mem);

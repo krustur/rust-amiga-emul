@@ -2,7 +2,7 @@ use std::convert::TryFrom;
 
 use crate::{
     cpu::Cpu,
-    mem::Mem,
+    memhandler::MemHandler,
     register::{ProgramCounter, Register, RegisterType},
 };
 
@@ -47,7 +47,7 @@ impl TryFrom<u16> for CmpOpMode {
 pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
-    mem: &mut Mem,
+    mem: &mut MemHandler,
 ) -> Result<StepResult, StepError> {
     let instr_word = pc.peek_next_word(mem);
     let operation_mode = Cpu::extract_op_mode_from_bit_pos_6_new::<CmpOpMode>(instr_word)?;
@@ -116,7 +116,7 @@ pub fn step<'a>(
 pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
-    mem: &Mem,
+    mem: &MemHandler,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let instr_word = pc.peek_next_word(mem);
     let operation_mode = Cpu::extract_op_mode_from_bit_pos_6_new::<CmpOpMode>(instr_word)?;

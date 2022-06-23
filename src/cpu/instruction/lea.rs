@@ -1,6 +1,6 @@
 use crate::{
     cpu::Cpu,
-    mem::Mem,
+    memhandler::MemHandler,
     register::{ProgramCounter, Register},
 };
 
@@ -18,7 +18,7 @@ use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResu
 pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
-    mem: &mut Mem,
+    mem: &mut MemHandler,
 ) -> Result<StepResult, StepError> {
     // TODO: Tests
     let ea_data =
@@ -33,7 +33,7 @@ pub fn step<'a>(
 pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
-    mem: &Mem,
+    mem: &MemHandler,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     // TODO: Tests
     let ea_data =
@@ -53,7 +53,7 @@ pub fn get_disassembly<'a>(
 mod tests {
     use crate::{
         cpu::instruction::GetDisassemblyResult,
-        memrange::MemRange,
+        memory::RamMemory,
         register::{
             STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE,
             STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
@@ -97,7 +97,7 @@ mod tests {
     fn absolute_long_addressing_mode_to_a0() {
         // arrange
         let code = [0x43, 0xf9, 0x00, 0xf8, 0x00, 0x00].to_vec(); // LEA ($00F80000).L,A1
-        let mem_range = MemRange::from_bytes(0xf80000, [0x00, 0x00, 0x00, 0x00].to_vec());
+        let mem_range = RamMemory::from_bytes(0xf80000, [0x00, 0x00, 0x00, 0x00].to_vec());
         let mut cpu = crate::instr_test_setup(code, Some(mem_range));
         cpu.register.reg_a[0] = 0x00000000;
         cpu.register.reg_sr = 0x0000;

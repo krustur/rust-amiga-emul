@@ -4,7 +4,7 @@ use crate::{
         instruction::{EffectiveAddressingMode, InstructionError, OperationSize, ScaleFactor},
         Cpu,
     },
-    mem::Mem,
+    memhandler::MemHandler,
 };
 
 pub const STATUS_REGISTER_MASK_CARRY: u16 = 0b0000000000000001;
@@ -93,13 +93,13 @@ impl ProgramCounter {
         self.address_next += 1;
     }
 
-    pub fn fetch_next_byte(&mut self, mem: &Mem) -> u8 {
+    pub fn fetch_next_byte(&mut self, mem: &MemHandler) -> u8 {
         let word = mem.get_byte(self.address_next);
         self.address_next += 1;
         word
     }
 
-    pub fn peek_next_word(&self, mem: &Mem) -> u16 {
+    pub fn peek_next_word(&self, mem: &MemHandler) -> u16 {
         let word = mem.get_word(self.address_next);
         word
     }
@@ -108,13 +108,13 @@ impl ProgramCounter {
         self.address_next += 2;
     }
 
-    pub fn fetch_next_word(&mut self, mem: &Mem) -> u16 {
+    pub fn fetch_next_word(&mut self, mem: &MemHandler) -> u16 {
         let word = mem.get_word(self.address_next);
         self.address_next += 2;
         word
     }
 
-    pub fn fetch_next_long(&mut self, mem: &Mem) -> u32 {
+    pub fn fetch_next_long(&mut self, mem: &MemHandler) -> u32 {
         let word = mem.get_long(self.address_next);
         self.address_next += 4;
         word
@@ -138,7 +138,7 @@ impl ProgramCounter {
     pub fn fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
         &mut self,
         reg: &Register,
-        mem: &Mem,
+        mem: &MemHandler,
         operation_size: Option<OperationSize>,
     ) -> Result<EffectiveAddressingData, InstructionError> {
         // TODO: Replace operation_size with Closure
@@ -157,7 +157,7 @@ impl ProgramCounter {
         &mut self,
         instr_word: u16,
         reg: &Register,
-        mem: &Mem,
+        mem: &MemHandler,
         operation_size: Option<OperationSize>,
         bit_pos: u8,
         reg_bit_pos: u8,

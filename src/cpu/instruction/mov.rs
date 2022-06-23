@@ -1,6 +1,6 @@
 use crate::{
     cpu::Cpu,
-    mem::Mem,
+    memhandler::MemHandler,
     register::{ProgramCounter, Register},
 };
 
@@ -21,7 +21,7 @@ use super::{
 pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
-    mem: &mut Mem,
+    mem: &mut MemHandler,
 ) -> Result<StepResult, StepError> {
     let instr_word = pc.peek_next_word(mem);
     let size = Cpu::extract_size011110_from_bit_pos(instr_word, 12);
@@ -63,7 +63,7 @@ pub fn step<'a>(
 pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
-    mem: &Mem,
+    mem: &MemHandler,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let instr_word = pc.peek_next_word(mem);
     let size = Cpu::extract_size011110_from_bit_pos(instr_word, 12);
@@ -114,7 +114,7 @@ pub fn get_disassembly<'a>(
 mod tests {
     use crate::{
         cpu::instruction::GetDisassemblyResult,
-        memrange::MemRange,
+        memory::RamMemory,
         register::{
             STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE,
             STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
@@ -125,7 +125,7 @@ mod tests {
     fn data_reg_direct_to_absolute_long_addressing_mode() {
         // arrange
         let code = [0x13, 0xc0, 0x00, 0x09, 0x00, 0x00].to_vec(); // MOVE.B D0,($00090000).L
-        let mem_range = MemRange::from_bytes(0x00090000, [0x00].to_vec());
+        let mem_range = RamMemory::from_bytes(0x00090000, [0x00].to_vec());
         let mut cpu = crate::instr_test_setup(code, Some(mem_range));
         cpu.register.reg_d[0] = 0x34;
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
@@ -196,7 +196,7 @@ mod tests {
     fn address_reg_indirect_to_address_reg_direct() {
         // arrange
         let code = [0x32, 0x50].to_vec(); // MOVE.W (A0),A1
-        let mem_range = MemRange::from_bytes(0x00090000, [0x12, 0x34].to_vec());
+        let mem_range = RamMemory::from_bytes(0x00090000, [0x12, 0x34].to_vec());
         let mut cpu = crate::instr_test_setup(code, Some(mem_range));
         cpu.register.reg_a[0] = 0x00090000;
         cpu.register.reg_a[1] = 0xffffffff;
@@ -230,7 +230,7 @@ mod tests {
     fn address_reg_indirect_with_post_increment_to_address_reg_indirect() {
         // arrange
         let code = [0x14, 0x99].to_vec(); // MOVE.B (A1)+,(A2)
-        let mem_range = MemRange::from_bytes(0x00090000, [0xf0, 0x00].to_vec());
+        let mem_range = RamMemory::from_bytes(0x00090000, [0xf0, 0x00].to_vec());
         let mut cpu = crate::instr_test_setup(code, Some(mem_range));
         cpu.register.reg_a[1] = 0x00090000;
         cpu.register.reg_a[2] = 0x00090001;
@@ -268,7 +268,7 @@ mod tests {
     fn address_reg_indirect_with_pre_decrement_to_address_reg_indirect_with_post_increment() {
         // arrange
         let code = [0x26, 0xe2].to_vec(); // MOVE.L -(A2),(A3)+
-        let mem_range = MemRange::from_bytes(
+        let mem_range = RamMemory::from_bytes(
             0x00090000,
             [0xff, 0xff, 0xff, 0xf0, 0x00, 0x00, 0x00, 0x00].to_vec(),
         );
@@ -309,7 +309,7 @@ mod tests {
     fn address_reg_indirect_with_displacement_to_address_reg_indirect_with_pre_decrement() {
         // arrange
         let code = [0x29, 0x2b, 0x7f, 0xf0].to_vec(); // MOVE.L ($7FF0,A3),-(A4)
-        let mem_range = MemRange::from_bytes(
+        let mem_range = RamMemory::from_bytes(
             0x00090000,
             [0x12, 0x34, 0x56, 0x78, 0x00, 0x00, 0x00, 0x00].to_vec(),
         );
@@ -350,7 +350,7 @@ mod tests {
     fn address_reg_indirect_with_index_to_address_reg_indirect_with_displacement() {
         // arrange
         let code = [0x2b, 0x74, 0x0e, 0x80, 0x80, 0x10].to_vec(); // MOVE.L ($80,A4,D0.L*8),$8010(A5)
-        let mem_range = MemRange::from_bytes(
+        let mem_range = RamMemory::from_bytes(
             0x00090000,
             [0x12, 0x34, 0x56, 0x78, 0x00, 0x00, 0x00, 0x00].to_vec(),
         );
@@ -386,7 +386,7 @@ mod tests {
     fn absolute_short_addressing_mode_to_address_reg_indirect_with_index() {
         // arrange
         let code = [0x1d, 0xb8, 0x90, 0x00, 0x70, 0x7c].to_vec(); // MOVE.B ($9000).W,($7C,A6,D7.W)
-        let mem_range = MemRange::from_bytes(0xffff9000, [0x00, 0xff].to_vec());
+        let mem_range = RamMemory::from_bytes(0xffff9000, [0x00, 0xff].to_vec());
         let mut cpu = crate::instr_test_setup(code, Some(mem_range));
         cpu.register.reg_d[7] = 0xffffff00;
         cpu.register.reg_a[6] = 0xffff9001 - 0x7c + 0x100;
@@ -419,7 +419,7 @@ mod tests {
         // arrange
         let code = [0x11, 0xf9, 0x00, 0xC0, 0x00, 0x08, 0x90, 0x00, 0xff].to_vec(); // MOVE.B ($C00008).L,(9000).W
                                                                                     // DC.B $FF
-        let mem_range = MemRange::from_bytes(0xffff9000, [0x88].to_vec());
+        let mem_range = RamMemory::from_bytes(0xffff9000, [0x88].to_vec());
         let mut cpu = crate::instr_test_setup(code, Some(mem_range));
         cpu.register.reg_d[7] = 0xffffff00;
         cpu.register.reg_a[6] = 0xffff9001 - 0x7c + 0x100;
@@ -452,7 +452,7 @@ mod tests {
         // arrange
         let code = [0x33, 0xfa, 0x80, 0x00, 0x00, 0xC0, 0x00, 0x08, 0x00, 0x00].to_vec(); // MOVE.W ($8000,PC),($C00008).L
                                                                                           // DC.B $00,$00
-        let mem_range = MemRange::from_bytes(0x00BF8002, [0xab, 0xba].to_vec());
+        let mem_range = RamMemory::from_bytes(0x00BF8002, [0xab, 0xba].to_vec());
         let mut cpu = crate::instr_test_setup(code, Some(mem_range));
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_OVERFLOW;
         // act assert - debug
@@ -483,7 +483,7 @@ mod tests {
         // arrange
         let code = [0x2E, 0x3B, 0x5C, 0x80, 0x00, 0x00].to_vec(); // MOVE.L ($80,PC,D5.L*4),D7
                                                                   // DC.B $00,$00
-        let mem_range = MemRange::from_bytes(0x50BFFF82, [0xab, 0xba, 0xba, 0xab].to_vec());
+        let mem_range = RamMemory::from_bytes(0x50BFFF82, [0xab, 0xba, 0xba, 0xab].to_vec());
         let mut cpu = crate::instr_test_setup(code, Some(mem_range));
         cpu.register.reg_d[5] = 0x14000000;
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_OVERFLOW;
