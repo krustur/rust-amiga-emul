@@ -1,15 +1,13 @@
-use std::convert::TryFrom;
-
+use super::{
+    GetDisassemblyResult, GetDisassemblyResultError, InstructionError, OperationSize, StepError,
+    StepResult,
+};
 use crate::{
     cpu::Cpu,
     memhandler::MemHandler,
     register::{ProgramCounter, Register, RegisterType},
 };
-
-use super::{
-    GetDisassemblyResult, GetDisassemblyResultError, InstructionError, OperationSize, StepError,
-    StepResult,
-};
+use std::convert::TryFrom;
 
 // Instruction State
 // =================

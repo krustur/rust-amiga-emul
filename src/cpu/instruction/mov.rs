@@ -1,12 +1,11 @@
+use super::{
+    EffectiveAddressingMode, GetDisassemblyResult, GetDisassemblyResultError, OperationSize,
+    StepError, StepResult,
+};
 use crate::{
     cpu::Cpu,
     memhandler::MemHandler,
     register::{ProgramCounter, Register},
-};
-
-use super::{
-    EffectiveAddressingMode, GetDisassemblyResult, GetDisassemblyResultError, OperationSize,
-    StepError, StepResult,
 };
 
 // Instruction State
@@ -24,10 +23,9 @@ pub fn step<'a>(
     mem: &mut MemHandler,
 ) -> Result<StepResult, StepError> {
     let instr_word = pc.peek_next_word(mem);
-    let size = Cpu::extract_size011110_from_bit_pos(instr_word, 12);
+    let size = Cpu::extract_size011110_from_bit_pos(instr_word, 12)?;
     let src_ea_data =
         pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size))?;
-    let src_ea_mode = src_ea_data.ea_mode;
 
     let dst_ea_data = pc.get_effective_addressing_data_from_instr_word_bit_pos(
         src_ea_data.instr_word,
@@ -66,7 +64,7 @@ pub fn get_disassembly<'a>(
     mem: &MemHandler,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let instr_word = pc.peek_next_word(mem);
-    let size = Cpu::extract_size011110_from_bit_pos(instr_word, 12);
+    let size = Cpu::extract_size011110_from_bit_pos(instr_word, 12)?;
     let src_ea_data =
         pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size))?;
     let src_ea_mode = src_ea_data.ea_mode;
@@ -81,7 +79,7 @@ pub fn get_disassembly<'a>(
     )?;
     let dst_ea_mode = dst_ea_data.ea_mode;
 
-    let size = Cpu::extract_size011110_from_bit_pos(src_ea_data.instr_word, 12);
+    // let size = Cpu::extract_size011110_from_bit_pos(src_ea_data.instr_word, 12)?;
 
     let src_ea_debug = Cpu::get_ea_format(src_ea_mode, pc, Some(size), reg, mem);
     let dst_ea_debug = Cpu::get_ea_format(dst_ea_mode, pc, Some(size), reg, mem);

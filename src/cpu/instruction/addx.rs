@@ -1,11 +1,10 @@
+use super::{
+    GetDisassemblyResult, GetDisassemblyResultError, OperationSize, StepError, StepResult,
+};
 use crate::{
     cpu::Cpu,
     memhandler::MemHandler,
     register::{ProgramCounter, Register, RegisterType},
-};
-
-use super::{
-    GetDisassemblyResult, GetDisassemblyResultError, OperationSize, StepError, StepResult,
 };
 
 // Instruction State
@@ -29,7 +28,7 @@ pub fn step<'a>(
     };
     let source_register_index = Cpu::extract_register_index_from_bit_pos_0(instr_word)?;
     let destination_register_index = Cpu::extract_register_index_from_bit_pos(instr_word, 9)?;
-    let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
+    let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word)?;
     let status_register_result = match register_type {
         RegisterType::Data => match operation_size {
             OperationSize::Byte => {
@@ -112,7 +111,7 @@ pub fn get_disassembly<'a>(
     };
     let source_register_index = Cpu::extract_register_index_from_bit_pos_0(instr_word)?;
     let destination_register_index = Cpu::extract_register_index_from_bit_pos(instr_word, 9)?;
-    let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
+    let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word)?;
     match register_type {
         RegisterType::Data => Ok(GetDisassemblyResult::from_pc(
             pc,

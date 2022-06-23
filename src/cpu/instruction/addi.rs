@@ -1,3 +1,10 @@
+use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResult};
+use crate::{
+    cpu::{instruction::OperationSize, Cpu},
+    memhandler::MemHandler,
+    register::{ProgramCounter, Register},
+};
+
 // Instruction State
 // =================
 // step: DONE
@@ -7,21 +14,13 @@
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
-use crate::{
-    cpu::{instruction::OperationSize, Cpu},
-    memhandler::MemHandler,
-    register::{ProgramCounter, Register},
-};
-
-use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResult};
-
 pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut MemHandler,
 ) -> Result<StepResult, StepError> {
     let instr_word = pc.peek_next_word(mem);
-    let size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
+    let size = Cpu::extract_size000110_from_bit_pos_6(instr_word)?;
     let ea_data =
         pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size))?;
     let ea_mode = ea_data.ea_mode;
@@ -61,11 +60,11 @@ pub fn get_disassembly<'a>(
     mem: &MemHandler,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let instr_word = pc.peek_next_word(mem);
-    let size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
+    let size = Cpu::extract_size000110_from_bit_pos_6(instr_word)?;
     let ea_data =
         pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size))?;
     let ea_mode = ea_data.ea_mode;
-    let size = Cpu::extract_size000110_from_bit_pos_6(ea_data.instr_word);
+    // let size = Cpu::extract_size000110_from_bit_pos_6(ea_data.instr_word)?;
     let ea_format = Cpu::get_ea_format(ea_mode, pc, None, reg, mem);
     match size {
         OperationSize::Byte => {

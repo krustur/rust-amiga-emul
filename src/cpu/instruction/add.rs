@@ -1,12 +1,11 @@
+use super::{
+    GetDisassemblyResult, GetDisassemblyResultError, OperationSize, StepError, StepResult,
+};
 use crate::cpu::{Cpu, StatusRegisterResult};
 use crate::memhandler::MemHandler;
 use crate::register::ProgramCounter;
 use crate::register::Register;
 use std::panic;
-
-use super::{
-    GetDisassemblyResult, GetDisassemblyResultError, OperationSize, StepError, StepResult,
-};
 
 // Instruction State
 // =================

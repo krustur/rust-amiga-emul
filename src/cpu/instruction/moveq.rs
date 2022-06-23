@@ -1,9 +1,8 @@
+use super::{GetDisassemblyResultError, StepError, StepResult};
 use crate::cpu::instruction::GetDisassemblyResult;
 use crate::memhandler::MemHandler;
 use crate::register::{ProgramCounter, Register, STATUS_REGISTER_MASK_ZERO};
 use crate::{cpu::Cpu, register::STATUS_REGISTER_MASK_NEGATIVE};
-
-use super::{GetDisassemblyResultError, StepError, StepResult};
 
 // Instruction State
 // =================

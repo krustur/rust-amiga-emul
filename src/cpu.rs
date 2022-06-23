@@ -69,7 +69,7 @@ impl Cpu {
                 instruction::addi::get_disassembly,
             ),
             Instruction::new(
-                String::from("DBcc"),
+                String::from("DBcc"), // DBcc need to be before ADDQ
                 0xf0f8,
                 0x50c8,
                 instruction::dbcc::step,
@@ -88,6 +88,13 @@ impl Cpu {
                 0x6000,
                 instruction::bcc::step,
                 instruction::bcc::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("CLR"),
+                0xff00,
+                0x4200,
+                instruction::clr::step,
+                instruction::clr::get_disassembly,
             ),
             Instruction::new(
                 String::from("CMP"),
@@ -118,13 +125,6 @@ impl Cpu {
                 instruction::lea::get_disassembly,
             ),
             Instruction::new(
-                String::from("SUBQ"),
-                0xf100,
-                0x5100,
-                instruction::subq::step,
-                instruction::subq::get_disassembly,
-            ),
-            Instruction::new(
                 String::from("MOVE"),
                 0xc000,
                 0x0000,
@@ -144,6 +144,13 @@ impl Cpu {
                 0x4e71,
                 instruction::nop::step,
                 instruction::nop::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("SUBQ"),
+                0xf100,
+                0x5100,
+                instruction::subq::step,
+                instruction::subq::get_disassembly,
             ),
         ];
         let mut register = Register::new();
@@ -297,23 +304,36 @@ impl Cpu {
         result
     }
 
-    pub fn extract_size000110_from_bit_pos_6(word: u16) -> OperationSize {
+    pub fn extract_size000110_from_bit_pos_6(word: u16) -> Result<OperationSize, InstructionError> {
         let size = (word >> 6) & 0x0003;
         match size {
-            0b00 => OperationSize::Byte,
-            0b01 => OperationSize::Word,
-            0b10 => OperationSize::Long,
-            _ => panic!("Unknown size!"),
+            0b00 => Ok(OperationSize::Byte),
+            0b01 => Ok(OperationSize::Word),
+            0b10 => Ok(OperationSize::Long),
+            _ => Err(InstructionError {
+                details: format!(
+                    "Failed to extract operation size 000110 from bit pos 6, got size: {} from word: ${:04X}",
+                    size, word
+                ),
+            }),
         }
     }
 
-    pub fn extract_size011110_from_bit_pos(word: u16, bit_pos: u8) -> OperationSize {
+    pub fn extract_size011110_from_bit_pos(
+        word: u16,
+        bit_pos: u8,
+    ) -> Result<OperationSize, InstructionError> {
         let size = (word >> bit_pos) & 0x0003;
         match size {
-            0b01 => OperationSize::Byte,
-            0b11 => OperationSize::Word,
-            0b10 => OperationSize::Long,
-            _ => panic!("Unknown size!"),
+            0b01 => Ok(OperationSize::Byte),
+            0b11 => Ok(OperationSize::Word),
+            0b10 => Ok(OperationSize::Long),
+            _ => Err(InstructionError {
+                details: format!(
+                    "Failed to extract operation size 011110 from bit pos {}, got size: {} from word: ${:04X}",
+                    bit_pos, size, word
+                ),
+            }),
         }
     }
 
@@ -991,7 +1011,7 @@ impl Cpu {
             .position(|x| (instr_word & x.mask) == x.opcode);
         let instruction = match instruction_pos {
             None => panic!(
-                "{:#010x} Unidentified instruction {:#06X}",
+                "{:#010X} Unidentified instruction {:#06X}",
                 pc.get_address(),
                 instr_word
             ),
@@ -1009,7 +1029,9 @@ impl Cpu {
                     instruction.name,
                     pc.get_address()
                 );
+                println!(" Error: {}", step_error);
                 self.print_registers();
+                panic!();
             }
         }
 
@@ -1038,18 +1060,23 @@ impl Cpu {
 
                 match get_disassembly_result {
                     Ok(result) => result,
-                    Err(error) => GetDisassemblyResult::from_pc(
-                        pc,
-                        String::from("DC.W"),
-                        format!(
-                            "#${:04X} ; Error when getting disassembly from instruction: {}",
-                            instr_word, error.details
-                        ),
-                    ),
+                    Err(error) => {
+                        if pc.get_address() == pc.get_address_next() {
+                            pc.skip_word();
+                        }
+                        GetDisassemblyResult::from_pc(
+                            pc,
+                            String::from("DC.W"),
+                            format!(
+                                "#${:04X} ; Error when getting disassembly from instruction: {}",
+                                instr_word, error.details
+                            ),
+                        )
+                    }
                 }
             }
             None => {
-                pc.fetch_next_word(&self.memory);
+                pc.skip_word();
                 GetDisassemblyResult::from_pc(
                     pc,
                     String::from("DC.W"),

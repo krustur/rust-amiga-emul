@@ -1,4 +1,4 @@
-use std::fmt;
+use std::fmt::{self, Display};
 
 use crate::{
     memhandler::MemHandler,
@@ -11,6 +11,7 @@ pub mod addi;
 pub mod addq;
 pub mod addx;
 pub mod bcc;
+pub mod clr;
 pub mod cmp;
 pub mod cmpi;
 pub mod dbcc;
@@ -45,6 +46,17 @@ pub enum StepError {
     InstructionError { details: String },
 }
 
+impl Display for StepError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            StepError::AccessFault => write!(f, "AccessFault"),
+            StepError::AddressError => write!(f, "AddressError"),
+            StepError::IllegalInstruction => write!(f, "IllegalInstruction"),
+            StepError::IntegerDivideByZero => write!(f, "IntegerDivideByZero"),
+            StepError::InstructionError { details } => write!(f, "InstructionError: {}", details),
+        }
+    }
+}
 impl From<InstructionError> for StepError {
     fn from(error: InstructionError) -> Self {
         match error {

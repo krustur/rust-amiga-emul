@@ -1,10 +1,9 @@
+use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResult};
 use crate::{
     cpu::Cpu,
     memhandler::MemHandler,
     register::{ProgramCounter, Register},
 };
-
-use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResult};
 
 // Instruction State
 // =================

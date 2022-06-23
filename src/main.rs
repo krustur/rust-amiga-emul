@@ -48,7 +48,7 @@ fn main() {
     cpu.print_registers();
 
     let mut disassembly_pc = cpu.register.reg_pc.clone();
-    for i in 0..30 {
+    for i in 0..70 {
         let disassembly_result = cpu.get_disassembly(&mut disassembly_pc);
 
         disassembly_pc = ProgramCounter::from_address(disassembly_result.address_next);
@@ -59,7 +59,7 @@ fn main() {
     loop {
         // cpu.print_registers();
         let disassembly_result = cpu.get_next_disassembly();
-        // cpu.print_disassembly(&disassembly_result);
+        cpu.print_disassembly(&disassembly_result);
         cpu.execute_next_instruction();
     }
     // cpu.print_registers();
