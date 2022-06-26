@@ -1,15 +1,21 @@
-use crate::{
-    memory::UnmappedMemory,
-    memrange::{self, MemRange},
-};
+use crate::mem::unmappedmemory::UnmappedMemory;
 
-pub struct MemHandler {
+use self::memrange::MemRange;
+
+pub mod ciamemory;
+pub mod memory;
+pub mod memrange;
+pub mod rammemory;
+pub mod rommemory;
+pub mod unmappedmemory;
+
+pub struct Mem {
     ranges: Vec<MemRange>,
     default_range: MemRange,
 }
 
-impl MemHandler {
-    pub fn new(ranges: Vec<memrange::MemRange>) -> MemHandler {
+impl Mem {
+    pub fn new(ranges: Vec<memrange::MemRange>) -> Mem {
         for (pos, range) in ranges.iter().enumerate() {
             println!("MemRange: {}", range);
             for (other_pos, other_range) in ranges.iter().enumerate() {
@@ -40,13 +46,13 @@ impl MemHandler {
 
         let default_range = UnmappedMemory::new(0x00000000, 0xffffffff);
         println!("Default range: {}", default_range);
-        MemHandler {
+        Mem {
             ranges,
             default_range: MemRange::from_memory(Box::new(default_range)),
         }
     }
 
-    fn get_range(self: &MemHandler, address: u32) -> &memrange::MemRange {
+    fn get_range(self: &Mem, address: u32) -> &memrange::MemRange {
         let pos = self
             .ranges
             .iter()
@@ -57,7 +63,7 @@ impl MemHandler {
         }
     }
 
-    fn get_range_mut(self: &mut MemHandler, address: u32) -> &mut memrange::MemRange {
+    fn get_range_mut(self: &mut Mem, address: u32) -> &mut memrange::MemRange {
         let pos = self
             .ranges
             .iter()
@@ -68,40 +74,40 @@ impl MemHandler {
         }
     }
 
-    pub fn get_long(self: &MemHandler, address: u32) -> u32 {
+    pub fn get_long(self: &Mem, address: u32) -> u32 {
         let range = self.get_range(address);
         let result = range.memory.get_long(address);
         result
     }
 
-    pub fn set_long(self: &mut MemHandler, address: u32, value: u32) {
+    pub fn set_long(self: &mut Mem, address: u32, value: u32) {
         let range = self.get_range_mut(address);
         let result = range.memory.set_long(address, value);
     }
 
-    pub fn get_word(self: &MemHandler, address: u32) -> u16 {
+    pub fn get_word(self: &Mem, address: u32) -> u16 {
         let range = self.get_range(address);
         let result = range.memory.get_word(address);
         result
     }
 
-    pub fn set_word(self: &mut MemHandler, address: u32, value: u16) {
+    pub fn set_word(self: &mut Mem, address: u32, value: u16) {
         let range = self.get_range_mut(address);
         let result = range.memory.set_word(address, value);
     }
 
-    pub fn get_byte(self: &MemHandler, address: u32) -> u8 {
+    pub fn get_byte(self: &Mem, address: u32) -> u8 {
         let range = self.get_range(address);
         let result = range.memory.get_byte(address);
         result
     }
 
-    pub fn set_byte(self: &mut MemHandler, address: u32, value: u8) {
+    pub fn set_byte(self: &mut Mem, address: u32, value: u8) {
         let range = self.get_range_mut(address);
         let result = range.memory.set_byte(address, value);
     }
 
-    pub fn print_hex_dump(self: &mut MemHandler, start_address: u32, end_address: u32) {
+    pub fn print_hex_dump(self: &mut Mem, start_address: u32, end_address: u32) {
         let mut col_cnt = 0;
         let mut address = start_address;
         while address <= end_address {

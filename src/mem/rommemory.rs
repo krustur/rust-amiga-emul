@@ -1,0 +1,99 @@
+use super::memory::Memory;
+use byteorder::{BigEndian, ReadBytesExt};
+use std::{
+    convert::TryInto,
+    fmt::{self},
+};
+
+pub struct RomMemory {
+    pub start_address: u32,
+    pub end_address: u32,
+    length: usize,
+    bytes: Vec<u8>,
+}
+
+impl fmt::Display for RomMemory {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "ROM: ${:08X}-${:08X} ({}) bytes)",
+            self.start_address, self.end_address, self.length
+        )
+    }
+}
+
+impl Memory for RomMemory {
+    fn get_start_address(&self) -> u32 {
+        return self.start_address;
+    }
+
+    fn get_end_address(&self) -> u32 {
+        return self.end_address;
+    }
+
+    fn get_length(&self) -> usize {
+        return self.length;
+    }
+
+    fn get_long(self: &RomMemory, address: u32) -> u32 {
+        let index = self.remap_address_to_index(address);
+        let mut bytes = &self.bytes[index..index + 4];
+        let result = bytes.read_u32::<BigEndian>().unwrap();
+        result
+    }
+
+    fn set_long(self: &mut RomMemory, address: u32, value: u32) {
+        println!("Trying to set_long on ROM memory: ${:08X}", address);
+    }
+
+    fn get_word(self: &RomMemory, address: u32) -> u16 {
+        let index = self.remap_address_to_index(address);
+        let mut bytes = &self.bytes[index..index + 2];
+        let result = bytes.read_u16::<BigEndian>().unwrap();
+        // let b0 : u16 = self.bytes[index].into();
+        // let b1 : u16 = self.bytes[index + 1].into();
+        // let result = (b0 << 8) + b1;
+        result
+    }
+
+    fn set_word(self: &mut RomMemory, address: u32, value: u16) {
+        println!("Trying to set_word on ROM memory: ${:08X}", address);
+    }
+
+    fn get_byte(self: &RomMemory, address: u32) -> u8 {
+        let index = self.remap_address_to_index(address);
+        let mut bytes = &self.bytes[index..index + 1];
+        let result = bytes.read_u8().unwrap();
+        result
+    }
+
+    fn set_byte(self: &mut RomMemory, address: u32, value: u8) {
+        println!("Trying to set_byte on ROM memory: ${:08X}", address);
+    }
+}
+
+impl RomMemory {
+    pub fn from_file(start_address: u32, filename: &str) -> Result<RomMemory, std::io::Error> {
+        let bytes = std::fs::read(filename)?;
+        let length: u32 = bytes.len().try_into().unwrap();
+        let end_address = start_address + length - 1;
+        let length = bytes.len();
+        // TODO: Check vec length against incoming size
+        let mem = RomMemory {
+            start_address: start_address,
+            end_address,
+            length: length,
+            bytes: bytes,
+        };
+        Ok(mem)
+    }
+
+    fn remap_address_to_index(self: &RomMemory, address: u32) -> usize {
+        if address < self.start_address || address > self.end_address {
+            panic!("Can't remap address to index. Address {:#010x} not in range of {:#010x} to {:#010x}", address, self.start_address, self.end_address)
+        }
+        let index = address - self.start_address;
+
+        return index.try_into().unwrap();
+    }
+}

@@ -1,7 +1,7 @@
 use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResult};
 use crate::{
     cpu::Cpu,
-    memhandler::MemHandler,
+    mem::Mem,
     register::{ProgramCounter, Register},
 };
 
@@ -17,7 +17,7 @@ use crate::{
 pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
-    mem: &mut MemHandler,
+    mem: &mut Mem,
 ) -> Result<StepResult, StepError> {
     // TODO: Tests
     let ea_data =
@@ -32,7 +32,7 @@ pub fn step<'a>(
 pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
-    mem: &MemHandler,
+    mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     // TODO: Tests
     let ea_data =
@@ -52,7 +52,7 @@ pub fn get_disassembly<'a>(
 mod tests {
     use crate::{
         cpu::instruction::GetDisassemblyResult,
-        memory::RamMemory,
+        mem::rammemory::RamMemory,
         register::{
             STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE,
             STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,

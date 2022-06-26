@@ -2,7 +2,7 @@ use super::{
     GetDisassemblyResult, GetDisassemblyResultError, OperationSize, StepError, StepResult,
 };
 use crate::cpu::{Cpu, StatusRegisterResult};
-use crate::memhandler::MemHandler;
+use crate::mem::Mem;
 use crate::register::ProgramCounter;
 use crate::register::Register;
 use std::panic;
@@ -28,7 +28,7 @@ const LONG_WITH_AN_AS_DEST: usize = 0b111;
 pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
-    mem: &mut MemHandler,
+    mem: &mut Mem,
 ) -> Result<StepResult, StepError> {
     let instr_word = pc.peek_next_word(mem);
     let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
@@ -125,7 +125,7 @@ pub fn step<'a>(
 pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
-    mem: &MemHandler,
+    mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let instr_word = pc.peek_next_word(mem);
     let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);

@@ -1,7 +1,7 @@
 use std::fmt;
 
 use crate::{
-    memhandler::MemHandler,
+    mem::Mem,
     register::{
         ProgramCounter, Register, STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_NEGATIVE,
         STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
@@ -50,7 +50,7 @@ impl EffectiveAddressingData {
         pc: &mut ProgramCounter,
         operation_size: Option<OperationSize>,
         reg: &mut Register,
-        mem: &MemHandler,
+        mem: &Mem,
     ) -> u32 {
         match self.ea_mode {
             EffectiveAddressingMode::DRegDirect {
@@ -159,7 +159,7 @@ impl EffectiveAddressingData {
         &self,
         pc: &mut ProgramCounter,
         reg: &mut Register,
-        mem: &MemHandler,
+        mem: &Mem,
         apply_increment_decrement: bool,
     ) -> u8 {
         match self.ea_mode {
@@ -202,7 +202,7 @@ impl EffectiveAddressingData {
         &self,
         pc: &mut ProgramCounter,
         reg: &mut Register,
-        mem: &MemHandler,
+        mem: &Mem,
         apply_increment_decrement: bool,
     ) -> u16 {
         match self.ea_mode {
@@ -245,7 +245,7 @@ impl EffectiveAddressingData {
         &self,
         pc: &mut ProgramCounter,
         reg: &mut Register,
-        mem: &MemHandler,
+        mem: &Mem,
         apply_increment_decrement: bool,
     ) -> u32 {
         match self.ea_mode {
@@ -288,7 +288,7 @@ impl EffectiveAddressingData {
         &self,
         pc: &mut ProgramCounter,
         reg: &mut Register,
-        mem: &mut MemHandler,
+        mem: &mut Mem,
         value: u8,
         apply_increment_decrement: bool,
     ) -> SetEffectiveAddressValueResult {
@@ -363,7 +363,7 @@ impl EffectiveAddressingData {
         &self,
         pc: &mut ProgramCounter,
         reg: &mut Register,
-        mem: &mut MemHandler,
+        mem: &mut Mem,
         value: u16,
         apply_increment_decrement: bool,
     ) -> SetEffectiveAddressValueResult {
@@ -452,7 +452,7 @@ impl EffectiveAddressingData {
         &self,
         pc: &mut ProgramCounter,
         reg: &mut Register,
-        mem: &mut MemHandler,
+        mem: &mut Mem,
         value: u32,
         apply_increment_decrement: bool,
     ) -> SetEffectiveAddressValueResult {

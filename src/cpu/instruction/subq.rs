@@ -1,6 +1,6 @@
 use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResult};
 use crate::{
-    memhandler::MemHandler,
+    mem::Mem,
     register::{ProgramCounter, Register},
 };
 
@@ -16,7 +16,7 @@ use crate::{
 pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
-    mem: &mut MemHandler,
+    mem: &mut Mem,
 ) -> Result<StepResult, StepError> {
     todo!("SUBQ common_exec_func");
     // TODO: Tests
@@ -35,7 +35,7 @@ pub fn step<'a>(
 pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
-    mem: &MemHandler,
+    mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     todo!("SUBQ common_exec_func");
     // TODO: Tests

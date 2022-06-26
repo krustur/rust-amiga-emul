@@ -1,5 +1,6 @@
-use crate::memory::Memory;
 use std::fmt;
+
+use super::memory::Memory;
 
 pub struct MemRange {
     pub start_address: u32,
@@ -15,7 +16,7 @@ impl fmt::Display for MemRange {
 }
 
 impl MemRange {
-    pub fn from_memory(memory: Box<dyn crate::memory::Memory>) -> MemRange {
+    pub fn from_memory(memory: Box<dyn Memory>) -> MemRange {
         let start_address = memory.get_start_address();
         let end_address = memory.get_end_address();
         let length = memory.get_length();

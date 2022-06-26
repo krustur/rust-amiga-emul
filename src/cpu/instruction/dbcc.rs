@@ -1,7 +1,7 @@
 use super::{GetDisassemblyResultError, StepError, StepResult};
 use crate::{
     cpu::{instruction::GetDisassemblyResult, Cpu},
-    memhandler::MemHandler,
+    mem::Mem,
     register::{ProgramCounter, Register},
 };
 
@@ -17,7 +17,7 @@ use crate::{
 pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
-    mem: &mut MemHandler,
+    mem: &mut Mem,
 ) -> Result<StepResult, StepError> {
     let instr_word = pc.fetch_next_word(mem);
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
@@ -52,7 +52,7 @@ pub fn step<'a>(
 pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
-    mem: &MemHandler,
+    mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let instr_word = pc.fetch_next_word(mem);
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);

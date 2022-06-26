@@ -1,6 +1,4 @@
-use super::{
-    GetDisassemblyResult, GetDisassemblyResultError, OperationSize, StepError, StepResult,
-};
+use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResult};
 use crate::{
     cpu::Cpu,
     mem::Mem,
@@ -24,12 +22,13 @@ pub fn step<'a>(
     let ea_data =
         pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size))?;
 
-    match size {
-        OperationSize::Byte => ea_data.set_value_byte(pc, reg, mem, 0x00, true),
-        OperationSize::Word => ea_data.set_value_word(pc, reg, mem, 0x0000, true),
-        OperationSize::Long => ea_data.set_value_long(pc, reg, mem, 0x00000000, true),
-    };
-    Ok(StepResult::Done {})
+    todo!();
+    // match size {
+    //     OperationSize::Byte => ea_data.set_value_byte(pc, reg, mem, 0x00, true),
+    //     OperationSize::Word => ea_data.set_value_word(pc, reg, mem, 0x0000, true),
+    //     OperationSize::Long => ea_data.set_value_long(pc, reg, mem, 0x00000000, true),
+    // };
+    // Ok(StepResult::Done {})
 }
 
 pub fn get_disassembly<'a>(
@@ -46,7 +45,7 @@ pub fn get_disassembly<'a>(
 
     Ok(GetDisassemblyResult::from_pc(
         pc,
-        String::from(format!("CLR.{}", size.get_format())),
+        String::from(format!("NOT.{}", size.get_format())),
         ea_format.format,
     ))
 }
