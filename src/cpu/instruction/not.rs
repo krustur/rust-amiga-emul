@@ -1,4 +1,6 @@
-use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResult};
+use super::{
+    GetDisassemblyResult, GetDisassemblyResultError, OperationSize, StepError, StepResult,
+};
 use crate::{
     cpu::Cpu,
     mem::Mem,
@@ -22,13 +24,24 @@ pub fn step<'a>(
     let ea_data =
         pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size))?;
 
-    todo!();
-    // match size {
-    //     OperationSize::Byte => ea_data.set_value_byte(pc, reg, mem, 0x00, true),
-    //     OperationSize::Word => ea_data.set_value_word(pc, reg, mem, 0x0000, true),
-    //     OperationSize::Long => ea_data.set_value_long(pc, reg, mem, 0x00000000, true),
-    // };
-    // Ok(StepResult::Done {})
+    // todo!();
+    let status_register_result = match size {
+        // OperationSize::Byte => ea_data.set_value_byte(pc, reg, mem, 0x00, true),
+        // OperationSize::Word => ea_data.set_value_word(pc, reg, mem, 0x0000, true),
+        OperationSize::Long => {
+            let mut value = ea_data.get_value_long(pc, reg, mem, false);
+
+            let result = Cpu::not_long(value);
+            println!("value after not:  ${:08X}", result.result);
+            ea_data.set_value_long(pc, reg, mem, value, true);
+            result.status_register_result
+        }
+        _ => todo!(),
+    };
+
+    reg.reg_sr = status_register_result.merge_status_register(reg.reg_sr);
+
+    Ok(StepResult::Done {})
 }
 
 pub fn get_disassembly<'a>(

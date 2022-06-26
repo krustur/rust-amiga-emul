@@ -17,6 +17,8 @@ use crate::{
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
+// BUG: move.w => a-reg should set entire areg
+
 pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
@@ -215,7 +217,7 @@ mod tests {
         // // act
         cpu.execute_next_instruction();
         // // assert
-        assert_eq!(0xffff1234, cpu.register.reg_a[1]);
+        assert_eq!(0x00001234, cpu.register.reg_a[1]);
         assert_eq!(0x00C00002, cpu.register.reg_pc.get_address());
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_overflow_set());
@@ -505,6 +507,35 @@ mod tests {
         assert_eq!(false, cpu.register.is_sr_overflow_set());
         assert_eq!(false, cpu.register.is_sr_zero_set());
         assert_eq!(true, cpu.register.is_sr_negative_set());
+        assert_eq!(false, cpu.register.is_sr_extend_set());
+    }
+
+    #[test]
+    fn absolute_short_mode_to_address_register_word_direct() {
+        // arrange
+        let code = [0x30, 0x7C, 0x00, 0x08].to_vec(); // MOVEA.W #$0008,A0
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.reg_a[0] = 0x12345678;
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_OVERFLOW;
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00004,
+                String::from("MOVEA.W"),
+                String::from("#$0008,A0")
+            ),
+            debug_result
+        );
+        // // act
+        cpu.execute_next_instruction();
+        // // assert
+        assert_eq!(0x00000008, cpu.register.reg_a[0]);
+        assert_eq!(false, cpu.register.is_sr_carry_set());
+        assert_eq!(false, cpu.register.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.is_sr_zero_set());
+        assert_eq!(false, cpu.register.is_sr_negative_set());
         assert_eq!(false, cpu.register.is_sr_extend_set());
     }
 }

@@ -303,7 +303,7 @@ impl EffectiveAddressingData {
                 ea_register: register,
             } => {
                 // An
-                reg.reg_a[register] = Cpu::set_byte_in_long(value, reg.reg_a[register]);
+                reg.reg_a[register] = value as u32;
             }
             EffectiveAddressingMode::ImmediateDataByte { .. }
             | EffectiveAddressingMode::ImmediateDataWord { .. }
@@ -378,7 +378,7 @@ impl EffectiveAddressingData {
                 ea_register: register,
             } => {
                 // An
-                reg.reg_a[register] = Cpu::set_word_in_long(value, reg.reg_a[register]);
+                reg.reg_a[register] = value as u32;
             }
             EffectiveAddressingMode::ImmediateDataByte { .. }
             | EffectiveAddressingMode::ImmediateDataWord { .. }

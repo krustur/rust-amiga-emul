@@ -628,7 +628,6 @@ impl Cpu {
     }
 
     pub fn sub_bytes(source: u8, dest: u8) -> ResultWithStatusRegister<u8> {
-        println!("source: {} - dest: {}", source, dest);
         let source_signed = Cpu::get_signed_byte_from_byte(source);
         let dest_signed = Cpu::get_signed_byte_from_byte(dest);
 
@@ -717,6 +716,30 @@ impl Cpu {
         match result_signed {
             0 => status_register |= STATUS_REGISTER_MASK_ZERO,
             i32::MIN..=-1 => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+            _ => (),
+        }
+
+        ResultWithStatusRegister {
+            result,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_EXTEND
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
+        }
+    }
+
+    pub fn not_long(dest: u32) -> ResultWithStatusRegister<u32> {
+        let result = !dest;
+
+        let mut status_register = 0x0000;
+
+        match result {
+            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            0x80000000..=0xffffffff => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
             _ => (),
         }
 
@@ -894,10 +917,10 @@ impl Cpu {
                 }
             }
             EffectiveAddressingMode::ImmediateDataWord { data } => EffectiveAddressDebug {
-                format: format!("#${:02X}", data),
+                format: format!("#${:04X}", data),
             },
             EffectiveAddressingMode::ImmediateDataLong { data } => EffectiveAddressDebug {
-                format: format!("#${:02X}", data),
+                format: format!("#${:08X}", data),
             },
         }
     }

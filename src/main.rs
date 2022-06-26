@@ -67,7 +67,14 @@ fn main() {
     loop {
         // cpu.print_registers();
         let disassembly_result = cpu.get_next_disassembly();
-        cpu.print_disassembly(&disassembly_result);
+        let pc_address = cpu.register.reg_pc.get_address();
+        let print_disassembly = match pc_address {
+            0x00F800E2..=0x00F800E8 => false,
+            _ => true,
+        };
+        if print_disassembly {
+            cpu.print_disassembly(&disassembly_result);
+        }
         cpu.execute_next_instruction();
     }
     // cpu.print_registers();
