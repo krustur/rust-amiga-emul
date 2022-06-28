@@ -12,5 +12,9 @@ pub trait Memory: Any + Display {
     fn get_word(&self, address: u32) -> u16;
     fn set_word(&mut self, address: u32, value: u16);
     fn get_byte(&self, address: u32) -> u8;
-    fn set_byte(&mut self, address: u32, value: u8);
+    fn set_byte(&mut self, address: u32, value: u8) -> Option<SetMemoryResult>;
+}
+
+pub struct SetMemoryResult {
+    pub set_overlay: Option<bool>,
 }

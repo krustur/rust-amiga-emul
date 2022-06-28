@@ -29,7 +29,7 @@ pub fn step<'a>(
         // OperationSize::Byte => ea_data.set_value_byte(pc, reg, mem, 0x00, true),
         // OperationSize::Word => ea_data.set_value_word(pc, reg, mem, 0x0000, true),
         OperationSize::Long => {
-            let mut value = ea_data.get_value_long(pc, reg, mem, false);
+            let value = ea_data.get_value_long(pc, reg, mem, false);
 
             let result = Cpu::not_long(value);
             println!("value after not:  ${:08X}", result.result);

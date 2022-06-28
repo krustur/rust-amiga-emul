@@ -1,4 +1,4 @@
-use super::memory::Memory;
+use super::memory::{Memory, SetMemoryResult};
 use std::{any::Any, fmt};
 
 pub struct CiaMemory {
@@ -53,11 +53,11 @@ impl Memory for CiaMemory {
     }
 
     fn get_byte(self: &CiaMemory, address: u32) -> u8 {
-        println!("   -TODO: get_byte() for CIA memory ${:06X}", address);
+        println!("   -CIA: TODO: get_byte() for CIA memory ${:06X}", address);
         0
     }
 
-    fn set_byte(self: &mut CiaMemory, address: u32, value: u8) {
+    fn set_byte(self: &mut CiaMemory, address: u32, value: u8) -> Option<SetMemoryResult> {
         match address {
             0xBFE001 => {
                 let pra_fir1 = (value & 0x80) == 0x80;
@@ -69,12 +69,20 @@ impl Memory for CiaMemory {
                 let pra_led = (value & 0x02) == 0x02;
                 let pra_ovl = (value & 0x01) == 0x01;
                 self.set_overlay(pra_ovl);
+                println!(
+                    "   -CIA: TODO: set_byte() for CIA memory ${:06X} to {}",
+                    address, value
+                );
+                Some(SetMemoryResult {
+                    set_overlay: Some(pra_ovl),
+                })
             }
             _ => {
                 println!(
-                    "   -TODO: set_byte() for CIA memory ${:06X} to {}",
+                    "   -CIA: TODO: set_byte() for CIA memory ${:06X} to {}",
                     address, value
-                )
+                );
+                None
             }
         }
     }
@@ -97,10 +105,13 @@ impl CiaMemory {
         0x10000
     }
 
-    fn set_overlay(self: &mut CiaMemory, ovl: bool) {
-        if self.overlay != ovl {
+    fn set_overlay(self: &mut CiaMemory, ovl: bool) -> Option<bool> {
+        if ovl != self.overlay {
             println!("   -CIA: PRA OVL changed to {}", ovl);
             self.overlay = ovl;
+            Some(ovl)
+        } else {
+            None
         }
     }
 }

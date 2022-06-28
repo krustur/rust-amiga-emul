@@ -6,7 +6,7 @@ use std::{
 
 use byteorder::{BigEndian, ReadBytesExt};
 
-use super::memory::Memory;
+use super::memory::{Memory, SetMemoryResult};
 
 pub struct RamMemory {
     pub start_address: u32,
@@ -80,9 +80,10 @@ impl Memory for RamMemory {
         result
     }
 
-    fn set_byte(self: &mut RamMemory, address: u32, value: u8) {
+    fn set_byte(self: &mut RamMemory, address: u32, value: u8) -> Option<SetMemoryResult> {
         let index = self.remap_address_to_index(address);
         self.bytes[index] = ((value) & 0x000000ff) as u8;
+        None
     }
 }
 
@@ -100,7 +101,7 @@ impl RamMemory {
     }
     pub fn from_bytes<'a>(start_address: u32, bytes: Vec<u8>) -> RamMemory {
         let length: u32 = bytes.len().try_into().unwrap();
-        let end_address = start_address + length - 1;
+        let end_address = start_address + length;
         let length = bytes.len();
         let mem = RamMemory {
             start_address,

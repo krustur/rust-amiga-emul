@@ -2,13 +2,11 @@
 #![allow(unused_must_use)]
 #![allow(unused_variables)]
 
-use crate::{
-    cpu::Cpu,
-    mem::{
-        ciamemory::CiaMemory, memrange::MemRange, rammemory::RamMemory, rommemory::RomMemory, Mem,
-    },
-};
 use mem::memory::Memory;
+use {
+    cpu::Cpu,
+    mem::{ciamemory::CiaMemory, rammemory::RamMemory, rommemory::RomMemory, Mem},
+};
 
 mod cpu;
 mod mem;
@@ -25,12 +23,12 @@ fn main() {
     let rom_cheat = RomMemory::from_file(0x000000, ROM_FILE_PATH).unwrap();
     let rom = RomMemory::from_file(0xF80000, ROM_FILE_PATH).unwrap();
 
-    let mut mem_ranges = Vec::new();
-    mem_ranges.push(MemRange::from_memory(Box::new(rom_cheat)));
-    mem_ranges.push(MemRange::from_memory(Box::new(rom)));
+    let mut mem_ranges: Vec<Box<dyn Memory>> = Vec::new();
+    mem_ranges.push(Box::new(rom_cheat));
+    mem_ranges.push(Box::new(rom));
 
     // Hack for "CDTV & CD32 Extended ROM / A4000 Diagnostics ROM"
-    // ROM code checks for $1111 at $00F00000 ()
+    // ROM code checks for $1111 at 0F00000 ()
     // let no_extended_rom_hack = RamMemory::from_range(0x00f00000, 0x00F7FFFF);
     // mem_ranges.push(MemRange::from_memory(Box::new(no_extended_rom_hack)));
 
@@ -47,9 +45,9 @@ fn main() {
     // mem_ranges.push(MemRange::from_memory(Box::new(chip_ram)));
 
     let cia_memory = CiaMemory::new();
-    // mem_ranges.push(MemRange::from_memory(Box::new(cia_memory)));
+    mem_ranges.push(Box::new(cia_memory));
 
-    let mem = Mem::new(mem_ranges, cia_memory);
+    let mem = Mem::new(mem_ranges);
 
     let mut cpu = Cpu::new(mem);
     cpu.memory.print_hex_dump(0xf80000, 0xf800ff);
@@ -130,17 +128,18 @@ fn instr_test_setup(code: Vec<u8>, mem_ranges: Option<Vec<RamMemory>>) -> cpu::C
     // TODO: Would be nice to not need the rom cheat
     let rom_cheat = RomMemory::from_file(0x000000, ROM_FILE_PATH).unwrap();
 
-    let mut mem_ranges_internal = Vec::new();
+    let mut mem_ranges_internal: Vec<Box<dyn Memory>> = Vec::new();
     let code = RamMemory::from_bytes(0xC00000, code);
-    mem_ranges_internal.push(MemRange::from_memory(Box::new(rom_cheat)));
-    mem_ranges_internal.push(MemRange::from_memory(Box::new(code)));
+    let cia_memory = CiaMemory::new();
+    mem_ranges_internal.push(Box::new(rom_cheat));
+    mem_ranges_internal.push(Box::new(code));
+    mem_ranges_internal.push(Box::new(cia_memory));
     if let Some(mem_ranges) = mem_ranges {
         for mem_range in mem_ranges {
-            mem_ranges_internal.push(MemRange::from_memory(Box::new(mem_range)));
+            mem_ranges_internal.push(Box::new(mem_range));
         }
     }
-    let cia_memory = CiaMemory::new();
-    let mem = mem::Mem::new(mem_ranges_internal, cia_memory);
+    let mem = mem::Mem::new(mem_ranges_internal);
     let mut cpu = cpu::Cpu::new(mem);
     cpu.register.reg_pc = ProgramCounter::from_address(0xC00000);
     cpu

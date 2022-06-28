@@ -1,4 +1,4 @@
-use super::memory::Memory;
+use super::memory::{Memory, SetMemoryResult};
 use std::{
     any::Any,
     fmt::{self},
@@ -60,8 +60,9 @@ impl Memory for UnmappedMemory {
         0
     }
 
-    fn set_byte(self: &mut UnmappedMemory, address: u32, value: u8) {
+    fn set_byte(self: &mut UnmappedMemory, address: u32, value: u8) -> Option<SetMemoryResult> {
         println!("   -UNMAPPED: Trying to set_byte: ${:08X}", address);
+        None
     }
 }
 

@@ -1,3 +1,5 @@
+use crate::mem::memory::SetMemoryResult;
+
 use super::memory::Memory;
 use byteorder::{BigEndian, ReadBytesExt};
 use std::{
@@ -72,8 +74,9 @@ impl Memory for RomMemory {
         result
     }
 
-    fn set_byte(self: &mut RomMemory, address: u32, value: u8) {
+    fn set_byte(self: &mut RomMemory, address: u32, value: u8) -> Option<SetMemoryResult> {
         println!("   -ROM: Trying to set_byte: ${:08X}", address);
+        None
     }
 }
 
