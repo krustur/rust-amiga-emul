@@ -320,18 +320,12 @@ impl EffectiveAddressingData {
                             operation_size,
                             ea_register,
                             ea_address,
-                        } => {
-                            println!("incrementing A{}", ea_register);
-                            reg.reg_a[ea_register] += operation_size.size_in_bytes()
-                        }
+                        } => reg.reg_a[ea_register] += operation_size.size_in_bytes(),
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
                             operation_size,
                             ea_register,
                             ea_address,
-                        } => {
-                            println!("decrementing A{}", ea_register);
-                            reg.reg_a[ea_register] -= operation_size.size_in_bytes()
-                        }
+                        } => reg.reg_a[ea_register] -= operation_size.size_in_bytes(),
                         _ => (),
                     }
                 }
@@ -396,31 +390,13 @@ impl EffectiveAddressingData {
                             ea_register,
                             ea_address,
                         } => {
-                            println!(
-                                "incrementing A{} {:08X} with {}",
-                                ea_register,
-                                reg.reg_a[ea_register],
-                                operation_size.size_in_bytes()
-                            );
-                            let x = reg.reg_a[ea_register] += operation_size.size_in_bytes();
-                            println!(
-                                "incremented A{} {:08X}",
-                                ea_register, reg.reg_a[ea_register],
-                            );
-                            x
+                            reg.reg_a[ea_register] += operation_size.size_in_bytes();
                         }
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
                             operation_size,
                             ea_register,
                             ea_address,
-                        } => {
-                            println!(
-                                "decrementing A{} with {}",
-                                ea_register,
-                                operation_size.size_in_bytes()
-                            );
-                            reg.reg_a[ea_register] -= operation_size.size_in_bytes()
-                        }
+                        } => reg.reg_a[ea_register] -= operation_size.size_in_bytes(),
                         _ => (),
                     }
                 }
@@ -484,18 +460,12 @@ impl EffectiveAddressingData {
                             operation_size,
                             ea_register,
                             ea_address,
-                        } => {
-                            println!("incrementing A{}", ea_register);
-                            reg.reg_a[ea_register] += operation_size.size_in_bytes()
-                        }
+                        } => reg.reg_a[ea_register] += operation_size.size_in_bytes(),
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
                             operation_size,
                             ea_register,
                             ea_address,
-                        } => {
-                            println!("decrementing A{}", ea_register);
-                            reg.reg_a[ea_register] -= operation_size.size_in_bytes()
-                        }
+                        } => reg.reg_a[ea_register] -= operation_size.size_in_bytes(),
                         _ => (),
                     }
                 }
