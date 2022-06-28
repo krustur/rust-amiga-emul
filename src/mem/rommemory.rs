@@ -1,6 +1,7 @@
 use super::memory::Memory;
 use byteorder::{BigEndian, ReadBytesExt};
 use std::{
+    any::Any,
     convert::TryInto,
     fmt::{self},
 };
@@ -23,6 +24,10 @@ impl fmt::Display for RomMemory {
 }
 
 impl Memory for RomMemory {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
     fn get_start_address(&self) -> u32 {
         return self.start_address;
     }
@@ -43,7 +48,7 @@ impl Memory for RomMemory {
     }
 
     fn set_long(self: &mut RomMemory, address: u32, value: u32) {
-        println!("Trying to set_long on ROM memory: ${:08X}", address);
+        println!("   -ROM: Trying to set_long: ${:08X}", address);
     }
 
     fn get_word(self: &RomMemory, address: u32) -> u16 {
@@ -57,7 +62,7 @@ impl Memory for RomMemory {
     }
 
     fn set_word(self: &mut RomMemory, address: u32, value: u16) {
-        println!("Trying to set_word on ROM memory: ${:08X}", address);
+        println!("   -ROM: Trying to set_word: ${:08X}", address);
     }
 
     fn get_byte(self: &RomMemory, address: u32) -> u8 {
@@ -68,7 +73,7 @@ impl Memory for RomMemory {
     }
 
     fn set_byte(self: &mut RomMemory, address: u32, value: u8) {
-        println!("Trying to set_byte on ROM memory: ${:08X}", address);
+        println!("   -ROM: Trying to set_byte: ${:08X}", address);
     }
 }
 

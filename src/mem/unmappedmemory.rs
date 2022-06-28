@@ -1,5 +1,8 @@
 use super::memory::Memory;
-use std::fmt::{self};
+use std::{
+    any::Any,
+    fmt::{self},
+};
 
 pub struct UnmappedMemory {
     pub start_address: u32,
@@ -18,6 +21,10 @@ impl fmt::Display for UnmappedMemory {
 }
 
 impl Memory for UnmappedMemory {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
     fn get_start_address(&self) -> u32 {
         return self.start_address;
     }
@@ -31,48 +38,30 @@ impl Memory for UnmappedMemory {
     }
 
     fn get_long(self: &UnmappedMemory, address: u32) -> u32 {
-        println!(
-            "   -Trying to get_long on UNMAPPED memory: ${:08X}",
-            address
-        );
+        println!("   -UNMAPPED: Trying to get_long: ${:08X}", address);
         0
     }
 
     fn set_long(self: &mut UnmappedMemory, address: u32, value: u32) {
-        println!(
-            "   -Trying to set_long on UNMAPPED memory: ${:08X}",
-            address
-        );
+        println!("   -UNMAPPED: Trying to set_long: ${:08X}", address);
     }
 
     fn get_word(self: &UnmappedMemory, address: u32) -> u16 {
-        println!(
-            "   -Trying to get_word on UNMAPPED memory: ${:08X}",
-            address
-        );
+        println!("   -UNMAPPED: Trying to get_word: ${:08X}", address);
         0
     }
 
     fn set_word(self: &mut UnmappedMemory, address: u32, value: u16) {
-        println!(
-            "   -Trying to set_word on UNMAPPED memory: ${:08X}",
-            address
-        );
+        println!("   -UNMAPPED: Trying to set_word: ${:08X}", address);
     }
 
     fn get_byte(self: &UnmappedMemory, address: u32) -> u8 {
-        println!(
-            "   -Trying to get_byte on UNMAPPED memory: ${:08X}",
-            address
-        );
+        println!("   -UNMAPPED: Trying to get_byte: ${:08X}", address);
         0
     }
 
     fn set_byte(self: &mut UnmappedMemory, address: u32, value: u8) {
-        println!(
-            "   -Trying to set_byte on UNMAPPED memory: ${:08X}",
-            address
-        );
+        println!("   -UNMAPPED: Trying to set_byte: ${:08X}", address);
     }
 }
 

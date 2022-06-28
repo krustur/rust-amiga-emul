@@ -97,7 +97,9 @@ mod tests {
         // arrange
         let code = [0x43, 0xf9, 0x00, 0xf8, 0x00, 0x00].to_vec(); // LEA ($00F80000).L,A1
         let mem_range = RamMemory::from_bytes(0xf80000, [0x00, 0x00, 0x00, 0x00].to_vec());
-        let mut cpu = crate::instr_test_setup(code, Some(mem_range));
+        let mut mem_ranges = Vec::new();
+        mem_ranges.push(mem_range);
+        let mut cpu = crate::instr_test_setup(code, Some(mem_ranges));
         cpu.register.reg_a[0] = 0x00000000;
         cpu.register.reg_sr = 0x0000;
         // act assert - debug

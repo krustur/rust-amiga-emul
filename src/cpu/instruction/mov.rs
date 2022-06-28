@@ -116,8 +116,9 @@ mod tests {
         cpu::instruction::GetDisassemblyResult,
         mem::rammemory::RamMemory,
         register::{
-            STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE,
-            STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
+            ProgramCounter, STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND,
+            STATUS_REGISTER_MASK_NEGATIVE, STATUS_REGISTER_MASK_OVERFLOW,
+            STATUS_REGISTER_MASK_ZERO,
         },
     };
 
@@ -126,7 +127,9 @@ mod tests {
         // arrange
         let code = [0x13, 0xc0, 0x00, 0x09, 0x00, 0x00].to_vec(); // MOVE.B D0,($00090000).L
         let mem_range = RamMemory::from_bytes(0x00090000, [0x00].to_vec());
-        let mut cpu = crate::instr_test_setup(code, Some(mem_range));
+        let mut mem_ranges = Vec::new();
+        mem_ranges.push(mem_range);
+        let mut cpu = crate::instr_test_setup(code, Some(mem_ranges));
         cpu.register.reg_d[0] = 0x34;
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
             | STATUS_REGISTER_MASK_OVERFLOW
@@ -197,7 +200,9 @@ mod tests {
         // arrange
         let code = [0x32, 0x50].to_vec(); // MOVE.W (A0),A1
         let mem_range = RamMemory::from_bytes(0x00090000, [0x12, 0x34].to_vec());
-        let mut cpu = crate::instr_test_setup(code, Some(mem_range));
+        let mut mem_ranges = Vec::new();
+        mem_ranges.push(mem_range);
+        let mut cpu = crate::instr_test_setup(code, Some(mem_ranges));
         cpu.register.reg_a[0] = 0x00090000;
         cpu.register.reg_a[1] = 0xffffffff;
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
@@ -231,7 +236,9 @@ mod tests {
         // arrange
         let code = [0x14, 0x99].to_vec(); // MOVE.B (A1)+,(A2)
         let mem_range = RamMemory::from_bytes(0x00090000, [0xf0, 0x00].to_vec());
-        let mut cpu = crate::instr_test_setup(code, Some(mem_range));
+        let mut mem_ranges = Vec::new();
+        mem_ranges.push(mem_range);
+        let mut cpu = crate::instr_test_setup(code, Some(mem_ranges));
         cpu.register.reg_a[1] = 0x00090000;
         cpu.register.reg_a[2] = 0x00090001;
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_OVERFLOW;
@@ -272,7 +279,9 @@ mod tests {
             0x00090000,
             [0xff, 0xff, 0xff, 0xf0, 0x00, 0x00, 0x00, 0x00].to_vec(),
         );
-        let mut cpu = crate::instr_test_setup(code, Some(mem_range));
+        let mut mem_ranges = Vec::new();
+        mem_ranges.push(mem_range);
+        let mut cpu = crate::instr_test_setup(code, Some(mem_ranges));
         cpu.register.reg_a[2] = 0x00090004;
         cpu.register.reg_a[3] = 0x00090004;
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_OVERFLOW;
@@ -313,7 +322,9 @@ mod tests {
             0x00090000,
             [0x12, 0x34, 0x56, 0x78, 0x00, 0x00, 0x00, 0x00].to_vec(),
         );
-        let mut cpu = crate::instr_test_setup(code, Some(mem_range));
+        let mut mem_ranges = Vec::new();
+        mem_ranges.push(mem_range);
+        let mut cpu = crate::instr_test_setup(code, Some(mem_ranges));
         cpu.register.reg_a[3] = 0x00090000 - 0x7ff0;
         cpu.register.reg_a[4] = 0x00090008;
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_OVERFLOW;
@@ -354,7 +365,9 @@ mod tests {
             0x00090000,
             [0x12, 0x34, 0x56, 0x78, 0x00, 0x00, 0x00, 0x00].to_vec(),
         );
-        let mut cpu = crate::instr_test_setup(code, Some(mem_range));
+        let mut mem_ranges = Vec::new();
+        mem_ranges.push(mem_range);
+        let mut cpu = crate::instr_test_setup(code, Some(mem_ranges));
         cpu.register.reg_d[0] = 0x00000100;
         cpu.register.reg_a[4] = 0x0008f800 + 0x80; // $80 displacement is -128 => +128 => 0x80
         cpu.register.reg_a[5] = 0x00090004 + 0x7ff0; // $8010 displacement is -32752 => +32752 => 0x7ff0
@@ -387,7 +400,9 @@ mod tests {
         // arrange
         let code = [0x1d, 0xb8, 0x90, 0x00, 0x70, 0x7c].to_vec(); // MOVE.B ($9000).W,($7C,A6,D7.W)
         let mem_range = RamMemory::from_bytes(0xffff9000, [0x00, 0xff].to_vec());
-        let mut cpu = crate::instr_test_setup(code, Some(mem_range));
+        let mut mem_ranges = Vec::new();
+        mem_ranges.push(mem_range);
+        let mut cpu = crate::instr_test_setup(code, Some(mem_ranges));
         cpu.register.reg_d[7] = 0xffffff00;
         cpu.register.reg_a[6] = 0xffff9001 - 0x7c + 0x100;
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_OVERFLOW;
@@ -420,7 +435,9 @@ mod tests {
         let code = [0x11, 0xf9, 0x00, 0xC0, 0x00, 0x08, 0x90, 0x00, 0xff].to_vec(); // MOVE.B ($C00008).L,(9000).W
                                                                                     // DC.B $FF
         let mem_range = RamMemory::from_bytes(0xffff9000, [0x88].to_vec());
-        let mut cpu = crate::instr_test_setup(code, Some(mem_range));
+        let mut mem_ranges = Vec::new();
+        mem_ranges.push(mem_range);
+        let mut cpu = crate::instr_test_setup(code, Some(mem_ranges));
         cpu.register.reg_d[7] = 0xffffff00;
         cpu.register.reg_a[6] = 0xffff9001 - 0x7c + 0x100;
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_OVERFLOW;
@@ -450,27 +467,35 @@ mod tests {
     #[test]
     fn program_counter_inderect_with_displacement_mode_to_address_long_addressing_mode() {
         // arrange
-        let code = [0x33, 0xfa, 0x80, 0x00, 0x00, 0xC0, 0x00, 0x08, 0x00, 0x00].to_vec(); // MOVE.W ($8000,PC),($C00008).L
-                                                                                          // DC.B $00,$00
-        let mem_range = RamMemory::from_bytes(0x00BF8002, [0xab, 0xba].to_vec());
-        let mut cpu = crate::instr_test_setup(code, Some(mem_range));
+        let code = [].to_vec();
+        let code_mem_range = RamMemory::from_bytes(
+            0x00D00000,
+            [0x33, 0xfa, 0x80, 0x00, 0x00, 0xD0, 0x00, 0x08, 0x00, 0x00].to_vec(),
+        ); // MOVE.W ($8000,PC),($C00008).L
+           // DC.B $00,$00
+        let data_mem_range = RamMemory::from_bytes(0x00CF8002, [0xab, 0xba].to_vec());
+        let mut mem_ranges = Vec::new();
+        mem_ranges.push(code_mem_range);
+        mem_ranges.push(data_mem_range);
+        let mut cpu = crate::instr_test_setup(code, Some(mem_ranges));
+        cpu.register.reg_pc = ProgramCounter::from_address(0x00D00000);
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_OVERFLOW;
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
-                0xC00000,
-                0xC00008,
+                0xD00000,
+                0xD00008,
                 String::from("MOVE.W"),
-                String::from("($8000,PC) [$00BF8002],($00C00008).L")
+                String::from("($8000,PC) [$00CF8002],($00D00008).L")
             ),
             debug_result
         );
         // // act
         cpu.execute_next_instruction();
         // // assert
-        assert_eq!(0x00C00008, cpu.register.reg_pc.get_address());
-        assert_eq!(0xabba, cpu.memory.get_word(0x00BF8002));
+        assert_eq!(0x00D00008, cpu.register.reg_pc.get_address());
+        assert_eq!(0xabba, cpu.memory.get_word(0x00CF8002));
         assert_eq!(false, cpu.register.is_sr_carry_set());
         assert_eq!(false, cpu.register.is_sr_overflow_set());
         assert_eq!(false, cpu.register.is_sr_zero_set());
@@ -484,7 +509,9 @@ mod tests {
         let code = [0x2E, 0x3B, 0x5C, 0x80, 0x00, 0x00].to_vec(); // MOVE.L ($80,PC,D5.L*4),D7
                                                                   // DC.B $00,$00
         let mem_range = RamMemory::from_bytes(0x50BFFF82, [0xab, 0xba, 0xba, 0xab].to_vec());
-        let mut cpu = crate::instr_test_setup(code, Some(mem_range));
+        let mut mem_ranges = Vec::new();
+        mem_ranges.push(mem_range);
+        let mut cpu = crate::instr_test_setup(code, Some(mem_ranges));
         cpu.register.reg_d[5] = 0x14000000;
         cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_OVERFLOW;
         // act assert - debug

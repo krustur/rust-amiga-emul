@@ -1,4 +1,5 @@
 use std::{
+    any::Any,
     convert::TryInto,
     fmt::{self},
 };
@@ -25,6 +26,10 @@ impl fmt::Display for RamMemory {
 }
 
 impl Memory for RamMemory {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
     fn get_start_address(&self) -> u32 {
         return self.start_address;
     }

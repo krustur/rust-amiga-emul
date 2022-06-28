@@ -8,6 +8,7 @@ use crate::{
         ciamemory::CiaMemory, memrange::MemRange, rammemory::RamMemory, rommemory::RomMemory, Mem,
     },
 };
+use mem::memory::Memory;
 
 mod cpu;
 mod mem;
@@ -46,9 +47,9 @@ fn main() {
     // mem_ranges.push(MemRange::from_memory(Box::new(chip_ram)));
 
     let cia_memory = CiaMemory::new();
-    mem_ranges.push(MemRange::from_memory(Box::new(cia_memory)));
+    // mem_ranges.push(MemRange::from_memory(Box::new(cia_memory)));
 
-    let mem = Mem::new(mem_ranges);
+    let mem = Mem::new(mem_ranges, cia_memory);
 
     let mut cpu = Cpu::new(mem);
     cpu.memory.print_hex_dump(0xf80000, 0xf800ff);
@@ -123,20 +124,23 @@ fn main() {
 }
 
 #[cfg(test)]
-fn instr_test_setup<'a>(code: Vec<u8>, mem_range: Option<RamMemory>) -> cpu::Cpu {
+fn instr_test_setup(code: Vec<u8>, mem_ranges: Option<Vec<RamMemory>>) -> cpu::Cpu {
     use register::ProgramCounter;
 
     // TODO: Would be nice to not need the rom cheat
     let rom_cheat = RomMemory::from_file(0x000000, ROM_FILE_PATH).unwrap();
 
-    let mut mem_ranges = Vec::new();
+    let mut mem_ranges_internal = Vec::new();
     let code = RamMemory::from_bytes(0xC00000, code);
-    mem_ranges.push(MemRange::from_memory(Box::new(rom_cheat)));
-    mem_ranges.push(MemRange::from_memory(Box::new(code)));
-    if let Some(mem_range) = mem_range {
-        mem_ranges.push(MemRange::from_memory(Box::new(mem_range)));
+    mem_ranges_internal.push(MemRange::from_memory(Box::new(rom_cheat)));
+    mem_ranges_internal.push(MemRange::from_memory(Box::new(code)));
+    if let Some(mem_ranges) = mem_ranges {
+        for mem_range in mem_ranges {
+            mem_ranges_internal.push(MemRange::from_memory(Box::new(mem_range)));
+        }
     }
-    let mem = mem::Mem::new(mem_ranges);
+    let cia_memory = CiaMemory::new();
+    let mem = mem::Mem::new(mem_ranges_internal, cia_memory);
     let mut cpu = cpu::Cpu::new(mem);
     cpu.register.reg_pc = ProgramCounter::from_address(0xC00000);
     cpu

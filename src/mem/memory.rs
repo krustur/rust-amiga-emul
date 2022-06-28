@@ -1,7 +1,8 @@
-use std::fmt::Display;
+use std::{any::Any, fmt::Display};
 
-pub trait Memory: Display {
-    // pub trait Memory {
+pub trait Memory: Any + Display {
+    fn as_any(&self) -> &dyn Any;
+
     fn get_start_address(&self) -> u32;
     fn get_end_address(&self) -> u32;
     fn get_length(&self) -> usize;

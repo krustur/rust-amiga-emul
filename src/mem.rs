@@ -1,6 +1,8 @@
-use crate::mem::unmappedmemory::UnmappedMemory;
+use std::any::Any;
 
-use self::memrange::MemRange;
+use crate::mem::{ciamemory::CiaMemory, unmappedmemory::UnmappedMemory};
+
+use self::{memory::Memory, memrange::MemRange};
 
 pub mod ciamemory;
 pub mod memory;
@@ -12,10 +14,11 @@ pub mod unmappedmemory;
 pub struct Mem {
     ranges: Vec<MemRange>,
     default_range: MemRange,
+    cia_range: MemRange,
 }
 
 impl Mem {
-    pub fn new(ranges: Vec<memrange::MemRange>) -> Mem {
+    pub fn new(ranges: Vec<memrange::MemRange>, cia_memory: CiaMemory) -> Mem {
         for (pos, range) in ranges.iter().enumerate() {
             println!("MemRange: {}", range);
             for (other_pos, other_range) in ranges.iter().enumerate() {
@@ -45,14 +48,41 @@ impl Mem {
         }
 
         let default_range = UnmappedMemory::new(0x00000000, 0xffffffff);
+        // let cia_memory = CiaMemory::new();
+        let cia_range = MemRange::from_memory(Box::new(cia_memory));
+
+        let overlay = match cia_range.memory.as_any().downcast_ref::<CiaMemory>() {
+            Some(s) => s,
+            None => panic!("none"),
+        };
+        // let a = MemRange::from_memory(Box::new(cia_memory));
+        // ranges.push(MemRange::from_memory(Box::new(cia_memory)));
+        // let x =
         println!("Default range: {}", default_range);
         Mem {
             ranges,
             default_range: MemRange::from_memory(Box::new(default_range)),
+            cia_range: cia_range,
         }
     }
 
-    fn get_range(self: &Mem, address: u32) -> &memrange::MemRange {
+    fn get_memory(self: &Mem, address: u32) -> &MemRange {
+        let overlay = match self.cia_range.memory.as_any().downcast_ref::<CiaMemory>() {
+            Some(s) => s.overlay,
+            None => panic!("none"),
+        };
+        if !overlay {
+            println!("overlay: {}", overlay);
+        }
+
+        // let overlay = match Any::downcast_ref::<CiaMemory>() {
+        //     Some(s) => panic!("some s"),
+        //     None => panic!("none"),
+        // };
+        if address >= self.cia_range.start_address && address <= self.cia_range.end_address {
+            println!("CIA accessed");
+            return &self.cia_range;
+        }
         let pos = self
             .ranges
             .iter()
@@ -63,7 +93,11 @@ impl Mem {
         }
     }
 
-    fn get_range_mut(self: &mut Mem, address: u32) -> &mut memrange::MemRange {
+    fn get_memory_mut(self: &mut Mem, address: u32) -> &mut MemRange {
+        if address >= self.cia_range.start_address && address <= self.cia_range.end_address {
+            println!("CIA accessed");
+            return &mut self.cia_range;
+        }
         let pos = self
             .ranges
             .iter()
@@ -75,35 +109,35 @@ impl Mem {
     }
 
     pub fn get_long(self: &Mem, address: u32) -> u32 {
-        let range = self.get_range(address);
+        let range = self.get_memory(address);
         let result = range.memory.get_long(address);
         result
     }
 
     pub fn set_long(self: &mut Mem, address: u32, value: u32) {
-        let range = self.get_range_mut(address);
+        let range = self.get_memory_mut(address);
         let result = range.memory.set_long(address, value);
     }
 
     pub fn get_word(self: &Mem, address: u32) -> u16 {
-        let range = self.get_range(address);
+        let range = self.get_memory(address);
         let result = range.memory.get_word(address);
         result
     }
 
     pub fn set_word(self: &mut Mem, address: u32, value: u16) {
-        let range = self.get_range_mut(address);
+        let range = self.get_memory_mut(address);
         let result = range.memory.set_word(address, value);
     }
 
     pub fn get_byte(self: &Mem, address: u32) -> u8 {
-        let range = self.get_range(address);
+        let range = self.get_memory(address);
         let result = range.memory.get_byte(address);
         result
     }
 
     pub fn set_byte(self: &mut Mem, address: u32, value: u8) {
-        let range = self.get_range_mut(address);
+        let range = self.get_memory_mut(address);
         let result = range.memory.set_byte(address, value);
     }
 
