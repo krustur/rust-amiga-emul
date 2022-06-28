@@ -19,12 +19,9 @@ static ROM_FILE_PATH: &str = "D:\\Amiga\\AmigaOS 3.1.4 for 68k Amiga 1200\\OS314
 fn main() {
     println!("Begin emulation!");
 
-    // Incorrect, but let's load the ROM to address 0x0 for now
-    let rom_cheat = RomMemory::from_file(0x000000, ROM_FILE_PATH).unwrap();
-    let rom = RomMemory::from_file(0xF80000, ROM_FILE_PATH).unwrap();
-
     let mut mem_ranges: Vec<Box<dyn Memory>> = Vec::new();
-    mem_ranges.push(Box::new(rom_cheat));
+
+    let rom = RomMemory::from_file(0xF80000, ROM_FILE_PATH).unwrap();
     mem_ranges.push(Box::new(rom));
 
     // Hack for "CDTV & CD32 Extended ROM / A4000 Diagnostics ROM"
@@ -41,13 +38,17 @@ fn main() {
     // )));
 
     // 2 MB chip ram
-    // let chip_ram = RamMemory::from_range(0x00000000, 0x001FFFFF);
-    // mem_ranges.push(MemRange::from_memory(Box::new(chip_ram)));
+    let chip_ram = RamMemory::from_range(0x00000000, 0x001FFFFF);
+    mem_ranges.push(Box::new(chip_ram));
 
+    // CIA memory
     let cia_memory = CiaMemory::new();
     mem_ranges.push(Box::new(cia_memory));
 
-    let mem = Mem::new(mem_ranges);
+    // ROM overlay
+    let rom_overlay = RomMemory::from_file(0x000000, ROM_FILE_PATH).unwrap();
+
+    let mem = Mem::new(mem_ranges, Box::new(rom_overlay));
 
     let mut cpu = Cpu::new(mem);
     cpu.memory.print_hex_dump(0xf80000, 0xf800ff);
@@ -139,7 +140,8 @@ fn instr_test_setup(code: Vec<u8>, mem_ranges: Option<Vec<RamMemory>>) -> cpu::C
             mem_ranges_internal.push(Box::new(mem_range));
         }
     }
-    let mem = mem::Mem::new(mem_ranges_internal);
+    let overlay_hack = Box::new(RamMemory::from_range(0xffffffff, 0xffffffff));
+    let mem = mem::Mem::new(mem_ranges_internal, overlay_hack);
     let mut cpu = cpu::Cpu::new(mem);
     cpu.register.reg_pc = ProgramCounter::from_address(0xC00000);
     cpu

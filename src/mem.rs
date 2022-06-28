@@ -1,6 +1,5 @@
-use crate::mem::{ciamemory::CiaMemory, unmappedmemory::UnmappedMemory};
-
 use self::memory::Memory;
+use crate::mem::unmappedmemory::UnmappedMemory;
 
 pub mod ciamemory;
 pub mod memory;
@@ -11,11 +10,12 @@ pub mod unmappedmemory;
 pub struct Mem {
     ranges: Vec<Box<dyn Memory>>,
     default_range: Box<dyn Memory>,
+    overlay_memory: Box<dyn Memory>,
     overlay: bool,
 }
 
 impl Mem {
-    pub fn new(ranges: Vec<Box<dyn Memory>>) -> Mem {
+    pub fn new(ranges: Vec<Box<dyn Memory>>, overlay_memory: Box<dyn Memory>) -> Mem {
         for (pos, range) in ranges.iter().enumerate() {
             println!("MemRange: {}", range);
             for (other_pos, other_range) in ranges.iter().enumerate() {
@@ -52,12 +52,20 @@ impl Mem {
         Mem {
             ranges,
             default_range: Box::new(default_range),
+            overlay_memory,
             overlay: true,
             // cia_range: cia_range,
         }
     }
 
     fn get_memory(self: &Mem, address: u32) -> &Box<dyn Memory> {
+        if self.overlay
+            && address >= self.overlay_memory.get_start_address()
+            && address <= self.overlay_memory.get_end_address()
+        {
+            println!("OVERLAY access!");
+            return &self.overlay_memory;
+        }
         // let overlay = match self.cia_range.as_any().downcast_ref::<CiaMemory>() {
         //     Some(s) => s.overlay,
         //     None => panic!("none"),
@@ -88,6 +96,13 @@ impl Mem {
     }
 
     fn get_memory_mut(self: &mut Mem, address: u32) -> &mut Box<dyn Memory> {
+        if self.overlay
+            && address >= self.overlay_memory.get_start_address()
+            && address <= self.overlay_memory.get_end_address()
+        {
+            println!("OVERLAY access!");
+            return &mut self.overlay_memory;
+        }
         // if address >= self.cia_range.get_start_address()
         //     && address <= self.cia_range.get_end_address()
         // {
