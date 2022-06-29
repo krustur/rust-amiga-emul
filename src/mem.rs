@@ -2,6 +2,7 @@ use self::memory::Memory;
 use crate::mem::unmappedmemory::UnmappedMemory;
 
 pub mod ciamemory;
+pub mod custommemory;
 pub mod memory;
 pub mod rammemory;
 pub mod rommemory;

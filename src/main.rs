@@ -3,6 +3,8 @@
 #![allow(unused_variables)]
 
 use mem::memory::Memory;
+
+use crate::mem::custommemory::CustomMemory;
 use {
     cpu::Cpu,
     mem::{ciamemory::CiaMemory, rammemory::RamMemory, rommemory::RomMemory, Mem},
@@ -44,6 +46,10 @@ fn main() {
     // CIA memory
     let cia_memory = CiaMemory::new();
     mem_ranges.push(Box::new(cia_memory));
+
+    // CUSTOM memory
+    let custom_memory = CustomMemory::new();
+    mem_ranges.push(Box::new(custom_memory));
 
     // ROM overlay
     let rom_overlay = RomMemory::from_file(0x000000, ROM_FILE_PATH).unwrap();
