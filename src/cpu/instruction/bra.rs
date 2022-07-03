@@ -20,28 +20,20 @@ pub fn step<'a>(
     mem: &mut Mem,
 ) -> Result<StepResult, StepError> {
     let instr_word = pc.fetch_next_word(mem);
-    let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
-    let condition = Cpu::evaluate_condition(reg, &conditional_test);
 
     let displacement = Cpu::get_byte_from_word(instr_word);
 
     let result = match displacement {
         0x00 => {
             let displacement = pc.fetch_next_word(mem);
-            if condition == true {
-                pc.branch_word(displacement);
-            }
+            pc.branch_word(displacement);
         }
         0xff => {
             let displacement = pc.fetch_next_long(mem);
-            if condition == true {
-                pc.branch_long(displacement);
-            }
+            pc.branch_long(displacement);
         }
         _ => {
-            if condition == true {
-                pc.branch_byte(displacement);
-            }
+            pc.branch_byte(displacement);
         }
     };
     Ok(StepResult::Done {})
@@ -53,7 +45,6 @@ pub fn get_disassembly<'a>(
     mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let instr_word = pc.fetch_next_word(mem);
-    let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
 
     let displacement = Cpu::get_byte_from_word(instr_word);
 
@@ -62,7 +53,7 @@ pub fn get_disassembly<'a>(
             let displacement = pc.fetch_next_word(mem);
             Ok(GetDisassemblyResult::from_pc(
                 pc,
-                format!("B{}.W", conditional_test),
+                String::from("BRA.W"),
                 format!(
                     "${:04X} [${:08X}]",
                     displacement,
@@ -74,7 +65,7 @@ pub fn get_disassembly<'a>(
             let displacement = pc.fetch_next_long(mem);
             Ok(GetDisassemblyResult::from_pc(
                 pc,
-                format!("B{}.L", conditional_test),
+                String::from("BRA.L"),
                 format!(
                     "${:08X} [${:08X}]",
                     displacement,
@@ -84,7 +75,7 @@ pub fn get_disassembly<'a>(
         }
         _ => Ok(GetDisassemblyResult::from_pc(
             pc,
-            format!("B{}.B", conditional_test),
+            String::from("BRA.B"),
             format!(
                 "${:02X} [${:08X}]",
                 displacement,

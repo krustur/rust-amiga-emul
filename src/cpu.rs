@@ -69,6 +69,20 @@ impl Cpu {
                 instruction::addi::get_disassembly,
             ),
             Instruction::new(
+                String::from("BRA"),
+                0xff00,
+                0x6000,
+                instruction::bra::step,
+                instruction::bra::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("BSR"),
+                0xff00,
+                0x6100,
+                instruction::bsr::step,
+                instruction::bsr::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("BTST"),
                 0xf1c0,
                 0x0100,

@@ -53,7 +53,6 @@ pub fn get_disassembly<'a>(
     mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let instr_word = pc.fetch_next_word(mem);
-    let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
 
     let displacement = Cpu::get_byte_from_word(instr_word);
 
@@ -62,7 +61,7 @@ pub fn get_disassembly<'a>(
             let displacement = pc.fetch_next_word(mem);
             Ok(GetDisassemblyResult::from_pc(
                 pc,
-                format!("B{}.W", conditional_test),
+                String::from("BSR.W"),
                 format!(
                     "${:04X} [${:08X}]",
                     displacement,
@@ -74,7 +73,7 @@ pub fn get_disassembly<'a>(
             let displacement = pc.fetch_next_long(mem);
             Ok(GetDisassemblyResult::from_pc(
                 pc,
-                format!("B{}.L", conditional_test),
+                String::from("BSR.L"),
                 format!(
                     "${:08X} [${:08X}]",
                     displacement,
@@ -84,7 +83,7 @@ pub fn get_disassembly<'a>(
         }
         _ => Ok(GetDisassemblyResult::from_pc(
             pc,
-            format!("B{}.B", conditional_test),
+            String::from("BSR.B"),
             format!(
                 "${:02X} [${:08X}]",
                 displacement,
