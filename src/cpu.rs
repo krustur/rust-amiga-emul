@@ -801,7 +801,6 @@ impl Cpu {
                 EffectiveAddressDebug { format: format }
             }
             EffectiveAddressingMode::ARegIndirectWithPostIncrement {
-                operation_size,
                 ea_register,
                 ea_address,
             } => {
@@ -810,7 +809,6 @@ impl Cpu {
                 EffectiveAddressDebug { format: format }
             }
             EffectiveAddressingMode::ARegIndirectWithPreDecrement {
-                operation_size,
                 ea_register,
                 ea_address,
             } => {

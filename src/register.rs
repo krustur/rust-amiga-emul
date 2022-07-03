@@ -139,7 +139,6 @@ impl ProgramCounter {
         &mut self,
         reg: &Register,
         mem: &Mem,
-        // operation_size: Option<OperationSize>,
         get_operation_size_func: T,
     ) -> Result<EffectiveAddressingData, InstructionError>
     where
@@ -162,7 +161,6 @@ impl ProgramCounter {
         instr_word: u16,
         reg: &Register,
         mem: &Mem,
-        // operation_size: Option<OperationSize>,
         get_operation_size_func: T,
         bit_pos: u8,
         reg_bit_pos: u8,
@@ -190,28 +188,16 @@ impl ProgramCounter {
             }
             0b011 => {
                 let address = reg.reg_a[ea_register];
-                // let operation_size = match operation_size {
-                //     None => panic!("Must have operation_size for ARegIndirectWithPostIncrement!"),
-                //     Some(operation_size) => operation_size,
-                // };
-                // reg.reg_a[register] += size_in_bytes;
                 EffectiveAddressingMode::ARegIndirectWithPostIncrement {
-                    operation_size,
                     ea_register,
                     ea_address: address,
                 }
             }
             0b100 => {
                 // (-An)
-                // let operation_size = match operation_size {
-                //     None => panic!("Must have operation_size for ARegIndirectWithPreDecrement!"),
-                //     Some(operation_size) => operation_size,
-                // };
-                // reg.reg_a[register] -= size_in_bytes;
                 let (address, _) =
                     reg.reg_a[ea_register].overflowing_sub(operation_size.size_in_bytes());
                 EffectiveAddressingMode::ARegIndirectWithPreDecrement {
-                    operation_size,
                     ea_register,
                     ea_address: address,
                 }
@@ -235,10 +221,6 @@ impl ProgramCounter {
                     0x8000 => (reg.reg_a[register], RegisterType::Address),
                     _ => (reg.reg_d[register], RegisterType::Data),
                 };
-                // let register_type = match extension_word & 0x8000 {
-                //     0x8000 => RegisterType::Address,
-                //     _ => RegisterType::Data,
-                // };
                 let (register_value, index_size) = match extension_word & 0x0800 {
                     0x0800 => (register_value, OperationSize::Long),
                     _ => (
@@ -246,10 +228,6 @@ impl ProgramCounter {
                         OperationSize::Word,
                     ),
                 };
-                // let operation_size = match extension_word & 0x0800 {
-                //     0x0800 => OperationSize::Long,
-                //     _ => OperationSize::Word,
-                // };
                 let scale_factor = Cpu::extract_scale_factor_from_bit_pos(extension_word, 9);
                 let extension_word_format = match extension_word & 0x0100 {
                     0x0100 => 'F', // full

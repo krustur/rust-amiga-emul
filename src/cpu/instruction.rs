@@ -133,13 +133,13 @@ pub enum EffectiveAddressingMode {
     },
     ARegIndirectWithPostIncrement {
         //  0b011       (An)+
-        operation_size: OperationSize,
+        // operation_size: OperationSize,
         ea_register: usize,
         ea_address: u32,
     },
     ARegIndirectWithPreDecrement {
         //   0b100       (-An)
-        operation_size: OperationSize,
+        // operation_size: OperationSize,
         ea_register: usize,
         ea_address: u32,
     },

@@ -27,7 +27,7 @@ pub fn step<'a>(
             Ok(OperationSize::Long)
         })?;
     let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;
-    let ea_address = ea_data.get_address(pc, None, reg, mem);
+    let ea_address = ea_data.get_address(pc, reg, mem);
 
     reg.reg_a[register] = ea_address;
     Ok(StepResult::Done {})

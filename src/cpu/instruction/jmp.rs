@@ -25,7 +25,7 @@ pub fn step<'a>(
         pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
             Ok(OperationSize::Long)
         })?;
-    let ea_address = ea_data.get_address(pc, None, reg, mem);
+    let ea_address = ea_data.get_address(pc, reg, mem);
     pc.jump_long(ea_address);
 
     Ok(StepResult::Done {})

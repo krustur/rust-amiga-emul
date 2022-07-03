@@ -51,13 +51,7 @@ impl EffectiveAddressingData {
         }
     }
 
-    pub fn get_address(
-        &self,
-        pc: &mut ProgramCounter,
-        operation_size: Option<OperationSize>,
-        reg: &mut Register,
-        mem: &Mem,
-    ) -> u32 {
+    pub fn get_address(&self, pc: &mut ProgramCounter, reg: &mut Register, mem: &Mem) -> u32 {
         match self.ea_mode {
             EffectiveAddressingMode::DRegDirect {
                 ea_register: register,
@@ -79,7 +73,6 @@ impl EffectiveAddressingData {
                 ea_address
             }
             EffectiveAddressingMode::ARegIndirectWithPostIncrement {
-                operation_size,
                 ea_register,
                 ea_address,
             } => {
@@ -87,7 +80,6 @@ impl EffectiveAddressingData {
                 ea_address
             }
             EffectiveAddressingMode::ARegIndirectWithPreDecrement {
-                operation_size,
                 ea_register,
                 ea_address,
             } => {
@@ -182,20 +174,20 @@ impl EffectiveAddressingData {
                 data
             }
             _ => {
-                let ea = self.get_address(pc, Some(OperationSize::Byte), reg, mem);
+                let ea = self.get_address(pc, reg, mem);
                 let result = mem.get_byte(ea);
                 if apply_increment_decrement {
                     match self.ea_mode {
                         EffectiveAddressingMode::ARegIndirectWithPostIncrement {
-                            operation_size,
+                            // operation_size,
                             ea_register,
                             ea_address,
-                        } => reg.reg_a[ea_register] += operation_size.size_in_bytes(),
+                        } => reg.reg_a[ea_register] += self.operation_size.size_in_bytes(),
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
-                            operation_size,
+                            // operation_size,
                             ea_register,
                             ea_address,
-                        } => reg.reg_a[ea_register] = operation_size.size_in_bytes(),
+                        } => reg.reg_a[ea_register] = self.operation_size.size_in_bytes(),
                         _ => (),
                     }
                 }
@@ -225,20 +217,20 @@ impl EffectiveAddressingData {
                 data
             }
             _ => {
-                let ea = self.get_address(pc, Some(OperationSize::Word), reg, mem);
+                let ea = self.get_address(pc, reg, mem);
                 let result = mem.get_word(ea);
                 if apply_increment_decrement {
                     match self.ea_mode {
                         EffectiveAddressingMode::ARegIndirectWithPostIncrement {
-                            operation_size,
+                            // operation_size,
                             ea_register,
                             ea_address,
-                        } => reg.reg_a[ea_register] += operation_size.size_in_bytes(),
+                        } => reg.reg_a[ea_register] += self.operation_size.size_in_bytes(),
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
-                            operation_size,
+                            // operation_size,
                             ea_register,
                             ea_address,
-                        } => reg.reg_a[ea_register] -= operation_size.size_in_bytes(),
+                        } => reg.reg_a[ea_register] -= self.operation_size.size_in_bytes(),
                         _ => (),
                     }
                 }
@@ -268,20 +260,20 @@ impl EffectiveAddressingData {
                 data
             }
             _ => {
-                let ea = self.get_address(pc, Some(OperationSize::Long), reg, mem);
+                let ea = self.get_address(pc, reg, mem);
                 let result = mem.get_long(ea);
                 if apply_increment_decrement {
                     match self.ea_mode {
                         EffectiveAddressingMode::ARegIndirectWithPostIncrement {
-                            operation_size,
+                            // operation_size,
                             ea_register,
                             ea_address,
-                        } => reg.reg_a[ea_register] += operation_size.size_in_bytes(),
+                        } => reg.reg_a[ea_register] += self.operation_size.size_in_bytes(),
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
-                            operation_size,
+                            // operation_size,
                             ea_register,
                             ea_address,
-                        } => reg.reg_a[ea_register] -= operation_size.size_in_bytes(),
+                        } => reg.reg_a[ea_register] -= self.operation_size.size_in_bytes(),
                         _ => (),
                     }
                 }
@@ -318,20 +310,18 @@ impl EffectiveAddressingData {
                 panic!("set_ea_value_word invalid EffectiveAddressingMode::ImmediateData");
             }
             _ => {
-                let ea = self.get_address(pc, Some(OperationSize::Byte), reg, mem);
+                let ea = self.get_address(pc, reg, mem);
                 mem.set_byte(ea, value);
                 if apply_increment_decrement {
                     match self.ea_mode {
                         EffectiveAddressingMode::ARegIndirectWithPostIncrement {
-                            operation_size,
                             ea_register,
                             ea_address,
-                        } => reg.reg_a[ea_register] += operation_size.size_in_bytes(),
+                        } => reg.reg_a[ea_register] += self.operation_size.size_in_bytes(),
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
-                            operation_size,
                             ea_register,
                             ea_address,
-                        } => reg.reg_a[ea_register] -= operation_size.size_in_bytes(),
+                        } => reg.reg_a[ea_register] -= self.operation_size.size_in_bytes(),
                         _ => (),
                     }
                 }
@@ -387,22 +377,20 @@ impl EffectiveAddressingData {
                 panic!("set_ea_value_word invalid EffectiveAddressingMode::ImmediateData");
             }
             _ => {
-                let ea = self.get_address(pc, Some(OperationSize::Word), reg, mem);
+                let ea = self.get_address(pc, reg, mem);
                 mem.set_word(ea, value);
                 if apply_increment_decrement {
                     match self.ea_mode {
                         EffectiveAddressingMode::ARegIndirectWithPostIncrement {
-                            operation_size,
                             ea_register,
                             ea_address,
                         } => {
-                            reg.reg_a[ea_register] += operation_size.size_in_bytes();
+                            reg.reg_a[ea_register] += self.operation_size.size_in_bytes();
                         }
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
-                            operation_size,
                             ea_register,
                             ea_address,
-                        } => reg.reg_a[ea_register] -= operation_size.size_in_bytes(),
+                        } => reg.reg_a[ea_register] -= self.operation_size.size_in_bytes(),
                         _ => (),
                     }
                 }
@@ -458,20 +446,18 @@ impl EffectiveAddressingData {
                 panic!("set_ea_value_word invalid EffectiveAddressingMode::ImmediateData");
             }
             _ => {
-                let ea = self.get_address(pc, Some(OperationSize::Long), reg, mem);
+                let ea = self.get_address(pc, reg, mem);
                 mem.set_long(ea, value);
                 if apply_increment_decrement {
                     match self.ea_mode {
                         EffectiveAddressingMode::ARegIndirectWithPostIncrement {
-                            operation_size,
                             ea_register,
                             ea_address,
-                        } => reg.reg_a[ea_register] += operation_size.size_in_bytes(),
+                        } => reg.reg_a[ea_register] += self.operation_size.size_in_bytes(),
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
-                            operation_size,
                             ea_register,
                             ea_address,
-                        } => reg.reg_a[ea_register] -= operation_size.size_in_bytes(),
+                        } => reg.reg_a[ea_register] -= self.operation_size.size_in_bytes(),
                         _ => (),
                     }
                 }
