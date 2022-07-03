@@ -167,6 +167,20 @@ impl Cpu {
                 instruction::not::get_disassembly,
             ),
             Instruction::new(
+                String::from("SUB"),
+                0xf000,
+                0x9000,
+                instruction::sub::step,
+                instruction::sub::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("SUBX"),
+                0xf130,
+                0x9100,
+                instruction::subx::step,
+                instruction::subx::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("SUBQ"),
                 0xf100,
                 0x5100,

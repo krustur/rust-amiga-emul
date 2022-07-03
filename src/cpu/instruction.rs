@@ -22,7 +22,9 @@ pub mod mov;
 pub mod moveq;
 pub mod nop;
 pub mod not;
+pub mod sub;
 pub mod subq;
+pub mod subx;
 
 pub struct InstructionError {
     pub details: String,
