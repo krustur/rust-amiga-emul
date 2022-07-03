@@ -34,13 +34,19 @@ impl fmt::Display for EffectiveAddressDebug {
 
 pub struct EffectiveAddressingData {
     pub instr_word: u16,
+    pub operation_size: OperationSize,
     pub ea_mode: EffectiveAddressingMode,
 }
 
 impl EffectiveAddressingData {
-    pub fn create(instr_word: u16, ea_mode: EffectiveAddressingMode) -> EffectiveAddressingData {
+    pub fn create(
+        instr_word: u16,
+        operation_size: OperationSize,
+        ea_mode: EffectiveAddressingMode,
+    ) -> EffectiveAddressingData {
         EffectiveAddressingData {
             instr_word,
+            operation_size,
             ea_mode,
         }
     }

@@ -44,11 +44,10 @@ pub fn step<'a>(
         _ => panic!("Unrecognized opmode"),
     };
 
-    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
-        reg,
-        mem,
-        Some(operation_size),
-    )?;
+    let ea_data =
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
+            Ok(operation_size)
+        })?;
     let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;
 
     let status_register_result = match opmode {
@@ -141,11 +140,10 @@ pub fn get_disassembly<'a>(
         _ => panic!("Unrecognized opmode"),
     };
 
-    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
-        reg,
-        mem,
-        Some(operation_size),
-    )?;
+    let ea_data =
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
+            Ok(operation_size)
+        })?;
     let ea_mode = ea_data.ea_mode;
     let opmode = Cpu::extract_op_mode_from_bit_pos_6(ea_data.instr_word);
     let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;

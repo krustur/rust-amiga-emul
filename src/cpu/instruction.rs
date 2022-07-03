@@ -11,6 +11,7 @@ pub mod addi;
 pub mod addq;
 pub mod addx;
 pub mod bcc;
+pub mod btst;
 pub mod clr;
 pub mod cmp;
 pub mod cmpi;
@@ -208,11 +209,11 @@ pub enum EffectiveAddressingMode {
     },
 }
 
-#[derive(FromPrimitive, Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum OperationSize {
-    Byte = 0b00,
-    Word = 0b01,
-    Long = 0b10,
+    Byte,
+    Word,
+    Long,
 }
 
 impl OperationSize {

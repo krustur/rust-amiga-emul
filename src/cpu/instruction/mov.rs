@@ -24,22 +24,22 @@ pub fn step<'a>(
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<StepResult, StepError> {
-    let instr_word = pc.peek_next_word(mem);
-    let size = Cpu::extract_size011110_from_bit_pos(instr_word, 12)?;
     let src_ea_data =
-        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size))?;
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
+            Cpu::extract_size011110_from_bit_pos(instr_word, 12)
+        })?;
 
     let dst_ea_data = pc.get_effective_addressing_data_from_instr_word_bit_pos(
         src_ea_data.instr_word,
         reg,
         mem,
-        Some(size),
+        |_| Ok(src_ea_data.operation_size),
         6,
         9,
     )?;
     let dst_ea_mode = dst_ea_data.ea_mode;
 
-    let set_result = match size {
+    let set_result = match src_ea_data.operation_size {
         OperationSize::Byte => {
             let ea_value = src_ea_data.get_value_byte(pc, reg, mem, true);
             dst_ea_data.set_value_byte(pc, reg, mem, ea_value, true)
@@ -65,17 +65,17 @@ pub fn get_disassembly<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
-    let instr_word = pc.peek_next_word(mem);
-    let size = Cpu::extract_size011110_from_bit_pos(instr_word, 12)?;
     let src_ea_data =
-        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size))?;
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
+            Cpu::extract_size011110_from_bit_pos(instr_word, 12)
+        })?;
     let src_ea_mode = src_ea_data.ea_mode;
 
     let dst_ea_data = pc.get_effective_addressing_data_from_instr_word_bit_pos(
         src_ea_data.instr_word,
         reg,
         mem,
-        Some(size),
+        |_| Ok(src_ea_data.operation_size),
         6,
         9,
     )?;
@@ -83,20 +83,22 @@ pub fn get_disassembly<'a>(
 
     // let size = Cpu::extract_size011110_from_bit_pos(src_ea_data.instr_word, 12)?;
 
-    let src_ea_debug = Cpu::get_ea_format(src_ea_mode, pc, Some(size), reg, mem);
-    let dst_ea_debug = Cpu::get_ea_format(dst_ea_mode, pc, Some(size), reg, mem);
+    let src_ea_debug =
+        Cpu::get_ea_format(src_ea_mode, pc, Some(src_ea_data.operation_size), reg, mem);
+    let dst_ea_debug =
+        Cpu::get_ea_format(dst_ea_mode, pc, Some(src_ea_data.operation_size), reg, mem);
 
     let name = match dst_ea_mode {
         EffectiveAddressingMode::ARegDirect {
             ea_register: register,
-        } => match size {
+        } => match src_ea_data.operation_size {
             OperationSize::Byte => {
                 panic!("AddressRegisterDirect as destination only available for Word and Long")
             }
             OperationSize::Word => String::from("MOVEA.W"),
             OperationSize::Long => String::from("MOVEA.L"),
         },
-        _ => match size {
+        _ => match src_ea_data.operation_size {
             OperationSize::Byte => String::from("MOVE.B"),
             OperationSize::Word => String::from("MOVE.W"),
             OperationSize::Long => String::from("MOVE.L"),

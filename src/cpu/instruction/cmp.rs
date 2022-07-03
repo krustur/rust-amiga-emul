@@ -56,11 +56,10 @@ pub fn step<'a>(
         CmpOpMode::CmpaWord => OperationSize::Word,
         CmpOpMode::CmpaLong => OperationSize::Long,
     };
-    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
-        reg,
-        mem,
-        Some(operation_size),
-    )?;
+    let ea_data =
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |_| {
+            Ok(operation_size)
+        })?;
     let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;
 
     let status_register_result = match operation_mode {
@@ -125,11 +124,10 @@ pub fn get_disassembly<'a>(
         CmpOpMode::CmpaWord => ("CMPA", OperationSize::Word, RegisterType::Address),
         CmpOpMode::CmpaLong => ("CMPA", OperationSize::Long, RegisterType::Address),
     };
-    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
-        reg,
-        mem,
-        Some(operation_size),
-    )?;
+    let ea_data =
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |_| {
+            Ok(operation_size)
+        })?;
     let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;
 
     let ea_format = Cpu::get_ea_format(ea_data.ea_mode, pc, None, reg, mem);

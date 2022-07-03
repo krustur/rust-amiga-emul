@@ -1,4 +1,6 @@
-use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResult};
+use super::{
+    GetDisassemblyResult, GetDisassemblyResultError, OperationSize, StepError, StepResult,
+};
 use crate::{
     cpu::Cpu,
     mem::Mem,
@@ -21,7 +23,9 @@ pub fn step<'a>(
 ) -> Result<StepResult, StepError> {
     // TODO: Tests
     let ea_data =
-        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, None)?;
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
+            Ok(OperationSize::Long)
+        })?;
     let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;
     let ea_address = ea_data.get_address(pc, None, reg, mem);
 
@@ -36,7 +40,9 @@ pub fn get_disassembly<'a>(
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     // TODO: Tests
     let ea_data =
-        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, None)?;
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
+            Ok(OperationSize::Long)
+        })?;
     let ea_mode = ea_data.ea_mode;
     let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;
 

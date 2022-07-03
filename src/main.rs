@@ -57,7 +57,7 @@ fn main() {
     let mem = Mem::new(mem_ranges, Box::new(rom_overlay));
 
     let mut cpu = Cpu::new(mem);
-    cpu.memory.print_hex_dump(0xf80000, 0xf800ff);
+    cpu.memory.print_hex_dump(0xf80000, 0xf801ff);
 
     cpu.print_registers();
 

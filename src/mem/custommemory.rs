@@ -90,7 +90,6 @@ impl CustomMemory {
     }
 
     pub fn set_color_rgb4(&mut self, color_index: usize, color_rgb4: u16) {
-        // println!("\x1b[93mError\x1b[0m");
         let mut r = (color_rgb4 >> 8) & 0x000f;
         let mut g = (color_rgb4 >> 4) & 0x000f;
         let mut b = color_rgb4 & 0x000f;

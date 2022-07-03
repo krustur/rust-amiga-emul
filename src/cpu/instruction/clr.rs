@@ -19,12 +19,12 @@ pub fn step<'a>(
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<StepResult, StepError> {
-    let instr_word = pc.peek_next_word(mem);
-    let size = Cpu::extract_size000110_from_bit_pos_6(instr_word)?;
     let ea_data =
-        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size))?;
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
+            Cpu::extract_size000110_from_bit_pos_6(instr_word)
+        })?;
 
-    match size {
+    match ea_data.operation_size {
         OperationSize::Byte => ea_data.set_value_byte(pc, reg, mem, 0x00, true),
         OperationSize::Word => ea_data.set_value_word(pc, reg, mem, 0x0000, true),
         OperationSize::Long => ea_data.set_value_long(pc, reg, mem, 0x00000000, true),
@@ -40,16 +40,16 @@ pub fn get_disassembly<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
-    let instr_word = pc.peek_next_word(mem);
-    let size = Cpu::extract_size000110_from_bit_pos_6(instr_word)?;
     let ea_data =
-        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size))?;
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
+            Cpu::extract_size000110_from_bit_pos_6(instr_word)
+        })?;
 
-    let ea_format = Cpu::get_ea_format(ea_data.ea_mode, pc, Some(size), reg, mem);
+    let ea_format = Cpu::get_ea_format(ea_data.ea_mode, pc, Some(ea_data.operation_size), reg, mem);
 
     Ok(GetDisassemblyResult::from_pc(
         pc,
-        String::from(format!("CLR.{}", size.get_format())),
+        String::from(format!("CLR.{}", ea_data.operation_size.get_format())),
         ea_format.format,
     ))
 }

@@ -69,6 +69,20 @@ impl Cpu {
                 instruction::addi::get_disassembly,
             ),
             Instruction::new(
+                String::from("BTST"),
+                0xf1c0,
+                0x0100,
+                instruction::btst::step,
+                instruction::btst::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("BTST"),
+                0xffc0,
+                0x0800,
+                instruction::btst::step,
+                instruction::btst::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("DBcc"), // DBcc need to be before ADDQ
                 0xf0f8,
                 0x50c8,

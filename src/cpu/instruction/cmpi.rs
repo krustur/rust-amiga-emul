@@ -19,15 +19,12 @@ pub fn step<'a>(
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<StepResult, StepError> {
-    let instr_word = pc.peek_next_word(mem);
-    let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word)?;
-    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
-        reg,
-        mem,
-        Some(operation_size),
-    )?;
+    let ea_data =
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
+            Cpu::extract_size000110_from_bit_pos_6(instr_word)
+        })?;
 
-    let status_register_result = match operation_size {
+    let status_register_result = match ea_data.operation_size {
         OperationSize::Byte => {
             pc.skip_byte();
             let source = pc.fetch_next_byte(mem);
@@ -65,17 +62,14 @@ pub fn get_disassembly<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
-    let instr_word = pc.peek_next_word(mem);
-    let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word)?;
-    let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
-        reg,
-        mem,
-        Some(operation_size),
-    )?;
+    let ea_data =
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
+            Cpu::extract_size000110_from_bit_pos_6(instr_word)
+        })?;
 
     let ea_format = Cpu::get_ea_format(ea_data.ea_mode, pc, None, reg, mem);
 
-    let immediate_data = match operation_size {
+    let immediate_data = match ea_data.operation_size {
         OperationSize::Byte => {
             pc.skip_byte();
             format!("#${:02X}", pc.fetch_next_byte(mem))
@@ -86,7 +80,7 @@ pub fn get_disassembly<'a>(
 
     Ok(GetDisassemblyResult::from_pc(
         pc,
-        format!("CMPI.{}", operation_size.get_format()),
+        format!("CMPI.{}", ea_data.operation_size.get_format()),
         format!("{},{}", immediate_data, ea_format),
     ))
 }

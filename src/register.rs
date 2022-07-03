@@ -135,35 +135,44 @@ impl ProgramCounter {
         self.address_next
     }
 
-    pub fn fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
+    pub fn fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0<T>(
         &mut self,
         reg: &Register,
         mem: &Mem,
-        operation_size: Option<OperationSize>,
-    ) -> Result<EffectiveAddressingData, InstructionError> {
+        // operation_size: Option<OperationSize>,
+        get_operation_size_func: T,
+    ) -> Result<EffectiveAddressingData, InstructionError>
+    where
+        T: Fn(u16) -> Result<OperationSize, InstructionError>,
+    {
         // TODO: Replace operation_size with Closure
         let instr_word = self.fetch_next_word(mem);
         self.get_effective_addressing_data_from_instr_word_bit_pos(
             instr_word,
             reg,
             mem,
-            operation_size,
+            get_operation_size_func,
             3,
             0,
         )
     }
 
-    pub fn get_effective_addressing_data_from_instr_word_bit_pos(
+    pub fn get_effective_addressing_data_from_instr_word_bit_pos<T>(
         &mut self,
         instr_word: u16,
         reg: &Register,
         mem: &Mem,
-        operation_size: Option<OperationSize>,
+        // operation_size: Option<OperationSize>,
+        get_operation_size_func: T,
         bit_pos: u8,
         reg_bit_pos: u8,
-    ) -> Result<EffectiveAddressingData, InstructionError> {
+    ) -> Result<EffectiveAddressingData, InstructionError>
+    where
+        T: Fn(u16) -> Result<OperationSize, InstructionError>,
+    {
         let ea_mode = (instr_word >> bit_pos) & 0x0007;
         let ea_register = Cpu::extract_register_index_from_bit_pos(instr_word, reg_bit_pos)?;
+        let operation_size = get_operation_size_func(instr_word)?;
         let ea_mode = match ea_mode {
             0b000 => EffectiveAddressingMode::DRegDirect {
                 ea_register: (ea_register),
@@ -181,10 +190,10 @@ impl ProgramCounter {
             }
             0b011 => {
                 let address = reg.reg_a[ea_register];
-                let operation_size = match operation_size {
-                    None => panic!("Must have operation_size for ARegIndirectWithPostIncrement!"),
-                    Some(operation_size) => operation_size,
-                };
+                // let operation_size = match operation_size {
+                //     None => panic!("Must have operation_size for ARegIndirectWithPostIncrement!"),
+                //     Some(operation_size) => operation_size,
+                // };
                 // reg.reg_a[register] += size_in_bytes;
                 EffectiveAddressingMode::ARegIndirectWithPostIncrement {
                     operation_size,
@@ -194,10 +203,10 @@ impl ProgramCounter {
             }
             0b100 => {
                 // (-An)
-                let operation_size = match operation_size {
-                    None => panic!("Must have operation_size for ARegIndirectWithPreDecrement!"),
-                    Some(operation_size) => operation_size,
-                };
+                // let operation_size = match operation_size {
+                //     None => panic!("Must have operation_size for ARegIndirectWithPreDecrement!"),
+                //     Some(operation_size) => operation_size,
+                // };
                 // reg.reg_a[register] -= size_in_bytes;
                 let (address, _) =
                     reg.reg_a[ea_register].overflowing_sub(operation_size.size_in_bytes());
@@ -340,28 +349,29 @@ impl ProgramCounter {
                     EffectiveAddressingMode::AbsolutLongAddressing { ea_address }
                 }
                 0b100 => match operation_size {
-                    None => panic!("Must have operation_size for Immediate data!"),
-                    Some(operation_size) => match operation_size {
-                        OperationSize::Byte => {
-                            self.skip_byte();
-                            let data = self.fetch_next_byte(mem);
-                            EffectiveAddressingMode::ImmediateDataByte { data }
-                        }
-                        OperationSize::Word => {
-                            let data = self.fetch_next_word(mem);
-                            EffectiveAddressingMode::ImmediateDataWord { data }
-                        }
-                        OperationSize::Long => {
-                            let data = self.fetch_next_long(mem);
-                            EffectiveAddressingMode::ImmediateDataLong { data }
-                        }
-                    },
+                    OperationSize::Byte => {
+                        self.skip_byte();
+                        let data = self.fetch_next_byte(mem);
+                        EffectiveAddressingMode::ImmediateDataByte { data }
+                    }
+                    OperationSize::Word => {
+                        let data = self.fetch_next_word(mem);
+                        EffectiveAddressingMode::ImmediateDataWord { data }
+                    }
+                    OperationSize::Long => {
+                        let data = self.fetch_next_long(mem);
+                        EffectiveAddressingMode::ImmediateDataLong { data }
+                    }
                 },
                 _ => panic!("Unable to extract EffectiveAddressingMode"),
             },
             _ => panic!("Unable to extract EffectiveAddressingMode"),
         };
-        Ok(EffectiveAddressingData::create(instr_word, ea_mode))
+        Ok(EffectiveAddressingData::create(
+            instr_word,
+            operation_size,
+            ea_mode,
+        ))
     }
 }
 

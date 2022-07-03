@@ -22,15 +22,15 @@ pub fn step<'a>(
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<StepResult, StepError> {
-    let instr_word = pc.peek_next_word(mem);
-    let size = Cpu::extract_size000110_from_bit_pos_6(instr_word)?;
     let ea_data =
-        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size))?;
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
+            Cpu::extract_size000110_from_bit_pos_6(instr_word)
+        })?;
     let ea_mode = ea_data.ea_mode;
 
     let ea_format = Cpu::get_ea_format(ea_mode, pc, None, reg, mem);
     let data = Cpu::extract_3_bit_data_1_to_8_from_word_at_pos(ea_data.instr_word, 9);
-    let status_register_result = match size {
+    let status_register_result = match ea_data.operation_size {
         OperationSize::Byte => {
             let ea_value = ea_data.get_value_byte(pc, reg, mem, false);
             let add_result = Cpu::add_bytes(data, ea_value);
@@ -72,14 +72,14 @@ pub fn get_disassembly<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
-    let instr_word = pc.peek_next_word(mem);
-    let size = Cpu::extract_size000110_from_bit_pos_6(instr_word)?;
     let ea_data =
-        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, Some(size))?;
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
+            Cpu::extract_size000110_from_bit_pos_6(instr_word)
+        })?;
     let ea_mode = ea_data.ea_mode;
-    let ea_format = Cpu::get_ea_format(ea_mode, pc, None, reg, mem);
+    let ea_format = Cpu::get_ea_format(ea_mode, pc, Some(ea_data.operation_size), reg, mem);
     let data = Cpu::extract_3_bit_data_1_to_8_from_word_at_pos(ea_data.instr_word, 9);
-    match size {
+    match ea_data.operation_size {
         OperationSize::Byte => Ok(GetDisassemblyResult::from_pc(
             pc,
             String::from("ADDQ.B"),
