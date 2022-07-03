@@ -1,8 +1,5 @@
-use num_traits::zero;
-
 use super::{
-    EffectiveAddressingMode, GetDisassemblyResult, GetDisassemblyResultError, OperationSize,
-    StepError, StepResult,
+    GetDisassemblyResult, GetDisassemblyResultError, OperationSize, StepError, StepResult,
 };
 use crate::{
     cpu::Cpu,
@@ -39,7 +36,6 @@ pub fn step<'a>(
     let bit_number = match ea_data.instr_word & 0x0100 {
         0x0100 => {
             // Bit Number Dynamic, Specified in a Register
-            println!("Bit Number Dynamic, Specified in a Register");
             let dreg = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;
             match ea_data.operation_size {
                 OperationSize::Long => Cpu::get_byte_from_long(reg.reg_d[dreg]) % 32,
@@ -59,32 +55,20 @@ pub fn step<'a>(
         OperationSize::Long => {
             let bit_number_mask = 1 << bit_number;
             let value = ea_data.get_value_long(pc, reg, mem, true);
-            println!(
-                "testing bit {} [{}] in value ${:08X}",
-                bit_number, bit_number_mask, value
-            );
             (value & bit_number_mask) != 0
         }
         _ => {
             let bit_number_mask = 1 << bit_number;
             let value = ea_data.get_value_byte(pc, reg, mem, true);
-            println!(
-                "testing bit {} [{}] in value ${:08X}",
-                bit_number, bit_number_mask, value
-            );
             (value & bit_number_mask) != 0
         }
     };
 
     let zero_flag = !bit_set;
-    println!("bit_set: {}", bit_set);
-    println!("zero_flag: {}", zero_flag);
-    println!("sr before: ${:04X}", reg.reg_sr);
     reg.reg_sr = match zero_flag {
         false => reg.reg_sr & 0b0000000000011011,
         true => reg.reg_sr | STATUS_REGISTER_MASK_ZERO,
     };
-    println!("sr after: ${:04X}", reg.reg_sr);
 
     Ok(StepResult::Done {})
 }
@@ -113,7 +97,6 @@ pub fn get_disassembly<'a>(
     match ea_data.instr_word & 0x0100 {
         0x0100 => {
             // Bit Number Dynamic, Specified in a Register
-            // println!("Bit Number Dynamic, Specified in a Register");
             let dreg = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;
             Ok(GetDisassemblyResult::from_pc(
                 pc,
@@ -123,12 +106,10 @@ pub fn get_disassembly<'a>(
         }
         _ => {
             // Bit Number Static, Specified as Immediate Data
-            // println!("Bit Number Static, Specified as Immediate Data");
             let bit_number = match ea_data.operation_size {
                 OperationSize::Long => pc.fetch_next_word(mem),
                 _ => pc.fetch_next_word(mem),
             };
-            // println!("bit number: {}", bit_number);
             Ok(GetDisassemblyResult::from_pc(
                 pc,
                 String::from(format!("BTST.{}", ea_data.operation_size.get_format())),
