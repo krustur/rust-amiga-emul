@@ -1163,7 +1163,7 @@ impl Cpu {
         );
         let instr_address = disassembly_result.address;
         let next_instr_address = disassembly_result.address_next;
-        print!("{:#010X} ", instr_address);
+        print!("${:08X} ", instr_address);
         for i in (instr_address..instr_address + 8).step_by(2) {
             if i < next_instr_address {
                 let op_mem = self.memory.get_word(i);
