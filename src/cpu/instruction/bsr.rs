@@ -20,28 +20,20 @@ pub fn step<'a>(
     mem: &mut Mem,
 ) -> Result<StepResult, StepError> {
     let instr_word = pc.fetch_next_word(mem);
-    let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
-    let condition = Cpu::evaluate_condition(reg, &conditional_test);
 
     let displacement = Cpu::get_byte_from_word(instr_word);
 
     let result = match displacement {
         0x00 => {
             let displacement = pc.fetch_next_word(mem);
-            if condition == true {
-                pc.branch_word(displacement);
-            }
+            pc.branch_word(displacement);
         }
         0xff => {
             let displacement = pc.fetch_next_long(mem);
-            if condition == true {
-                pc.branch_long(displacement);
-            }
+            pc.branch_long(displacement);
         }
         _ => {
-            if condition == true {
-                pc.branch_byte(displacement);
-            }
+            pc.branch_byte(displacement);
         }
     };
     Ok(StepResult::Done {})
