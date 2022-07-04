@@ -774,6 +774,52 @@ impl Cpu {
         }
     }
 
+    pub fn not_byte(dest: u8) -> ResultWithStatusRegister<u8> {
+        let result = !dest;
+
+        let mut status_register = 0x0000;
+
+        match result {
+            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            0x80..=0xff => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+            _ => (),
+        }
+
+        ResultWithStatusRegister {
+            result,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
+        }
+    }
+
+    pub fn not_word(dest: u16) -> ResultWithStatusRegister<u16> {
+        let result = !dest;
+
+        let mut status_register = 0x0000;
+
+        match result {
+            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            0x8000..=0xffff => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+            _ => (),
+        }
+
+        ResultWithStatusRegister {
+            result,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
+        }
+    }
+
     pub fn not_long(dest: u32) -> ResultWithStatusRegister<u32> {
         let result = !dest;
 
@@ -790,7 +836,6 @@ impl Cpu {
             status_register_result: StatusRegisterResult {
                 status_register,
                 status_register_mask: STATUS_REGISTER_MASK_CARRY
-                    | STATUS_REGISTER_MASK_EXTEND
                     | STATUS_REGISTER_MASK_OVERFLOW
                     | STATUS_REGISTER_MASK_ZERO
                     | STATUS_REGISTER_MASK_NEGATIVE,
