@@ -7,9 +7,9 @@ use crate::{
 
 // Instruction State
 // =================
-// step: TODO
+// step: DONE
 // step cc: DONE (not affected)
-// get_disassembly: TODO
+// get_disassembly: DONE
 
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
@@ -90,17 +90,15 @@ mod tests {
     use crate::{
         cpu::instruction::GetDisassemblyResult,
         register::{
-            STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_NEGATIVE,
+            STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE,
             STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
         },
     };
 
-    // byte
-
     #[test]
-    fn step_bcc_byte_when_carry_clear() {
+    fn bra_byte_positive() {
         // arrange
-        let code = [0x64, 0x06].to_vec(); // BCC.B $06
+        let code = [0x60, 0x02].to_vec(); // BRA.B $02
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.reg_sr = 0x0000; //STATUS_REGISTER_MASK_CARRY;
 
@@ -110,53 +108,36 @@ mod tests {
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
-                String::from("BCC.B"),
-                String::from("$06 [$00C00008]")
+                String::from("BRA.B"),
+                String::from("$02 [$00C00004]")
             ),
             debug_result
         );
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0xC00008, cpu.register.reg_pc.get_address());
+        assert_eq!(0xC00004, cpu.register.reg_pc.get_address());
+        assert_eq!(0x0000, cpu.register.reg_sr);
     }
 
     #[test]
-    fn step_bcc_byte_when_carry_set() {
+    fn bra_byte_negative() {
         // arrange
-        let code = [0x64, 0x06].to_vec(); // BCC.B $06
+        let code = [0x60, 0xfa].to_vec(); // BRA.B $FA
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY;
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_NEGATIVE
+            | STATUS_REGISTER_MASK_OVERFLOW
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_EXTEND;
+
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
-                String::from("BCC.B"),
-                String::from("$06 [$00C00008]")
-            ),
-            debug_result
-        );
-        // act
-        cpu.execute_next_instruction();
-        // assert
-        assert_eq!(0xC00002, cpu.register.reg_pc.get_address());
-    }
-
-    #[test]
-    fn step_beq_byte_when_zero_set_negative() {
-        // arrange
-        let code = [0x67, 0xfa].to_vec(); // BEQ.B $FA
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_ZERO;
-        // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
-        assert_eq!(
-            GetDisassemblyResult::from_address_and_address_next(
-                0xC00000,
-                0xC00002,
-                String::from("BEQ.B"),
+                String::from("BRA.B"),
                 String::from("$FA [$00BFFFFC]")
             ),
             debug_result
@@ -165,147 +146,135 @@ mod tests {
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0x00BFFFFC, cpu.register.reg_pc.get_address());
+        assert_eq!(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_EXTEND,
+            cpu.register.reg_sr
+        );
     }
 
-    // word
-
     #[test]
-    fn step_beq_word_when_zero_set_negative() {
+    fn bra_word_positive() {
         // arrange
-        let code = [0x67, 0x00, 0xff, 0xfa].to_vec(); // BEQ.W $FFFA
+        let code = [0x60, 0x00, 0x00, 0x08].to_vec(); // BRA.B $08
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_ZERO;
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_NEGATIVE
+            | STATUS_REGISTER_MASK_OVERFLOW
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_EXTEND;
+
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00004,
-                String::from("BEQ.W"),
-                String::from("$FFFA [$00BFFFFC]")
+                String::from("BRA.W"),
+                String::from("$0008 [$00C0000A]")
             ),
             debug_result
         );
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x00BFFFFC, cpu.register.reg_pc.get_address());
-    }
-
-    #[test]
-    fn step_beq_word_when_zero_set() {
-        // arrange
-        let code = [0x67, 0x00, 0x00, 0x60].to_vec(); // BEQ.W $0060
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_ZERO;
-        // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(0xC0000A, cpu.register.reg_pc.get_address());
         assert_eq!(
-            GetDisassemblyResult::from_address_and_address_next(
-                0xC00000,
-                0xC00004,
-                String::from("BEQ.W"),
-                String::from("$0060 [$00C00062]")
-            ),
-            debug_result
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_EXTEND,
+            cpu.register.reg_sr
         );
-        // act
-        cpu.execute_next_instruction();
-        // assert
-        assert_eq!(0xC00062, cpu.register.reg_pc.get_address());
     }
 
     #[test]
-    fn step_beq_word_when_zero_clear_negative() {
+    fn bra_word_negative() {
         // arrange
-        let code = [0x67, 0x00, 0xff, 0xfa].to_vec(); // BEQ.W $FFFA
+        let code = [0x60, 0x00, 0xff, 0xf8].to_vec(); // BRA.B $FFF8
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.reg_sr = 0x0000;
+
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00004,
-                String::from("BEQ.W"),
-                String::from("$FFFA [$00BFFFFC]")
+                String::from("BRA.W"),
+                String::from("$FFF8 [$00BFFFFA]")
             ),
             debug_result
         );
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x00C00004, cpu.register.reg_pc.get_address());
+        assert_eq!(0x00BFFFFA, cpu.register.reg_pc.get_address());
+        assert_eq!(0x0000, cpu.register.reg_sr);
     }
 
-    // long
-
     #[test]
-    fn step_bgt_long_when_true_negative() {
+    fn bra_long_positive() {
         // arrange
-        let code = [0x6e, 0xff, 0xff, 0xff, 0xff, 0xfa].to_vec(); // BGT.L $FFFFFFFA
+        let code = [0x60, 0xff, 0x00, 0x00, 0x00, 0x0C].to_vec(); // BRA.B $0000000C
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW;
+        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_NEGATIVE
+            | STATUS_REGISTER_MASK_OVERFLOW
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_EXTEND;
+
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00006,
-                String::from("BGT.L"),
-                String::from("$FFFFFFFA [$00BFFFFC]")
+                String::from("BRA.L"),
+                String::from("$0000000C [$00C0000E]")
             ),
             debug_result
         );
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x00BFFFFC, cpu.register.reg_pc.get_address());
+        assert_eq!(0xC0000E, cpu.register.reg_pc.get_address());
+        assert_eq!(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_EXTEND,
+            cpu.register.reg_sr
+        );
     }
 
     #[test]
-    fn step_bgt_long_when_true() {
+    fn bra_long_negative() {
         // arrange
-        let code = [0x6e, 0xff, 0x00, 0x00, 0x80, 0x00].to_vec(); // BGT.L $00008000
+        let code = [0x60, 0xff, 0xff, 0xff, 0xff, 0xf6].to_vec(); // BRA.B $FFFFFFF6
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.reg_sr = 0x0000;
-        // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
-        assert_eq!(
-            GetDisassemblyResult::from_address_and_address_next(
-                0xC00000,
-                0xC00006,
-                String::from("BGT.L"),
-                String::from("$00008000 [$00C08002]")
-            ),
-            debug_result
-        );
-        // act
-        cpu.execute_next_instruction();
-        // assert
-        assert_eq!(0xC08002, cpu.register.reg_pc.get_address());
-    }
 
-    #[test]
-    fn step_bgt_long_when_false() {
-        // arrange
-        let code = [0x6e, 0xff, 0x00, 0x00, 0x80, 0x00].to_vec(); // BGT.L $00008000
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_ZERO;
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00006,
-                String::from("BGT.L"),
-                String::from("$00008000 [$00C08002]")
+                String::from("BRA.L"),
+                String::from("$FFFFFFF6 [$00BFFFF8]")
             ),
             debug_result
         );
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0xC00006, cpu.register.reg_pc.get_address());
+        assert_eq!(0x00BFFFF8, cpu.register.reg_pc.get_address());
+        assert_eq!(0x0000, cpu.register.reg_sr);
     }
 }
