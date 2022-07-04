@@ -29,7 +29,6 @@ pub fn step<'a>(
             let value = ea_data.get_value_byte(pc, reg, mem, false);
 
             let result = Cpu::not_byte(value);
-            println!("value after not:  ${:08X}", result.result);
             ea_data.set_value_byte(pc, reg, mem, result.result, true);
             result.status_register_result
         }
@@ -37,7 +36,6 @@ pub fn step<'a>(
             let value = ea_data.get_value_word(pc, reg, mem, false);
 
             let result = Cpu::not_word(value);
-            println!("value after not:  ${:08X}", result.result);
             ea_data.set_value_word(pc, reg, mem, result.result, true);
             result.status_register_result
         }
@@ -45,7 +43,6 @@ pub fn step<'a>(
             let value = ea_data.get_value_long(pc, reg, mem, false);
 
             let result = Cpu::not_long(value);
-            println!("value after not:  ${:08X}", result.result);
             ea_data.set_value_long(pc, reg, mem, result.result, true);
             result.status_register_result
         }

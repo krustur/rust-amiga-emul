@@ -17,6 +17,7 @@ mod register;
 // static ROM_FILE_PATH: &str = "D:\\Amiga\\ROM\\Kickstart 3.1.rom";
 // static ROM_FILE_PATH: &str = "C:\\WS\\Amiga\\Kickstart v3.1 rev 40.68 (1993)(Commodore)(A1200).rom";
 static ROM_FILE_PATH: &str = "D:\\Amiga\\AmigaOS 3.1.4 for 68k Amiga 1200\\OS314_A1200\\ROMs\\emulation_or_maprom\\kick.a1200.46.143";
+// static ROM_FILE_PATH: &str = "D:\\Amiga\\ROM\\Kickstart 2.0.rom";
 
 fn main() {
     println!("Begin emulation!");
@@ -57,7 +58,10 @@ fn main() {
     let mem = Mem::new(mem_ranges, Box::new(rom_overlay));
 
     let mut cpu = Cpu::new(mem);
+    println!("Beginning of ROM");
     cpu.memory.print_hex_dump(0xf80000, 0xf801ff);
+    println!("Checksum:");
+    cpu.memory.print_hex_dump(0xffffe8, 0xffffeb);
 
     cpu.print_registers();
 
@@ -72,16 +76,57 @@ fn main() {
 
     loop {
         // cpu.print_registers();
-        let disassembly_result = cpu.get_next_disassembly();
         let pc_address = cpu.register.reg_pc.get_address();
+        let comment = match pc_address {
+            0x00F800D2 => Some(String::from("Stack Pointer = $400")),
+            0x00F800D6 => Some(String::from("Calculate check sum to D5")),
+            0x00F80CA4 => Some(String::from("Check CPU model and if FPU is present")),
+            0x00F800F4 => Some(String::from("Branch if we're at $00F00000")),
+            0x00F80102 => Some(String::from(
+                "If $1111 at $00F00000 (extended rom), then jmp to it+2 ",
+            )),
+            0x00F8010C => Some(String::from("A600 & A1200 IDE controller")),
+            0x00F80116 => Some(String::from(
+                "Zorro 2 IO expansion / PCMCIA registers (A600 & A1200)",
+            )),
+            0x00F80154 => Some(String::from("A600 & A1200 IDE controller (again?)")),
+            0x00F8015C => Some(String::from("CIA something")),
+            0x00F80168 => Some(String::from("CIA disable overlay (and something more)")),
+            0x00F801A4 => Some(String::from(
+                "If checksum (D5) isn't correct, branch to error with red background",
+            )),
+
+            0x00F801AE => Some(String::from("Setup exception vectors")),
+            0x00F801C0 => Some(String::from(
+                "Verify exception vectors ok, if not branch to error with green background",
+            )),
+            0x00F801D2 => Some(String::from("What now?")),
+            _ => None,
+        };
+        if let Some(comment) = comment {
+            println!("                              ; {}", comment);
+        }
+
         let print_disassembly = match pc_address {
             0x00F800E2..=0x00F800E8 => false,
             _ => true,
         };
+        let print_registers = match pc_address {
+            0x00F800EC => true,
+            0x00F801E4 => true,
+            0x00F801E8 => true,
+            0x00F801EA => true,
+            _ => false,
+        };
         if print_disassembly {
+            let disassembly_result = cpu.get_next_disassembly();
+
             cpu.print_disassembly(&disassembly_result);
         }
         cpu.execute_next_instruction();
+        if print_registers {
+            cpu.print_registers();
+        }
     }
     // cpu.print_registers();
     // cpu.get_next_disassembly();
