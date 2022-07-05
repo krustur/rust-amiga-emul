@@ -1150,7 +1150,7 @@ impl Cpu {
             }
         }
 
-        self.register.reg_pc = pc.get_next_pc();
+        self.register.reg_pc = pc.get_step_next_pc();
     }
 
     pub fn get_next_disassembly(self: &mut Cpu) -> GetDisassemblyResult {

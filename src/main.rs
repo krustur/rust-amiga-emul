@@ -182,9 +182,11 @@ fn instr_test_setup(code: Vec<u8>, mem_ranges: Option<Vec<RamMemory>>) -> cpu::C
 
     let mut mem_ranges_internal: Vec<Box<dyn Memory>> = Vec::new();
     let code = RamMemory::from_bytes(0xC00000, code);
+    let stack = RamMemory::from_range(0x1000000, 0x1000400);
     let cia_memory = CiaMemory::new();
     mem_ranges_internal.push(Box::new(rom_cheat));
     mem_ranges_internal.push(Box::new(code));
+    mem_ranges_internal.push(Box::new(stack));
     mem_ranges_internal.push(Box::new(cia_memory));
     if let Some(mem_ranges) = mem_ranges {
         for mem_range in mem_ranges {
@@ -195,5 +197,6 @@ fn instr_test_setup(code: Vec<u8>, mem_ranges: Option<Vec<RamMemory>>) -> cpu::C
     let mem = mem::Mem::new(mem_ranges_internal, overlay_hack);
     let mut cpu = cpu::Cpu::new(mem);
     cpu.register.reg_pc = ProgramCounter::from_address(0xC00000);
+    cpu.register.reg_a[7] = 0x1000400;
     cpu
 }

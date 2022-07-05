@@ -4,7 +4,7 @@ use crate::{
         instruction::{EffectiveAddressingMode, InstructionError, OperationSize, ScaleFactor},
         Cpu,
     },
-    mem::Mem,
+    mem::{memory::Memory, Mem},
 };
 
 pub const STATUS_REGISTER_MASK_CARRY: u16 = 0b0000000000000001;
@@ -31,6 +31,7 @@ impl RegisterType {
 pub struct ProgramCounter {
     address: u32,
     address_next: u32,
+    address_jump: Option<u32>,
 }
 
 impl ProgramCounter {
@@ -38,21 +39,23 @@ impl ProgramCounter {
         ProgramCounter {
             address,
             address_next: address,
+            address_jump: None,
         }
     }
 
     pub fn from_address_and_address_next(address: u32, address_next: u32) -> ProgramCounter {
         ProgramCounter {
             address,
-            address_next,
+            address_next: address,
+            address_jump: None,
         }
     }
 
     pub fn branch_byte(&mut self, displacement: u8) {
-        self.address_next = Cpu::get_address_with_byte_displacement_sign_extended(
+        self.address_jump = Some(Cpu::get_address_with_byte_displacement_sign_extended(
             self.address.wrapping_add(2),
             displacement,
-        )
+        ))
     }
 
     pub fn get_branch_byte_address(&self, displacement: u8) -> u32 {
@@ -63,10 +66,10 @@ impl ProgramCounter {
     }
 
     pub fn branch_word(&mut self, displacement: u16) {
-        self.address_next = Cpu::get_address_with_word_displacement_sign_extended(
+        self.address_jump = Some(Cpu::get_address_with_word_displacement_sign_extended(
             self.address.wrapping_add(2),
             displacement,
-        )
+        ))
     }
 
     pub fn get_branch_word_address(&self, displacement: u16) -> u32 {
@@ -77,8 +80,10 @@ impl ProgramCounter {
     }
 
     pub fn branch_long(&mut self, displacement: u32) {
-        self.address_next =
-            Cpu::get_address_with_long_displacement(self.address.wrapping_add(2), displacement)
+        self.address_jump = Some(Cpu::get_address_with_long_displacement(
+            self.address.wrapping_add(2),
+            displacement,
+        ))
     }
 
     pub fn get_branch_long_address(&self, displacement: u32) -> u32 {
@@ -86,16 +91,16 @@ impl ProgramCounter {
     }
 
     pub fn jump_long(&mut self, address: u32) {
-        self.address_next = address;
+        self.address_jump = Some(address);
     }
 
     pub fn skip_byte(&mut self) {
-        self.address_next += 1;
+        self.address_next = self.address_next.wrapping_add(1);
     }
 
     pub fn fetch_next_byte(&mut self, mem: &Mem) -> u8 {
         let word = mem.get_byte(self.address_next);
-        self.address_next += 1;
+        self.address_next = self.address_next.wrapping_add(1);
         word
     }
 
@@ -105,25 +110,33 @@ impl ProgramCounter {
     }
 
     pub fn skip_word(&mut self) {
-        self.address_next += 2;
+        self.address_next = self.address_next.wrapping_add(2);
     }
 
     pub fn fetch_next_word(&mut self, mem: &Mem) -> u16 {
         let word = mem.get_word(self.address_next);
-        self.address_next += 2;
+        self.address_next = self.address_next.wrapping_add(2);
         word
     }
 
     pub fn fetch_next_long(&mut self, mem: &Mem) -> u32 {
         let word = mem.get_long(self.address_next);
-        self.address_next += 4;
+        self.address_next = self.address_next.wrapping_add(4);
         word
     }
 
-    pub fn get_next_pc(&self) -> ProgramCounter {
-        ProgramCounter {
-            address: self.address_next,
-            address_next: self.address_next,
+    pub fn get_step_next_pc(&self) -> ProgramCounter {
+        match self.address_jump {
+            None => ProgramCounter {
+                address: self.address_next,
+                address_next: self.address_next,
+                address_jump: None,
+            },
+            Some(x) => ProgramCounter {
+                address: x,
+                address_next: x,
+                address_jump: None,
+            },
         }
     }
 
@@ -389,5 +402,12 @@ impl Register {
 
     pub fn is_sr_extend_set(&self) -> bool {
         return (self.reg_sr & STATUS_REGISTER_MASK_EXTEND) == STATUS_REGISTER_MASK_EXTEND;
+    }
+
+    pub fn stack_push_long(&mut self, mem: &mut Mem, value: u32) {
+        println!("sp A: ${:08X}", self.reg_a[7]);
+        self.reg_a[7] = self.reg_a[7].wrapping_sub(4);
+        println!("sp B: ${:08X}", self.reg_a[7]);
+        mem.set_long(self.reg_a[7], value);
     }
 }
