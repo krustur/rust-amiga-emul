@@ -2,7 +2,7 @@ use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResu
 use crate::{
     cpu::{instruction::OperationSize, Cpu, StatusRegisterResult},
     mem::Mem,
-    register::{ProgramCounter, Register, RegisterType},
+    register::{ProgramCounter, Register},
 };
 
 // Instruction State
