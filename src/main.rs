@@ -131,14 +131,10 @@ fn main() {
 fn instr_test_setup(code: Vec<u8>, mem_ranges: Option<Vec<RamMemory>>) -> cpu::Cpu {
     use register::ProgramCounter;
 
-    // TODO: Would be nice to not need the rom cheat
-    let rom_cheat = RomMemory::from_file(0x000000, ROM_FILE_PATH).unwrap();
-
     let mut mem_ranges_internal: Vec<Box<dyn Memory>> = Vec::new();
     let code = RamMemory::from_bytes(0xC00000, code);
     let stack = RamMemory::from_range(0x1000000, 0x1000400);
     let cia_memory = CiaMemory::new();
-    mem_ranges_internal.push(Box::new(rom_cheat));
     mem_ranges_internal.push(Box::new(code));
     mem_ranges_internal.push(Box::new(stack));
     mem_ranges_internal.push(Box::new(cia_memory));
