@@ -46,7 +46,6 @@ pub fn step<'a>(
             ea_data.set_value_long(pc, reg, mem, result.result, true);
             result.status_register_result
         }
-        _ => todo!(),
     };
 
     reg.reg_sr = status_register_result.merge_status_register(reg.reg_sr);
