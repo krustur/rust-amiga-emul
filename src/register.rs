@@ -4,7 +4,7 @@ use crate::{
         instruction::{EffectiveAddressingMode, InstructionError, OperationSize, ScaleFactor},
         Cpu,
     },
-    mem::{memory::Memory, Mem},
+    mem::Mem,
 };
 
 pub const STATUS_REGISTER_MASK_CARRY: u16 = 0b0000000000000001;
