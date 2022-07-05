@@ -113,9 +113,6 @@ fn main() {
         };
         let print_registers = match pc_address {
             0x00F800EC => true,
-            0x00F801E4 => true,
-            0x00F801E8 => true,
-            0x00F801EA => true,
             _ => false,
         };
         if print_disassembly {
@@ -128,49 +125,7 @@ fn main() {
             cpu.print_registers();
         }
     }
-    // cpu.print_registers();
-    // cpu.get_next_disassembly();
-    // cpu.execute_next_instruction();
-
-    // cpu.print_registers();
-    // cpu.get_next_disassembly();
-    // cpu.execute_next_instruction();
-
-    // cpu.print_registers();
-    // cpu.get_next_disassembly();
-    // cpu.execute_next_instruction();
-
-    // cpu.print_registers();
-    // cpu.get_next_disassembly();
-    // cpu.execute_next_instruction();
-
-    // cpu.print_registers();
-    // // cpu.memory.print_range(0xf80000, 0xf800ff);
-    // cpu.get_next_disassembly();
-    // cpu.execute_next_instruction();
-
-    // cpu.print_registers();
-    // // cpu.memory.print_range(0xf80000, 0xf800ff);
-    // cpu.get_next_disassembly();
-    // cpu.execute_next_instruction();
-
-    // cpu.print_registers();
-    // cpu.get_next_disassembly();
-    // cpu.execute_next_instruction();
-
-    // cpu.print_registers();
-    // cpu.get_next_disassembly();
-    // cpu.execute_next_instruction();
-
-    // cpu.print_registers();
-    // cpu.get_next_disassembly();
-    // cpu.execute_next_instruction();
-
-    // cpu.print_registers();
-    // cpu.get_next_disassembly();
-    // cpu.execute_next_instruction();
-
-    // println!("End emulation!")
+    println!("End emulation!")
 }
 
 #[cfg(test)]
