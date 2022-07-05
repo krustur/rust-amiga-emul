@@ -88,13 +88,7 @@ pub fn get_disassembly<'a>(
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        cpu::instruction::GetDisassemblyResult,
-        register::{
-            STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_NEGATIVE,
-            STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
-        },
-    };
+    use crate::cpu::instruction::GetDisassemblyResult;
 
     // byte
 
