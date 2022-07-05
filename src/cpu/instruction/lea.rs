@@ -9,9 +9,9 @@ use crate::{
 
 // Instruction State
 // =================
-// step: TODO
-// step cc: TODO
-// get_disassembly: TODO
+// step: DONE
+// step cc: DONE (not affected)
+// get_disassembly: DONE
 
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
@@ -66,7 +66,7 @@ mod tests {
     };
 
     #[test]
-    fn absolute_short_addressing_mode_to_a0() {
+    fn lea_absolute_short_addressing_mode_to_a0() {
         // arrange
         let code = [0x41, 0xf8, 0x05, 0x00].to_vec(); // LEA ($0500).W,A0
         let mut cpu = crate::instr_test_setup(code, None);
@@ -99,7 +99,7 @@ mod tests {
     }
 
     #[test]
-    fn absolute_long_addressing_mode_to_a0() {
+    fn lea_absolute_long_addressing_mode_to_a0() {
         // arrange
         let code = [0x43, 0xf9, 0x00, 0xf8, 0x00, 0x00].to_vec(); // LEA ($00F80000).L,A1
         let mem_range = RamMemory::from_bytes(0xf80000, [0x00, 0x00, 0x00, 0x00].to_vec());
