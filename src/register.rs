@@ -405,9 +405,7 @@ impl Register {
     }
 
     pub fn stack_push_long(&mut self, mem: &mut Mem, value: u32) {
-        println!("sp A: ${:08X}", self.reg_a[7]);
         self.reg_a[7] = self.reg_a[7].wrapping_sub(4);
-        println!("sp B: ${:08X}", self.reg_a[7]);
         mem.set_long(self.reg_a[7], value);
     }
 }
