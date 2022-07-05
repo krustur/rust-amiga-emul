@@ -125,7 +125,6 @@ fn main() {
             cpu.print_registers();
         }
     }
-    println!("End emulation!")
 }
 
 #[cfg(test)]
