@@ -160,6 +160,13 @@ impl Cpu {
                 instruction::mov::get_disassembly,
             ),
             Instruction::new(
+                String::from("MOVEM"),
+                0xfb80,
+                0x4880,
+                instruction::movem::step,
+                instruction::movem::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("MOVEQ"),
                 0xf100,
                 0x7000,
@@ -874,16 +881,16 @@ impl Cpu {
                 EffectiveAddressDebug { format: format }
             }
             EffectiveAddressingMode::ARegIndirectWithPostIncrement {
+                operation_size,
                 ea_register,
-                ea_address,
             } => {
                 // (An)+
                 let format = format!("(A{})+", ea_register);
                 EffectiveAddressDebug { format: format }
             }
             EffectiveAddressingMode::ARegIndirectWithPreDecrement {
+                operation_size,
                 ea_register,
-                ea_address,
             } => {
                 // (-An)
                 let format = format!("-(A{})", ea_register);

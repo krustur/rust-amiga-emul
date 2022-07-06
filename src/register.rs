@@ -202,17 +202,15 @@ impl ProgramCounter {
             0b011 => {
                 let address = reg.reg_a[ea_register];
                 EffectiveAddressingMode::ARegIndirectWithPostIncrement {
+                    operation_size,
                     ea_register,
-                    ea_address: address,
                 }
             }
             0b100 => {
                 // (-An)
-                let (address, _) =
-                    reg.reg_a[ea_register].overflowing_sub(operation_size.size_in_bytes());
                 EffectiveAddressingMode::ARegIndirectWithPreDecrement {
+                    operation_size,
                     ea_register,
-                    ea_address: address,
                 }
             }
             0b101 => {

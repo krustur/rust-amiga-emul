@@ -73,17 +73,19 @@ impl EffectiveAddressingData {
                 ea_address
             }
             EffectiveAddressingMode::ARegIndirectWithPostIncrement {
+                operation_size,
                 ea_register,
-                ea_address,
             } => {
                 // (An)+
-                ea_address
+                reg.reg_a[ea_register]
             }
             EffectiveAddressingMode::ARegIndirectWithPreDecrement {
+                operation_size,
                 ea_register,
-                ea_address,
             } => {
                 // (-An)
+                let (ea_address, _) =
+                    reg.reg_a[ea_register].overflowing_sub(operation_size.size_in_bytes());
                 ea_address
             }
             EffectiveAddressingMode::ARegIndirectWithDisplacement {
@@ -179,14 +181,12 @@ impl EffectiveAddressingData {
                 if apply_increment_decrement {
                     match self.ea_mode {
                         EffectiveAddressingMode::ARegIndirectWithPostIncrement {
-                            // operation_size,
+                            operation_size,
                             ea_register,
-                            ea_address,
                         } => reg.reg_a[ea_register] += self.operation_size.size_in_bytes(),
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
-                            // operation_size,
+                            operation_size,
                             ea_register,
-                            ea_address,
                         } => reg.reg_a[ea_register] = self.operation_size.size_in_bytes(),
                         _ => (),
                     }
@@ -222,14 +222,14 @@ impl EffectiveAddressingData {
                 if apply_increment_decrement {
                     match self.ea_mode {
                         EffectiveAddressingMode::ARegIndirectWithPostIncrement {
-                            // operation_size,
+                            operation_size,
                             ea_register,
-                            ea_address,
                         } => reg.reg_a[ea_register] += self.operation_size.size_in_bytes(),
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
+                            operation_size,
                             // operation_size,
                             ea_register,
-                            ea_address,
+                            // ea_address,
                         } => reg.reg_a[ea_register] -= self.operation_size.size_in_bytes(),
                         _ => (),
                     }
@@ -265,14 +265,14 @@ impl EffectiveAddressingData {
                 if apply_increment_decrement {
                     match self.ea_mode {
                         EffectiveAddressingMode::ARegIndirectWithPostIncrement {
-                            // operation_size,
+                            operation_size,
                             ea_register,
-                            ea_address,
                         } => reg.reg_a[ea_register] += self.operation_size.size_in_bytes(),
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
+                            operation_size,
                             // operation_size,
                             ea_register,
-                            ea_address,
+                            // ea_address,
                         } => reg.reg_a[ea_register] -= self.operation_size.size_in_bytes(),
                         _ => (),
                     }
@@ -315,12 +315,13 @@ impl EffectiveAddressingData {
                 if apply_increment_decrement {
                     match self.ea_mode {
                         EffectiveAddressingMode::ARegIndirectWithPostIncrement {
+                            operation_size,
                             ea_register,
-                            ea_address,
                         } => reg.reg_a[ea_register] += self.operation_size.size_in_bytes(),
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
+                            operation_size,
                             ea_register,
-                            ea_address,
+                            // ea_address,
                         } => reg.reg_a[ea_register] -= self.operation_size.size_in_bytes(),
                         _ => (),
                     }
@@ -382,14 +383,15 @@ impl EffectiveAddressingData {
                 if apply_increment_decrement {
                     match self.ea_mode {
                         EffectiveAddressingMode::ARegIndirectWithPostIncrement {
+                            operation_size,
                             ea_register,
-                            ea_address,
                         } => {
                             reg.reg_a[ea_register] += self.operation_size.size_in_bytes();
                         }
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
+                            operation_size,
                             ea_register,
-                            ea_address,
+                            // ea_address,
                         } => reg.reg_a[ea_register] -= self.operation_size.size_in_bytes(),
                         _ => (),
                     }
@@ -451,13 +453,17 @@ impl EffectiveAddressingData {
                 if apply_increment_decrement {
                     match self.ea_mode {
                         EffectiveAddressingMode::ARegIndirectWithPostIncrement {
+                            operation_size,
                             ea_register,
-                            ea_address,
-                        } => reg.reg_a[ea_register] += self.operation_size.size_in_bytes(),
+                        } => {
+                            reg.reg_a[ea_register] += self.operation_size.size_in_bytes();
+                        }
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
+                            operation_size,
                             ea_register,
-                            ea_address,
-                        } => reg.reg_a[ea_register] -= self.operation_size.size_in_bytes(),
+                        } => {
+                            reg.reg_a[ea_register] -= self.operation_size.size_in_bytes();
+                        }
                         _ => (),
                     }
                 }

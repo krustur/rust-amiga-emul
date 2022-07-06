@@ -21,6 +21,7 @@ pub mod dbcc;
 pub mod jmp;
 pub mod lea;
 pub mod mov;
+pub mod movem;
 pub mod moveq;
 pub mod nop;
 pub mod not;
@@ -137,15 +138,13 @@ pub enum EffectiveAddressingMode {
     },
     ARegIndirectWithPostIncrement {
         //  0b011       (An)+
-        // operation_size: OperationSize,
+        operation_size: OperationSize,
         ea_register: usize,
-        ea_address: u32,
     },
     ARegIndirectWithPreDecrement {
         //   0b100       (-An)
-        // operation_size: OperationSize,
+        operation_size: OperationSize,
         ea_register: usize,
-        ea_address: u32,
     },
     ARegIndirectWithDisplacement {
         //   0b101       (d16,An)
