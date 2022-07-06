@@ -157,7 +157,6 @@ impl ProgramCounter {
     where
         T: Fn(u16) -> Result<OperationSize, InstructionError>,
     {
-        // TODO: Replace operation_size with Closure
         let instr_word = self.fetch_next_word(mem);
         self.get_effective_addressing_data_from_instr_word_bit_pos(
             instr_word,

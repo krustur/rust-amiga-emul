@@ -123,6 +123,7 @@ impl Mem {
     pub fn get_long(self: &Mem, address: u32) -> u32 {
         let range = self.get_memory(address);
         let result = range.get_long(address);
+        // println!("get_long: ${:08X}=${:08X}", address, result);
         result
     }
 
