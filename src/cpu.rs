@@ -220,11 +220,11 @@ impl Cpu {
         cpu
     }
 
-    pub fn sign_extend_byte(address: u8) -> u32 {
+    pub fn sign_extend_byte(value: u8) -> u32 {
         // TODO: Any better way to do this?
-        let address_bytes = address.to_be_bytes();
+        let address_bytes = value.to_be_bytes();
         // if address < 0
-        let fixed_bytes: [u8; 4] = if address >= 0x80 {
+        let fixed_bytes: [u8; 4] = if value >= 0x80 {
             [0xff, 0xff, 0xff, address_bytes[0]]
         } else {
             [0x00, 0x00, 0x00, address_bytes[0]]
@@ -234,11 +234,11 @@ impl Cpu {
         res
     }
 
-    pub fn sign_extend_word(address: u16) -> u32 {
+    pub fn sign_extend_word(value: u16) -> u32 {
         // // TODO: Any better way to do this?
-        let address_bytes = address.to_be_bytes();
+        let address_bytes = value.to_be_bytes();
         // if address < 0
-        let fixed_bytes: [u8; 4] = if address >= 0x8000 {
+        let fixed_bytes: [u8; 4] = if value >= 0x8000 {
             [0xff, 0xff, address_bytes[0], address_bytes[1]]
         } else {
             [0x00, 0x00, address_bytes[0], address_bytes[1]]
