@@ -1,6 +1,6 @@
 use super::{
     EffectiveAddressingMode, GetDisassemblyResult, GetDisassemblyResultError, OperationSize,
-    StepError, StepResult,
+    StepError,
 };
 use crate::{
     cpu::Cpu,
@@ -23,7 +23,7 @@ pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
-) -> Result<StepResult, StepError> {
+) -> Result<(), StepError> {
     let src_ea_data =
         pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
             Cpu::extract_size011110_from_bit_pos(instr_word, 12)
@@ -57,7 +57,7 @@ pub fn step<'a>(
     reg.reg_sr = set_result
         .status_register_result
         .merge_status_register(reg.reg_sr);
-    Ok(StepResult::Done {})
+    Ok(())
 }
 
 pub fn get_disassembly<'a>(

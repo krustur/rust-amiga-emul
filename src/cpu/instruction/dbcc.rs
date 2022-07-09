@@ -1,4 +1,4 @@
-use super::{GetDisassemblyResultError, StepError, StepResult};
+use super::{GetDisassemblyResultError, StepError};
 use crate::{
     cpu::{instruction::GetDisassemblyResult, Cpu},
     mem::Mem,
@@ -18,13 +18,13 @@ pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
-) -> Result<StepResult, StepError> {
+) -> Result<(), StepError> {
     let instr_word = pc.fetch_next_word(mem);
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
     let condition_result = Cpu::evaluate_condition(reg, &conditional_test);
     let displacement_16bit = pc.fetch_next_word(mem);
 
-    let result = match condition_result {
+    match condition_result {
         false => {
             let register = Cpu::extract_register_index_from_bit_pos_0(instr_word)?;
             let reg_word = Cpu::get_word_from_long(reg.reg_d[register]);
@@ -34,19 +34,17 @@ pub fn step<'a>(
             match reg_word {
                 0xffff => {
                     // == -1 => loop done, next instruction
-                    StepResult::Done {}
                 }
                 _ => {
                     // != -1 => loop not done, branch
                     pc.branch_word(displacement_16bit);
-                    StepResult::Done {}
                 }
             }
         }
-        true => StepResult::Done {},
+        true => (),
     };
 
-    Ok(result)
+    Ok(())
 }
 
 pub fn get_disassembly<'a>(

@@ -1,4 +1,4 @@
-use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResult};
+use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError};
 use crate::{
     cpu::Cpu,
     mem::Mem,
@@ -18,7 +18,7 @@ pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
-) -> Result<StepResult, StepError> {
+) -> Result<(), StepError> {
     let instr_word = pc.fetch_next_word(mem);
 
     let displacement = Cpu::get_byte_from_word(instr_word);
@@ -37,7 +37,7 @@ pub fn step<'a>(
         }
     };
     reg.stack_push_long(mem, pc.get_address_next());
-    Ok(StepResult::Done {})
+    Ok(())
 }
 
 pub fn get_disassembly<'a>(

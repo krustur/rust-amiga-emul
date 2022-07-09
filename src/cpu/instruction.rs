@@ -21,6 +21,7 @@ pub mod dbcc;
 pub mod jmp;
 pub mod lea;
 pub mod mov;
+pub mod movec;
 pub mod movem;
 pub mod moveq;
 pub mod nop;
@@ -31,12 +32,6 @@ pub mod subx;
 
 pub struct InstructionError {
     pub details: String,
-}
-
-#[derive(Copy, Clone)]
-pub enum StepResult {
-    Done,
-    PassOn,
 }
 
 pub enum StepError {
@@ -373,11 +368,8 @@ pub struct Instruction {
     pub name: String,
     pub mask: u16,
     pub opcode: u16,
-    pub step: fn(
-        pc: &mut ProgramCounter,
-        reg: &mut Register,
-        mem: &mut Mem,
-    ) -> Result<StepResult, StepError>,
+    pub step:
+        fn(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> Result<(), StepError>,
     pub get_disassembly: fn(
         pc: &mut ProgramCounter,
         reg: &Register,
@@ -394,7 +386,7 @@ impl Instruction {
             pc: &mut ProgramCounter,
             reg: &mut Register,
             mem: &mut Mem,
-        ) -> Result<StepResult, StepError>,
+        ) -> Result<(), StepError>,
         get_disassembly: fn(
             pc: &mut ProgramCounter,
             reg: &Register,

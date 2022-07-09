@@ -1,4 +1,4 @@
-use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResult};
+use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError};
 use crate::{
     cpu::Cpu,
     mem::Mem,
@@ -18,7 +18,7 @@ pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
-) -> Result<StepResult, StepError> {
+) -> Result<(), StepError> {
     todo!("SUBX step");
     // TODO: Tests
     // let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9);

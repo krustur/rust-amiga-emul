@@ -1,6 +1,6 @@
 use super::{
     EffectiveAddressingMode, GetDisassemblyResult, GetDisassemblyResultError, OperationSize,
-    StepError, StepResult,
+    StepError,
 };
 use crate::{
     cpu::Cpu,
@@ -28,7 +28,7 @@ pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
-) -> Result<StepResult, StepError> {
+) -> Result<(), StepError> {
     let instr_word = pc.fetch_next_word(mem);
 
     let mut register_list_mask = pc.fetch_next_word(mem);
@@ -211,7 +211,7 @@ pub fn step<'a>(
         }
     };
 
-    Ok(StepResult::Done {})
+    Ok(())
 }
 
 pub fn get_disassembly<'a>(

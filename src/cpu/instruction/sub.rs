@@ -1,4 +1,4 @@
-use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError, StepResult};
+use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError};
 use crate::{
     cpu::{instruction::OperationSize, Cpu, StatusRegisterResult},
     mem::Mem,
@@ -27,7 +27,7 @@ pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
-) -> Result<StepResult, StepError> {
+) -> Result<(), StepError> {
     let instr_word = pc.peek_next_word(mem);
     let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
     let operation_size = match opmode {
@@ -116,7 +116,7 @@ pub fn step<'a>(
 
     reg.reg_sr = status_register_result.merge_status_register(reg.reg_sr);
 
-    Ok(StepResult::Done {})
+    Ok(())
 }
 
 pub fn get_disassembly<'a>(

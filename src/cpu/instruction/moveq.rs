@@ -1,4 +1,4 @@
-use super::{GetDisassemblyResultError, StepError, StepResult};
+use super::{GetDisassemblyResultError, StepError};
 use crate::cpu::instruction::GetDisassemblyResult;
 use crate::mem::Mem;
 use crate::register::{ProgramCounter, Register, STATUS_REGISTER_MASK_ZERO};
@@ -17,7 +17,7 @@ pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
-) -> Result<StepResult, StepError> {
+) -> Result<(), StepError> {
     let instr_word = pc.fetch_next_word(mem);
     let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9)?;
     let data = Cpu::get_byte_from_word(instr_word);
@@ -32,7 +32,7 @@ pub fn step<'a>(
 
     reg.reg_d[register] = data;
     reg.reg_sr = (reg.reg_sr & status_register_mask) | status_register_flags;
-    Ok(StepResult::Done {})
+    Ok(())
 }
 
 pub fn get_disassembly<'a>(

@@ -160,6 +160,13 @@ impl Cpu {
                 instruction::mov::get_disassembly,
             ),
             Instruction::new(
+                String::from("MOVEC"),
+                0xfffe,
+                0x4e7a,
+                instruction::movec::step,
+                instruction::movec::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("MOVEM"),
                 0xfb80,
                 0x4880,
