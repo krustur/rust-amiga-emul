@@ -401,6 +401,13 @@ impl Register {
         return (self.reg_sr & STATUS_REGISTER_MASK_EXTEND) == STATUS_REGISTER_MASK_EXTEND;
     }
 
+    pub fn stack_push_pc(&mut self, mem: &mut Mem) {
+        self.reg_a[7] = self.reg_a[7].wrapping_sub(4);
+        let pc = self.reg_pc.address;
+        println!("stack_push_pc: ${:08X}", pc);
+        mem.set_long(self.reg_a[7], self.reg_pc.address);
+    }
+
     pub fn stack_push_long(&mut self, mem: &mut Mem, value: u32) {
         self.reg_a[7] = self.reg_a[7].wrapping_sub(4);
         mem.set_long(self.reg_a[7], value);

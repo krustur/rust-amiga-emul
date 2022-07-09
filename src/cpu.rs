@@ -1130,6 +1130,14 @@ impl Cpu {
         }
     }
 
+    pub fn exception(&mut self) {
+        // TODO: Do we push PC or PC+2?
+        self.register.stack_push_pc(&mut self.memory);
+        // TODO: Enter Supervisor mode
+        // TODO: Internal SR
+        // TODO: T bit clear
+    }
+
     pub fn execute_next_instruction(self: &mut Cpu) {
         let mut pc = self.register.reg_pc.clone();
         let instr_word = pc.peek_next_word(&self.memory);
@@ -1150,18 +1158,25 @@ impl Cpu {
         let step_result = (instruction.step)(&mut pc, &mut self.register, &mut self.memory);
         match step_result {
             Ok(step_result) => (),
-            Err(step_error) => {
-                println!("Runtime error occured when running instruction.");
-                println!(
-                    " Instruction word: ${:04X} ({}) at address ${:08X}",
-                    instr_word,
-                    instruction.name,
-                    pc.get_address()
-                );
-                println!(" Error: {}", step_error);
-                self.print_registers();
-                panic!();
-            }
+            Err(step_error) => match step_error {
+                StepError::IllegalInstruction => {
+                    self.exception();
+                    // self.register.stack_push_pc(&mut self.memory);
+                    todo!("StepError::IllegalInstruction not di-di-di-done!")
+                }
+                _ => {
+                    println!("Runtime error occured when running instruction.");
+                    println!(
+                        " Instruction word: ${:04X} ({}) at address ${:08X}",
+                        instr_word,
+                        instruction.name,
+                        pc.get_address()
+                    );
+                    println!(" Error: {}", step_error);
+                    self.print_registers();
+                    panic!();
+                }
+            },
         }
 
         self.register.reg_pc = pc.get_step_next_pc();
