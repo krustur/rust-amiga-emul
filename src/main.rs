@@ -101,6 +101,7 @@ fn main() {
                 "Verify exception vectors ok, if not branch to error with green background",
             )),
             0x00F801D2 => Some(String::from("What now?")),
+            0x00F80D50 => Some(String::from("We now know CPU model and if FPU is present")),
             _ => None,
         };
         if let Some(comment) = comment {
@@ -113,8 +114,8 @@ fn main() {
         };
         let print_registers = match pc_address {
             0x00F800EC => true,
-            0x00F80D50 => true,
-            0x00F80D52 => true,
+            // 0x00F80D50 => true,
+            // 0x00F80D52 => true,
             _ => false,
         };
         if print_disassembly {
