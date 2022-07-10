@@ -523,6 +523,23 @@ impl Register {
         }
     }
 
+    pub fn stack_pop_pc(&mut self, mem: &mut Mem, pc: &mut ProgramCounter) {
+        let pc_address = match self.reg_sr.is_sr_supervisor_set() {
+            true => {
+                let pc_address = mem.get_long(self.reg_ssp);
+                self.reg_ssp = self.reg_ssp.wrapping_add(4);
+                pc_address
+            }
+            false => {
+                let pc_address = mem.get_long(self.reg_usp);
+                self.reg_usp = self.reg_usp.wrapping_add(4);
+                pc_address
+            }
+        };
+        println!("pc_address: ${:08X}", pc_address);
+        pc.address_jump = Some(pc_address);
+    }
+
     pub fn stack_push_word(&mut self, mem: &mut Mem, value: u16) {
         match self.reg_sr.is_sr_supervisor_set() {
             true => {

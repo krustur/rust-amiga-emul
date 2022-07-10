@@ -191,6 +191,13 @@ impl Cpu {
                 instruction::not::get_disassembly,
             ),
             Instruction::new(
+                String::from("RTS"),
+                0xffff,
+                0x4e75,
+                instruction::rts::step,
+                instruction::rts::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("SUB"),
                 0xf000,
                 0x9000,

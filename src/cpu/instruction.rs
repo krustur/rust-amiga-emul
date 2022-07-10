@@ -26,6 +26,7 @@ pub mod movem;
 pub mod moveq;
 pub mod nop;
 pub mod not;
+pub mod rts;
 pub mod sub;
 pub mod subq;
 pub mod subx;
