@@ -1019,12 +1019,21 @@ impl Cpu {
         }
     }
 
-    pub fn exception(&mut self) {
+    pub fn exception(&mut self, pc: &mut ProgramCounter, vector: u32) {
+        println!("Exception occured!");
+        println!("vector: {} [${:02X}]", vector, vector);
+        self.register.reg_sr.set_supervisor();
+        // TODO: T bit clear
         // TODO: Do we push PC or PC+2?
         self.register.stack_push_pc(&mut self.memory);
-        // TODO: Enter Supervisor mode
-        // TODO: Internal SR
-        // TODO: T bit clear
+        self.register
+            .stack_push_word(&mut self.memory, self.register.reg_sr.get_value());
+
+        let vector_offset = (vector) * 4;
+        println!("vector_offset: ${:08X}", vector_offset);
+        let vector_address = self.memory.get_long(vector_offset);
+        println!("vector_address: ${:08X}", vector_address);
+        pc.set_long(vector_address);
     }
 
     pub fn execute_next_instruction(self: &mut Cpu) {
@@ -1046,12 +1055,13 @@ impl Cpu {
 
         let step_result = (instruction.step)(&mut pc, &mut self.register, &mut self.memory);
         match step_result {
-            Ok(step_result) => (),
+            Ok(step_result) => self.register.reg_pc = pc.get_step_next_pc(),
             Err(step_error) => match step_error {
                 StepError::IllegalInstruction => {
-                    self.exception();
+                    self.exception(&mut pc, 4);
                     // self.register.stack_push_pc(&mut self.memory);
-                    todo!("StepError::IllegalInstruction not di-di-di-done!")
+                    // todo!("StepError::IllegalInstruction not di-di-di-done!")
+                    self.register.reg_pc = pc.get_step_next_pc();
                 }
                 _ => {
                     println!("Runtime error occured when running instruction.");
@@ -1067,8 +1077,6 @@ impl Cpu {
                 }
             },
         }
-
-        self.register.reg_pc = pc.get_step_next_pc();
     }
 
     pub fn get_next_disassembly(self: &mut Cpu) -> GetDisassemblyResult {

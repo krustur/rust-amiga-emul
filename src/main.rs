@@ -113,6 +113,8 @@ fn main() {
         };
         let print_registers = match pc_address {
             0x00F800EC => true,
+            0x00F80D50 => true,
+            0x00F80D52 => true,
             _ => false,
         };
         if print_disassembly {

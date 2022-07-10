@@ -96,6 +96,10 @@ impl ProgramCounter {
         Cpu::get_address_with_long_displacement(self.address.wrapping_add(2), displacement)
     }
 
+    pub fn set_long(&mut self, address: u32) {
+        self.address_jump = Some(address);
+    }
+
     pub fn jump_long(&mut self, address: u32) {
         self.address_jump = Some(address);
     }
@@ -519,6 +523,19 @@ impl Register {
         }
     }
 
+    pub fn stack_push_word(&mut self, mem: &mut Mem, value: u16) {
+        match self.reg_sr.is_sr_supervisor_set() {
+            true => {
+                self.reg_ssp = self.reg_ssp.wrapping_sub(2);
+                mem.set_word(self.reg_ssp, value);
+            }
+            false => {
+                self.reg_usp = self.reg_usp.wrapping_sub(2);
+                mem.set_word(self.reg_usp, value);
+            }
+        }
+    }
+
     pub fn stack_push_long(&mut self, mem: &mut Mem, value: u32) {
         match self.reg_sr.is_sr_supervisor_set() {
             true => {
@@ -610,9 +627,7 @@ impl StatusRegister {
     }
 
     pub fn set_sr_reg_flags_abcde(&mut self, value: u16) {
-        println!("set_sr_reg_flags_abcde before: ${:04X}", self.reg_sr);
         self.reg_sr = (self.reg_sr & 0b1111111111100000) | value;
-        println!("set_sr_reg_flags_abcde after:  ${:04X}", self.reg_sr);
     }
 
     pub fn merge_status_register(&mut self, status_register_result: StatusRegisterResult) {
@@ -621,12 +636,52 @@ impl StatusRegister {
                 & status_register_result.status_register_mask);
     }
 
+    pub fn clear_carry(&mut self) {
+        self.reg_sr &= !STATUS_REGISTER_MASK_CARRY;
+    }
+
+    pub fn set_carry(&mut self) {
+        self.reg_sr |= STATUS_REGISTER_MASK_CARRY;
+    }
+
+    pub fn clear_overflow(&mut self) {
+        self.reg_sr &= !STATUS_REGISTER_MASK_OVERFLOW;
+    }
+
+    pub fn set_overflow(&mut self) {
+        self.reg_sr |= STATUS_REGISTER_MASK_OVERFLOW;
+    }
+
     pub fn clear_zero(&mut self) {
-        self.reg_sr &= 0b1111111111111011;
+        self.reg_sr &= !STATUS_REGISTER_MASK_ZERO;
     }
 
     pub fn set_zero(&mut self) {
         self.reg_sr |= STATUS_REGISTER_MASK_ZERO;
+    }
+
+    pub fn clear_negative(&mut self) {
+        self.reg_sr &= !STATUS_REGISTER_MASK_NEGATIVE;
+    }
+
+    pub fn set_negative(&mut self) {
+        self.reg_sr |= STATUS_REGISTER_MASK_NEGATIVE;
+    }
+
+    pub fn clear_extend(&mut self) {
+        self.reg_sr &= !STATUS_REGISTER_MASK_EXTEND;
+    }
+
+    pub fn set_extend(&mut self) {
+        self.reg_sr |= STATUS_REGISTER_MASK_EXTEND;
+    }
+
+    pub fn clear_supervisor(&mut self) {
+        self.reg_sr &= !STATUS_REGISTER_MASK_SUPERVISOR_STATE;
+    }
+
+    pub fn set_supervisor(&mut self) {
+        self.reg_sr |= STATUS_REGISTER_MASK_SUPERVISOR_STATE;
     }
 
     pub fn is_sr_carry_set(&self) -> bool {
