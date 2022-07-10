@@ -21,15 +21,15 @@ pub fn step<'a>(
 ) -> Result<(), StepError> {
     let instr_word = pc.fetch_next_word(mem);
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
-    let condition_result = Cpu::evaluate_condition(reg, &conditional_test);
+    let condition_result = reg.reg_sr.evaluate_condition(&conditional_test);
     let displacement_16bit = pc.fetch_next_word(mem);
 
     match condition_result {
         false => {
             let register = Cpu::extract_register_index_from_bit_pos_0(instr_word)?;
-            let reg_word = Cpu::get_word_from_long(reg.reg_d[register]);
+            let reg_word = reg.get_d_reg_word(register);
             let reg_word = reg_word.wrapping_sub(1);
-            reg.reg_d[register] = Cpu::set_word_in_long(reg_word, reg.reg_d[register]);
+            reg.set_d_reg_word(register, reg_word);
 
             match reg_word {
                 0xffff => {
@@ -88,8 +88,10 @@ mod tests {
         // arrange
         let code = [0x54, 0xc8, 0x00, 0x04].to_vec(); // DBCC D0,$0004
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_d[0] = 0xffff0001;
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY;
+        cpu.register.set_d_reg_long(0, 0xffff0001);
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_CARRY);
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -104,7 +106,7 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0xffff0000, cpu.register.reg_d[0]);
+        assert_eq!(0xffff0000, cpu.register.get_d_reg_long(0));
         assert_eq!(0xC00006, cpu.register.reg_pc.get_address());
     }
 
@@ -113,8 +115,10 @@ mod tests {
         // arrange
         let code = [0x54, 0xc9, 0x00, 0x04].to_vec(); // DBCC D1,$0004
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_d[1] = 0x11110000;
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY;
+        cpu.register.set_d_reg_long(1, 0x11110000);
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_CARRY);
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -129,7 +133,7 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x1111ffff, cpu.register.reg_d[1]);
+        assert_eq!(0x1111ffff, cpu.register.get_d_reg_long(1));
         assert_eq!(0xc00004, cpu.register.reg_pc.get_address());
     }
 
@@ -138,8 +142,8 @@ mod tests {
         // arrange
         let code = [0x54, 0xca, 0x00, 0x04].to_vec(); // DBCC D2,$0004
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_d[2] = 0xffff0001;
-        cpu.register.reg_sr = 0x0000; //STATUS_REGISTER_MASK_CARRY;
+        cpu.register.set_d_reg_long(2, 0xffff0001);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -155,7 +159,7 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0xffff0001, cpu.register.reg_d[2]);
+        assert_eq!(0xffff0001, cpu.register.get_d_reg_long(2));
         assert_eq!(0xC00004, cpu.register.reg_pc.get_address());
     }
 }

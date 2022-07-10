@@ -64,7 +64,7 @@ pub fn step<'a>(
     let status_register_result = match operation_mode {
         CmpOpMode::CmpByte => {
             let source = ea_data.get_value_byte(pc, reg, mem, true);
-            let dest = Cpu::get_byte_from_long(reg.reg_d[register]);
+            let dest = reg.get_d_reg_byte(register);
 
             let add_result = Cpu::sub_bytes(source, dest);
 
@@ -72,7 +72,7 @@ pub fn step<'a>(
         }
         CmpOpMode::CmpWord => {
             let source = ea_data.get_value_word(pc, reg, mem, true);
-            let dest = Cpu::get_word_from_long(reg.reg_d[register]);
+            let dest = reg.get_d_reg_word(register);
 
             let add_result = Cpu::sub_words(source, dest);
 
@@ -80,7 +80,7 @@ pub fn step<'a>(
         }
         CmpOpMode::CmpLong => {
             let source = ea_data.get_value_long(pc, reg, mem, true);
-            let dest = reg.reg_d[register];
+            let dest = reg.get_d_reg_long(register);
 
             let add_result = Cpu::sub_longs(source, dest);
 
@@ -88,7 +88,7 @@ pub fn step<'a>(
         }
         CmpOpMode::CmpaWord => {
             let source = Cpu::sign_extend_word(ea_data.get_value_word(pc, reg, mem, true));
-            let dest = reg.reg_a[register];
+            let dest = reg.get_a_reg_long(register);
 
             let add_result = Cpu::sub_longs(source, dest);
 
@@ -96,7 +96,7 @@ pub fn step<'a>(
         }
         CmpOpMode::CmpaLong => {
             let source = ea_data.get_value_long(pc, reg, mem, true);
-            let dest = reg.reg_a[register];
+            let dest = reg.get_a_reg_long(register);
 
             let add_result = Cpu::sub_longs(source, dest);
 
@@ -104,7 +104,7 @@ pub fn step<'a>(
         }
     };
 
-    reg.reg_sr = status_register_result.merge_status_register(reg.reg_sr);
+    reg.reg_sr.merge_status_register(status_register_result);
 
     Ok(())
 }
@@ -129,7 +129,7 @@ pub fn get_disassembly<'a>(
         })?;
     let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;
 
-    let ea_format = Cpu::get_ea_format(ea_data.ea_mode, pc, None, reg, mem);
+    let ea_format = Cpu::get_ea_format(ea_data.ea_mode, pc, None, mem);
 
     Ok(GetDisassemblyResult::from_pc(
         pc,
@@ -156,9 +156,9 @@ mod tests {
         let code = [0xbe, 0x10, /* DC */ 0x50].to_vec(); // CMP.B (A0),D7
                                                          // DC.B $50
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_a[0] = 0xC00002;
-        cpu.register.reg_d[7] = 0x40;
-        cpu.register.reg_sr = 0x0000;
+        cpu.register.set_a_reg_long(0, 0xC00002);
+        cpu.register.set_d_reg_long(7, 0x40);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -175,8 +175,8 @@ mod tests {
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0x50, cpu.memory.get_byte(0xC00002));
-        assert_eq!(0x40, cpu.register.reg_d[7]);
-        assert_eq!(true, cpu.register.is_sr_negative_set());
+        assert_eq!(0x40, cpu.register.get_d_reg_long(7));
+        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
     }
 
     #[test]
@@ -185,9 +185,11 @@ mod tests {
         let code = [0xbe, 0x10, /* DC */ 0x50].to_vec(); // CMP.B (A0),D7
                                                          // DC.B $50
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_a[0] = 0xC00002;
-        cpu.register.reg_d[7] = 0x60;
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE;
+        cpu.register.set_a_reg_long(0, 0xC00002);
+        cpu.register.set_d_reg_long(7, 0x60);
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_NEGATIVE);
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -204,8 +206,8 @@ mod tests {
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0x50, cpu.memory.get_byte(0xC00002));
-        assert_eq!(0x60, cpu.register.reg_d[7]);
-        assert_eq!(false, cpu.register.is_sr_negative_set());
+        assert_eq!(0x60, cpu.register.get_d_reg_long(7));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
     }
 
     // cmp word
@@ -216,9 +218,9 @@ mod tests {
         let code = [0xbe, 0x50, /* DC */ 0x50, 0x00].to_vec(); // CMP.W (A0),D7
                                                                // DC.W $5000
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_a[0] = 0xC00002;
-        cpu.register.reg_d[7] = 0x5000;
-        cpu.register.reg_sr = 0x0000;
+        cpu.register.set_a_reg_long(0, 0xC00002);
+        cpu.register.set_d_reg_long(7, 0x5000);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -235,8 +237,8 @@ mod tests {
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0x5000, cpu.memory.get_word(0xC00002));
-        assert_eq!(0x5000, cpu.register.reg_d[7]);
-        assert_eq!(true, cpu.register.is_sr_zero_set());
+        assert_eq!(0x5000, cpu.register.get_d_reg_long(7));
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
     }
 
     #[test]
@@ -245,9 +247,11 @@ mod tests {
         let code = [0xbe, 0x50, /* DC */ 0x50, 0x00].to_vec(); // CMP.W (A0),D7
                                                                // DC.W $5000
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_a[0] = 0xC00002;
-        cpu.register.reg_d[7] = 0x5001;
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_ZERO;
+        cpu.register.set_a_reg_long(0, 0xC00002);
+        cpu.register.set_d_reg_long(7, 0x5001);
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_ZERO);
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -264,8 +268,8 @@ mod tests {
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0x5000, cpu.memory.get_word(0xC00002));
-        assert_eq!(0x5001, cpu.register.reg_d[7]);
-        assert_eq!(false, cpu.register.is_sr_zero_set());
+        assert_eq!(0x5001, cpu.register.get_d_reg_long(7));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
     }
 
     // cmp long
@@ -276,9 +280,9 @@ mod tests {
         let code = [0xbc, 0xa6, /* DC */ 0x80, 0x00, 0x00, 0x00].to_vec(); // CMP.L -(A6),D6
                                                                            // DC.L $80000000
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_a[6] = 0xC00006;
-        cpu.register.reg_d[6] = 0x10000001;
-        cpu.register.reg_sr = 0x0000;
+        cpu.register.set_a_reg_long(6, 0xC00006);
+        cpu.register.set_d_reg_long(6, 0x10000001);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -295,8 +299,8 @@ mod tests {
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0x80000000, cpu.memory.get_long(0xC00002));
-        assert_eq!(0x10000001, cpu.register.reg_d[6]);
-        assert_eq!(true, cpu.register.is_sr_overflow_set());
+        assert_eq!(0x10000001, cpu.register.get_d_reg_long(6));
+        assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
     }
 
     #[test]
@@ -305,9 +309,11 @@ mod tests {
         let code = [0xbc, 0xa6, /* DC */ 0x10, 0x00, 0x00, 0x00].to_vec(); // CMP.L -(A6),D6
                                                                            // DC.L 7FFFFFFF
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_a[6] = 0xC00006;
-        cpu.register.reg_d[6] = 0x7fffffff;
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_OVERFLOW;
+        cpu.register.set_a_reg_long(6, 0xC00006);
+        cpu.register.set_d_reg_long(6, 0x7fffffff);
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_OVERFLOW);
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -324,8 +330,8 @@ mod tests {
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0x10000000, cpu.memory.get_long(0xC00002));
-        assert_eq!(0x7fffffff, cpu.register.reg_d[6]);
-        assert_eq!(false, cpu.register.is_sr_overflow_set());
+        assert_eq!(0x7fffffff, cpu.register.get_d_reg_long(6));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
     }
 
     // cmpa word
@@ -335,9 +341,9 @@ mod tests {
         // arrange
         let code = [0xbc, 0xc0].to_vec(); // CMPA.W D0,A6
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_d[0] = 0x5000;
-        cpu.register.reg_a[6] = 0x5000;
-        cpu.register.reg_sr = 0x0000;
+        cpu.register.set_d_reg_long(0, 0x5000);
+        cpu.register.set_a_reg_long(6, 0x5000);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -353,9 +359,9 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x5000, cpu.register.reg_d[0]);
-        assert_eq!(0x5000, cpu.register.reg_a[6]);
-        assert_eq!(true, cpu.register.is_sr_zero_set());
+        assert_eq!(0x5000, cpu.register.get_d_reg_long(0));
+        assert_eq!(0x5000, cpu.register.get_a_reg_long(6));
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
     }
 
     #[test]
@@ -363,9 +369,11 @@ mod tests {
         // arrange
         let code = [0xbc, 0xc0].to_vec(); // CMPA.W D0,A6
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_d[0] = 0x5000;
-        cpu.register.reg_a[6] = 0x4fff;
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_ZERO;
+        cpu.register.set_d_reg_long(0, 0x5000);
+        cpu.register.set_a_reg_long(6, 0x4fff);
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_ZERO);
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -381,9 +389,9 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x5000, cpu.register.reg_d[0]);
-        assert_eq!(0x4fff, cpu.register.reg_a[6]);
-        assert_eq!(false, cpu.register.is_sr_zero_set());
+        assert_eq!(0x5000, cpu.register.get_d_reg_long(0));
+        assert_eq!(0x4fff, cpu.register.get_a_reg_long(6));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
     }
 
     #[test]
@@ -391,9 +399,9 @@ mod tests {
         // arrange
         let code = [0xbc, 0xc0].to_vec(); // CMPA.W D0,A6
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_d[0] = 0x00005000;
-        cpu.register.reg_a[6] = 0xffff6000;
-        cpu.register.reg_sr = 0x0000;
+        cpu.register.set_d_reg_long(0, 0x00005000);
+        cpu.register.set_a_reg_long(6, 0xffff6000);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -409,9 +417,9 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x00005000, cpu.register.reg_d[0]);
-        assert_eq!(0xffff6000, cpu.register.reg_a[6]);
-        assert_eq!(true, cpu.register.is_sr_negative_set());
+        assert_eq!(0x00005000, cpu.register.get_d_reg_long(0));
+        assert_eq!(0xffff6000, cpu.register.get_a_reg_long(6));
+        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
     }
 
     #[test]
@@ -419,9 +427,11 @@ mod tests {
         // arrange
         let code = [0xbc, 0xc0].to_vec(); // CMPA.W D0,A6
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_d[0] = 0x00005000;
-        cpu.register.reg_a[6] = 0x00014000;
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE;
+        cpu.register.set_d_reg_long(0, 0x00005000);
+        cpu.register.set_a_reg_long(6, 0x00014000);
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_NEGATIVE);
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -437,9 +447,9 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x00005000, cpu.register.reg_d[0]);
-        assert_eq!(0x00014000, cpu.register.reg_a[6]);
-        assert_eq!(false, cpu.register.is_sr_negative_set());
+        assert_eq!(0x00005000, cpu.register.get_d_reg_long(0));
+        assert_eq!(0x00014000, cpu.register.get_a_reg_long(6));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
     }
 
     #[test]
@@ -447,9 +457,11 @@ mod tests {
         // arrange
         let code = [0xbc, 0xc0].to_vec(); // CMPA.W D0,A6
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_d[0] = 0xffff6000;
-        cpu.register.reg_a[6] = 0x00005000;
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_ZERO;
+        cpu.register.set_d_reg_long(0, 0xffff6000);
+        cpu.register.set_a_reg_long(6, 0x00005000);
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_ZERO);
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -465,9 +477,9 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0xffff6000, cpu.register.reg_d[0]);
-        assert_eq!(0x00005000, cpu.register.reg_a[6]);
-        assert_eq!(false, cpu.register.is_sr_zero_set());
+        assert_eq!(0xffff6000, cpu.register.get_d_reg_long(0));
+        assert_eq!(0x00005000, cpu.register.get_a_reg_long(6));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
     }
 
     #[test]
@@ -475,9 +487,9 @@ mod tests {
         // arrange
         let code = [0xbc, 0xc0].to_vec(); // CMPA.W D0,A6
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_d[0] = 0x11114000;
-        cpu.register.reg_a[6] = 0x00004000;
-        cpu.register.reg_sr = 0x0000;
+        cpu.register.set_d_reg_long(0, 0x11114000);
+        cpu.register.set_a_reg_long(6, 0x00004000);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -493,9 +505,9 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x11114000, cpu.register.reg_d[0]);
-        assert_eq!(0x00004000, cpu.register.reg_a[6]);
-        assert_eq!(true, cpu.register.is_sr_zero_set());
+        assert_eq!(0x11114000, cpu.register.get_d_reg_long(0));
+        assert_eq!(0x00004000, cpu.register.get_a_reg_long(6));
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
     }
 
     // cmp long
@@ -505,9 +517,9 @@ mod tests {
         // arrange
         let code = [0xbb, 0xc2].to_vec(); // CMP.L D2,A5
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_d[2] = 0x90000000;
-        cpu.register.reg_a[5] = 0x20000000;
-        cpu.register.reg_sr = 0x0000;
+        cpu.register.set_d_reg_long(2, 0x90000000);
+        cpu.register.set_a_reg_long(5, 0x20000000);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -523,9 +535,9 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x90000000, cpu.register.reg_d[2]);
-        assert_eq!(0x20000000, cpu.register.reg_a[5]);
-        assert_eq!(true, cpu.register.is_sr_carry_set());
+        assert_eq!(0x90000000, cpu.register.get_d_reg_long(2));
+        assert_eq!(0x20000000, cpu.register.get_a_reg_long(5));
+        assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
     }
 
     #[test]
@@ -533,9 +545,11 @@ mod tests {
         // arrange
         let code = [0xbb, 0xc2].to_vec(); // CMP.L D2,A5
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_d[2] = 0x11223344;
-        cpu.register.reg_a[5] = 0x44442222;
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY;
+        cpu.register.set_d_reg_long(2, 0x11223344);
+        cpu.register.set_a_reg_long(5, 0x44442222);
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_CARRY);
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -551,8 +565,8 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x11223344, cpu.register.reg_d[2]);
-        assert_eq!(0x44442222, cpu.register.reg_a[5]);
-        assert_eq!(false, cpu.register.is_sr_carry_set());
+        assert_eq!(0x11223344, cpu.register.get_d_reg_long(2));
+        assert_eq!(0x44442222, cpu.register.get_a_reg_long(5));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
     }
 }

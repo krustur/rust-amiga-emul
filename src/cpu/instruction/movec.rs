@@ -1,9 +1,5 @@
-use super::{
-    EffectiveAddressingMode, GetDisassemblyResult, GetDisassemblyResultError, OperationSize,
-    StepError,
-};
+use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError};
 use crate::{
-    cpu::Cpu,
     mem::Mem,
     register::{ProgramCounter, Register},
 };

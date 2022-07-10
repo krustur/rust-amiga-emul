@@ -63,11 +63,11 @@ fn main() {
     println!("Checksum:");
     cpu.memory.print_hex_dump(0xffffe8, 0xffffeb);
 
-    cpu.print_registers();
+    cpu.register.print_registers();
 
     // let mut disassembly_pc = cpu.register.reg_pc.clone();
     // for i in 0..70 {
-    //     let disassembly_result = cpu.get_disassembly(&mut disassembly_pc);
+    //     let disassembly_result = cpu.register.get_disassembly(&mut disassembly_pc);
 
     //     disassembly_pc = ProgramCounter::from_address(disassembly_result.address_next);
 
@@ -122,12 +122,13 @@ fn main() {
         }
         cpu.execute_next_instruction();
         if print_registers {
-            cpu.print_registers();
+            cpu.register.print_registers();
         }
     }
 }
 
 #[cfg(test)]
+
 fn instr_test_setup(code: Vec<u8>, mem_ranges: Option<Vec<RamMemory>>) -> cpu::Cpu {
     use register::ProgramCounter;
 
@@ -147,6 +148,6 @@ fn instr_test_setup(code: Vec<u8>, mem_ranges: Option<Vec<RamMemory>>) -> cpu::C
     let mem = mem::Mem::new(mem_ranges_internal, overlay_hack);
     let mut cpu = cpu::Cpu::new(mem);
     cpu.register.reg_pc = ProgramCounter::from_address(0xC00000);
-    cpu.register.reg_a[7] = 0x1000400;
+    cpu.register.set_ssp_reg(0x1000400);
     cpu
 }

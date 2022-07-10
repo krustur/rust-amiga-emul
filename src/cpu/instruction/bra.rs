@@ -100,7 +100,7 @@ mod tests {
         // arrange
         let code = [0x60, 0x02].to_vec(); // BRA.B $02
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr = 0x0000; //STATUS_REGISTER_MASK_CARRY;
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -117,7 +117,7 @@ mod tests {
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0xC00004, cpu.register.reg_pc.get_address());
-        assert_eq!(0x0000, cpu.register.reg_sr);
+        assert_eq!(0x0000, cpu.register.reg_sr.get_sr_reg_flags_abcde());
     }
 
     #[test]
@@ -125,11 +125,13 @@ mod tests {
         // arrange
         let code = [0x60, 0xfa].to_vec(); // BRA.B $FA
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
-            | STATUS_REGISTER_MASK_NEGATIVE
-            | STATUS_REGISTER_MASK_OVERFLOW
-            | STATUS_REGISTER_MASK_ZERO
-            | STATUS_REGISTER_MASK_EXTEND;
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -152,7 +154,7 @@ mod tests {
                 | STATUS_REGISTER_MASK_OVERFLOW
                 | STATUS_REGISTER_MASK_ZERO
                 | STATUS_REGISTER_MASK_EXTEND,
-            cpu.register.reg_sr
+            cpu.register.reg_sr.get_sr_reg_flags_abcde()
         );
     }
 
@@ -161,11 +163,13 @@ mod tests {
         // arrange
         let code = [0x60, 0x00, 0x00, 0x08].to_vec(); // BRA.B $08
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
-            | STATUS_REGISTER_MASK_NEGATIVE
-            | STATUS_REGISTER_MASK_OVERFLOW
-            | STATUS_REGISTER_MASK_ZERO
-            | STATUS_REGISTER_MASK_EXTEND;
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -188,7 +192,7 @@ mod tests {
                 | STATUS_REGISTER_MASK_OVERFLOW
                 | STATUS_REGISTER_MASK_ZERO
                 | STATUS_REGISTER_MASK_EXTEND,
-            cpu.register.reg_sr
+            cpu.register.reg_sr.get_sr_reg_flags_abcde()
         );
     }
 
@@ -197,7 +201,7 @@ mod tests {
         // arrange
         let code = [0x60, 0x00, 0xff, 0xf8].to_vec(); // BRA.B $FFF8
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr = 0x0000;
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -214,7 +218,7 @@ mod tests {
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0x00BFFFFA, cpu.register.reg_pc.get_address());
-        assert_eq!(0x0000, cpu.register.reg_sr);
+        assert_eq!(0x0000, cpu.register.reg_sr.get_sr_reg_flags_abcde());
     }
 
     #[test]
@@ -222,11 +226,13 @@ mod tests {
         // arrange
         let code = [0x60, 0xff, 0x00, 0x00, 0x00, 0x0C].to_vec(); // BRA.B $0000000C
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY
-            | STATUS_REGISTER_MASK_NEGATIVE
-            | STATUS_REGISTER_MASK_OVERFLOW
-            | STATUS_REGISTER_MASK_ZERO
-            | STATUS_REGISTER_MASK_EXTEND;
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -249,7 +255,7 @@ mod tests {
                 | STATUS_REGISTER_MASK_OVERFLOW
                 | STATUS_REGISTER_MASK_ZERO
                 | STATUS_REGISTER_MASK_EXTEND,
-            cpu.register.reg_sr
+            cpu.register.reg_sr.get_sr_reg_flags_abcde()
         );
     }
 
@@ -258,7 +264,7 @@ mod tests {
         // arrange
         let code = [0x60, 0xff, 0xff, 0xff, 0xff, 0xf6].to_vec(); // BRA.B $FFFFFFF6
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr = 0x0000;
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -275,6 +281,6 @@ mod tests {
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0x00BFFFF8, cpu.register.reg_pc.get_address());
-        assert_eq!(0x0000, cpu.register.reg_sr);
+        assert_eq!(0x0000, cpu.register.reg_sr.get_sr_reg_flags_abcde());
     }
 }

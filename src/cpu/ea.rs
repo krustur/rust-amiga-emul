@@ -77,15 +77,16 @@ impl EffectiveAddressingData {
                 ea_register,
             } => {
                 // (An)+
-                reg.reg_a[ea_register]
+                reg.get_a_reg_long(ea_register)
             }
             EffectiveAddressingMode::ARegIndirectWithPreDecrement {
                 operation_size,
                 ea_register,
             } => {
                 // (-An)
-                let (ea_address, _) =
-                    reg.reg_a[ea_register].overflowing_sub(operation_size.size_in_bytes());
+                let (ea_address, _) = reg
+                    .get_a_reg_long(ea_register)
+                    .overflowing_sub(operation_size.size_in_bytes());
                 ea_address
             }
             EffectiveAddressingMode::ARegIndirectWithDisplacement {
@@ -165,11 +166,11 @@ impl EffectiveAddressingData {
         match self.ea_mode {
             EffectiveAddressingMode::DRegDirect { ea_register } => {
                 // Dn
-                Cpu::get_byte_from_long(reg.reg_d[ea_register])
+                reg.get_d_reg_byte(ea_register)
             }
             EffectiveAddressingMode::ARegDirect { ea_register } => {
                 // An
-                Cpu::get_byte_from_long(reg.reg_a[ea_register])
+                reg.get_a_reg_byte(ea_register)
             }
             EffectiveAddressingMode::ImmediateDataByte { data } => {
                 // #<xxx>
@@ -183,11 +184,11 @@ impl EffectiveAddressingData {
                         EffectiveAddressingMode::ARegIndirectWithPostIncrement {
                             operation_size,
                             ea_register,
-                        } => reg.reg_a[ea_register] += self.operation_size.size_in_bytes(),
+                        } => reg.increment_a_reg(ea_register, self.operation_size),
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
                             operation_size,
                             ea_register,
-                        } => reg.reg_a[ea_register] = self.operation_size.size_in_bytes(),
+                        } => reg.decrement_a_reg(ea_register, self.operation_size),
                         _ => (),
                     }
                 }
@@ -206,11 +207,11 @@ impl EffectiveAddressingData {
         match self.ea_mode {
             EffectiveAddressingMode::DRegDirect { ea_register } => {
                 // Dn
-                Cpu::get_word_from_long(reg.reg_d[ea_register])
+                reg.get_d_reg_word(ea_register)
             }
             EffectiveAddressingMode::ARegDirect { ea_register } => {
                 // An
-                Cpu::get_word_from_long(reg.reg_a[ea_register])
+                reg.get_a_reg_word(ea_register)
             }
             EffectiveAddressingMode::ImmediateDataWord { data } => {
                 // #<xxx>
@@ -224,13 +225,13 @@ impl EffectiveAddressingData {
                         EffectiveAddressingMode::ARegIndirectWithPostIncrement {
                             operation_size,
                             ea_register,
-                        } => reg.reg_a[ea_register] += self.operation_size.size_in_bytes(),
+                        } => reg.increment_a_reg(ea_register, self.operation_size),
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
                             operation_size,
                             // operation_size,
                             ea_register,
                             // ea_address,
-                        } => reg.reg_a[ea_register] -= self.operation_size.size_in_bytes(),
+                        } => reg.decrement_a_reg(ea_register, self.operation_size),
                         _ => (),
                     }
                 }
@@ -249,11 +250,11 @@ impl EffectiveAddressingData {
         match self.ea_mode {
             EffectiveAddressingMode::DRegDirect { ea_register } => {
                 // Dn
-                reg.reg_d[ea_register]
+                reg.get_d_reg_long(ea_register)
             }
             EffectiveAddressingMode::ARegDirect { ea_register } => {
                 // An
-                reg.reg_a[ea_register]
+                reg.get_a_reg_long(ea_register)
             }
             EffectiveAddressingMode::ImmediateDataLong { data } => {
                 // #<xxx>
@@ -267,13 +268,13 @@ impl EffectiveAddressingData {
                         EffectiveAddressingMode::ARegIndirectWithPostIncrement {
                             operation_size,
                             ea_register,
-                        } => reg.reg_a[ea_register] += self.operation_size.size_in_bytes(),
+                        } => reg.increment_a_reg(ea_register, self.operation_size),
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
                             operation_size,
                             // operation_size,
                             ea_register,
                             // ea_address,
-                        } => reg.reg_a[ea_register] -= self.operation_size.size_in_bytes(),
+                        } => reg.decrement_a_reg(ea_register, self.operation_size),
                         _ => (),
                     }
                 }
@@ -295,13 +296,13 @@ impl EffectiveAddressingData {
                 ea_register: register,
             } => {
                 // Dn
-                reg.reg_d[register] = Cpu::set_byte_in_long(value, reg.reg_d[register]);
+                reg.set_d_reg_byte(register, value);
             }
             EffectiveAddressingMode::ARegDirect {
                 ea_register: register,
             } => {
                 // An
-                reg.reg_a[register] = value as u32;
+                reg.set_a_reg_long(register, value as u32);
             }
             EffectiveAddressingMode::ImmediateDataByte { .. }
             | EffectiveAddressingMode::ImmediateDataWord { .. }
@@ -317,12 +318,12 @@ impl EffectiveAddressingData {
                         EffectiveAddressingMode::ARegIndirectWithPostIncrement {
                             operation_size,
                             ea_register,
-                        } => reg.reg_a[ea_register] += self.operation_size.size_in_bytes(),
+                        } => reg.increment_a_reg(ea_register, self.operation_size),
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
                             operation_size,
                             ea_register,
                             // ea_address,
-                        } => reg.reg_a[ea_register] -= self.operation_size.size_in_bytes(),
+                        } => reg.decrement_a_reg(ea_register, self.operation_size),
                         _ => (),
                     }
                 }
@@ -363,13 +364,13 @@ impl EffectiveAddressingData {
                 ea_register: register,
             } => {
                 // Dn
-                reg.reg_d[register] = Cpu::set_word_in_long(value, reg.reg_d[register]);
+                reg.set_d_reg_word(register, value);
             }
             EffectiveAddressingMode::ARegDirect {
                 ea_register: register,
             } => {
                 // An
-                reg.reg_a[register] = value as u32;
+                reg.set_a_reg_long(register, value as u32);
             }
             EffectiveAddressingMode::ImmediateDataByte { .. }
             | EffectiveAddressingMode::ImmediateDataWord { .. }
@@ -385,14 +386,12 @@ impl EffectiveAddressingData {
                         EffectiveAddressingMode::ARegIndirectWithPostIncrement {
                             operation_size,
                             ea_register,
-                        } => {
-                            reg.reg_a[ea_register] += self.operation_size.size_in_bytes();
-                        }
+                        } => reg.increment_a_reg(ea_register, self.operation_size),
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
                             operation_size,
                             ea_register,
                             // ea_address,
-                        } => reg.reg_a[ea_register] -= self.operation_size.size_in_bytes(),
+                        } => reg.decrement_a_reg(ea_register, self.operation_size),
                         _ => (),
                     }
                 }
@@ -433,13 +432,13 @@ impl EffectiveAddressingData {
                 ea_register: register,
             } => {
                 // Dn
-                reg.reg_d[register] = value;
+                reg.set_d_reg_long(register, value);
             }
             EffectiveAddressingMode::ARegDirect {
                 ea_register: register,
             } => {
                 // An
-                reg.reg_a[register] = value;
+                reg.set_a_reg_long(register, value);
             }
             EffectiveAddressingMode::ImmediateDataByte { .. }
             | EffectiveAddressingMode::ImmediateDataWord { .. }
@@ -456,13 +455,13 @@ impl EffectiveAddressingData {
                             operation_size,
                             ea_register,
                         } => {
-                            reg.reg_a[ea_register] += self.operation_size.size_in_bytes();
+                            reg.increment_a_reg(ea_register, self.operation_size);
                         }
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
                             operation_size,
                             ea_register,
                         } => {
-                            reg.reg_a[ea_register] -= self.operation_size.size_in_bytes();
+                            reg.decrement_a_reg(ea_register, self.operation_size);
                         }
                         _ => (),
                     }

@@ -1,8 +1,10 @@
 use crate::{
     cpu::{
         ea::EffectiveAddressingData,
-        instruction::{EffectiveAddressingMode, InstructionError, OperationSize, ScaleFactor},
-        Cpu,
+        instruction::{
+            ConditionalTest, EffectiveAddressingMode, InstructionError, OperationSize, ScaleFactor,
+        },
+        Cpu, StatusRegisterResult,
     },
     mem::Mem,
 };
@@ -12,6 +14,9 @@ pub const STATUS_REGISTER_MASK_OVERFLOW: u16 = 0b0000000000000010;
 pub const STATUS_REGISTER_MASK_ZERO: u16 = 0b0000000000000100;
 pub const STATUS_REGISTER_MASK_NEGATIVE: u16 = 0b0000000000001000;
 pub const STATUS_REGISTER_MASK_EXTEND: u16 = 0b0000000000010000;
+
+pub const STATUS_REGISTER_MASK_MASTER_INTERRUPT_STATE: u16 = 0b0001000000000000;
+pub const STATUS_REGISTER_MASK_SUPERVISOR_STATE: u16 = 0b0010000000000000;
 
 #[derive(Copy, Clone, Debug, std::cmp::PartialEq)]
 pub enum RegisterType {
@@ -27,6 +32,7 @@ impl RegisterType {
         }
     }
 }
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct ProgramCounter {
     address: u32,
@@ -191,7 +197,7 @@ impl ProgramCounter {
                 ea_register: (ea_register),
             },
             0b010 => {
-                let address = reg.reg_a[ea_register];
+                let address = reg.get_a_reg_long(ea_register);
 
                 EffectiveAddressingMode::ARegIndirect {
                     ea_register,
@@ -199,7 +205,7 @@ impl ProgramCounter {
                 }
             }
             0b011 => {
-                let address = reg.reg_a[ea_register];
+                let address = reg.get_a_reg_long(ea_register);
                 EffectiveAddressingMode::ARegIndirectWithPostIncrement {
                     operation_size,
                     ea_register,
@@ -214,8 +220,9 @@ impl ProgramCounter {
             }
             0b101 => {
                 let displacement = self.fetch_next_word(mem);
-                let (address, _) =
-                    reg.reg_a[ea_register].overflowing_add(Cpu::sign_extend_word(displacement));
+                let (address, _) = reg
+                    .get_a_reg_long(ea_register)
+                    .overflowing_add(Cpu::sign_extend_word(displacement));
 
                 EffectiveAddressingMode::ARegIndirectWithDisplacement {
                     ea_register,
@@ -228,8 +235,8 @@ impl ProgramCounter {
                 let displacement = Cpu::get_byte_from_word(extension_word);
                 let register = Cpu::extract_register_index_from_bit_pos(extension_word, 12)?;
                 let (register_value, register_type) = match extension_word & 0x8000 {
-                    0x8000 => (reg.reg_a[register], RegisterType::Address),
-                    _ => (reg.reg_d[register], RegisterType::Data),
+                    0x8000 => (reg.get_a_reg_long(register), RegisterType::Address),
+                    _ => (reg.get_d_reg_long(register), RegisterType::Data),
                 };
                 let (register_value, index_size) = match extension_word & 0x0800 {
                     0x0800 => (register_value, OperationSize::Long),
@@ -254,7 +261,9 @@ impl ProgramCounter {
                 };
 
                 let displacement_long = Cpu::sign_extend_byte(displacement);
-                let (ea_address, _) = reg.reg_a[ea_register].overflowing_add(displacement_long);
+                let (ea_address, _) = reg
+                    .get_a_reg_long(ea_register)
+                    .overflowing_add(displacement_long);
                 let (ea_address, _) = ea_address.overflowing_add(register_value);
 
                 EffectiveAddressingMode::ARegIndirectWithIndexOrMemoryIndirect {
@@ -294,9 +303,12 @@ impl ProgramCounter {
                     let (register_type, register_displacement) = match extension_word & 0x8000 {
                         0x8000 => (
                             RegisterType::Address,
-                            reg.reg_a[register] * index_size_bytes,
+                            reg.get_a_reg_long(register) * index_size_bytes,
                         ),
-                        _ => (RegisterType::Data, reg.reg_d[register] * index_size_bytes),
+                        _ => (
+                            RegisterType::Data,
+                            reg.get_d_reg_long(register) * index_size_bytes,
+                        ),
                     };
                     let extension_word_format = match extension_word & 0x0100 {
                         0x0100 => 'F', // full
@@ -364,9 +376,11 @@ impl ProgramCounter {
 }
 
 pub struct Register {
-    pub reg_d: [u32; 8],
-    pub reg_a: [u32; 8],
-    pub reg_sr: u16,
+    reg_d: [u32; 8],
+    reg_a: [u32; 7],
+    reg_usp: u32,
+    reg_ssp: u32,
+    pub reg_sr: StatusRegister,
     pub reg_pc: ProgramCounter,
 }
 
@@ -374,11 +388,245 @@ impl Register {
     pub fn new() -> Register {
         let register = Register {
             reg_d: [0x00000000; 8],
-            reg_a: [0x00000000; 8],
-            reg_sr: 0x0000,
+            reg_a: [0x00000000; 7],
+            reg_usp: 0x00000000,
+            reg_ssp: 0x00000000,
+            reg_sr: StatusRegister::from_word(STATUS_REGISTER_MASK_SUPERVISOR_STATE),
             reg_pc: ProgramCounter::from_address(0x00000000),
         };
         register
+    }
+
+    pub fn get_d_reg_long(&self, reg_index: usize) -> u32 {
+        self.reg_d[reg_index]
+    }
+
+    pub fn get_d_reg_word(&self, reg_index: usize) -> u16 {
+        Cpu::get_word_from_long(self.reg_d[reg_index])
+    }
+
+    pub fn get_d_reg_byte(&self, reg_index: usize) -> u8 {
+        Cpu::get_byte_from_long(self.reg_d[reg_index])
+    }
+
+    pub fn get_a_reg_long(&self, reg_index: usize) -> u32 {
+        match reg_index {
+            7 => match self.reg_sr.is_sr_supervisor_set() {
+                true => self.get_ssp_reg(),
+                false => self.get_usp_reg(),
+            },
+            _ => self.reg_a[reg_index],
+        }
+    }
+
+    pub fn get_a_reg_word(&self, reg_index: usize) -> u16 {
+        Cpu::get_word_from_long(self.get_a_reg_long(reg_index))
+    }
+
+    pub fn get_a_reg_byte(&self, reg_index: usize) -> u8 {
+        Cpu::get_byte_from_long(self.get_a_reg_long(reg_index))
+    }
+
+    pub fn increment_a_reg(&mut self, reg_index: usize, operation_size: OperationSize) {
+        match reg_index {
+            7 => match self.reg_sr.is_sr_supervisor_set() {
+                true => self.reg_ssp += operation_size.size_in_bytes(),
+                false => self.reg_usp += operation_size.size_in_bytes(),
+            },
+            _ => self.reg_a[reg_index] += operation_size.size_in_bytes(),
+        }
+    }
+
+    pub fn decrement_a_reg(&mut self, reg_index: usize, operation_size: OperationSize) {
+        match reg_index {
+            7 => match self.reg_sr.is_sr_supervisor_set() {
+                true => self.reg_ssp -= operation_size.size_in_bytes(),
+                false => self.reg_usp -= operation_size.size_in_bytes(),
+            },
+            _ => self.reg_a[reg_index] -= operation_size.size_in_bytes(),
+        }
+    }
+
+    pub fn set_d_reg_long(&mut self, reg_index: usize, value: u32) {
+        self.reg_d[reg_index] = value;
+    }
+
+    pub fn set_d_reg_word(&mut self, reg_index: usize, value: u16) {
+        self.reg_d[reg_index] = Cpu::set_word_in_long(value, self.reg_d[reg_index]);
+    }
+
+    pub fn set_d_reg_byte(&mut self, reg_index: usize, value: u8) {
+        self.reg_d[reg_index] = Cpu::set_byte_in_long(value, self.reg_d[reg_index]);
+    }
+
+    pub fn set_a_reg_long(&mut self, reg_index: usize, value: u32) {
+        match reg_index {
+            7 => match self.reg_sr.is_sr_supervisor_set() {
+                true => self.set_ssp_reg(value),
+                false => self.set_usp_reg(value),
+            },
+            _ => self.reg_a[reg_index] = value,
+        };
+    }
+
+    pub fn set_a_reg_word(&mut self, reg_index: usize, value: u16) {
+        match reg_index {
+            7 => match self.reg_sr.is_sr_supervisor_set() {
+                true => self.reg_ssp = Cpu::set_word_in_long(value, self.reg_ssp),
+                false => self.reg_usp = Cpu::set_word_in_long(value, self.reg_usp),
+            },
+            _ => self.reg_a[reg_index] = Cpu::set_word_in_long(value, self.reg_a[reg_index]),
+        };
+    }
+
+    pub fn set_a_reg_byte(&mut self, reg_index: usize, value: u8) {
+        match reg_index {
+            7 => match self.reg_sr.is_sr_supervisor_set() {
+                true => self.reg_ssp = Cpu::set_byte_in_long(value, self.reg_ssp),
+                false => self.reg_usp = Cpu::set_byte_in_long(value, self.reg_usp),
+            },
+            _ => self.reg_a[reg_index] = Cpu::set_byte_in_long(value, self.reg_a[reg_index]),
+        };
+    }
+
+    pub fn get_ssp_reg(&self) -> u32 {
+        self.reg_ssp
+    }
+
+    pub fn set_ssp_reg(&mut self, value: u32) {
+        self.reg_ssp = value;
+    }
+
+    pub fn get_usp_reg(&self) -> u32 {
+        self.reg_usp
+    }
+
+    pub fn set_usp_reg(&mut self, value: u32) {
+        self.reg_usp = value;
+    }
+
+    pub fn stack_push_pc(&mut self, mem: &mut Mem) {
+        let pc = self.reg_pc.address;
+        match self.reg_sr.is_sr_supervisor_set() {
+            true => {
+                self.reg_ssp = self.reg_ssp.wrapping_sub(4);
+                mem.set_long(self.reg_ssp, pc);
+            }
+            false => {
+                self.reg_usp = self.reg_usp.wrapping_sub(4);
+                mem.set_long(self.reg_usp, pc);
+            }
+        }
+    }
+
+    pub fn stack_push_long(&mut self, mem: &mut Mem, value: u32) {
+        match self.reg_sr.is_sr_supervisor_set() {
+            true => {
+                self.reg_ssp = self.reg_ssp.wrapping_sub(4);
+                mem.set_long(self.reg_ssp, value);
+            }
+            false => {
+                self.reg_usp = self.reg_usp.wrapping_sub(4);
+                mem.set_long(self.reg_usp, value);
+            }
+        }
+    }
+
+    pub fn print_registers(&self) {
+        for n in 0..8 {
+            print!(" D{} ${:08X}", n, self.reg_d[n]);
+        }
+        println!();
+        for n in 0..7 {
+            print!(" A{} ${:08X}", n, self.reg_a[n]);
+        }
+        match self.reg_sr.is_sr_supervisor_set() {
+            true => print!(" A7 ${:08X}", self.reg_ssp),
+            false => print!(" A7 ${:08X}", self.reg_usp),
+        }
+        println!();
+        print!(" USP ${:08X} ", self.reg_usp);
+        print!(" SSP ${:08X} ", self.reg_ssp);
+        println!();
+        print!(" SR ${:04X} ", self.reg_sr.get_sr_reg_flags_abcde());
+        print!("  ");
+        if self.reg_sr.is_sr_supervisor_set() {
+            print!("S");
+        } else {
+            print!("-");
+        }
+        print!("  0    000");
+        if self.reg_sr.is_sr_extend_set() {
+            print!("X");
+        } else {
+            print!("-");
+        }
+        if self.reg_sr.is_sr_negative_set() {
+            print!(" N");
+        } else {
+            print!(" -");
+        }
+        if self.reg_sr.is_sr_zero_set() {
+            print!("Z");
+        } else {
+            print!("-");
+        }
+        if self.reg_sr.is_sr_overflow_set() {
+            print!("V");
+        } else {
+            print!("-");
+        }
+        if self.reg_sr.is_sr_carry_set() {
+            print!("C");
+        } else {
+            print!("-");
+        }
+        println!();
+        print!(" PC ${:08X}", self.reg_pc.get_address());
+        println!();
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct StatusRegister {
+    reg_sr: u16,
+}
+
+impl StatusRegister {
+    pub fn from_empty() -> StatusRegister {
+        StatusRegister { reg_sr: 0x0000 }
+    }
+
+    pub fn from_word(reg_sr: u16) -> StatusRegister {
+        StatusRegister { reg_sr }
+    }
+
+    pub fn get_value(&self) -> u16 {
+        self.reg_sr
+    }
+
+    pub fn get_sr_reg_flags_abcde(&self) -> u16 {
+        self.reg_sr & 0b0000000000011111
+    }
+
+    pub fn set_sr_reg_flags_abcde(&mut self, value: u16) {
+        println!("set_sr_reg_flags_abcde before: ${:04X}", self.reg_sr);
+        self.reg_sr = (self.reg_sr & 0b1111111111100000) | value;
+        println!("set_sr_reg_flags_abcde after:  ${:04X}", self.reg_sr);
+    }
+
+    pub fn merge_status_register(&mut self, status_register_result: StatusRegisterResult) {
+        self.reg_sr = (self.reg_sr & !status_register_result.status_register_mask)
+            | (status_register_result.status_register
+                & status_register_result.status_register_mask);
+    }
+
+    pub fn clear_zero(&mut self) {
+        self.reg_sr &= 0b1111111111111011;
+    }
+
+    pub fn set_zero(&mut self) {
+        self.reg_sr |= STATUS_REGISTER_MASK_ZERO;
     }
 
     pub fn is_sr_carry_set(&self) -> bool {
@@ -401,15 +649,74 @@ impl Register {
         return (self.reg_sr & STATUS_REGISTER_MASK_EXTEND) == STATUS_REGISTER_MASK_EXTEND;
     }
 
-    pub fn stack_push_pc(&mut self, mem: &mut Mem) {
-        self.reg_a[7] = self.reg_a[7].wrapping_sub(4);
-        let pc = self.reg_pc.address;
-        println!("stack_push_pc: ${:08X}", pc);
-        mem.set_long(self.reg_a[7], self.reg_pc.address);
+    pub fn is_sr_supervisor_set(&self) -> bool {
+        return (self.reg_sr & STATUS_REGISTER_MASK_SUPERVISOR_STATE)
+            == STATUS_REGISTER_MASK_SUPERVISOR_STATE;
     }
 
-    pub fn stack_push_long(&mut self, mem: &mut Mem, value: u32) {
-        self.reg_a[7] = self.reg_a[7].wrapping_sub(4);
-        mem.set_long(self.reg_a[7], value);
+    pub fn evaluate_condition(&self, conditional_test: &ConditionalTest) -> bool {
+        match conditional_test {
+            ConditionalTest::T => true,
+
+            ConditionalTest::CC => self.reg_sr & STATUS_REGISTER_MASK_CARRY == 0x0000,
+            ConditionalTest::CS => self.reg_sr & STATUS_REGISTER_MASK_CARRY != 0x0000,
+            ConditionalTest::EQ => self.reg_sr & STATUS_REGISTER_MASK_ZERO != 0x0000,
+            ConditionalTest::F => false,
+            ConditionalTest::GE => {
+                let ge_mask = STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW;
+                let sr = self.reg_sr & ge_mask;
+                sr == ge_mask || sr == 0x0000
+                // (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE == 0x0000
+                //     && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW == 0x0000)
+                //     || (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE != 0x0000
+                //         && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW != 0x0000)
+            }
+            ConditionalTest::GT => {
+                let gt_mask = STATUS_REGISTER_MASK_NEGATIVE
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO;
+                let sr = self.reg_sr & gt_mask;
+                sr == STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW || sr == 0x0000
+                // (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE != 0x0000
+                //     && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW != 0x0000
+                //     && reg.reg_sr & STATUS_REGISTER_MASK_ZERO == 0x0000)
+                //     || (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE == 0x0000
+                //         && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW == 0x0000
+                //         && reg.reg_sr & STATUS_REGISTER_MASK_ZERO == 0x0000)
+            }
+            ConditionalTest::HI => {
+                self.reg_sr & STATUS_REGISTER_MASK_CARRY == 0x0000
+                    && self.reg_sr & STATUS_REGISTER_MASK_ZERO == 0x0000
+            }
+            ConditionalTest::LE => {
+                let le_mask = STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE
+                    | STATUS_REGISTER_MASK_OVERFLOW;
+                let sr = self.reg_sr & le_mask;
+                sr == STATUS_REGISTER_MASK_ZERO
+                    || sr == STATUS_REGISTER_MASK_NEGATIVE
+                    || sr == STATUS_REGISTER_MASK_OVERFLOW
+                // (reg.reg_sr & STATUS_REGISTER_MASK_ZERO != 0x0000)
+                //     || (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE != 0x0000
+                //         && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW == 0x0000)
+                //     || (reg.reg_sr & STATUS_REGISTER_MASK_NEGATIVE == 0x0000
+                //         && reg.reg_sr & STATUS_REGISTER_MASK_OVERFLOW != 0x0000)
+            }
+            ConditionalTest::LS => {
+                (self.reg_sr & STATUS_REGISTER_MASK_CARRY != 0x0000)
+                    || (self.reg_sr & STATUS_REGISTER_MASK_ZERO != 0x0000)
+            }
+            ConditionalTest::LT => {
+                (self.reg_sr & STATUS_REGISTER_MASK_NEGATIVE != 0x0000
+                    && self.reg_sr & STATUS_REGISTER_MASK_OVERFLOW == 0x0000)
+                    || (self.reg_sr & STATUS_REGISTER_MASK_NEGATIVE == 0x0000
+                        && self.reg_sr & STATUS_REGISTER_MASK_OVERFLOW != 0x0000)
+            }
+            ConditionalTest::MI => self.reg_sr & STATUS_REGISTER_MASK_NEGATIVE != 0x0000,
+            ConditionalTest::NE => self.reg_sr & STATUS_REGISTER_MASK_ZERO == 0x0000,
+            ConditionalTest::PL => self.reg_sr & STATUS_REGISTER_MASK_NEGATIVE == 0x0000,
+            ConditionalTest::VC => self.reg_sr & STATUS_REGISTER_MASK_OVERFLOW == 0x0000,
+            ConditionalTest::VS => self.reg_sr & STATUS_REGISTER_MASK_OVERFLOW != 0x0000,
+        }
     }
 }

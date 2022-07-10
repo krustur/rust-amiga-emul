@@ -52,7 +52,7 @@ pub fn step<'a>(
         }
     };
 
-    reg.reg_sr = status_register_result.merge_status_register(reg.reg_sr);
+    reg.reg_sr.merge_status_register(status_register_result);
 
     Ok(())
 }
@@ -67,7 +67,7 @@ pub fn get_disassembly<'a>(
             Cpu::extract_size000110_from_bit_pos_6(instr_word)
         })?;
 
-    let ea_format = Cpu::get_ea_format(ea_data.ea_mode, pc, None, reg, mem);
+    let ea_format = Cpu::get_ea_format(ea_data.ea_mode, pc, None, mem);
 
     let immediate_data = match ea_data.operation_size {
         OperationSize::Byte => {
@@ -99,8 +99,8 @@ mod tests {
         // arrange
         let code = [0x0c, 0x00, 0x00, 0xff].to_vec(); // CMPI.B #$FF,D0
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_d[0] = 0xF0;
-        cpu.register.reg_sr = 0x0000;
+        cpu.register.set_d_reg_long(0, 0xF0);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -116,8 +116,8 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0xF0, cpu.register.reg_d[0]);
-        assert_eq!(true, cpu.register.is_sr_negative_set());
+        assert_eq!(0xF0, cpu.register.get_d_reg_long(0));
+        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
     }
 
     #[test]
@@ -125,8 +125,10 @@ mod tests {
         // arrange
         let code = [0x0c, 0x00, 0x00, 0x50].to_vec(); // CMPI.B #$50,D0
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_d[0] = 0x7f;
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE;
+        cpu.register.set_d_reg_long(0, 0x7f);
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_NEGATIVE);
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -142,8 +144,8 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x7f, cpu.register.reg_d[0]);
-        assert_eq!(false, cpu.register.is_sr_negative_set());
+        assert_eq!(0x7f, cpu.register.get_d_reg_long(0));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
     }
 
     // cmpi word
@@ -153,8 +155,8 @@ mod tests {
         // arrange
         let code = [0x0c, 0x40, 0x50, 0xff].to_vec(); // CMPI.B #$50FF,D0
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_d[0] = 0x50FF;
-        cpu.register.reg_sr = 0x0000;
+        cpu.register.set_d_reg_long(0, 0x50FF);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -170,8 +172,8 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x50FF, cpu.register.reg_d[0]);
-        assert_eq!(true, cpu.register.is_sr_zero_set());
+        assert_eq!(0x50FF, cpu.register.get_d_reg_long(0));
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
     }
 
     #[test]
@@ -179,8 +181,10 @@ mod tests {
         // arrange
         let code = [0x0c, 0x40, 0x50, 0x50].to_vec(); // CMPI.W #$5050,D0
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_d[0] = 0x5040;
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_ZERO;
+        cpu.register.set_d_reg_long(0, 0x5040);
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_ZERO);
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -196,8 +200,8 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x5040, cpu.register.reg_d[0]);
-        assert_eq!(false, cpu.register.is_sr_zero_set());
+        assert_eq!(0x5040, cpu.register.get_d_reg_long(0));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
     }
 
     // cmpi long
@@ -207,8 +211,8 @@ mod tests {
         // arrange
         let code = [0x0c, 0x80, 0x55, 0x55, 0x50, 0xff].to_vec(); // CMPI.B #$555550FF,D0
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_d[0] = 0x555550FF;
-        cpu.register.reg_sr = 0x0000;
+        cpu.register.set_d_reg_long(0, 0x555550FF);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -224,8 +228,8 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x555550FF, cpu.register.reg_d[0]);
-        assert_eq!(true, cpu.register.is_sr_zero_set());
+        assert_eq!(0x555550FF, cpu.register.get_d_reg_long(0));
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
     }
 
     #[test]
@@ -233,8 +237,10 @@ mod tests {
         // arrange
         let code = [0x0c, 0x80, 0x55, 0x55, 0x50, 0x50].to_vec(); // CMPI.L #$55555050,D0
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_d[0] = 0x55555040;
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_ZERO;
+        cpu.register.set_d_reg_long(0, 0x55555040);
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_ZERO);
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -250,7 +256,7 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x55555040, cpu.register.reg_d[0]);
-        assert_eq!(false, cpu.register.is_sr_zero_set());
+        assert_eq!(0x55555040, cpu.register.get_d_reg_long(0));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
     }
 }

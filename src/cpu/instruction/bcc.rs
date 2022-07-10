@@ -21,7 +21,7 @@ pub fn step<'a>(
 ) -> Result<(), StepError> {
     let instr_word = pc.fetch_next_word(mem);
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
-    let condition = Cpu::evaluate_condition(reg, &conditional_test);
+    let condition = reg.reg_sr.evaluate_condition(&conditional_test);
 
     let displacement = Cpu::get_byte_from_word(instr_word);
 
@@ -111,7 +111,7 @@ mod tests {
         // arrange
         let code = [0x64, 0x06].to_vec(); // BCC.B $06
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr = 0x0000; //STATUS_REGISTER_MASK_CARRY;
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
 
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -135,7 +135,9 @@ mod tests {
         // arrange
         let code = [0x64, 0x06].to_vec(); // BCC.B $06
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_CARRY;
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_CARRY);
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -158,7 +160,9 @@ mod tests {
         // arrange
         let code = [0x67, 0xfa].to_vec(); // BEQ.B $FA
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_ZERO;
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_ZERO);
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -183,7 +187,9 @@ mod tests {
         // arrange
         let code = [0x67, 0x00, 0xff, 0xfa].to_vec(); // BEQ.W $FFFA
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_ZERO;
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_ZERO);
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -206,7 +212,9 @@ mod tests {
         // arrange
         let code = [0x67, 0x00, 0x00, 0x60].to_vec(); // BEQ.W $0060
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_ZERO;
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_ZERO);
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -229,7 +237,7 @@ mod tests {
         // arrange
         let code = [0x67, 0x00, 0xff, 0xfa].to_vec(); // BEQ.W $FFFA
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr = 0x0000;
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -254,7 +262,9 @@ mod tests {
         // arrange
         let code = [0x6e, 0xff, 0xff, 0xff, 0xff, 0xfa].to_vec(); // BGT.L $FFFFFFFA
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW;
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW);
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -277,7 +287,7 @@ mod tests {
         // arrange
         let code = [0x6e, 0xff, 0x00, 0x00, 0x80, 0x00].to_vec(); // BGT.L $00008000
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr = 0x0000;
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -300,7 +310,9 @@ mod tests {
         // arrange
         let code = [0x6e, 0xff, 0x00, 0x00, 0x80, 0x00].to_vec(); // BGT.L $00008000
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr = STATUS_REGISTER_MASK_ZERO;
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_ZERO);
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
