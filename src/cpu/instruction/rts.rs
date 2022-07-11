@@ -1,6 +1,5 @@
 use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError};
 use crate::{
-    cpu::Cpu,
     mem::Mem,
     register::{ProgramCounter, Register},
 };
