@@ -536,7 +536,6 @@ impl Register {
                 pc_address
             }
         };
-        println!("pc_address: ${:08X}", pc_address);
         pc.address_jump = Some(pc_address);
     }
 
