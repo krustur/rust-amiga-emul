@@ -20,6 +20,7 @@ pub mod cmp;
 pub mod cmpi;
 pub mod dbcc;
 pub mod jmp;
+pub mod jsr;
 pub mod lea;
 pub mod mov;
 pub mod movec;
@@ -371,6 +372,8 @@ pub struct Instruction {
     pub name: String,
     pub mask: u16,
     pub opcode: u16,
+    pub ex_mask: u16,
+    pub ex_code: u16,
     pub step:
         fn(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> Result<(), StepError>,
     pub get_disassembly: fn(
@@ -397,10 +400,41 @@ impl Instruction {
         ) -> Result<GetDisassemblyResult, GetDisassemblyResultError>,
     ) -> Instruction {
         let instr = Instruction {
-            name: name,
-            mask: mask,
-            opcode: opcode,
-            step: step,
+            name,
+            mask,
+            opcode,
+            ex_mask: 0x0000,
+            ex_code: 0xffff,
+            step,
+            get_disassembly,
+        };
+        instr
+    }
+
+    pub fn new_with_exclude(
+        name: String,
+        mask: u16,
+        opcode: u16,
+        ex_mask: u16,
+        ex_code: u16,
+        step: fn(
+            pc: &mut ProgramCounter,
+            reg: &mut Register,
+            mem: &mut Mem,
+        ) -> Result<(), StepError>,
+        get_disassembly: fn(
+            pc: &mut ProgramCounter,
+            reg: &Register,
+            mem: &Mem,
+        ) -> Result<GetDisassemblyResult, GetDisassemblyResultError>,
+    ) -> Instruction {
+        let instr = Instruction {
+            name,
+            mask,
+            opcode,
+            ex_mask,
+            ex_code,
+            step,
             get_disassembly,
         };
         instr

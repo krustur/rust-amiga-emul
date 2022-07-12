@@ -99,8 +99,6 @@ mod tests {
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
 
-        println!("sp: ${:08X}", cpu.register.get_a_reg_long(7));
-
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(

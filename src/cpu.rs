@@ -43,10 +43,12 @@ impl Cpu {
         let pc_address = mem.get_long(0x4);
         let reg_pc = ProgramCounter::from_address(pc_address);
         let instructions = vec![
-            Instruction::new(
+            Instruction::new_with_exclude(
                 String::from("ADDX"),
                 0xf130,
                 0xd100,
+                0x00c0,
+                0x00c0,
                 instruction::addx::step,
                 instruction::addx::get_disassembly,
             ),
@@ -147,6 +149,13 @@ impl Cpu {
                 0x4ec0,
                 instruction::jmp::step,
                 instruction::jmp::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("JSR"),
+                0xffc0,
+                0x4e80,
+                instruction::jsr::step,
+                instruction::jsr::get_disassembly,
             ),
             Instruction::new(
                 String::from("LEA"),
@@ -1127,10 +1136,9 @@ impl Cpu {
         let mut pc = self.register.reg_pc.clone();
         let instr_word = pc.peek_next_word(&self.memory);
 
-        let instruction_pos = self
-            .instructions
-            .iter()
-            .position(|x| (instr_word & x.mask) == x.opcode);
+        let instruction_pos = self.instructions.iter().position(|x| {
+            ((instr_word & x.mask) == x.opcode) && ((instr_word & x.ex_mask) != x.ex_code)
+        });
         let instruction = match instruction_pos {
             None => panic!(
                 "{:#010X} Unidentified instruction {:#06X}",
@@ -1174,10 +1182,9 @@ impl Cpu {
     pub fn get_disassembly(self: &mut Cpu, pc: &mut ProgramCounter) -> GetDisassemblyResult {
         let instr_word = pc.peek_next_word(&self.memory);
 
-        let instruction_pos = self
-            .instructions
-            .iter()
-            .position(|x| (instr_word & x.mask) == x.opcode);
+        let instruction_pos = self.instructions.iter().position(|x| {
+            ((instr_word & x.mask) == x.opcode) && ((instr_word & x.ex_mask) != x.ex_code)
+        });
 
         match instruction_pos {
             Some(instruction_pos) => {
