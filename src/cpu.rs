@@ -65,6 +65,13 @@ impl Cpu {
                 instruction::addi::get_disassembly,
             ),
             Instruction::new(
+                String::from("AND"),
+                0xf000,
+                0xc000,
+                instruction::and::step,
+                instruction::and::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("BRA"),
                 0xff00,
                 0x6000,
@@ -679,6 +686,74 @@ impl Cpu {
                 status_register,
                 status_register_mask: STATUS_REGISTER_MASK_CARRY
                     | STATUS_REGISTER_MASK_EXTEND
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
+        }
+    }
+
+    pub fn and_bytes(source: u8, dest: u8) -> ResultWithStatusRegister<u8> {
+        println!("and_bytes: ${:0X} & ${:0X}", source, dest);
+        let result = source & dest;
+        println!("result: ${:0X} ", result);
+
+        let mut status_register = 0x0000;
+        match result {
+            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            0x80..=0xff => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+            _ => (),
+        }
+
+        ResultWithStatusRegister {
+            result,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
+        }
+    }
+
+    pub fn and_words(source: u16, dest: u16) -> ResultWithStatusRegister<u16> {
+        let result = source & dest;
+
+        let mut status_register = 0x0000;
+        match result {
+            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            0x8000..=0xffff => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+            _ => (),
+        }
+
+        ResultWithStatusRegister {
+            result,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
+        }
+    }
+
+    pub fn and_longs(source: u32, dest: u32) -> ResultWithStatusRegister<u32> {
+        let result = source & dest;
+
+        let mut status_register = 0x0000;
+        match result {
+            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            0x80000000..=0xffffffff => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+            _ => (),
+        }
+
+        ResultWithStatusRegister {
+            result,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
                     | STATUS_REGISTER_MASK_OVERFLOW
                     | STATUS_REGISTER_MASK_ZERO
                     | STATUS_REGISTER_MASK_NEGATIVE,
