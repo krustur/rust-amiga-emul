@@ -27,7 +27,7 @@ ADDA|X|X|X|X|X|X|||X
 ADDI|X|X|X|X|X|X|||X
 ADDQ|X|X|X|X|X|X|||X
 ADDX|X|X|X|X|X|X|||X
-AND (todo)|X|X|X|X|X|X|||X
+AND|X|X|X|X|X|X|||X
 ANDI (todo)|X|X|X|X|X|X|||X
 ANDI to CCR (todo)|X|X|X|X|X|X|||X
 ANDI to SR 1 (todo)|X|X|X|X|X|X|||X
@@ -75,7 +75,7 @@ EXT (todo)|X|X|X|X|X|X|||X
 todo: EXTB - FTWOTOX|||||||||
 ILLEGAL (todo)|X|X|X|X|X|X|||X
 JMP|X|X|X|X|X|X|||X
-JSR (todo)|X|X|X|X|X|X|||X
+JSR|X|X|X|X|X|X|||X
 LEA|X|X|X|X|X|X|||X
 LINK (todo)|X|X|X|X|X|X|||X
 LPSTOP (todo)|||||||||
@@ -132,7 +132,7 @@ TBLU,TBLUN (todo)|||||||||X
 TRAP (todo)|X|X|X|X|X|X|||X
 TRAPcc (todo)||||X|X|X|||X
 TRAPV (todo)|X|X|X|X|X|X|||X
-TST (todo)|X|X|X|X|X|X|||X
+TST|X|X|X|X|X|X|||X
 UNLK (todo)|X|X|X|X|X|X|||X
 UNPK (todo)||||X|X|X|||
 
