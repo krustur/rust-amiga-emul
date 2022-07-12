@@ -1,5 +1,5 @@
 use super::{GetDisassemblyResult, GetDisassemblyResultError, OperationSize, StepError};
-use crate::cpu::{Cpu, StatusRegisterResult};
+use crate::cpu::Cpu;
 use crate::mem::Mem;
 use crate::register::{ProgramCounter, Register};
 use std::panic;

@@ -225,6 +225,13 @@ impl Cpu {
                 instruction::subq::step,
                 instruction::subq::get_disassembly,
             ),
+            Instruction::new(
+                String::from("TST"),
+                0xff00,
+                0x4a00,
+                instruction::tst::step,
+                instruction::tst::get_disassembly,
+            ),
         ];
         let mut register = Register::new();
         register.set_ssp_reg(reg_ssp);

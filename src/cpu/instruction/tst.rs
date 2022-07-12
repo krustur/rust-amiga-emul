@@ -1,0 +1,437 @@
+use super::{GetDisassemblyResult, GetDisassemblyResultError, OperationSize, StepError};
+use crate::{
+    cpu::{Cpu, StatusRegisterResult},
+    mem::Mem,
+    register::{
+        ProgramCounter, Register, STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_NEGATIVE,
+        STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
+    },
+};
+
+// Instruction State
+// =================
+// step: DONE
+// step cc: DONE
+// get_disassembly: DONE
+
+// 020+ step: TODO
+// 020+ get_disassembly: TODO
+
+pub fn step<'a>(
+    pc: &mut ProgramCounter,
+    reg: &mut Register,
+    mem: &mut Mem,
+) -> Result<(), StepError> {
+    let ea_data =
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
+            Ok(Cpu::extract_size000110_from_bit_pos_6(instr_word))?
+        })?;
+
+    let status_register = match ea_data.operation_size {
+        OperationSize::Byte => {
+            let source = ea_data.get_value_byte(pc, reg, mem, true);
+
+            let mut status_register = 0x0000;
+            match source {
+                0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+                0x80..=0xff => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+                _ => (),
+            };
+            status_register
+        }
+        OperationSize::Word => {
+            let source = ea_data.get_value_word(pc, reg, mem, true);
+
+            let mut status_register = 0x0000;
+            match source {
+                0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+                0x8000..=0xffff => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+                _ => (),
+            };
+            status_register
+        }
+        OperationSize::Long => {
+            let source = ea_data.get_value_long(pc, reg, mem, true);
+
+            let mut status_register = 0x0000;
+            match source {
+                0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+                0x80000000..=0xffffffff => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+                _ => (),
+            };
+            status_register
+        }
+    };
+
+    let status_register_result = StatusRegisterResult {
+        status_register,
+        status_register_mask: STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_OVERFLOW
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_NEGATIVE,
+    };
+
+    reg.reg_sr.merge_status_register(status_register_result);
+
+    Ok(())
+}
+
+pub fn get_disassembly<'a>(
+    pc: &mut ProgramCounter,
+    reg: &Register,
+    mem: &Mem,
+) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
+    let ea_data =
+        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
+            Ok(Cpu::extract_size000110_from_bit_pos_6(instr_word))?
+        })?;
+
+    let ea_format = Cpu::get_ea_format(ea_data.ea_mode, pc, None, mem);
+
+    Ok(GetDisassemblyResult::from_pc(
+        pc,
+        format!("TST.{}", ea_data.operation_size.get_format()),
+        ea_format.format,
+    ))
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        cpu::instruction::GetDisassemblyResult,
+        register::{
+            STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE,
+            STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
+        },
+    };
+
+    // byte
+
+    #[test]
+    fn tst_byte() {
+        // arrange
+        let code = [0x4a, 0x07].to_vec(); // TST.B D7
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long(7, 0x40);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("TST.B"),
+                String::from("D7")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x40, cpu.register.get_d_reg_long(7));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
+    fn tst_byte_zero() {
+        // arrange
+        let code = [0x4a, 0x07].to_vec(); // TST.B D7
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long(7, 0x00);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("TST.B"),
+                String::from("D7")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00, cpu.register.get_d_reg_long(7));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
+    fn tst_byte_negative() {
+        // arrange
+        let code = [0x4a, 0x07].to_vec(); // TST.B D7
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long(7, 0x9f);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("TST.B"),
+                String::from("D7")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x9f, cpu.register.get_d_reg_long(7));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    // word
+
+    #[test]
+    fn tst_word() {
+        // arrange
+        let code = [0x4a, 0x46].to_vec(); // TST.W D6
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long(6, 0x4040);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("TST.W"),
+                String::from("D6")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x4040, cpu.register.get_d_reg_long(6));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
+    fn tst_word_zero() {
+        // arrange
+        let code = [0x4a, 0x46].to_vec(); // TST.W D6
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long(6, 0x0000);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("TST.W"),
+                String::from("D6")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x0000, cpu.register.get_d_reg_long(6));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
+    fn tst_word_negative() {
+        // arrange
+        let code = [0x4a, 0x46].to_vec(); // TST.W D6
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long(6, 0x9f9f);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("TST.W"),
+                String::from("D6")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x9f9f, cpu.register.get_d_reg_long(6));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    // long
+
+    #[test]
+    fn tst_long() {
+        // arrange
+        let code = [0x4a, 0x85].to_vec(); // TST.L D5
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long(5, 0x40404040);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("TST.L"),
+                String::from("D5")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x40404040, cpu.register.get_d_reg_long(5));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
+    fn tst_long_zero() {
+        // arrange
+        let code = [0x4a, 0x85].to_vec(); // TST.L D5
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long(5, 0x00000000);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("TST.L"),
+                String::from("D5")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00000000, cpu.register.get_d_reg_long(5));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
+    fn tst_long_negative() {
+        // arrange
+        let code = [0x4a, 0x85].to_vec(); // TST.L D5
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long(5, 0x9f9f9f9f);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("TST.L"),
+                String::from("D5")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x9f9f9f9f, cpu.register.get_d_reg_long(5));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
+}

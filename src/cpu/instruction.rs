@@ -31,6 +31,7 @@ pub mod rts;
 pub mod sub;
 pub mod subq;
 pub mod subx;
+pub mod tst;
 
 pub struct InstructionError {
     pub details: String,
