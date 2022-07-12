@@ -694,7 +694,7 @@ impl Cpu {
     }
 
     pub fn and_bytes(source: u8, dest: u8) -> ResultWithStatusRegister<u8> {
-        println!("and_bytes: ${:0X} & ${:0X}", source, dest);
+        println!("and_words: ${:0X} & ${:0X}", source, dest);
         let result = source & dest;
         println!("result: ${:0X} ", result);
 
@@ -718,7 +718,9 @@ impl Cpu {
     }
 
     pub fn and_words(source: u16, dest: u16) -> ResultWithStatusRegister<u16> {
+        println!("and_bytes: ${:0X} & ${:0X}", source, dest);
         let result = source & dest;
+        println!("result: ${:0X} ", result);
 
         let mut status_register = 0x0000;
         match result {
