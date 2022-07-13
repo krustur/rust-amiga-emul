@@ -1,4 +1,4 @@
-use super::{GetDisassemblyResult, GetDisassemblyResultError, OperationSize, StepError};
+use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError};
 use crate::{
     cpu::Cpu,
     mem::Mem,

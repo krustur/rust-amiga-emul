@@ -34,7 +34,7 @@ ANDI to SR 1 (todo)|X|X|X|X|X|X|||X
 ASL,ASR (todo)|X|X|X|X|X|X|||X
 Bcc|X|X|X|X|X|X|||X
 BCHG (todo)|X|X|X|X|X|X|||X
-BCLR (todo)|X|X|X|X|X|X|||X
+BCLR|X|X|X|X|X|X|||X
 BFCHG (todo)||||X|X|X|||
 BFCLR (todo)||||X|X|X|||
 BFEXTS (todo)||||X|X|X|||

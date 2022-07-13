@@ -52,13 +52,19 @@ pub fn step<'a>(
     let bit_set = match ea_data.operation_size {
         OperationSize::Long => {
             let bit_number_mask = 1 << bit_number;
-            let value = ea_data.get_value_long(pc, reg, mem, true);
-            (value & bit_number_mask) != 0
+            let value = ea_data.get_value_long(pc, reg, mem, false);
+            let bit_set = (value & bit_number_mask) != 0;
+            let value = value & !bit_number_mask;
+            ea_data.set_value_long(pc, reg, mem, value, true);
+            bit_set
         }
         _ => {
             let bit_number_mask = 1 << bit_number;
-            let value = ea_data.get_value_byte(pc, reg, mem, true);
-            (value & bit_number_mask) != 0
+            let value = ea_data.get_value_byte(pc, reg, mem, false);
+            let bit_set = (value & bit_number_mask) != 0;
+            let value = value & !bit_number_mask;
+            ea_data.set_value_byte(pc, reg, mem, value, true);
+            bit_set
         }
     };
 
@@ -98,7 +104,7 @@ pub fn get_disassembly<'a>(
             let dreg = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;
             Ok(GetDisassemblyResult::from_pc(
                 pc,
-                String::from(format!("BTST.{}", ea_data.operation_size.get_format())),
+                String::from(format!("BCLR.{}", ea_data.operation_size.get_format())),
                 format!("D{},{}", dreg, ea_format.format),
             ))
         }
@@ -110,7 +116,7 @@ pub fn get_disassembly<'a>(
             };
             Ok(GetDisassemblyResult::from_pc(
                 pc,
-                String::from(format!("BTST.{}", ea_data.operation_size.get_format())),
+                String::from(format!("BCLR.{}", ea_data.operation_size.get_format())),
                 format!("#${:02X},{}", bit_number, ea_format.format),
             ))
         }
@@ -130,9 +136,9 @@ mod tests {
     // long (data register direct)
 
     #[test]
-    fn btst_long_bit_number_static_data_register_direct_bit_set() {
+    fn bclr_long_bit_number_static_data_register_direct_bit_set() {
         // arrange
-        let code = [0x08, 0x01, 0x00, 0x00].to_vec(); // BTST.L #$00,D1
+        let code = [0x08, 0x81, 0x00, 0x00].to_vec(); // BCLR.L #$00,D1
         let mut cpu = crate::instr_test_setup(code, None);
 
         cpu.register.set_d_reg_long(1, 0x00000001);
@@ -149,7 +155,7 @@ mod tests {
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00004,
-                String::from("BTST.L"),
+                String::from("BCLR.L"),
                 String::from("#$00,D1")
             ),
             debug_result
@@ -157,6 +163,7 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
+        assert_eq!(0x00000000, cpu.register.get_d_reg_long(1));
         assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
         assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
@@ -165,9 +172,9 @@ mod tests {
     }
 
     #[test]
-    fn btst_long_bit_number_static_data_register_direct_bit_clear() {
+    fn bclr_long_bit_number_static_data_register_direct_bit_clear() {
         // arrange
-        let code = [0x08, 0x02, 0x00, 0x21].to_vec(); // BTST.L #$21,D2
+        let code = [0x08, 0x82, 0x00, 0x21].to_vec(); // BCLR.L #$21,D2
         let mut cpu = crate::instr_test_setup(code, None);
 
         cpu.register.set_d_reg_long(2, 0x0000000d);
@@ -178,7 +185,7 @@ mod tests {
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00004,
-                String::from("BTST.L"),
+                String::from("BCLR.L"),
                 String::from("#$21,D2")
             ),
             debug_result
@@ -186,6 +193,7 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
+        assert_eq!(0x0000000d, cpu.register.get_d_reg_long(2));
         assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
         assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
@@ -194,9 +202,9 @@ mod tests {
     }
 
     #[test]
-    fn btst_long_bit_number_dynamic_data_register_direct_bit_set() {
+    fn bclr_long_bit_number_dynamic_data_register_direct_bit_set() {
         // arrange
-        let code = [0x01, 0x03].to_vec(); // BTST.L D0,D3
+        let code = [0x01, 0x83].to_vec(); // BCLR.L D0,D3
         let mut cpu = crate::instr_test_setup(code, None);
 
         cpu.register.set_d_reg_long(0, 0x00000002);
@@ -214,7 +222,7 @@ mod tests {
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
-                String::from("BTST.L"),
+                String::from("BCLR.L"),
                 String::from("D0,D3")
             ),
             debug_result
@@ -222,6 +230,7 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
+        assert_eq!(0x0000fff3, cpu.register.get_d_reg_long(3));
         assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
         assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
@@ -230,9 +239,9 @@ mod tests {
     }
 
     #[test]
-    fn btst_long_bit_number_dynamic_data_data_register_direct_bit_clear() {
+    fn bclr_long_bit_number_dynamic_data_data_register_direct_bit_clear() {
         // arrange
-        let code = [0x0f, 0x06].to_vec(); // BTST.L D7,D6
+        let code = [0x0f, 0x86].to_vec(); // BCLR.L D7,D6
         let mut cpu = crate::instr_test_setup(code, None);
 
         cpu.register.set_d_reg_long(7, 0x00000003);
@@ -244,7 +253,7 @@ mod tests {
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
-                String::from("BTST.L"),
+                String::from("BCLR.L"),
                 String::from("D7,D6")
             ),
             debug_result
@@ -252,6 +261,7 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
+        assert_eq!(0x0000fff7, cpu.register.get_d_reg_long(6));
         assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
         assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
@@ -262,9 +272,9 @@ mod tests {
     // byte
 
     #[test]
-    fn btst_byte_bit_number_static_address_register_indirect_bit_set() {
+    fn bclr_byte_bit_number_static_address_register_indirect_bit_set() {
         // arrange
-        let code = [0x08, 0x10, 0x00, 0x08, /* DC  */ 0x01].to_vec(); // BTST.B #$08,(A0)
+        let code = [0x08, 0x90, 0x00, 0x08, /* DC  */ 0x01].to_vec(); // BCLR.B #$08,(A0)
         let mut cpu = crate::instr_test_setup(code, None);
 
         cpu.register.set_d_reg_long(1, 0x00000001);
@@ -282,7 +292,7 @@ mod tests {
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00004,
-                String::from("BTST.B"),
+                String::from("BCLR.B"),
                 String::from("#$08,(A0)")
             ),
             debug_result
@@ -290,6 +300,7 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
+        assert_eq!(0x00, cpu.memory.get_byte(0x00c00004));
         assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
         assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
@@ -298,9 +309,9 @@ mod tests {
     }
 
     #[test]
-    fn btst_byte_bit_number_static_address_register_indirect_bit_clear() {
+    fn bclr_byte_bit_number_static_address_register_indirect_bit_clear() {
         // arrange
-        let code = [0x08, 0x10, 0x00, 0x09, /* DC  */ 0x01].to_vec(); // BTST.B #$09,(A0)
+        let code = [0x08, 0x90, 0x00, 0x09, /* DC  */ 0x01].to_vec(); // BCLR.B #$09,(A0)
         let mut cpu = crate::instr_test_setup(code, None);
 
         cpu.register.set_d_reg_long(2, 0x0000fffd);
@@ -312,7 +323,7 @@ mod tests {
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00004,
-                String::from("BTST.B"),
+                String::from("BCLR.B"),
                 String::from("#$09,(A0)")
             ),
             debug_result
@@ -320,6 +331,7 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
+        assert_eq!(0x01, cpu.memory.get_byte(0x00c00004));
         assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
         assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
@@ -328,9 +340,9 @@ mod tests {
     }
 
     #[test]
-    fn btst_byte_bit_number_dynamic_address_register_indirect_bit_clear() {
+    fn bclr_byte_bit_number_dynamic_address_register_indirect_bit_clear() {
         // arrange
-        let code = [0x0b, 0x10, /* DC  */ 0x01].to_vec(); // BTST.B D5,(A0)
+        let code = [0x0b, 0x90, /* DC  */ 0x01].to_vec(); // BCLR.B D5,(A0)
         let mut cpu = crate::instr_test_setup(code, None);
 
         cpu.register.set_d_reg_long(5, 0x00000001);
@@ -347,7 +359,7 @@ mod tests {
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
-                String::from("BTST.B"),
+                String::from("BCLR.B"),
                 String::from("D5,(A0)")
             ),
             debug_result
@@ -355,6 +367,7 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
+        assert_eq!(0x01, cpu.memory.get_byte(0x00c00002));
         assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
         assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
         assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
@@ -363,12 +376,12 @@ mod tests {
     }
 
     #[test]
-    fn btst_byte_bit_number_dynamic_address_register_indirect_bit_set() {
+    fn bclr_byte_bit_number_dynamic_address_register_indirect_bit_set() {
         // arrange
-        let code = [0x0b, 0x10, /* DC */ 0x01].to_vec(); // BTST.B D5,(A0)
+        let code = [0x0b, 0x90, /* DC  */ 0x01].to_vec(); // BCLR.B D5,(A0)
         let mut cpu = crate::instr_test_setup(code, None);
 
-        cpu.register.set_d_reg_long(5, 0x00000000);
+        cpu.register.set_d_reg_long(7, 0x00000000);
         cpu.register.set_a_reg_long(0, 0x00c00002);
         cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
         // act assert - debug
@@ -377,7 +390,7 @@ mod tests {
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
                 0xC00002,
-                String::from("BTST.B"),
+                String::from("BCLR.B"),
                 String::from("D5,(A0)")
             ),
             debug_result
@@ -385,6 +398,7 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
+        assert_eq!(0x00, cpu.memory.get_byte(0x00c00002));
         assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());

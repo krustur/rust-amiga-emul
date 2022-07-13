@@ -12,6 +12,7 @@ pub mod addq;
 pub mod addx;
 pub mod and;
 pub mod bcc;
+pub mod bclr;
 pub mod bra;
 pub mod bsr;
 pub mod btst;

@@ -88,18 +88,32 @@ impl Cpu {
                 instruction::bsr::get_disassembly,
             ),
             Instruction::new(
-                String::from("BTST"),
+                String::from("BTST"), // Bit Number Dynamic
                 0xf1c0,
                 0x0100,
                 instruction::btst::step,
                 instruction::btst::get_disassembly,
             ),
             Instruction::new(
-                String::from("BTST"),
+                String::from("BTST"), // Bit Number Static
                 0xffc0,
                 0x0800,
                 instruction::btst::step,
                 instruction::btst::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("BCLR"), // Bit Number Dynamic
+                0xf1c0,
+                0x0180,
+                instruction::bclr::step,
+                instruction::bclr::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("BCLR"), // Bit Number Static
+                0xffc0,
+                0x0880,
+                instruction::bclr::step,
+                instruction::bclr::get_disassembly,
             ),
             Instruction::new(
                 String::from("DBcc"), // DBcc need to be before ADDQ
