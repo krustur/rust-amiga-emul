@@ -30,7 +30,6 @@ pub fn step<'a>(
     pc.jump_long(address);
     reg.stack_push_long(mem, pc.get_address_next());
     Ok(())
-    // todo!("jsr")
 }
 
 pub fn get_disassembly<'a>(

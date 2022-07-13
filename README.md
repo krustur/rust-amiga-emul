@@ -77,7 +77,7 @@ ILLEGAL (todo)|X|X|X|X|X|X|||X
 JMP|X|X|X|X|X|X|||X
 JSR|X|X|X|X|X|X|||X
 LEA|X|X|X|X|X|X|||X
-LINK (todo)|X|X|X|X|X|X|||X
+LINK|X|X|X|X|X|X|||X
 LPSTOP (todo)|||||||||
 LSL,LSR (todo)|X|X|X|X|X|X|||X
 MOVE|X|X|X|X|X|X|||X

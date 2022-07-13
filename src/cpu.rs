@@ -165,6 +165,20 @@ impl Cpu {
                 instruction::lea::get_disassembly,
             ),
             Instruction::new(
+                String::from("LINK"), // word
+                0xfff8,
+                0x4e50,
+                instruction::link::step,
+                instruction::link::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("LINK"), // long
+                0xfff8,
+                0x4808,
+                instruction::link::step_long,
+                instruction::link::get_disassembly_long,
+            ),
+            Instruction::new(
                 String::from("MOVE"),
                 0xc000,
                 0x0000,
@@ -1154,8 +1168,6 @@ impl Cpu {
             Err(step_error) => match step_error {
                 StepError::IllegalInstruction => {
                     self.exception(&mut pc, 4);
-                    // self.register.stack_push_pc(&mut self.memory);
-                    // todo!("StepError::IllegalInstruction not di-di-di-done!")
                     self.register.reg_pc = pc.get_step_next_pc();
                 }
                 _ => {
