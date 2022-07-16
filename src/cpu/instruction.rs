@@ -24,6 +24,7 @@ pub mod jmp;
 pub mod jsr;
 pub mod lea;
 pub mod link;
+pub mod lslr;
 pub mod mov;
 pub mod movec;
 pub mod movem;

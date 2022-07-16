@@ -118,6 +118,8 @@ fn main() {
             // 0x00F80D52 => true,
             0x00F80D5A => true,
             0x00F80D5E => true,
+            0x00F80F22 => true,
+            0x00F80F24 => true,
             _ => false,
         };
         if print_disassembly {

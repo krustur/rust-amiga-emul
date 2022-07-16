@@ -264,7 +264,7 @@ mod tests {
     #[test]
     fn btst_byte_bit_number_static_address_register_indirect_bit_set() {
         // arrange
-        let code = [0x08, 0x10, 0x00, 0x08, /* DC  */ 0x01].to_vec(); // BTST.B #$08,(A0)
+        let code = [0x08, 0x10, 0x00, 0x08, /* DC */ 0x01].to_vec(); // BTST.B #$08,(A0)
         let mut cpu = crate::instr_test_setup(code, None);
 
         cpu.register.set_d_reg_long(1, 0x00000001);
@@ -330,7 +330,7 @@ mod tests {
     #[test]
     fn btst_byte_bit_number_dynamic_address_register_indirect_bit_clear() {
         // arrange
-        let code = [0x0b, 0x10, /* DC  */ 0x01].to_vec(); // BTST.B D5,(A0)
+        let code = [0x0b, 0x10, /* DC */ 0x01].to_vec(); // BTST.B D5,(A0)
         let mut cpu = crate::instr_test_setup(code, None);
 
         cpu.register.set_d_reg_long(5, 0x00000001);

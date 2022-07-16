@@ -193,6 +193,20 @@ impl Cpu {
                 instruction::link::get_disassembly_long,
             ),
             Instruction::new(
+                String::from("LSLR"), // register
+                0xf018,
+                0xe008,
+                instruction::lslr::step,
+                instruction::lslr::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("LSLR"), // memory
+                0xfec0,
+                0xe2c0,
+                instruction::lslr::step,
+                instruction::lslr::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("MOVE"),
                 0xc000,
                 0x0000,
