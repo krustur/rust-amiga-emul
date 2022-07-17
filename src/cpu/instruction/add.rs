@@ -206,7 +206,7 @@ mod tests {
                                                          // DC.B 0x01
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.set_a_reg_long(0, 0x00C00002);
-        cpu.register.set_d_reg_long(1, 0x00000001);
+        cpu.register.set_d_reg_long(0, 0x00000001);
         cpu.register.reg_sr.set_sr_reg_flags_abcde(
             STATUS_REGISTER_MASK_CARRY
                 | STATUS_REGISTER_MASK_OVERFLOW
@@ -228,7 +228,7 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x01, cpu.register.get_d_reg_long(0));
+        assert_eq!(0x02, cpu.register.get_d_reg_long(0));
         assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
@@ -244,7 +244,6 @@ mod tests {
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.set_a_reg_long(0, 0x00C00002);
         cpu.register.set_d_reg_long(0, 0x0000007f);
-        cpu.register.set_d_reg_long(1, 0x00000001);
         cpu.register.reg_sr.set_sr_reg_flags_abcde(
             STATUS_REGISTER_MASK_CARRY
                 | STATUS_REGISTER_MASK_OVERFLOW
@@ -318,7 +317,7 @@ mod tests {
                                                                // DC.W 0x01
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.set_a_reg_long(0, 0x00C00002);
-        cpu.register.set_d_reg_long(1, 0x00000001);
+        cpu.register.set_d_reg_long(0, 0x00000001);
         cpu.register.reg_sr.set_sr_reg_flags_abcde(
             STATUS_REGISTER_MASK_CARRY
                 | STATUS_REGISTER_MASK_OVERFLOW
@@ -340,7 +339,7 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x0001, cpu.register.get_d_reg_long(0));
+        assert_eq!(0x0002, cpu.register.get_d_reg_long(0));
         assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
@@ -356,7 +355,6 @@ mod tests {
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.set_a_reg_long(0, 0x00C00002);
         cpu.register.set_d_reg_long(0, 0x00007fff);
-        cpu.register.set_d_reg_long(1, 0x00000001);
         cpu.register.reg_sr.set_sr_reg_flags_abcde(
             STATUS_REGISTER_MASK_CARRY
                 | STATUS_REGISTER_MASK_OVERFLOW
@@ -394,7 +392,6 @@ mod tests {
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.set_a_reg_long(0, 0x00C00002);
         cpu.register.set_d_reg_long(0, 0x0000ffff);
-        cpu.register.set_d_reg_long(1, 0x00000001);
         cpu.register.reg_sr.set_sr_reg_flags_abcde(
             STATUS_REGISTER_MASK_CARRY
                 | STATUS_REGISTER_MASK_OVERFLOW
