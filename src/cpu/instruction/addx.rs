@@ -162,7 +162,7 @@ mod tests {
     // Data register byte
 
     #[test]
-    fn data_register_byte_with_carry_zero() {
+    fn data_register_byte_with_carry_clear() {
         // arrange
         let code = [0xd3, 0x00].to_vec(); // ADDX.B D0,D1
         let mut cpu = crate::instr_test_setup(code, None);
@@ -197,7 +197,7 @@ mod tests {
     }
 
     #[test]
-    fn data_register_byte_with_carry_one() {
+    fn data_register_byte_with_carry_set() {
         // arrange
         let code = [0xd3, 0x00].to_vec(); // ADDX.B D0,D1
         let mut cpu = crate::instr_test_setup(code, None);
@@ -229,7 +229,7 @@ mod tests {
     }
 
     #[test]
-    fn data_register_byte_with_carry_one_set_carry_extend() {
+    fn data_register_byte_with_carry_set_set_carry_extend() {
         // arrange
         let code = [0xd3, 0x00].to_vec(); // ADDX.B D0,D1
         let mut cpu = crate::instr_test_setup(code, None);
@@ -261,7 +261,7 @@ mod tests {
     }
 
     #[test]
-    fn data_register_byte_with_carry_one_set_carry_extend_leave_zero_cleared_test_both_carry() {
+    fn data_register_byte_with_carry_set_set_carry_extend_leave_zero_cleared_test_both_carry() {
         // arrange
         let code = [0xd3, 0x00].to_vec(); // ADDX.B D0,D1
         let mut cpu = crate::instr_test_setup(code, None);
@@ -293,7 +293,7 @@ mod tests {
     }
 
     #[test]
-    fn data_register_byte_with_carry_one_set_carry_extend_leave_zero_set_test_both_carry() {
+    fn data_register_byte_with_carry_set_set_carry_extend_leave_zero_set_test_both_carry() {
         // arrange
         let code = [0xd3, 0x00].to_vec(); // ADDX.B D0,D1
         let mut cpu = crate::instr_test_setup(code, None);
@@ -325,7 +325,7 @@ mod tests {
     }
 
     #[test]
-    fn data_register_byte_with_carry_one_set_overflow_negative() {
+    fn data_register_byte_with_carry_set_set_overflow_negative() {
         // arrange
         let code = [0xd3, 0x00].to_vec(); // ADDX.B D0,D1
         let mut cpu = crate::instr_test_setup(code, None);
@@ -357,7 +357,7 @@ mod tests {
     }
 
     #[test]
-    fn data_register_byte_with_carry_one_set_overflow_negative_test_both_overflow() {
+    fn data_register_byte_with_carry_set_set_overflow_negative_test_both_overflow() {
         // arrange
         let code = [0xd3, 0x00].to_vec(); // ADDX.B D0,D1
         let mut cpu = crate::instr_test_setup(code, None);
@@ -391,7 +391,7 @@ mod tests {
     // Data register word
 
     #[test]
-    fn data_register_word_with_carry_zero() {
+    fn data_register_word_with_carry_clear() {
         // arrange
         let code = [0xd7, 0x42].to_vec(); // ADDX.W D2,D3
         let mut cpu = crate::instr_test_setup(code, None);
@@ -426,7 +426,7 @@ mod tests {
     }
 
     #[test]
-    fn data_register_word_with_carry_one() {
+    fn data_register_word_with_carry_set() {
         // arrange
         let code = [0xd7, 0x42].to_vec(); // ADDX.W D2,D3
         let mut cpu = crate::instr_test_setup(code, None);
@@ -458,7 +458,7 @@ mod tests {
     }
 
     #[test]
-    fn data_register_word_with_carry_one_set_carry_extend() {
+    fn data_register_word_with_carry_set_set_carry_extend() {
         // arrange
         let code = [0xd7, 0x42].to_vec(); // ADDX.W D2,D3
         let mut cpu = crate::instr_test_setup(code, None);
@@ -490,7 +490,7 @@ mod tests {
     }
 
     #[test]
-    fn data_register_word_with_carry_one_set_carry_extend_leave_zero_cleared_test_both_carry() {
+    fn data_register_word_with_carry_set_set_carry_extend_leave_zero_cleared_test_both_carry() {
         // arrange
         let code = [0xd7, 0x42].to_vec(); // ADDX.W D2,D3
         let mut cpu = crate::instr_test_setup(code, None);
@@ -522,7 +522,7 @@ mod tests {
     }
 
     #[test]
-    fn data_register_word_with_carry_one_set_carry_extend_leave_zero_set_test_both_carry() {
+    fn data_register_word_with_carry_set_set_carry_extend_leave_zero_set_test_both_carry() {
         // arrange
         let code = [0xd7, 0x42].to_vec(); // ADDX.W D2,D3
         let mut cpu = crate::instr_test_setup(code, None);
@@ -554,7 +554,7 @@ mod tests {
     }
 
     #[test]
-    fn data_register_word_with_carry_one_set_overflow_negative() {
+    fn data_register_word_with_carry_set_set_overflow_negative() {
         // arrange
         let code = [0xd7, 0x42].to_vec(); // ADDX.W D2,D3
         let mut cpu = crate::instr_test_setup(code, None);
@@ -586,7 +586,7 @@ mod tests {
     }
 
     #[test]
-    fn data_register_word_with_carry_one_set_overflow_negative_zero_test_both_overflow() {
+    fn data_register_word_with_carry_set_set_overflow_negative_zero_test_both_overflow() {
         // arrange
         let code = [0xd7, 0x42].to_vec(); // ADDX.W D2,D3
         let mut cpu = crate::instr_test_setup(code, None);
@@ -620,7 +620,7 @@ mod tests {
     // Data register long
 
     #[test]
-    fn data_register_long_with_carry_zero() {
+    fn data_register_long_with_carry_clear() {
         // arrange
         let code = [0xdb, 0x84].to_vec(); // ADDX.L D4,D5
         let mut cpu = crate::instr_test_setup(code, None);
@@ -655,7 +655,7 @@ mod tests {
     }
 
     #[test]
-    fn data_register_long_with_carry_one() {
+    fn data_register_long_with_carry_set() {
         // arrange
         let code = [0xdb, 0x84].to_vec(); // ADDX.L D4,D5
         let mut cpu = crate::instr_test_setup(code, None);
@@ -687,7 +687,7 @@ mod tests {
     }
 
     #[test]
-    fn data_register_long_with_carry_one_set_carry_extend() {
+    fn data_register_long_with_carry_set_set_carry_extend() {
         // arrange
         let code = [0xdb, 0x84].to_vec(); // ADDX.L D4,D5
         let mut cpu = crate::instr_test_setup(code, None);
@@ -719,7 +719,7 @@ mod tests {
     }
 
     #[test]
-    fn data_register_long_with_carry_one_set_carry_extend_leave_zero_cleared_test_both_carry() {
+    fn data_register_long_with_carry_set_set_carry_extend_leave_zero_cleared_test_both_carry() {
         // arrange
         let code = [0xdb, 0x84].to_vec(); // ADDX.L D4,D5
         let mut cpu = crate::instr_test_setup(code, None);
@@ -751,7 +751,7 @@ mod tests {
     }
 
     #[test]
-    fn data_register_long_with_carry_one_set_carry_extend_leave_zero_cleared_set_both_carry() {
+    fn data_register_long_with_carry_set_set_carry_extend_leave_zero_cleared_set_both_carry() {
         // arrange
         let code = [0xdb, 0x84].to_vec(); // ADDX.L D4,D5
         let mut cpu = crate::instr_test_setup(code, None);
@@ -783,7 +783,7 @@ mod tests {
     }
 
     #[test]
-    fn data_register_long_with_carry_one_set_overflow_negative() {
+    fn data_register_long_with_carry_set_set_overflow_negative() {
         // arrange
         let code = [0xdb, 0x84].to_vec(); // ADDX.L D4,D5
         let mut cpu = crate::instr_test_setup(code, None);
@@ -815,7 +815,7 @@ mod tests {
     }
 
     #[test]
-    fn data_register_long_with_carry_one_set_overflow_negative_zero_test_both_overflow() {
+    fn data_register_long_with_carry_set_set_overflow_negative_zero_test_both_overflow() {
         // arrange
         let code = [0xdb, 0x84].to_vec(); // ADDX.L D4,D5
         let mut cpu = crate::instr_test_setup(code, None);
@@ -849,7 +849,7 @@ mod tests {
     // Address register indirect with pre decrement byte
 
     #[test]
-    fn address_register_byte_with_carry_zero() {
+    fn address_register_byte_with_carry_clear() {
         // arrange
         let code = [0xd9, 0x0b, /* DC */ 0x10, 0x20].to_vec(); // ADDX.B -(A3),-(A4)
                                                                // DC.B $10, $20
@@ -887,7 +887,7 @@ mod tests {
     }
 
     #[test]
-    fn address_register_byte_with_carry_one() {
+    fn address_register_byte_with_carry_set() {
         // arrange
         let code = [0xd9, 0x0b, /* DC */ 0x10, 0x20].to_vec(); // ADDX.B -(A3),-(A4)
                                                                // DC.B $10, $20
@@ -926,7 +926,7 @@ mod tests {
     }
 
     #[test]
-    fn address_register_word_with_carry_zero() {
+    fn address_register_word_with_carry_clear() {
         // arrange
         let code = [0xdd, 0x4d, /* DC */ 0x10, 0x10, 0x20, 0x20].to_vec(); // ADDX.W -(A5),-(A6)
                                                                            // DC.W $1010, $2020
@@ -964,7 +964,7 @@ mod tests {
     }
 
     #[test]
-    fn address_register_word_with_carry_one() {
+    fn address_register_word_with_carry_set() {
         // arrange
         let code = [0xdd, 0x4d, /* DC */ 0x10, 0x10, 0x20, 0x20].to_vec(); // ADDX.W -(A5),-(A6)
                                                                            // DC.W $1010, $2020
@@ -1003,7 +1003,7 @@ mod tests {
     }
 
     #[test]
-    fn address_register_long_with_carry_zero() {
+    fn address_register_long_with_carry_clear() {
         // arrange
         let code = [
             0xd1, 0x8f, /* DC */ 0x10, 0x10, 0x10, 0x10, 0x20, 0x20, 0x20, 0x20,
@@ -1044,7 +1044,7 @@ mod tests {
     }
 
     #[test]
-    fn address_register_long_with_carry_one() {
+    fn address_register_long_with_carry_set() {
         // arrange
         let code = [
             0xd1, 0x8f, /* DC */ 0x10, 0x10, 0x10, 0x10, 0x20, 0x20, 0x20, 0x20,
