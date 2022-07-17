@@ -378,6 +378,70 @@ mod tests {
         assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
     }
 
+    #[test]
+    fn subx_data_register_byte_with_carry_set_leave_zero_cleared() {
+        // arrange
+        let code = [0x93, 0x00].to_vec(); // SUBX.B D0,D1
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long(0, 0x00000010);
+        cpu.register.set_d_reg_long(1, 0x00000011);
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_CARRY);
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("SUBX.B"),
+                String::from("D0,D1")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00, cpu.register.get_d_reg_long(1));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
+    fn subx_data_register_byte_with_carry_set_leave_zero_set() {
+        // arrange
+        let code = [0x93, 0x00].to_vec(); // SUBX.B D0,D1
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long(0, 0x00000010);
+        cpu.register.set_d_reg_long(1, 0x00000011);
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO);
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("SUBX.B"),
+                String::from("D0,D1")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00, cpu.register.get_d_reg_long(1));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
     // Data register word
 
     #[test]
@@ -575,6 +639,70 @@ mod tests {
         assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
     }
 
+    #[test]
+    fn subx_data_register_word_with_carry_set_leave_zero_cleared() {
+        // arrange
+        let code = [0x97, 0x42].to_vec(); // SUBX.W D2,D3
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long(2, 0x00001000);
+        cpu.register.set_d_reg_long(3, 0x00001001);
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_CARRY);
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("SUBX.W"),
+                String::from("D2,D3")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00000000, cpu.register.get_d_reg_long(3));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
+    fn subx_data_register_word_with_carry_set_leave_zero_set() {
+        // arrange
+        let code = [0x97, 0x42].to_vec(); // SUBX.W D2,D3
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long(2, 0x00001000);
+        cpu.register.set_d_reg_long(3, 0x00001001);
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO);
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("SUBX.W"),
+                String::from("D2,D3")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00000000, cpu.register.get_d_reg_long(3));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
     // Data register long
 
     #[test]
@@ -768,6 +896,70 @@ mod tests {
         assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
         assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
+    fn subx_data_register_long_with_carry_set_leave_zero_cleared() {
+        // arrange
+        let code = [0x9b, 0x84].to_vec(); // SUBX.L D4,D5
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long(4, 0x10000000);
+        cpu.register.set_d_reg_long(5, 0x10000001);
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_CARRY);
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("SUBX.L"),
+                String::from("D4,D5")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00000000, cpu.register.get_d_reg_long(5));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
+    fn subx_data_register_long_with_carry_set_leave_zero_set() {
+        // arrange
+        let code = [0x9b, 0x84].to_vec(); // SUBX.L D4,D5
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long(4, 0x10000000);
+        cpu.register.set_d_reg_long(5, 0x10000001);
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO);
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("SUBX.L"),
+                String::from("D4,D5")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00000000, cpu.register.get_d_reg_long(5));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
     }

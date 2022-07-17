@@ -124,7 +124,7 @@ SUB|X|X|X|X|X|X|||X
 SUBA|X|X|X|X|X|X|||X
 SUBI (todo)|X|X|X|X|X|X|||X
 SUBQ|X|X|X|X|X|X|||X
-SUBX (todo)|X|X|X|X|X|X|||X
+SUBX|X|X|X|X|X|X|||X
 SWAP (todo)|X|X|X|X|X|X|||X
 TAS (todo)|X|X|X|X|X|X|||X
 TBLS, TBLSN (todo)|||||||||X

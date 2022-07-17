@@ -890,6 +890,11 @@ impl Cpu {
         let (result_signed, overflow) = dest_signed.overflowing_sub(source_signed);
         let (result_signed, overflow2) = result_signed.overflowing_sub(extend_signed);
 
+        let mut status_register_mask = STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_EXTEND
+            | STATUS_REGISTER_MASK_OVERFLOW
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_NEGATIVE;
         let mut status_register = 0x0000;
         match carry | carry2 {
             true => status_register |= STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND,
@@ -900,22 +905,21 @@ impl Cpu {
             false => (),
         }
         match result_signed {
-            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            0 => {
+                status_register_mask &= STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_EXTEND
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_NEGATIVE
+            }
             i8::MIN..=-1 => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
             _ => (),
         }
 
-        // TODO: status_register_mask no STATUS_REGISTER_MASK_ZERO when ZERO
-        // TODO: .. and test!
         ResultWithStatusRegister {
             result,
             status_register_result: StatusRegisterResult {
                 status_register,
-                status_register_mask: STATUS_REGISTER_MASK_CARRY
-                    | STATUS_REGISTER_MASK_EXTEND
-                    | STATUS_REGISTER_MASK_OVERFLOW
-                    | STATUS_REGISTER_MASK_ZERO
-                    | STATUS_REGISTER_MASK_NEGATIVE,
+                status_register_mask,
             },
         }
     }
@@ -973,6 +977,11 @@ impl Cpu {
         let (result_signed, overflow) = dest_signed.overflowing_sub(source_signed);
         let (result_signed, overflow2) = result_signed.overflowing_sub(extend_signed);
 
+        let mut status_register_mask = STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_EXTEND
+            | STATUS_REGISTER_MASK_OVERFLOW
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_NEGATIVE;
         let mut status_register = 0x0000;
         match carry | carry2 {
             true => status_register |= STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND,
@@ -983,22 +992,21 @@ impl Cpu {
             false => (),
         }
         match result_signed {
-            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            0 => {
+                status_register_mask &= STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_EXTEND
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_NEGATIVE
+            }
             i16::MIN..=-1 => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
             _ => (),
         }
 
-        // TODO: status_register_mask no STATUS_REGISTER_MASK_ZERO when ZERO
-        // TODO: .. and test!
         ResultWithStatusRegister {
             result,
             status_register_result: StatusRegisterResult {
                 status_register,
-                status_register_mask: STATUS_REGISTER_MASK_CARRY
-                    | STATUS_REGISTER_MASK_EXTEND
-                    | STATUS_REGISTER_MASK_OVERFLOW
-                    | STATUS_REGISTER_MASK_ZERO
-                    | STATUS_REGISTER_MASK_NEGATIVE,
+                status_register_mask,
             },
         }
     }
@@ -1056,6 +1064,11 @@ impl Cpu {
         let (result_signed, overflow) = dest_signed.overflowing_sub(source_signed);
         let (result_signed, overflow2) = result_signed.overflowing_sub(extend_signed);
 
+        let mut status_register_mask = STATUS_REGISTER_MASK_CARRY
+            | STATUS_REGISTER_MASK_EXTEND
+            | STATUS_REGISTER_MASK_OVERFLOW
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_NEGATIVE;
         let mut status_register = 0x0000;
         match carry | carry2 {
             true => status_register |= STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND,
@@ -1066,7 +1079,12 @@ impl Cpu {
             false => (),
         }
         match result_signed {
-            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            0 => {
+                status_register_mask &= STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_EXTEND
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_NEGATIVE
+            }
             i32::MIN..=-1 => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
             _ => (),
         }
@@ -1077,11 +1095,7 @@ impl Cpu {
             result,
             status_register_result: StatusRegisterResult {
                 status_register,
-                status_register_mask: STATUS_REGISTER_MASK_CARRY
-                    | STATUS_REGISTER_MASK_EXTEND
-                    | STATUS_REGISTER_MASK_OVERFLOW
-                    | STATUS_REGISTER_MASK_ZERO
-                    | STATUS_REGISTER_MASK_NEGATIVE,
+                status_register_mask,
             },
         }
     }
