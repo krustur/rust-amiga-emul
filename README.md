@@ -19,6 +19,8 @@ There's no ambition to make this a fully functional Amiga emulator.
 
 <https://wandel.ca/homepage/execdis/exec_disassembly.txt>
 
+68000 instructions left to do: 44
+
 instruction|68000|68008|68010|68020|68030|68040|68881/68882|68851|CPU32
 -|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:
 ABCD (todo)|X|X|X|X|X|X|||X
@@ -122,10 +124,10 @@ Scc (todo)|X|X|X|X|X|X|||X
 STOP 1 (todo)|X|X|X|X|X|X|||X
 SUB|X|X|X|X|X|X|||X
 SUBA|X|X|X|X|X|X|||X
-SUBI (todo)|X|X|X|X|X|X|||X
+SUBI|X|X|X|X|X|X|||X
 SUBQ|X|X|X|X|X|X|||X
 SUBX|X|X|X|X|X|X|||X
-SWAP (todo)|X|X|X|X|X|X|||X
+SWAP|X|X|X|X|X|X|||X
 TAS (todo)|X|X|X|X|X|X|||X
 TBLS, TBLSN (todo)|||||||||X
 TBLU,TBLUN (todo)|||||||||X

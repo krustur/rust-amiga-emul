@@ -286,6 +286,13 @@ impl Cpu {
                 instruction::subq::get_disassembly,
             ),
             Instruction::new(
+                String::from("SWAP"),
+                0xfff8,
+                0x4840,
+                instruction::swap::step,
+                instruction::swap::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("TST"),
                 0xff00,
                 0x4a00,

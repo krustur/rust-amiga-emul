@@ -36,6 +36,7 @@ pub mod sub;
 pub mod subi;
 pub mod subq;
 pub mod subx;
+pub mod swap;
 pub mod tst;
 
 pub struct InstructionError {
