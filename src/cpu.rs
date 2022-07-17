@@ -207,6 +207,13 @@ impl Cpu {
                 instruction::lslr::get_disassembly,
             ),
             Instruction::new(
+                String::from("SUBI"), // SUBI need to be before MOVE
+                0xff00,
+                0x0400,
+                instruction::subi::step,
+                instruction::subi::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("MOVE"),
                 0xc000,
                 0x0000,

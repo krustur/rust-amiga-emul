@@ -33,6 +33,7 @@ pub mod nop;
 pub mod not;
 pub mod rts;
 pub mod sub;
+pub mod subi;
 pub mod subq;
 pub mod subx;
 pub mod tst;
