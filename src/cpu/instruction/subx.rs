@@ -7,9 +7,9 @@ use crate::{
 
 // Instruction State
 // =================
-// step: TODO
-// step cc: TODO
-// get_disassembly: TODO
+// step: DONE
+// step cc: DONE
+// get_disassembly: DONE
 
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
