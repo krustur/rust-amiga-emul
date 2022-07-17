@@ -5,13 +5,12 @@ use crate::register::{
     ProgramCounter, Register, STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND,
     STATUS_REGISTER_MASK_NEGATIVE, STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
 };
-use std::panic;
 
 // Instruction State
 // =================
-// step: TODO
-// step cc: TODO
-// get_disassembly: TODO
+// step: DONE
+// step cc: DONE
+// get_disassembly: DONE
 
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
@@ -73,16 +72,6 @@ pub fn step<'a>(
                     let source_register = Cpu::extract_register_index_from_bit_pos(instr_word, 9)?;
                     let shift_count = reg.get_d_reg_long(source_register) % 64;
                     shift_count
-                    // Ok(GetDisassemblyResult::from_pc(
-                    //     pc,
-                    //     format!(
-                    //         "LS{}.{}",
-                    //         lslr_direction.get_format(),
-                    //         operation_size.get_format()
-                    //     ),
-                    //     format!("D{},D{}", source_register, dest_register),
-                    // ))
-                    // todo!("reg to reg")
                 }
                 _ => {
                     let shift_count = ((instr_word & 0x0e00) >> 9).into();
@@ -230,17 +219,44 @@ pub fn step<'a>(
                 mem,
                 |instr_word| Ok(operation_size),
             )?;
-            let ea_format = Cpu::get_ea_format(ea_data.ea_mode, pc, None, mem);
-            // Ok(GetDisassemblyResult::from_pc(
-            //     pc,
-            //     format!(
-            //         "LS{}.{}",
-            //         lslr_direction.get_format(),
-            //         operation_size.get_format()
-            //     ),
-            //     format!("#$01,{}", ea_format),
-            // ))
-            todo!("memory")
+
+            let value = ea_data.get_value_word(pc, reg, mem, false) as u32;
+            println!("value: ${:08X}", value);
+            let (result, overflow) = match lslr_direction {
+                LslrDirection::Left => {
+                    // println!("lslr_direction: left");
+                    let result = value.checked_shl(1).unwrap_or(0);
+                    let overflow = result & 0x10000 != 0;
+                    let result = (result & 0xffff) as u16;
+                    (result, overflow)
+                }
+                LslrDirection::Right => {
+                    // println!("lslr_direction: right");
+                    let result = (value << 1).checked_shr(1).unwrap_or(0);
+                    let overflow = result & 0x0001 != 0;
+                    let result = ((result >> 1) & 0xffff) as u16;
+                    (result, overflow)
+                }
+            };
+
+            ea_data.set_value_word(pc, reg, mem, result, true);
+            let mut status_register = 0x0000;
+            match result {
+                0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+                0x8000..=0xffff => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+                _ => (),
+            }
+            // println!("shift_count: {}", shift_count);
+            // println!("result: {}", result);
+            // println!("overflow: {}", overflow);
+            match overflow {
+                true => status_register |= STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY,
+                false => (),
+            }
+            StatusRegisterResult {
+                status_register,
+                status_register_mask: get_status_register_mask(1),
+            }
         }
     };
 
@@ -251,8 +267,6 @@ pub fn step<'a>(
     reg.reg_sr.merge_status_register(status_register_result);
 
     Ok(())
-
-    // todo!("lslr")
 }
 
 fn get_status_register_mask(shift_count: u32) -> u16 {
@@ -367,7 +381,7 @@ mod tests {
         },
     };
 
-    // register by immediate / XNZC / byte/word/long lsl/lsr
+    // lsl/lsr register by immediate / XNZC / byte/word/long
 
     #[test]
     fn lsl_register_by_immediate_byte() {
@@ -2564,5 +2578,264 @@ mod tests {
         assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
     }
 
-    // lsl/lsr memory(ea) XNZC word
+    // lsl/lsr memory(ea) by 1 / XNZC / word
+
+    #[test]
+    fn lsl_memory_word() {
+        // arrange
+        let code = [0xe3, 0xe0, /* DC */ 0x11, 0x11].to_vec(); // LSL.W #1,-(A0)
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long(0, 0x00C00004);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("LSL.W"),
+                String::from("#$01,-(A0)")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x2222, cpu.memory.get_word(0x00C00002));
+        assert_eq!(0x00C00002, cpu.register.get_a_reg_long(0));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
+    fn lsl_memory_word_negative() {
+        // arrange
+        let code = [0xe3, 0xe0, /* DC */ 0x41, 0x41].to_vec(); // LSL.W #1,-(A0)
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long(0, 0x00C00004);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("LSL.W"),
+                String::from("#$01,-(A0)")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x8282, cpu.memory.get_word(0x00C00002));
+        assert_eq!(0x00C00002, cpu.register.get_a_reg_long(0));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
+    fn lsl_memory_word_zero() {
+        // arrange
+        let code = [0xe3, 0xe0, /* DC */ 0x00, 0x00].to_vec(); // LSL.W #1,-(A0)
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long(0, 0x00C00004);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("LSL.W"),
+                String::from("#$01,-(A0)")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x0000, cpu.memory.get_word(0x00C00002));
+        assert_eq!(0x00C00002, cpu.register.get_a_reg_long(0));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
+    fn lsl_memory_word_extend_carry() {
+        // arrange
+        let code = [0xe3, 0xe0, /* DC */ 0x81, 0x00].to_vec(); // LSL.W #1,-(A0)
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long(0, 0x00C00004);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("LSL.W"),
+                String::from("#$01,-(A0)")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x0200, cpu.memory.get_word(0x00C00002));
+        assert_eq!(0x00C00002, cpu.register.get_a_reg_long(0));
+        assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
+    fn lsr_memory_word() {
+        // arrange
+        let code = [0xe2, 0xde, /* DC */ 0x11, 0x10].to_vec(); // LSR.W #1,(A6)+
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long(6, 0x00C00002);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("LSR.W"),
+                String::from("#$01,(A6)+")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x0888, cpu.memory.get_word(0x00C00002));
+        assert_eq!(0x00C00004, cpu.register.get_a_reg_long(6));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
+    fn lsr_memory_word_zero() {
+        // arrange
+        let code = [0xe2, 0xde, /* DC */ 0x00, 0x00].to_vec(); // LSR.W #1,(A6)+
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long(6, 0x00C00002);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("LSR.W"),
+                String::from("#$01,(A6)+")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x0000, cpu.memory.get_word(0x00C00002));
+        assert_eq!(0x00C00004, cpu.register.get_a_reg_long(6));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
+    fn lsr_memory_word_extend_carry() {
+        // arrange
+        let code = [0xe2, 0xde, /* DC */ 0x81, 0x01].to_vec(); // LSR.W #1,(A6)+
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long(6, 0x00C00002);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("LSR.W"),
+                String::from("#$01,(A6)+")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x4080, cpu.memory.get_word(0x00C00002));
+        assert_eq!(0x00C00004, cpu.register.get_a_reg_long(6));
+        assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
 }
