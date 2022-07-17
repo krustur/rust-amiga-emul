@@ -25,9 +25,7 @@ pub fn step<'a>(
 
     let long = reg.get_d_reg_long(register);
 
-    println!("long: ${:08X}", long);
     let result = ((long & 0xffff0000) >> 16) | ((long & 0x0000ffff) << 16);
-    println!("result: ${:08X}", result);
     reg.set_d_reg_long(register, result);
 
     let mut status_register = STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_OVERFLOW;

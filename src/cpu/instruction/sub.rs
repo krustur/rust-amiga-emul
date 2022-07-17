@@ -89,11 +89,8 @@ pub fn step<'a>(
         }
         LONG_WITH_EA_AS_DEST => {
             let ea_value = ea_data.get_value_long(pc, reg, mem, false);
-            println!("ea_value: ${:08X}", ea_value);
             let reg_value = reg.get_d_reg_long(register);
-            println!("reg_value: ${:08X}", reg_value);
             let result = Cpu::sub_longs(reg_value, ea_value);
-            println!("result: ${:08X}", result.result);
 
             ea_data.set_value_long(pc, reg, mem, result.result, true);
             result.status_register_result
