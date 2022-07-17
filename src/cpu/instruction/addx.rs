@@ -325,7 +325,7 @@ mod tests {
     }
 
     #[test]
-    fn data_register_byte_with_carry_one_set_overflow_negative_zero_test_both_overflow() {
+    fn data_register_byte_with_carry_one_set_overflow_negative_test_both_overflow() {
         // arrange
         let code = [0xd3, 0x00].to_vec(); // ADDX.B D0,D1
         let mut cpu = crate::instr_test_setup(code, None);
