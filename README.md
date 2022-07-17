@@ -120,8 +120,8 @@ RTS|X|X|X|X|X|X|||X
 SBCD (todo)|X|X|X|X|X|X|||X
 Scc (todo)|X|X|X|X|X|X|||X
 STOP 1 (todo)|X|X|X|X|X|X|||X
-SUB (todo)|X|X|X|X|X|X|||X
-SUBA (todo)|X|X|X|X|X|X|||X
+SUB|X|X|X|X|X|X|||X
+SUBA|X|X|X|X|X|X|||X
 SUBI (todo)|X|X|X|X|X|X|||X
 SUBQ|X|X|X|X|X|X|||X
 SUBX (todo)|X|X|X|X|X|X|||X
