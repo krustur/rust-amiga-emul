@@ -180,7 +180,6 @@ mod tests {
         assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
     }
 
-    /////////////////////////////////////////
     #[test]
     fn addq_data_to_data_register_direct_word() {
         // arrange
@@ -262,10 +261,9 @@ mod tests {
         cpu.register.set_a_reg_long(3, 0xC00002);
         cpu.register.reg_sr.set_sr_reg_flags_abcde(
             STATUS_REGISTER_MASK_CARRY
-            | STATUS_REGISTER_MASK_OVERFLOW
-            // | STATUS_REGISTER_MASK_ZERO
-            | STATUS_REGISTER_MASK_NEGATIVE
-            | STATUS_REGISTER_MASK_EXTEND,
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
         );
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
@@ -368,12 +366,6 @@ mod tests {
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.set_a_reg_long(0, 0xfffffffe);
         cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
-        /*STATUS_REGISTER_MASK_CARRY
-        | STATUS_REGISTER_MASK_OVERFLOW
-        | STATUS_REGISTER_MASK_ZERO
-        | STATUS_REGISTER_MASK_NEGATIVE
-        | STATUS_REGISTER_MASK_EXTEND);
-        */
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -403,12 +395,6 @@ mod tests {
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.set_a_reg_long(1, 0xfffffffe);
         cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
-        /*STATUS_REGISTER_MASK_CARRY
-        | STATUS_REGISTER_MASK_OVERFLOW
-        | STATUS_REGISTER_MASK_ZERO
-        | STATUS_REGISTER_MASK_NEGATIVE
-        | STATUS_REGISTER_MASK_EXTEND);
-        */
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(

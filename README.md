@@ -79,7 +79,7 @@ JSR|X|X|X|X|X|X|||X
 LEA|X|X|X|X|X|X|||X
 LINK|X|X|X|X|X|X|||X
 LPSTOP (todo)|||||||||
-LSL,LSR (todo)|X|X|X|X|X|X|||X
+LSL,LSR|X|X|X|X|X|X|||X
 MOVE|X|X|X|X|X|X|||X
 MOVEA|X|X|X|X|X|X|||X
 MOVE from CCR (todo)|||X|X|X|X|||X
@@ -123,7 +123,7 @@ STOP 1 (todo)|X|X|X|X|X|X|||X
 SUB (todo)|X|X|X|X|X|X|||X
 SUBA (todo)|X|X|X|X|X|X|||X
 SUBI (todo)|X|X|X|X|X|X|||X
-SUBQ (todo)|X|X|X|X|X|X|||X
+SUBQ|X|X|X|X|X|X|||X
 SUBX (todo)|X|X|X|X|X|X|||X
 SWAP (todo)|X|X|X|X|X|X|||X
 TAS (todo)|X|X|X|X|X|X|||X
