@@ -261,7 +261,7 @@ mod tests {
     }
 
     #[test]
-    fn data_register_byte_with_carry_one_set_carry_extend_zero_test_both_carry() {
+    fn data_register_byte_with_carry_one_set_carry_extend_leave_zero_cleared_test_both_carry() {
         // arrange
         let code = [0xd3, 0x00].to_vec(); // ADDX.B D0,D1
         let mut cpu = crate::instr_test_setup(code, None);
@@ -270,6 +270,38 @@ mod tests {
         cpu.register
             .reg_sr
             .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_CARRY);
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("ADDX.B"),
+                String::from("D0,D1")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00, cpu.register.get_d_reg_long(1));
+        assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
+    fn data_register_byte_with_carry_one_set_carry_extend_leave_zero_set_test_both_carry() {
+        // arrange
+        let code = [0xd3, 0x00].to_vec(); // ADDX.B D0,D1
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long(0, 0x0000000f);
+        cpu.register.set_d_reg_long(1, 0x000000f0);
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO);
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -458,7 +490,7 @@ mod tests {
     }
 
     #[test]
-    fn data_register_word_with_carry_one_set_carry_extend_zero_test_both_carry() {
+    fn data_register_word_with_carry_one_set_carry_extend_leave_zero_cleared_test_both_carry() {
         // arrange
         let code = [0xd7, 0x42].to_vec(); // ADDX.W D2,D3
         let mut cpu = crate::instr_test_setup(code, None);
@@ -467,6 +499,38 @@ mod tests {
         cpu.register
             .reg_sr
             .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_CARRY);
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("ADDX.W"),
+                String::from("D2,D3")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x0000, cpu.register.get_d_reg_long(3));
+        assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
+    fn data_register_word_with_carry_one_set_carry_extend_leave_zero_set_test_both_carry() {
+        // arrange
+        let code = [0xd7, 0x42].to_vec(); // ADDX.W D2,D3
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long(2, 0x0000000f);
+        cpu.register.set_d_reg_long(3, 0x0000fff0);
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO);
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -655,7 +719,7 @@ mod tests {
     }
 
     #[test]
-    fn data_register_long_with_carry_one_set_carry_extend_zero_test_both_carry() {
+    fn data_register_long_with_carry_one_set_carry_extend_leave_zero_cleared_test_both_carry() {
         // arrange
         let code = [0xdb, 0x84].to_vec(); // ADDX.L D4,D5
         let mut cpu = crate::instr_test_setup(code, None);
@@ -664,6 +728,38 @@ mod tests {
         cpu.register
             .reg_sr
             .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_CARRY);
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("ADDX.L"),
+                String::from("D4,D5")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00000000, cpu.register.get_d_reg_long(5));
+        assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
+    fn data_register_long_with_carry_one_set_carry_extend_leave_zero_cleared_set_both_carry() {
+        // arrange
+        let code = [0xdb, 0x84].to_vec(); // ADDX.L D4,D5
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long(4, 0x0000000f);
+        cpu.register.set_d_reg_long(5, 0xfffffff0);
+        cpu.register
+            .reg_sr
+            .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_ZERO);
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
