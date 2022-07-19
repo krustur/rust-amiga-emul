@@ -143,6 +143,15 @@ impl Cpu {
                 instruction::clr::step,
                 instruction::clr::get_disassembly,
             ),
+            Instruction::new_with_exclude(
+                String::from("CMPM"),
+                0xf138,
+                0xb108,
+                0x00c0,
+                0x00c0,
+                instruction::cmpm::step,
+                instruction::cmpm::get_disassembly,
+            ),
             Instruction::new(
                 String::from("CMP"),
                 0xb000,

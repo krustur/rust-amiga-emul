@@ -19,7 +19,7 @@ There's no ambition to make this a fully functional Amiga emulator.
 
 <https://wandel.ca/homepage/execdis/exec_disassembly.txt>
 
-68000 instructions left to do: 44
+68000 instructions left to do: 42
 
 instruction|68000|68008|68010|68020|68030|68040|68881/68882|68851|CPU32
 -|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:
@@ -60,7 +60,7 @@ CLR|X|X|X|X|X|X|||X
 CMP|X|X|X|X|X|X|||X
 CMPA|X|X|X|X|X|X|||X
 CMPI|X|X|X|X|X|X|||X
-CMPM (todo)|X|X|X|X|X|X|||X
+CMPM|X|X|X|X|X|X|||X
 CMP2 (todo)||||X|X|X||X
 todo: cpBcc - CPUSH|||||||||
 DBcc|X|X|X|X|X|X|||X

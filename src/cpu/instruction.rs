@@ -19,6 +19,7 @@ pub mod btst;
 pub mod clr;
 pub mod cmp;
 pub mod cmpi;
+pub mod cmpm;
 pub mod dbcc;
 pub mod jmp;
 pub mod jsr;
