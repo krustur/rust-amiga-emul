@@ -5,8 +5,8 @@ use crate::{
     cpu::{Cpu, StatusRegisterResult},
     mem::Mem,
     register::{
-        ProgramCounter, Register, RegisterType, STATUS_REGISTER_MASK_CARRY,
-        STATUS_REGISTER_MASK_NEGATIVE, STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
+        ProgramCounter, Register, STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_NEGATIVE,
+        STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
     },
 };
 use std::convert::TryFrom;
