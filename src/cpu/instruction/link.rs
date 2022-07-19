@@ -23,6 +23,12 @@ pub fn step<'a>(
 
     let register = Cpu::extract_register_index_from_bit_pos_0(instr_word)?;
     let register_value = reg.get_a_reg_long(register);
+    // println!(
+    //     "link - A{}=${:08X} - SP=${:08x}",
+    //     register,
+    //     register_value,
+    //     reg.get_a_reg_long(7)
+    // );
 
     reg.stack_push_long(mem, register_value);
     reg.set_a_reg_long(register, reg.get_a_reg_long(7));
