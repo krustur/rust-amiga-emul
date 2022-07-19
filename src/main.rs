@@ -17,6 +17,7 @@ mod register;
 // static ROM_FILE_PATH: &str = "D:\\Amiga\\ROM\\Kickstart 3.1.rom";
 // static ROM_FILE_PATH: &str = "C:\\WS\\Amiga\\Kickstart v3.1 rev 40.68 (1993)(Commodore)(A1200).rom";
 static ROM_FILE_PATH: &str = "D:\\Amiga\\AmigaOS 3.1.4 for 68k Amiga 1200\\OS314_A1200\\ROMs\\emulation_or_maprom\\kick.a1200.46.143";
+// static ROM_FILE_PATH: &str = "D:\\Amiga\\ROM\\Kickstart 1.2.rom";
 // static ROM_FILE_PATH: &str = "D:\\Amiga\\ROM\\Kickstart 2.0.rom";
 
 fn main() {
@@ -44,6 +45,10 @@ fn main() {
     let chip_ram = RamMemory::from_range(0x00000000, 0x001FFFFF);
     mem_ranges.push(Box::new(chip_ram));
 
+    // wtf ram?
+    // let wtf_ram = RamMemory::from_range(0x00f00000, 0x00f7FFFF);
+    // mem_ranges.push(Box::new(wtf_ram));
+
     // CIA memory
     let cia_memory = CiaMemory::new();
     mem_ranges.push(Box::new(cia_memory));
@@ -62,6 +67,8 @@ fn main() {
     cpu.memory.print_hex_dump(0xf80000, 0xf801ff);
     println!("Checksum:");
     cpu.memory.print_hex_dump(0xffffe8, 0xffffeb);
+    println!("Chip memory-string:");
+    cpu.memory.print_hex_dump(0x00F803AE, 0x00F803B9);
 
     cpu.register.print_registers();
 
@@ -85,7 +92,9 @@ fn main() {
             0x00F80102 => Some(String::from(
                 "If $1111 at $00F00000 (extended rom), then jmp to it+2 ",
             )),
-            0x00F8010C => Some(String::from("A600 & A1200 IDE controller")),
+            0x00F8010C => Some(String::from(
+                "We're running ROM code at correct location. Access A600 & A1200 IDE controller",
+            )),
             0x00F80116 => Some(String::from(
                 "Zorro 2 IO expansion / PCMCIA registers (A600 & A1200)",
             )),
@@ -101,7 +110,40 @@ fn main() {
                 "Verify exception vectors ok, if not branch to error with green background",
             )),
             0x00F801D2 => Some(String::from("What now?")),
+            0x00F801E4 => Some(String::from("Exec base => D1/A6")),
+            0x00F801EA => Some(String::from(
+                "If Exec Base is at an odd address, go reconfigure memory",
+            )),
+            0x00F801F0 => Some(String::from(
+                "Check ExecBase->ChkBase (system base pointer complement). If not ok, go reconfigure memory",
+            )),
+            0x00F80232 => Some(String::from("Reconfigure memory")),
+            0x00F80234 => Some(String::from("Reconfigure memory")),
+            0x00F8023A => Some(String::from("... continue reconfigure memory")),
             0x00F80D50 => Some(String::from("We now know CPU model and if FPU is present")),
+            
+            
+            0x00F8024e => Some(String::from("Check chunks of 16k")),
+            0x00F80252 => Some(String::from("Max 2MB of chip memory available")),
+            0x00F8025a => Some(String::from("I don't really get these cmp's")),
+            0x00F80270 => Some(String::from("Did we 'wrap around' (by writing in shadow memory!)?")),
+            0x00F80274 => Some(String::from("Can we read back the value? If not, we didn't write to ram!")),
+            0x00F80278 => Some(String::from("We now now chip mem (A0=start, A3=end)")),
+
+            0x00F80282 => Some(String::from("'LOWM' in .$0000.W?")),
+            0x00F802FE => Some(String::from("'HELP' in .$0000.W?")),
+            
+            0x00F802A0 => Some(String::from("Setting up MemHeader for chip memory")),
+
+            // ExecLibrary
+            
+            0x00004364 => Some(String::from("ExecLibrary.InitCode -72")),
+            0x00004358 => Some(String::from("ExecLibrary.MakeLibrary -84")),
+            0x00004346 => Some(String::from("ExecLibrary.InitResident -102")),
+            0x000042E6 => Some(String::from("ExecLibrary.AllocMem -198")),
+            0x000042DA => Some(String::from("ExecLibrary.FreeMem -210")),
+            0x00004130 => Some(String::from("ExecLibrary.CacheClearU - 636")),
+            
             _ => None,
         };
         if let Some(comment) = comment {
@@ -110,14 +152,16 @@ fn main() {
 
         let print_disassembly = match pc_address {
             0x00F800E2..=0x00F800E8 => false,
+            0x00F80F2E..=0x00F80F30 => false,
             _ => true,
         };
         let print_registers = match pc_address {
             0x00F800EC => true,
             // 0x00F80D50 => true,
             // 0x00F80D52 => true,
-            0x00F80D5A => true,
-            0x00F80D5E => true,
+            // 0x00F80D5A => true,
+            // 0x00F80D5E => true,
+            0x00F801EA => true,
             0x00F80F22 => true,
             0x00F80F24 => true,
             0x00F80F26 => true,
