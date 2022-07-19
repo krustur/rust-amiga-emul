@@ -565,6 +565,21 @@ impl Register {
         }
     }
 
+    pub fn stack_pop_long(&mut self, mem: &mut Mem) -> u32 {
+        match self.reg_sr.is_sr_supervisor_set() {
+            true => {
+                let result = mem.get_long(self.reg_ssp);
+                self.reg_ssp = self.reg_ssp.wrapping_add(4);
+                result
+            }
+            false => {
+                let result = mem.get_long(self.reg_usp);
+                self.reg_usp = self.reg_usp.wrapping_add(4);
+                result
+            }
+        }
+    }
+
     pub fn print_registers(&self) {
         for n in 0..8 {
             print!(" D{} ${:08X}", n, self.reg_d[n]);

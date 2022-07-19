@@ -135,7 +135,7 @@ TRAP (todo)|X|X|X|X|X|X|||X
 TRAPcc (todo)||||X|X|X|||X
 TRAPV (todo)|X|X|X|X|X|X|||X
 TST|X|X|X|X|X|X|||X
-UNLK (todo)|X|X|X|X|X|X|||X
+UNLK|X|X|X|X|X|X|||X
 UNPK (todo)||||X|X|X|||
 
 1) Privileged (Supervisor) Instruction

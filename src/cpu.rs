@@ -299,6 +299,13 @@ impl Cpu {
                 instruction::tst::step,
                 instruction::tst::get_disassembly,
             ),
+            Instruction::new(
+                String::from("UNLK"),
+                0xfff8,
+                0x4e58,
+                instruction::unlk::step,
+                instruction::unlk::get_disassembly,
+            ),
         ];
         let mut register = Register::new();
         register.set_ssp_reg(reg_ssp);
