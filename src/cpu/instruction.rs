@@ -335,6 +335,9 @@ impl fmt::Display for ConditionalTest {
             ConditionalTest::CC => {
                 write!(f, "CC")
             }
+            ConditionalTest::CS => {
+                write!(f, "CS")
+            }
             ConditionalTest::NE => {
                 write!(f, "NE")
             }
@@ -364,9 +367,6 @@ impl fmt::Display for ConditionalTest {
             }
             ConditionalTest::LE => {
                 write!(f, "LE")
-            }
-            _ => {
-                write!(f, "cc")
             }
         }
         // write!(f, "{}", self.format)
