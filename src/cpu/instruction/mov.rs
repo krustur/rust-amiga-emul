@@ -498,7 +498,7 @@ mod tests {
     #[test]
     fn program_counter_inderect_with_displacement_mode_to_address_long_addressing_mode() {
         // arrange
-        let code = [].to_vec();
+        let code = [0x66].to_vec();
         let code_mem_range = RamMemory::from_bytes(
             0x00D00000,
             [0x33, 0xfa, 0x80, 0x00, 0x00, 0xD0, 0x00, 0x08, 0x00, 0x00].to_vec(),

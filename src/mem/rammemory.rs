@@ -101,7 +101,8 @@ impl RamMemory {
     }
     pub fn from_bytes<'a>(start_address: u32, bytes: Vec<u8>) -> RamMemory {
         let length: u32 = bytes.len().try_into().unwrap();
-        let end_address = start_address + length;
+        assert_eq!(true, length > 0);
+        let end_address = start_address + length - 1;
         let length = bytes.len();
         let mem = RamMemory {
             start_address,
