@@ -25,7 +25,7 @@ pub fn step<'a>(
         })?;
 
     let address = ea_data.get_address(pc, reg, mem);
-    println!("${:08X}", address);
+    // println!("${:08X}", address);
 
     pc.jump_long(address);
     reg.stack_push_long(mem, pc.get_address_next());
