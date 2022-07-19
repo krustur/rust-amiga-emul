@@ -17,8 +17,6 @@ use crate::{
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
-// BUG: move.w => a-reg should set entire areg
-
 pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
