@@ -644,10 +644,6 @@ mod tests {
 
     // word
 
-    // TODO: tests
-    // word sizes
-    // word sign extended when writing to D and A regs
-
     #[test]
     fn movem_word_ff00_register_to_memory_address_register_indirect_with_pre_decrement() {
         // arrange
