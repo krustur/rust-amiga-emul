@@ -86,7 +86,6 @@ impl RomMemory {
         let length: u32 = bytes.len().try_into().unwrap();
         let end_address = start_address + length - 1;
         let length = bytes.len();
-        // TODO: Check vec length against incoming size
         let mem = RomMemory {
             start_address: start_address,
             end_address,
