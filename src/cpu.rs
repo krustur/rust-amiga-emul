@@ -1119,8 +1119,6 @@ impl Cpu {
             _ => (),
         }
 
-        // TODO: status_register_mask no STATUS_REGISTER_MASK_ZERO when ZERO
-        // TODO: .. and test!
         ResultWithStatusRegister {
             result,
             status_register_result: StatusRegisterResult {
