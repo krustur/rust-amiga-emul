@@ -36,9 +36,9 @@ pub fn step<'a>(
             )?;
             let dest = ea_data.get_value_byte(pc, reg, mem, true);
 
-            let add_result = Cpu::add_bytes(source, dest);
-            ea_data.set_value_byte(pc, reg, mem, add_result.result, true);
-            add_result.status_register_result
+            let result = Cpu::add_bytes(source, dest);
+            ea_data.set_value_byte(pc, reg, mem, result.result, true);
+            result.status_register_result
         }
         OperationSize::Word => {
             let source = pc.fetch_next_word(mem);
@@ -53,9 +53,9 @@ pub fn step<'a>(
             )?;
             let dest = ea_data.get_value_word(pc, reg, mem, true);
 
-            let add_result = Cpu::add_words(source, dest);
-            ea_data.set_value_word(pc, reg, mem, add_result.result, true);
-            add_result.status_register_result
+            let result = Cpu::add_words(source, dest);
+            ea_data.set_value_word(pc, reg, mem, result.result, true);
+            result.status_register_result
         }
         OperationSize::Long => {
             let source = pc.fetch_next_long(mem);
@@ -70,9 +70,9 @@ pub fn step<'a>(
             )?;
             let dest = ea_data.get_value_long(pc, reg, mem, true);
 
-            let add_result = Cpu::add_longs(source, dest);
-            ea_data.set_value_long(pc, reg, mem, add_result.result, true);
-            add_result.status_register_result
+            let result = Cpu::add_longs(source, dest);
+            ea_data.set_value_long(pc, reg, mem, result.result, true);
+            result.status_register_result
         }
     };
 
@@ -169,7 +169,6 @@ mod tests {
         let mut mem_ranges = Vec::new();
         mem_ranges.push(mem_range);
         let mut cpu = crate::instr_test_setup(code, Some(mem_ranges));
-        cpu.register.set_d_reg_long(7, 0x00004321);
         cpu.register.reg_sr.set_sr_reg_flags_abcde(
             STATUS_REGISTER_MASK_CARRY
                 | STATUS_REGISTER_MASK_OVERFLOW
@@ -242,7 +241,6 @@ mod tests {
         let mut mem_ranges = Vec::new();
         mem_ranges.push(mem_range);
         let mut cpu = crate::instr_test_setup(code, Some(mem_ranges));
-        cpu.register.set_d_reg_long(7, 0x00004321);
         cpu.register.reg_sr.set_sr_reg_flags_abcde(
             STATUS_REGISTER_MASK_CARRY
                 | STATUS_REGISTER_MASK_OVERFLOW
@@ -315,7 +313,6 @@ mod tests {
         let mut mem_ranges = Vec::new();
         mem_ranges.push(mem_range);
         let mut cpu = crate::instr_test_setup(code, Some(mem_ranges));
-        cpu.register.set_d_reg_long(7, 0x00004321);
         cpu.register.reg_sr.set_sr_reg_flags_abcde(
             STATUS_REGISTER_MASK_CARRY
                 | STATUS_REGISTER_MASK_OVERFLOW
