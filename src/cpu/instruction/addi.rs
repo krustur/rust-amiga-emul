@@ -79,38 +79,6 @@ pub fn step<'a>(
     reg.reg_sr.merge_status_register(status_register_result);
 
     Ok(())
-    // let ea_data =
-    //     pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
-    //         Cpu::extract_size000110_from_bit_pos_6(instr_word)
-    //     })?;
-    // let status_register_result = match ea_data.operation_size {
-    //     OperationSize::Byte => {
-    //         pc.skip_byte();
-    //         let data = pc.fetch_next_byte(mem);
-    //         let ea_value = ea_data.get_value_byte(pc, reg, mem, false);
-    //         let add_result = Cpu::add_bytes(data, ea_value);
-    //         ea_data.set_value_byte(pc, reg, mem, add_result.result, true);
-    //         add_result.status_register_result
-    //     }
-    //     OperationSize::Word => {
-    //         let data = pc.fetch_next_word(mem);
-    //         let ea_value = ea_data.get_value_word(pc, reg, mem, false);
-    //         let add_result = Cpu::add_words(data, ea_value);
-    //         ea_data.set_value_word(pc, reg, mem, add_result.result, true);
-    //         add_result.status_register_result
-    //     }
-    //     OperationSize::Long => {
-    //         let data = pc.fetch_next_long(mem);
-    //         let ea_value = ea_data.get_value_long(pc, reg, mem, false);
-    //         let add_result = Cpu::add_longs(data, ea_value);
-    //         ea_data.set_value_long(pc, reg, mem, add_result.result, true);
-    //         add_result.status_register_result
-    //     }
-    // };
-
-    // reg.reg_sr.merge_status_register(status_register_result);
-
-    // Ok(())
 }
 
 pub fn get_disassembly<'a>(
