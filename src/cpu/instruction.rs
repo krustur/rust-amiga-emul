@@ -30,6 +30,7 @@ pub mod mov;
 pub mod movec;
 pub mod movem;
 pub mod moveq;
+pub mod mulu;
 pub mod nop;
 pub mod not;
 pub mod rts;

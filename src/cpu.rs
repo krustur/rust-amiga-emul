@@ -67,6 +67,13 @@ impl Cpu {
                 instruction::addi::get_disassembly,
             ),
             Instruction::new(
+                String::from("MULU"), // MULU need to be before AND
+                0xf1c0,
+                0xc0c0,
+                instruction::mulu::step,
+                instruction::mulu::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("AND"),
                 0xf000,
                 0xc000,
@@ -1176,6 +1183,32 @@ impl Cpu {
 
     pub fn not_long(dest: u32) -> ResultWithStatusRegister<u32> {
         let result = !dest;
+
+        let mut status_register = 0x0000;
+
+        match result {
+            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            0x80000000..=0xffffffff => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+            _ => (),
+        }
+
+        ResultWithStatusRegister {
+            result,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
+        }
+    }
+
+    pub fn mulu_words(source: u16, dest: u16) -> ResultWithStatusRegister<u32> {
+        let source = source as u32;
+        let dest = dest as u32;
+
+        let result = source * dest;
 
         let mut status_register = 0x0000;
 
