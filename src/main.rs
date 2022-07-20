@@ -138,12 +138,19 @@ fn main() {
             // ExecLibrary
             
             0x00004364 => Some(String::from("ExecLibrary.InitCode -72")),
+            0x00F810BA => Some(String::from("ExecLibrary.InitCode [code]")),
             0x00004358 => Some(String::from("ExecLibrary.MakeLibrary -84")),
-            0x00F81D10 => Some(String::from("ExecLibrary.MakeFunctions code")), // -90
+            0x00F81C88 => Some(String::from("ExecLibrary.MakeLibrary [code]")),
+            0x00004352 => Some(String::from("ExecLibrary.MakeFunctions -90")),
+            0x00F81D10 => Some(String::from("ExecLibrary.MakeFunctions [code]")),
             0x00004346 => Some(String::from("ExecLibrary.InitResident -102")),
+            0x00F810F2 => Some(String::from("ExecLibrary.InitResident [code]")),
             0x000042E6 => Some(String::from("ExecLibrary.AllocMem -198")),
+            0x00F81F5C => Some(String::from("ExecLibrary.AllocMem [code]")),
             0x000042DA => Some(String::from("ExecLibrary.FreeMem -210")),
-            0x00004130 => Some(String::from("ExecLibrary.CacheClearU - 636")),
+            0x00F81E1C => Some(String::from("ExecLibrary.FreeMem [code]")),
+            0x00004130 => Some(String::from("ExecLibrary.CacheClearU -636")),
+            0x00F80D60 => Some(String::from("ExecLibrary.CacheClearU [code]")),
             
             _ => None,
         };
@@ -157,15 +164,15 @@ fn main() {
             _ => true,
         };
         let print_registers = match pc_address {
-            0x00F800EC => true,
+            // 0x00F800EC => true,
             // 0x00F80D50 => true,
             // 0x00F80D52 => true,
             // 0x00F80D5A => true,
             // 0x00F80D5E => true,
-            0x00F801EA => true,
-            0x00F80F22 => true,
-            0x00F80F24 => true,
-            0x00F80F26 => true,
+            // 0x00F801EA => true,
+            // 0x00F80F22 => true,
+            // 0x00F80F24 => true,
+            // 0x00F80F26 => true,
             _ => false,
         };
         if print_disassembly {
