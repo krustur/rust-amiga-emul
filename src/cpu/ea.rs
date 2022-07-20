@@ -13,11 +13,6 @@ use super::{
     Cpu, StatusRegisterResult,
 };
 
-// TODO: No need for this any longer
-pub struct EffectiveAddressValue<T> {
-    pub value: T,
-}
-
 pub struct SetEffectiveAddressValueResult {
     pub status_register_result: StatusRegisterResult,
 }
