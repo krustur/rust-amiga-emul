@@ -139,6 +139,7 @@ fn main() {
             
             0x00004364 => Some(String::from("ExecLibrary.InitCode -72")),
             0x00004358 => Some(String::from("ExecLibrary.MakeLibrary -84")),
+            0x00F81D10 => Some(String::from("ExecLibrary.MakeFunctions code")), // -90
             0x00004346 => Some(String::from("ExecLibrary.InitResident -102")),
             0x000042E6 => Some(String::from("ExecLibrary.AllocMem -198")),
             0x000042DA => Some(String::from("ExecLibrary.FreeMem -210")),
