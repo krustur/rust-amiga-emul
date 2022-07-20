@@ -81,6 +81,13 @@ impl Cpu {
                 instruction::and::get_disassembly,
             ),
             Instruction::new(
+                String::from("ANDI"),
+                0xff00,
+                0x0200,
+                instruction::andi::step,
+                instruction::andi::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("BRA"),
                 0xff00,
                 0x6000,

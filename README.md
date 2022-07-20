@@ -30,7 +30,7 @@ ADDI|X|X|X|X|X|X|||X
 ADDQ|X|X|X|X|X|X|||X
 ADDX|X|X|X|X|X|X|||X
 AND|X|X|X|X|X|X|||X
-ANDI (todo)|X|X|X|X|X|X|||X
+ANDI|X|X|X|X|X|X|||X
 ANDI to CCR (todo)|X|X|X|X|X|X|||X
 ANDI to SR 1 (todo)|X|X|X|X|X|X|||X
 ASL,ASR (todo)|X|X|X|X|X|X|||X
