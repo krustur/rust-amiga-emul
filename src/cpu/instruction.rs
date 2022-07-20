@@ -34,6 +34,7 @@ pub mod moveq;
 pub mod mulu;
 pub mod nop;
 pub mod not;
+pub mod pea;
 pub mod rts;
 pub mod sub;
 pub mod subi;

@@ -279,6 +279,20 @@ impl Cpu {
                 instruction::not::get_disassembly,
             ),
             Instruction::new(
+                String::from("SWAP"), // SWAP need to be before PEA
+                0xfff8,
+                0x4840,
+                instruction::swap::step,
+                instruction::swap::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("PEA"),
+                0xffc0,
+                0x4840,
+                instruction::pea::step,
+                instruction::pea::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("RTS"),
                 0xffff,
                 0x4e75,
@@ -307,13 +321,6 @@ impl Cpu {
                 0x5100,
                 instruction::subq::step,
                 instruction::subq::get_disassembly,
-            ),
-            Instruction::new(
-                String::from("SWAP"),
-                0xfff8,
-                0x4840,
-                instruction::swap::step,
-                instruction::swap::get_disassembly,
             ),
             Instruction::new(
                 String::from("TST"),

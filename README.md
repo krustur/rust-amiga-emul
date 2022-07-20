@@ -19,7 +19,7 @@ There's no ambition to make this a fully functional Amiga emulator.
 
 <https://wandel.ca/homepage/execdis/exec_disassembly.txt>
 
-68000 instructions left to do: 41
+68000 instructions left to do: 40
 
 instruction|68000|68008|68010|68020|68030|68040|68881/68882|68851|CPU32
 -|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:
@@ -109,7 +109,7 @@ ORI to SR 1 (todo)|X|X|X|X|X|X|||X
 PACK (todo)||||X|X|X|||
 PBcc 1 (todo)||||||||X|
 PDBcc 1 (todo)||||||||X|
-PEA (todo)|X|X|X|X|X|X|||X
+PEA|X|X|X|X|X|X|||X
 todo: PFLUSH 1 to PVALID|||||||||
 RESET 1 (todo)|X|X|X|X|X|X|||X
 ROL,ROR (todo)|X|X|X|X|X|X|||X
