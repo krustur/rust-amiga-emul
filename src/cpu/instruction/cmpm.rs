@@ -52,7 +52,7 @@ pub fn step<'a>(
 ) -> Result<(), StepError> {
     let source_register = Cpu::extract_register_index_from_bit_pos_0(instr_word)?;
     let dest_register = Cpu::extract_register_index_from_bit_pos(instr_word, 9)?;
-    let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word)?;
+    let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word).unwrap();
 
     let status_register = match operation_size {
         OperationSize::Byte => {
@@ -120,7 +120,7 @@ pub fn get_disassembly<'a>(
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let source_register = Cpu::extract_register_index_from_bit_pos_0(instr_word)?;
     let dest_register = Cpu::extract_register_index_from_bit_pos(instr_word, 9)?;
-    let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word)?;
+    let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word).unwrap();
 
     Ok(GetDisassemblyResult::from_pc(
         pc,

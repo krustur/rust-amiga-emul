@@ -27,7 +27,7 @@ pub fn step<'a>(
         instr_word,
         reg,
         mem,
-        |instr_word| Cpu::extract_size000110_from_bit_pos_6(instr_word),
+        |instr_word| Ok(Cpu::extract_size000110_from_bit_pos_6(instr_word).unwrap()),
     )?;
     let ea_mode = ea_data.ea_mode;
 
@@ -80,7 +80,7 @@ pub fn get_disassembly<'a>(
         instr_word,
         reg,
         mem,
-        |instr_word| Cpu::extract_size000110_from_bit_pos_6(instr_word),
+        |instr_word| Ok(Cpu::extract_size000110_from_bit_pos_6(instr_word).unwrap()),
     )?;
     let ea_mode = ea_data.ea_mode;
     let ea_format = Cpu::get_ea_format(ea_mode, pc, Some(ea_data.operation_size), mem);

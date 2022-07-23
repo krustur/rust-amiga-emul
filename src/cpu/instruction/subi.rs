@@ -20,7 +20,7 @@ pub fn step<'a>(
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<(), StepError> {
-    let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word)?;
+    let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word).unwrap();
     let status_register_result = match operation_size {
         OperationSize::Byte => {
             pc.skip_byte();
@@ -87,7 +87,7 @@ pub fn get_disassembly<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
-    let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word)?;
+    let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word).unwrap();
     let immediate_data = match operation_size {
         OperationSize::Byte => {
             pc.skip_byte();

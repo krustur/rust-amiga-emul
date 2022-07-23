@@ -73,7 +73,7 @@ impl Cpu {
                 String::from("ADDI"),
                 0xff00,
                 0x0600,
-                crate::cpu::match_check,
+                instruction::addi::match_check,
                 instruction::addi::step,
                 instruction::addi::get_disassembly,
             ),
@@ -563,18 +563,13 @@ impl Cpu {
         result
     }
 
-    pub fn extract_size000110_from_bit_pos_6(word: u16) -> Result<OperationSize, InstructionError> {
+    pub fn extract_size000110_from_bit_pos_6(word: u16) -> Option<OperationSize> {
         let size = (word >> 6) & 0x0003;
         match size {
-            0b00 => Ok(OperationSize::Byte),
-            0b01 => Ok(OperationSize::Word),
-            0b10 => Ok(OperationSize::Long),
-            _ => Err(InstructionError {
-                details: format!(
-                    "Failed to extract operation size 000110 from bit pos 6, got size: {} from word: ${:04X}",
-                    size, word
-                ),
-            }),
+            0b00 => Some(OperationSize::Byte),
+            0b01 => Some(OperationSize::Word),
+            0b10 => Some(OperationSize::Long),
+            _ => None,
         }
     }
 

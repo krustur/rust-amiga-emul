@@ -1,4 +1,4 @@
-use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError};
+use super::{GetDisassemblyResult, GetDisassemblyResultError, Instruction, StepError};
 use crate::{
     cpu::{instruction::OperationSize, Cpu},
     mem::Mem,
@@ -14,13 +14,38 @@ use crate::{
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
+pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
+    match crate::cpu::match_check(instruction, instr_word) {
+        true => {
+            let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
+            match operation_size {
+                None => false,
+                Some(_) => {
+                    // Only data alterable addressing modes
+                    match instr_word & 0b111111 {
+                        0b001000..=0b001111 => false, // An
+                        0b111100 => false,            // #data
+                        0b111010 => false,            // (d16,PC)
+                        0b111011 => false,            // (d8,PC,Xn)
+                        0b111101 => false,
+                        0b111110 => false,
+                        0b111111 => false,
+                        _ => true,
+                    }
+                }
+            }
+        }
+        false => false,
+    }
+}
+
 pub fn step<'a>(
     instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<(), StepError> {
-    let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word)?;
+    let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word).unwrap();
     let status_register_result = match operation_size {
         OperationSize::Byte => {
             pc.skip_byte();
@@ -87,7 +112,7 @@ pub fn get_disassembly<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
-    let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word)?;
+    let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word).unwrap();
     let immediate_data = match operation_size {
         OperationSize::Byte => {
             pc.skip_byte();
