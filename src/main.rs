@@ -146,10 +146,11 @@ fn main() {
             0x00004346 => Some(String::from("ExecLibrary.InitResident -102")),
             0x00F810F2 => Some(String::from("ExecLibrary.InitResident [code]")),
             0x000042E6 => Some(String::from("ExecLibrary.AllocMem -198")),
+            0x00F8060C => Some(String::from("ExecLibrary.AllocMem -198 (B)")),
             0x00F81F5C => Some(String::from("ExecLibrary.AllocMem [code]")),
 
-            // 0x00005090 => Some(String::from("ExecLibrary.AllocAbs -204")),
-            // 0x00F8202C => Some(String::from("ExecLibrary.AllocAbs [code]")),
+            0x00005090 => Some(String::from("ExecLibrary.AllocAbs -204")),
+            0x00F8202C => Some(String::from("ExecLibrary.AllocAbs [code]")),
 
             0x000042DA => Some(String::from("ExecLibrary.FreeMem -210")),
             0x00F81E1C => Some(String::from("ExecLibrary.FreeMem [code]")),
