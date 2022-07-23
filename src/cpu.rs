@@ -45,6 +45,76 @@ pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
             == false
 }
 
+pub fn match_check_size000110_from_bit_pos_6(instr_word: u16) -> bool {
+    let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
+    match operation_size {
+        None => false,
+        Some(_) => true,
+    }
+}
+
+pub fn match_check_ea_all_addressing_modes_pos_0(instr_word: u16) -> bool {
+    // All addressing modes
+    match instr_word & 0b111111 {
+        0b_111_101 => false, // These ea modes don't exist
+        0b_111_110 => false,
+        0b_111_111 => false,
+        _ => true,
+    }
+}
+
+pub fn match_check_ea_only_data_addressing_modes_pos_0(instr_word: u16) -> bool {
+    // All addressing modes
+    match instr_word & 0b111111 {
+        0b_111_101 => false, // These ea modes don't exist
+        0b_111_110 => false,
+        0b_111_111 => false,
+        0b_001_000..=0b_001_111 => false, // An
+        _ => true,
+    }
+}
+
+pub fn match_check_ea_only_alterable_addressing_modes_pos_0(instr_word: u16) -> bool {
+    // Only alterable addressing modes
+    match instr_word & 0b111111 {
+        0b_111_101 => false, // These ea modes don't exist
+        0b_111_110 => false,
+        0b_111_111 => false,
+        0b_111_100 => false, // #data
+        0b_111_010 => false, // (d16,PC)
+        0b_111_011 => false, // (d8,PC,Xn)
+        _ => true,
+    }
+}
+
+pub fn match_check_ea_only_data_alterable_addressing_modes_pos_0(instr_word: u16) -> bool {
+    // Only data alterable addressing modes
+    match instr_word & 0b111111 {
+        0b_111_101 => false, // These ea modes don't exist
+        0b_111_110 => false,
+        0b_111_111 => false,
+        0b_001_000..=0b_001_111 => false, // An
+        0b_111_100 => false,              // #data
+        0b_111_010 => false,              // (d16,PC)
+        0b_111_011 => false,              // (d8,PC,Xn)
+        _ => true,
+    }
+}
+
+pub fn match_check_ea_only_memory_alterable_addressing_modes_pos_0(instr_word: u16) -> bool {
+    // Only memory alterable addressing modes
+    match instr_word & 0b111111 {
+        0b_111_101 => false, // These ea modes don't exist
+        0b_111_110 => false,
+        0b_111_111 => false,
+        0b_000_000..=0b_001_111 => false, // Dn / An
+        0b_111_100 => false,              // #data
+        0b_111_010 => false,              // (d16,PC)
+        0b_111_011 => false,              // (d8,PC,Xn)
+        _ => true,
+    }
+}
+
 impl Cpu {
     pub fn new(mem: Mem) -> Cpu {
         let reg_ssp = mem.get_long(0x0);

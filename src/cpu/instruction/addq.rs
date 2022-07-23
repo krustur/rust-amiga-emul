@@ -19,24 +19,10 @@ use crate::{
 
 pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
     match crate::cpu::match_check(instruction, instr_word) {
-        true => {
-            let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
-            match operation_size {
-                None => false,
-                Some(_) => {
-                    // Only alterable addressing modes
-                    match instr_word & 0b111111 {
-                        0b111100 => false, // #data
-                        0b111010 => false, // (d16,PC)
-                        0b111011 => false, // (d8,PC,Xn)
-                        0b111101 => false,
-                        0b111110 => false,
-                        0b111111 => false,
-                        _ => true,
-                    }
-                }
-            }
-        }
+        true => match crate::cpu::match_check_size000110_from_bit_pos_6(instr_word) {
+            true => crate::cpu::match_check_ea_only_alterable_addressing_modes_pos_0(instr_word),
+            false => false,
+        },
         false => false,
     }
 }

@@ -18,13 +18,7 @@ use crate::{
 
 pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
     match crate::cpu::match_check(instruction, instr_word) {
-        true => {
-            let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
-            match operation_size {
-                None => false,
-                Some(_) => true,
-            }
-        }
+        true => crate::cpu::match_check_size000110_from_bit_pos_6(instr_word),
         false => false,
     }
 }
