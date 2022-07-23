@@ -212,7 +212,7 @@ impl Cpu {
                 String::from("BTST"), // Bit Number Dynamic
                 0xf1c0,
                 0x0100,
-                crate::cpu::match_check,
+                instruction::btst::match_check,
                 instruction::btst::step,
                 instruction::btst::get_disassembly,
             ),
@@ -220,17 +220,9 @@ impl Cpu {
                 String::from("BTST"), // Bit Number Static
                 0xffc0,
                 0x0800,
-                crate::cpu::match_check,
+                instruction::btst::match_check,
                 instruction::btst::step,
                 instruction::btst::get_disassembly,
-            ),
-            Instruction::new(
-                String::from("DBcc"), // DBcc need to be before ADDQ
-                0xf0f8,
-                0x50c8,
-                crate::cpu::match_check,
-                instruction::dbcc::step,
-                instruction::dbcc::get_disassembly,
             ),
             Instruction::new(
                 String::from("CLR"),
@@ -265,6 +257,14 @@ impl Cpu {
                 crate::cpu::match_check,
                 instruction::cmpi::step,
                 instruction::cmpi::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("DBcc"),
+                0xf0f8,
+                0x50c8,
+                crate::cpu::match_check,
+                instruction::dbcc::step,
+                instruction::dbcc::get_disassembly,
             ),
             Instruction::new(
                 String::from("EXG"),
