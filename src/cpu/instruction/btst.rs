@@ -14,6 +14,8 @@ use crate::{
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
+// BUG: ea fetch data bug, fix and add tests!
+
 pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
     match crate::cpu::match_check(instruction, instr_word) {
         true => crate::cpu::match_check_ea_only_data_addressing_modes_pos_0(instr_word),

@@ -15,6 +15,8 @@ use crate::{
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
+// TODO: Tests!
+
 enum ExgMode {
     DataRegisters,
     AddressRegisters,

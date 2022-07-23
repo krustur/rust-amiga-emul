@@ -201,6 +201,22 @@ impl Cpu {
                 instruction::bra::get_disassembly,
             ),
             Instruction::new(
+                String::from("BSET"), // Bit Number Dynamic
+                0xf1c0,
+                0x01c0,
+                instruction::bset::match_check,
+                instruction::bset::step_dynamic,
+                instruction::bset::get_disassembly_dynamic,
+            ),
+            Instruction::new(
+                String::from("BSET"), // Bit Number Static
+                0xffc0,
+                0x08c0,
+                instruction::bset::match_check,
+                instruction::bset::step_static,
+                instruction::bset::get_disassembly_static,
+            ),
+            Instruction::new(
                 String::from("BSR"),
                 0xff00,
                 0x6100,
@@ -278,6 +294,7 @@ impl Cpu {
                 String::from("JMP"),
                 0xffc0,
                 0x4ec0,
+                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::jmp::step,
                 instruction::jmp::get_disassembly,
@@ -286,6 +303,7 @@ impl Cpu {
                 String::from("JSR"),
                 0xffc0,
                 0x4e80,
+                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::jsr::step,
                 instruction::jsr::get_disassembly,
@@ -294,6 +312,7 @@ impl Cpu {
                 String::from("LEA"),
                 0xf1c0,
                 0x41c0,
+                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::lea::step,
                 instruction::lea::get_disassembly,
@@ -302,6 +321,7 @@ impl Cpu {
                 String::from("LINK"), // word
                 0xfff8,
                 0x4e50,
+                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::link::step,
                 instruction::link::get_disassembly,
@@ -310,6 +330,7 @@ impl Cpu {
                 String::from("LINK"), // long
                 0xfff8,
                 0x4808,
+                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::link::step_long,
                 instruction::link::get_disassembly_long,
@@ -318,6 +339,7 @@ impl Cpu {
                 String::from("LSLR"), // register
                 0xf018,
                 0xe008,
+                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::lslr::step,
                 instruction::lslr::get_disassembly,
@@ -326,6 +348,7 @@ impl Cpu {
                 String::from("LSLR"), // memory
                 0xfec0,
                 0xe2c0,
+                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::lslr::step,
                 instruction::lslr::get_disassembly,
@@ -334,6 +357,7 @@ impl Cpu {
                 String::from("SUBI"), // SUBI need to be before MOVE
                 0xff00,
                 0x0400,
+                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::subi::step,
                 instruction::subi::get_disassembly,
@@ -342,6 +366,7 @@ impl Cpu {
                 String::from("MOVE"),
                 0xc000,
                 0x0000,
+                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::mov::step,
                 instruction::mov::get_disassembly,
@@ -350,6 +375,7 @@ impl Cpu {
                 String::from("MOVEC"),
                 0xfffe,
                 0x4e7a,
+                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::movec::step,
                 instruction::movec::get_disassembly,
@@ -358,6 +384,7 @@ impl Cpu {
                 String::from("MOVEM"),
                 0xfb80,
                 0x4880,
+                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::movem::step,
                 instruction::movem::get_disassembly,
@@ -366,6 +393,7 @@ impl Cpu {
                 String::from("MOVEQ"),
                 0xf100,
                 0x7000,
+                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::moveq::step,
                 instruction::moveq::get_disassembly,
@@ -374,6 +402,7 @@ impl Cpu {
                 String::from("MULU"),
                 0xf1c0,
                 0xc0c0,
+                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::mulu::step,
                 instruction::mulu::get_disassembly,
@@ -382,14 +411,24 @@ impl Cpu {
                 String::from("NOP"),
                 0xffff,
                 0x4e71,
+                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::nop::step,
                 instruction::nop::get_disassembly,
             ),
             Instruction::new(
+                String::from("NEG"),
+                0xff00,
+                0x4400,
+                instruction::neg::match_check,
+                instruction::neg::step,
+                instruction::neg::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("NOT"),
                 0xff00,
                 0x4600,
+                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::not::step,
                 instruction::not::get_disassembly,
@@ -398,6 +437,7 @@ impl Cpu {
                 String::from("ROLR"), // register
                 0xf018,
                 0xe018,
+                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::rolrreg::step,
                 instruction::rolrreg::get_disassembly,
@@ -406,6 +446,7 @@ impl Cpu {
                 String::from("ROLR"), // memory
                 0xfec0,
                 0xe6c0,
+                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::rolrmem::step,
                 instruction::rolrmem::get_disassembly,
@@ -414,6 +455,7 @@ impl Cpu {
                 String::from("SWAP"), // SWAP need to be before PEA
                 0xfff8,
                 0x4840,
+                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::swap::step,
                 instruction::swap::get_disassembly,
@@ -422,6 +464,7 @@ impl Cpu {
                 String::from("PEA"),
                 0xffc0,
                 0x4840,
+                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::pea::step,
                 instruction::pea::get_disassembly,
@@ -430,6 +473,7 @@ impl Cpu {
                 String::from("RTS"),
                 0xffff,
                 0x4e75,
+                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::rts::step,
                 instruction::rts::get_disassembly,
@@ -440,6 +484,7 @@ impl Cpu {
                 0x9100,
                 0x00c0,
                 vec![0x00c0],
+                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::subx::step,
                 instruction::subx::get_disassembly,
@@ -448,6 +493,7 @@ impl Cpu {
                 String::from("SUB"),
                 0xf000,
                 0x9000,
+                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::sub::step,
                 instruction::sub::get_disassembly,
@@ -456,6 +502,7 @@ impl Cpu {
                 String::from("SUBQ"),
                 0xf100,
                 0x5100,
+                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::subq::step,
                 instruction::subq::get_disassembly,
@@ -464,6 +511,7 @@ impl Cpu {
                 String::from("TST"),
                 0xff00,
                 0x4a00,
+                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::tst::step,
                 instruction::tst::get_disassembly,
@@ -472,6 +520,7 @@ impl Cpu {
                 String::from("UNLK"),
                 0xfff8,
                 0x4e58,
+                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::unlk::step,
                 instruction::unlk::get_disassembly,

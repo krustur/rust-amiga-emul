@@ -15,6 +15,8 @@ use crate::register::{
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
+// TODO: Tests!
+
 enum RolrDirection {
     Right,
     Left,
