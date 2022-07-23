@@ -4,7 +4,6 @@ use crate::{
     mem::Mem,
     register::{ProgramCounter, Register, RegisterType},
 };
-use num_derive::FromPrimitive;
 
 pub mod add;
 pub mod addi;
@@ -401,12 +400,12 @@ impl fmt::Display for OperationSize {
     }
 }
 
-#[derive(FromPrimitive, Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum ScaleFactor {
-    One = 0b00,
-    Two = 0b01,
-    Four = 0b10,
-    Eight = 0b11,
+    One,
+    Two,
+    Four,
+    Eight,
 }
 
 impl ScaleFactor {
@@ -439,7 +438,7 @@ impl fmt::Display for ScaleFactor {
     }
 }
 
-#[derive(FromPrimitive, Debug)]
+#[derive(Debug)]
 pub enum ConditionalTest {
     /// True (1)
     T = 0b0000,

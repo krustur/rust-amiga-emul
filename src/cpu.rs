@@ -2,7 +2,6 @@ use crate::register::*;
 use crate::{cpu::instruction::*, mem::Mem};
 use byteorder::{BigEndian, ReadBytesExt};
 use core::panic;
-use num_traits::FromPrimitive;
 use std::convert::{TryFrom, TryInto};
 
 use self::ea::EffectiveAddressDebug;
@@ -541,28 +540,49 @@ impl Cpu {
     }
 
     fn extract_conditional_test_pos_8(word: u16) -> ConditionalTest {
-        let ea_mode = (word >> 8) & 0x000f;
-        let ea_mode = match FromPrimitive::from_u16(ea_mode) {
-            Some(r) => r,
-            None => panic!("Unable to extract ConditionalTest"),
+        let conditional_test = (word >> 8) & 0x000f;
+        let conditional_test = match conditional_test {
+            0b0000 => ConditionalTest::T,
+            0b0001 => ConditionalTest::F,
+            0b0010 => ConditionalTest::HI,
+            0b0011 => ConditionalTest::LS,
+            0b0100 => ConditionalTest::CC,
+            0b0101 => ConditionalTest::CS,
+            0b0110 => ConditionalTest::NE,
+            0b0111 => ConditionalTest::EQ,
+            0b1000 => ConditionalTest::VC,
+            0b1001 => ConditionalTest::VS,
+            0b1010 => ConditionalTest::PL,
+            0b1011 => ConditionalTest::MI,
+            0b1100 => ConditionalTest::GE,
+            0b1101 => ConditionalTest::LT,
+            0b1110 => ConditionalTest::GT,
+            _ => ConditionalTest::LE,
         };
-        ea_mode
+        conditional_test
     }
 
     pub fn extract_scale_factor_from_bit_pos(word: u16, bit_pos: u8) -> ScaleFactor {
         let scale_factor = (word >> bit_pos) & 0b0011;
-        let scale_factor = match ScaleFactor::from_u16(scale_factor) {
-            Some(r) => r,
-            None => panic!("Unable to extract ScaleFactor"),
-        };
-        scale_factor
+        match scale_factor {
+            0b00 => ScaleFactor::One,
+            0b01 => ScaleFactor::Two,
+            0b10 => ScaleFactor::Four,
+            _ => ScaleFactor::Eight,
+        }
     }
 
     fn extract_op_mode_from_bit_pos_6(word: u16) -> usize {
         let op_mode = (word >> 6) & 0x0007;
-        let op_mode = match FromPrimitive::from_u16(op_mode) {
-            Some(r) => r,
-            None => panic!("Unable to extract OpMode"),
+        let op_mode = match op_mode {
+            0 => 0,
+            1 => 1,
+            2 => 2,
+            3 => 3,
+            4 => 4,
+            5 => 5,
+            6 => 6,
+            _ => 7,
         };
         op_mode
     }
