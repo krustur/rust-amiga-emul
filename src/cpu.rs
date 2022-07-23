@@ -153,12 +153,10 @@ impl Cpu {
                 instruction::addx::step,
                 instruction::addx::get_disassembly,
             ),
-            Instruction::new_with_exclude(
+            Instruction::new(
                 String::from("AND"),
                 0xf000,
                 0xc000,
-                0x01c0,
-                vec![0b011000000, 0b111000000],
                 instruction::and::match_check,
                 instruction::and::step,
                 instruction::and::get_disassembly,
@@ -167,7 +165,7 @@ impl Cpu {
                 String::from("ANDI"),
                 0xff00,
                 0x0200,
-                crate::cpu::match_check,
+                instruction::andi::match_check,
                 instruction::andi::step,
                 instruction::andi::get_disassembly,
             ),
