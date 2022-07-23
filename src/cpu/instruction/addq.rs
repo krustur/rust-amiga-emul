@@ -1,6 +1,6 @@
 use super::{
-    EffectiveAddressingMode, GetDisassemblyResult, GetDisassemblyResultError, OperationSize,
-    StepError,
+    EffectiveAddressingMode, GetDisassemblyResult, GetDisassemblyResultError, Instruction,
+    OperationSize, StepError,
 };
 use crate::{
     cpu::{Cpu, StatusRegisterResult},
@@ -16,6 +16,30 @@ use crate::{
 
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
+
+pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
+    match crate::cpu::match_check(instruction, instr_word) {
+        true => {
+            let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word);
+            match operation_size {
+                None => false,
+                Some(_) => {
+                    // Only alterable addressing modes
+                    match instr_word & 0b111111 {
+                        0b111100 => false, // #data
+                        0b111010 => false, // (d16,PC)
+                        0b111011 => false, // (d8,PC,Xn)
+                        0b111101 => false,
+                        0b111110 => false,
+                        0b111111 => false,
+                        _ => true,
+                    }
+                }
+            }
+        }
+        false => false,
+    }
+}
 
 pub fn step<'a>(
     instr_word: u16,

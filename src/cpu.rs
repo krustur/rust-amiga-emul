@@ -77,6 +77,14 @@ impl Cpu {
                 instruction::addi::step,
                 instruction::addi::get_disassembly,
             ),
+            Instruction::new(
+                String::from("ADDQ"),
+                0xf100,
+                0x5000,
+                instruction::addq::match_check,
+                instruction::addq::step,
+                instruction::addq::get_disassembly,
+            ),
             Instruction::new_with_exclude(
                 String::from("AND"),
                 0xf000,
@@ -150,14 +158,6 @@ impl Cpu {
                 crate::cpu::match_check,
                 instruction::dbcc::step,
                 instruction::dbcc::get_disassembly,
-            ),
-            Instruction::new(
-                String::from("ADDQ"),
-                0xf100,
-                0x5000,
-                crate::cpu::match_check,
-                instruction::addq::step,
-                instruction::addq::get_disassembly,
             ),
             Instruction::new(
                 String::from("Bcc"),
