@@ -13,11 +13,11 @@ use crate::register::{ProgramCounter, Register};
 // 020+ get_disassembly: TODO
 
 pub fn step<'a>(
+    instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<(), StepError> {
-    let instr_word = pc.fetch_next_word(mem);
     let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word)?;
     let status_register_result = match operation_size {
         OperationSize::Byte => {
@@ -80,11 +80,11 @@ pub fn step<'a>(
 }
 
 pub fn get_disassembly<'a>(
+    instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
-    let instr_word = pc.fetch_next_word(mem);
     let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word)?;
     let immediate_data = match operation_size {
         OperationSize::Byte => {

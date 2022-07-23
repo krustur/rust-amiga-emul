@@ -158,8 +158,9 @@ impl ProgramCounter {
         self.address_next
     }
 
-    pub fn fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0<T>(
+    pub fn get_effective_addressing_data_from_bit_pos_3_and_reg_pos_0<T>(
         &mut self,
+        instr_word: u16,
         reg: &Register,
         mem: &Mem,
         get_operation_size_func: T,
@@ -167,7 +168,6 @@ impl ProgramCounter {
     where
         T: Fn(u16) -> Result<OperationSize, InstructionError>,
     {
-        let instr_word = self.fetch_next_word(mem);
         self.get_effective_addressing_data_from_instr_word_bit_pos(
             instr_word,
             reg,

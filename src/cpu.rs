@@ -37,6 +37,14 @@ pub struct Cpu {
     instructions: Vec<Instruction>,
 }
 
+pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
+    ((instr_word & instruction.mask) == instruction.opcode)
+        && instruction
+            .ex_code
+            .contains(&(instr_word & instruction.ex_mask))
+            == false
+}
+
 impl Cpu {
     pub fn new(mem: Mem) -> Cpu {
         let reg_ssp = mem.get_long(0x0);
@@ -48,7 +56,8 @@ impl Cpu {
                 0xf130,
                 0xd100,
                 0x00c0,
-                0x00c0,
+                vec![0x00c0],
+                crate::cpu::match_check,
                 instruction::addx::step,
                 instruction::addx::get_disassembly,
             ),
@@ -56,6 +65,7 @@ impl Cpu {
                 String::from("ADD"),
                 0xf000,
                 0xd000,
+                crate::cpu::match_check,
                 instruction::add::step,
                 instruction::add::get_disassembly,
             ),
@@ -63,20 +73,17 @@ impl Cpu {
                 String::from("ADDI"),
                 0xff00,
                 0x0600,
+                crate::cpu::match_check,
                 instruction::addi::step,
                 instruction::addi::get_disassembly,
             ),
-            Instruction::new(
-                String::from("MULU"), // MULU need to be before AND
-                0xf1c0,
-                0xc0c0,
-                instruction::mulu::step,
-                instruction::mulu::get_disassembly,
-            ),
-            Instruction::new(
+            Instruction::new_with_exclude(
                 String::from("AND"),
                 0xf000,
                 0xc000,
+                0x01c0,
+                vec![0b011000000, 0b111000000],
+                instruction::and::match_check,
                 instruction::and::step,
                 instruction::and::get_disassembly,
             ),
@@ -84,6 +91,7 @@ impl Cpu {
                 String::from("ANDI"),
                 0xff00,
                 0x0200,
+                crate::cpu::match_check,
                 instruction::andi::step,
                 instruction::andi::get_disassembly,
             ),
@@ -91,6 +99,7 @@ impl Cpu {
                 String::from("BRA"),
                 0xff00,
                 0x6000,
+                crate::cpu::match_check,
                 instruction::bra::step,
                 instruction::bra::get_disassembly,
             ),
@@ -98,6 +107,7 @@ impl Cpu {
                 String::from("BSR"),
                 0xff00,
                 0x6100,
+                crate::cpu::match_check,
                 instruction::bsr::step,
                 instruction::bsr::get_disassembly,
             ),
@@ -105,6 +115,7 @@ impl Cpu {
                 String::from("BTST"), // Bit Number Dynamic
                 0xf1c0,
                 0x0100,
+                crate::cpu::match_check,
                 instruction::btst::step,
                 instruction::btst::get_disassembly,
             ),
@@ -112,6 +123,7 @@ impl Cpu {
                 String::from("BTST"), // Bit Number Static
                 0xffc0,
                 0x0800,
+                crate::cpu::match_check,
                 instruction::btst::step,
                 instruction::btst::get_disassembly,
             ),
@@ -119,6 +131,7 @@ impl Cpu {
                 String::from("BCLR"), // Bit Number Dynamic
                 0xf1c0,
                 0x0180,
+                crate::cpu::match_check,
                 instruction::bclr::step,
                 instruction::bclr::get_disassembly,
             ),
@@ -126,6 +139,7 @@ impl Cpu {
                 String::from("BCLR"), // Bit Number Static
                 0xffc0,
                 0x0880,
+                crate::cpu::match_check,
                 instruction::bclr::step,
                 instruction::bclr::get_disassembly,
             ),
@@ -133,6 +147,7 @@ impl Cpu {
                 String::from("DBcc"), // DBcc need to be before ADDQ
                 0xf0f8,
                 0x50c8,
+                crate::cpu::match_check,
                 instruction::dbcc::step,
                 instruction::dbcc::get_disassembly,
             ),
@@ -140,6 +155,7 @@ impl Cpu {
                 String::from("ADDQ"),
                 0xf100,
                 0x5000,
+                crate::cpu::match_check,
                 instruction::addq::step,
                 instruction::addq::get_disassembly,
             ),
@@ -147,6 +163,7 @@ impl Cpu {
                 String::from("Bcc"),
                 0xf000,
                 0x6000,
+                crate::cpu::match_check,
                 instruction::bcc::step,
                 instruction::bcc::get_disassembly,
             ),
@@ -154,6 +171,7 @@ impl Cpu {
                 String::from("CLR"),
                 0xff00,
                 0x4200,
+                crate::cpu::match_check,
                 instruction::clr::step,
                 instruction::clr::get_disassembly,
             ),
@@ -162,7 +180,8 @@ impl Cpu {
                 0xf138,
                 0xb108,
                 0x00c0,
-                0x00c0,
+                vec![0x00c0],
+                crate::cpu::match_check,
                 instruction::cmpm::step,
                 instruction::cmpm::get_disassembly,
             ),
@@ -170,6 +189,7 @@ impl Cpu {
                 String::from("CMP"),
                 0xb000,
                 0xb000,
+                crate::cpu::match_check,
                 instruction::cmp::step,
                 instruction::cmp::get_disassembly,
             ),
@@ -177,13 +197,23 @@ impl Cpu {
                 String::from("CMPI"),
                 0xff00,
                 0x0c00,
+                crate::cpu::match_check,
                 instruction::cmpi::step,
                 instruction::cmpi::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("EXG"),
+                0xf100,
+                0xc100,
+                instruction::exg::match_check,
+                instruction::exg::step,
+                instruction::exg::get_disassembly,
             ),
             Instruction::new(
                 String::from("JMP"),
                 0xffc0,
                 0x4ec0,
+                crate::cpu::match_check,
                 instruction::jmp::step,
                 instruction::jmp::get_disassembly,
             ),
@@ -191,6 +221,7 @@ impl Cpu {
                 String::from("JSR"),
                 0xffc0,
                 0x4e80,
+                crate::cpu::match_check,
                 instruction::jsr::step,
                 instruction::jsr::get_disassembly,
             ),
@@ -198,6 +229,7 @@ impl Cpu {
                 String::from("LEA"),
                 0xf1c0,
                 0x41c0,
+                crate::cpu::match_check,
                 instruction::lea::step,
                 instruction::lea::get_disassembly,
             ),
@@ -205,6 +237,7 @@ impl Cpu {
                 String::from("LINK"), // word
                 0xfff8,
                 0x4e50,
+                crate::cpu::match_check,
                 instruction::link::step,
                 instruction::link::get_disassembly,
             ),
@@ -212,6 +245,7 @@ impl Cpu {
                 String::from("LINK"), // long
                 0xfff8,
                 0x4808,
+                crate::cpu::match_check,
                 instruction::link::step_long,
                 instruction::link::get_disassembly_long,
             ),
@@ -219,6 +253,7 @@ impl Cpu {
                 String::from("LSLR"), // register
                 0xf018,
                 0xe008,
+                crate::cpu::match_check,
                 instruction::lslr::step,
                 instruction::lslr::get_disassembly,
             ),
@@ -226,6 +261,7 @@ impl Cpu {
                 String::from("LSLR"), // memory
                 0xfec0,
                 0xe2c0,
+                crate::cpu::match_check,
                 instruction::lslr::step,
                 instruction::lslr::get_disassembly,
             ),
@@ -233,6 +269,7 @@ impl Cpu {
                 String::from("SUBI"), // SUBI need to be before MOVE
                 0xff00,
                 0x0400,
+                crate::cpu::match_check,
                 instruction::subi::step,
                 instruction::subi::get_disassembly,
             ),
@@ -240,6 +277,7 @@ impl Cpu {
                 String::from("MOVE"),
                 0xc000,
                 0x0000,
+                crate::cpu::match_check,
                 instruction::mov::step,
                 instruction::mov::get_disassembly,
             ),
@@ -247,6 +285,7 @@ impl Cpu {
                 String::from("MOVEC"),
                 0xfffe,
                 0x4e7a,
+                crate::cpu::match_check,
                 instruction::movec::step,
                 instruction::movec::get_disassembly,
             ),
@@ -254,6 +293,7 @@ impl Cpu {
                 String::from("MOVEM"),
                 0xfb80,
                 0x4880,
+                crate::cpu::match_check,
                 instruction::movem::step,
                 instruction::movem::get_disassembly,
             ),
@@ -261,13 +301,23 @@ impl Cpu {
                 String::from("MOVEQ"),
                 0xf100,
                 0x7000,
+                crate::cpu::match_check,
                 instruction::moveq::step,
                 instruction::moveq::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("MULU"),
+                0xf1c0,
+                0xc0c0,
+                crate::cpu::match_check,
+                instruction::mulu::step,
+                instruction::mulu::get_disassembly,
             ),
             Instruction::new(
                 String::from("NOP"),
                 0xffff,
                 0x4e71,
+                crate::cpu::match_check,
                 instruction::nop::step,
                 instruction::nop::get_disassembly,
             ),
@@ -275,13 +325,31 @@ impl Cpu {
                 String::from("NOT"),
                 0xff00,
                 0x4600,
+                crate::cpu::match_check,
                 instruction::not::step,
                 instruction::not::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("ROLR"), // register
+                0xf018,
+                0xe018,
+                crate::cpu::match_check,
+                instruction::rolrreg::step,
+                instruction::rolrreg::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("ROLR"), // memory
+                0xfec0,
+                0xe6c0,
+                crate::cpu::match_check,
+                instruction::rolrmem::step,
+                instruction::rolrmem::get_disassembly,
             ),
             Instruction::new(
                 String::from("SWAP"), // SWAP need to be before PEA
                 0xfff8,
                 0x4840,
+                crate::cpu::match_check,
                 instruction::swap::step,
                 instruction::swap::get_disassembly,
             ),
@@ -289,6 +357,7 @@ impl Cpu {
                 String::from("PEA"),
                 0xffc0,
                 0x4840,
+                crate::cpu::match_check,
                 instruction::pea::step,
                 instruction::pea::get_disassembly,
             ),
@@ -296,6 +365,7 @@ impl Cpu {
                 String::from("RTS"),
                 0xffff,
                 0x4e75,
+                crate::cpu::match_check,
                 instruction::rts::step,
                 instruction::rts::get_disassembly,
             ),
@@ -304,7 +374,8 @@ impl Cpu {
                 0xf130,
                 0x9100,
                 0x00c0,
-                0x00c0,
+                vec![0x00c0],
+                crate::cpu::match_check,
                 instruction::subx::step,
                 instruction::subx::get_disassembly,
             ),
@@ -312,6 +383,7 @@ impl Cpu {
                 String::from("SUB"),
                 0xf000,
                 0x9000,
+                crate::cpu::match_check,
                 instruction::sub::step,
                 instruction::sub::get_disassembly,
             ),
@@ -319,6 +391,7 @@ impl Cpu {
                 String::from("SUBQ"),
                 0xf100,
                 0x5100,
+                crate::cpu::match_check,
                 instruction::subq::step,
                 instruction::subq::get_disassembly,
             ),
@@ -326,6 +399,7 @@ impl Cpu {
                 String::from("TST"),
                 0xff00,
                 0x4a00,
+                crate::cpu::match_check,
                 instruction::tst::step,
                 instruction::tst::get_disassembly,
             ),
@@ -333,6 +407,7 @@ impl Cpu {
                 String::from("UNLK"),
                 0xfff8,
                 0x4e58,
+                crate::cpu::match_check,
                 instruction::unlk::step,
                 instruction::unlk::get_disassembly,
             ),
@@ -1429,11 +1504,12 @@ impl Cpu {
 
     pub fn execute_next_instruction(self: &mut Cpu) {
         let mut pc = self.register.reg_pc.clone();
-        let instr_word = pc.peek_next_word(&self.memory);
+        let instr_word = pc.fetch_next_word(&self.memory);
 
-        let instruction_pos = self.instructions.iter().position(|x| {
-            ((instr_word & x.mask) == x.opcode) && ((instr_word & x.ex_mask) != x.ex_code)
-        });
+        let instruction_pos = self
+            .instructions
+            .iter()
+            .position(|x| (x.match_check)(x, instr_word));
         let instruction = match instruction_pos {
             None => panic!(
                 "{:#010X} Unidentified instruction {:#06X}",
@@ -1443,7 +1519,8 @@ impl Cpu {
             Some(instruction_pos) => &self.instructions[instruction_pos],
         };
 
-        let step_result = (instruction.step)(&mut pc, &mut self.register, &mut self.memory);
+        let step_result =
+            (instruction.step)(instr_word, &mut pc, &mut self.register, &mut self.memory);
         match step_result {
             Ok(step_result) => self.register.reg_pc = pc.get_step_next_pc(),
             Err(step_error) => match step_error {
@@ -1473,44 +1550,41 @@ impl Cpu {
     }
 
     pub fn get_disassembly(self: &mut Cpu, pc: &mut ProgramCounter) -> GetDisassemblyResult {
-        let instr_word = pc.peek_next_word(&self.memory);
+        let instr_word = pc.fetch_next_word(&self.memory);
 
-        let instruction_pos = self.instructions.iter().position(|x| {
-            ((instr_word & x.mask) == x.opcode) && ((instr_word & x.ex_mask) != x.ex_code)
-        });
+        let instruction_pos = self
+            .instructions
+            .iter()
+            .position(|x| (x.match_check)(x, instr_word));
 
         match instruction_pos {
             Some(instruction_pos) => {
                 let instruction = &self.instructions[instruction_pos];
 
-                let get_disassembly_result =
-                    (instruction.get_disassembly)(pc, &mut self.register, &mut self.memory);
+                let get_disassembly_result = (instruction.get_disassembly)(
+                    instr_word,
+                    pc,
+                    &mut self.register,
+                    &mut self.memory,
+                );
 
                 match get_disassembly_result {
                     Ok(result) => result,
-                    Err(error) => {
-                        if pc.get_address() == pc.get_address_next() {
-                            pc.skip_word();
-                        }
-                        GetDisassemblyResult::from_pc(
-                            pc,
-                            String::from("DC.W"),
-                            format!(
-                                "#${:04X} ; Error when getting disassembly from instruction: {}",
-                                instr_word, error.details
-                            ),
-                        )
-                    }
+                    Err(error) => GetDisassemblyResult::from_pc(
+                        pc,
+                        String::from("DC.W"),
+                        format!(
+                            "#${:04X} ; Error when getting disassembly from instruction: {}",
+                            instr_word, error.details
+                        ),
+                    ),
                 }
             }
-            None => {
-                pc.skip_word();
-                GetDisassemblyResult::from_pc(
-                    pc,
-                    String::from("DC.W"),
-                    format!("#${:04X}", instr_word),
-                )
-            }
+            None => GetDisassemblyResult::from_pc(
+                pc,
+                String::from("DC.W"),
+                format!("#${:04X}", instr_word),
+            ),
         }
     }
 

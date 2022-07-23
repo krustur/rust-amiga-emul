@@ -35,11 +35,11 @@ impl LslrDirection {
 }
 
 pub fn step<'a>(
+    instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<(), StepError> {
-    let instr_word = pc.peek_next_word(mem);
     let (lslr_direction, lslr_type, operation_size) = match (instr_word & 0x01c0) >> 6 {
         0b000 => (
             LslrDirection::Right,
@@ -65,7 +65,6 @@ pub fn step<'a>(
 
     let status_register_result = match lslr_type {
         LslrType::Register => {
-            pc.fetch_next_word(mem);
             let dest_register = Cpu::extract_register_index_from_bit_pos_0(instr_word)?;
             let shift_count = match instr_word & 0x0020 {
                 0x0020 => {
@@ -214,7 +213,8 @@ pub fn step<'a>(
             }
         }
         LslrType::Memory => {
-            let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
+            let ea_data = pc.get_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
+                instr_word,
                 reg,
                 mem,
                 |instr_word| Ok(operation_size),
@@ -288,11 +288,11 @@ fn get_status_register_mask(shift_count: u32) -> u16 {
 }
 
 pub fn get_disassembly<'a>(
+    instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
-    let instr_word = pc.peek_next_word(mem);
     let (lslr_direction, lslr_type, operation_size) = match (instr_word & 0x01c0) >> 6 {
         0b000 => (
             LslrDirection::Right,
@@ -318,7 +318,6 @@ pub fn get_disassembly<'a>(
 
     match lslr_type {
         LslrType::Register => {
-            pc.fetch_next_word(mem);
             let dest_register = Cpu::extract_register_index_from_bit_pos_0(instr_word)?;
             match instr_word & 0x0020 {
                 0x0020 => {
@@ -352,7 +351,8 @@ pub fn get_disassembly<'a>(
             }
         }
         LslrType::Memory => {
-            let ea_data = pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
+            let ea_data = pc.get_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
+                instr_word,
                 reg,
                 mem,
                 |instr_word| Ok(operation_size),

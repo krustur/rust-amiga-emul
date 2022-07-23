@@ -15,14 +15,17 @@ use crate::{
 // 020+ get_disassembly: TODO
 
 pub fn step<'a>(
+    instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<(), StepError> {
-    let ea_data =
-        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
-            Ok(OperationSize::Long)
-        })?;
+    let ea_data = pc.get_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
+        instr_word,
+        reg,
+        mem,
+        |instr_word| Ok(OperationSize::Long),
+    )?;
 
     let address = ea_data.get_address(pc, reg, mem);
     // println!("${:08X}", address);
@@ -33,14 +36,17 @@ pub fn step<'a>(
 }
 
 pub fn get_disassembly<'a>(
+    instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
-    let ea_data =
-        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
-            Ok(OperationSize::Long)
-        })?;
+    let ea_data = pc.get_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
+        instr_word,
+        reg,
+        mem,
+        |instr_word| Ok(OperationSize::Long),
+    )?;
 
     let ea_format = Cpu::get_ea_format(ea_data.ea_mode, pc, Some(ea_data.operation_size), mem);
     Ok(GetDisassemblyResult::from_pc(

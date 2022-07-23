@@ -15,14 +15,17 @@ use crate::{
 // 020+ get_disassembly: TODO
 
 pub fn step<'a>(
+    instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<(), StepError> {
-    let ea_data =
-        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
-            Ok(OperationSize::Long)
-        })?;
+    let ea_data = pc.get_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
+        instr_word,
+        reg,
+        mem,
+        |instr_word| Ok(OperationSize::Long),
+    )?;
     let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;
     let ea_address = ea_data.get_address(pc, reg, mem);
 
@@ -31,14 +34,17 @@ pub fn step<'a>(
 }
 
 pub fn get_disassembly<'a>(
+    instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
-    let ea_data =
-        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
-            Ok(OperationSize::Long)
-        })?;
+    let ea_data = pc.get_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
+        instr_word,
+        reg,
+        mem,
+        |instr_word| Ok(OperationSize::Long),
+    )?;
     let ea_mode = ea_data.ea_mode;
     let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;
 

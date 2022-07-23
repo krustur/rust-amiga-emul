@@ -14,17 +14,18 @@ use crate::{
 // 020+ get_disassembly: TODO
 
 pub fn step<'a>(
+    instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<(), StepError> {
-    let _ = pc.fetch_next_word(mem);
     let _ = pc.fetch_next_word(mem);
 
     Err(StepError::IllegalInstruction)
 }
 
 pub fn get_disassembly<'a>(
+    instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,

@@ -24,11 +24,11 @@ const WORD_WITH_AN_AS_DEST: usize = 0b011;
 const LONG_WITH_AN_AS_DEST: usize = 0b111;
 
 pub fn step<'a>(
+    instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<(), StepError> {
-    let instr_word = pc.peek_next_word(mem);
     let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
     let operation_size = match opmode {
         BYTE_WITH_DN_AS_DEST => OperationSize::Byte,
@@ -42,10 +42,12 @@ pub fn step<'a>(
         _ => panic!("Unrecognized opmode"),
     };
 
-    let ea_data =
-        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
-            Ok(operation_size)
-        })?;
+    let ea_data = pc.get_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
+        instr_word,
+        reg,
+        mem,
+        |instr_word| Ok(operation_size),
+    )?;
     let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;
 
     let status_register_result = match opmode {
@@ -121,11 +123,11 @@ pub fn step<'a>(
 }
 
 pub fn get_disassembly<'a>(
+    instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
-    let instr_word = pc.peek_next_word(mem);
     let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
     let operation_size = match opmode {
         BYTE_WITH_DN_AS_DEST => OperationSize::Byte,
@@ -139,10 +141,12 @@ pub fn get_disassembly<'a>(
         _ => panic!("Unrecognized opmode"),
     };
 
-    let ea_data =
-        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
-            Ok(operation_size)
-        })?;
+    let ea_data = pc.get_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
+        instr_word,
+        reg,
+        mem,
+        |instr_word| Ok(operation_size),
+    )?;
     let ea_mode = ea_data.ea_mode;
     let opmode = Cpu::extract_op_mode_from_bit_pos_6(ea_data.instr_word);
     let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;

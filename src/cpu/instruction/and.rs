@@ -1,4 +1,6 @@
-use super::{GetDisassemblyResult, GetDisassemblyResultError, OperationSize, StepError};
+use super::{
+    GetDisassemblyResult, GetDisassemblyResultError, Instruction, OperationSize, StepError,
+};
 use crate::cpu::Cpu;
 use crate::mem::Mem;
 use crate::register::{ProgramCounter, Register};
@@ -22,12 +24,45 @@ const LONG_WITH_EA_AS_DEST: usize = 0b110;
 const WORD_WITH_AN_AS_DEST: usize = 0b011;
 const LONG_WITH_AN_AS_DEST: usize = 0b111;
 
+pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
+    match crate::cpu::match_check(instruction, instr_word) {
+        true => {
+            let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
+            match opmode {
+                BYTE_WITH_DN_AS_DEST | WORD_WITH_DN_AS_DEST | LONG_WITH_DN_AS_DEST => {
+                    // EA is source, only data addressing modes
+                    match instr_word & 0b111111 {
+                        0b001000..=0b001111 => false, // An
+                        0b111101 => false,
+                        0b111110 => false,
+                        0b111111 => false,
+                        _ => true,
+                    }
+                }
+                BYTE_WITH_EA_AS_DEST | WORD_WITH_EA_AS_DEST | LONG_WITH_EA_AS_DEST => {
+                    // EA is dest, only memory alterable addressing modes
+                    match instr_word & 0b111111 {
+                        0b000000..=0b001111 => false, // Dn / An
+                        0b111100 => false,            // #data
+                        0b111101 => false,
+                        0b111110 => false,
+                        0b111111 => false,
+                        _ => true,
+                    }
+                }
+                _ => false,
+            }
+        }
+        false => false,
+    }
+}
+
 pub fn step<'a>(
+    instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<(), StepError> {
-    let instr_word = pc.peek_next_word(mem);
     let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
     let operation_size = match opmode {
         BYTE_WITH_DN_AS_DEST => OperationSize::Byte,
@@ -39,10 +74,12 @@ pub fn step<'a>(
         _ => panic!("Unrecognized opmode"),
     };
 
-    let ea_data =
-        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
-            Ok(operation_size)
-        })?;
+    let ea_data = pc.get_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
+        instr_word,
+        reg,
+        mem,
+        |instr_word| Ok(operation_size),
+    )?;
     let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;
 
     let status_register_result = match opmode {
@@ -100,11 +137,11 @@ pub fn step<'a>(
 }
 
 pub fn get_disassembly<'a>(
+    instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
-    let instr_word = pc.peek_next_word(mem);
     let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
     let operation_size = match opmode {
         BYTE_WITH_DN_AS_DEST => OperationSize::Byte,
@@ -118,10 +155,12 @@ pub fn get_disassembly<'a>(
         _ => panic!("Unrecognized opmode"),
     };
 
-    let ea_data =
-        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
-            Ok(operation_size)
-        })?;
+    let ea_data = pc.get_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
+        instr_word,
+        reg,
+        mem,
+        |instr_word| Ok(operation_size),
+    )?;
     let opmode = Cpu::extract_op_mode_from_bit_pos_6(ea_data.instr_word);
     let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;
     let ea_format = Cpu::get_ea_format(ea_data.ea_mode, pc, None, mem);

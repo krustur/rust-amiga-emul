@@ -147,6 +147,10 @@ fn main() {
             0x00F810F2 => Some(String::from("ExecLibrary.InitResident [code]")),
             0x000042E6 => Some(String::from("ExecLibrary.AllocMem -198")),
             0x00F81F5C => Some(String::from("ExecLibrary.AllocMem [code]")),
+
+            // 0x00005090 => Some(String::from("ExecLibrary.AllocAbs -204")),
+            // 0x00F8202C => Some(String::from("ExecLibrary.AllocAbs [code]")),
+
             0x000042DA => Some(String::from("ExecLibrary.FreeMem -210")),
             0x00F81E1C => Some(String::from("ExecLibrary.FreeMem [code]")),
             0x00004130 => Some(String::from("ExecLibrary.CacheClearU -636")),
@@ -158,12 +162,12 @@ fn main() {
             println!("                              ; {}", comment);
         }
 
-        let print_disassembly = match pc_address {
+        let print_disassembly_before_step = match pc_address {
             0x00F800E2..=0x00F800E8 => false,
             0x00F80F2E..=0x00F80F30 => false,
             _ => true,
         };
-        let print_registers = match pc_address {
+        let print_registers_after_step = match pc_address {
             // 0x00F800EC => true,
             // 0x00F80D50 => true,
             // 0x00F80D52 => true,
@@ -173,16 +177,26 @@ fn main() {
             // 0x00F80F22 => true,
             // 0x00F80F24 => true,
             // 0x00F80F26 => true,
+            0x00F8060C => true,
+            0x00F82002=> true,
             _ => false,
         };
-        if print_disassembly {
+        let (dump_memory_after_step, dump_memory_start, dump_memory_end) = match pc_address {
+            0x00F8060C => (true, 0x00f8008d, 0x00f800ad),
+            // 0x00F82002 => (true, 0x0000515C, 0x0000516C),
+            0x00F82002 => (true, 0x00f8008d, 0x00f800ad),
+            _ => (false, 0, 0)
+        };
+        if print_disassembly_before_step {
             let disassembly_result = cpu.get_next_disassembly();
-
             cpu.print_disassembly(&disassembly_result);
         }
         cpu.execute_next_instruction();
-        if print_registers {
+        if print_registers_after_step {
             cpu.register.print_registers();
+        }
+        if dump_memory_after_step{
+            cpu.memory.print_hex_dump(dump_memory_start, dump_memory_end);
         }
     }
 }

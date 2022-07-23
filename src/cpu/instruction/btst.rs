@@ -13,12 +13,16 @@ use crate::{
 // 020+ get_disassembly: TODO
 
 pub fn step<'a>(
+    instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<(), StepError> {
-    let ea_data =
-        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
+    let ea_data = pc.get_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
+        instr_word,
+        reg,
+        mem,
+        |instr_word| {
             match instr_word & 0x0038 {
                 0x0000 => {
                     // DRegDirect
@@ -29,7 +33,8 @@ pub fn step<'a>(
                     Ok(OperationSize::Byte)
                 }
             }
-        })?;
+        },
+    )?;
 
     let bit_number = match ea_data.instr_word & 0x0100 {
         0x0100 => {
@@ -72,12 +77,16 @@ pub fn step<'a>(
 }
 
 pub fn get_disassembly<'a>(
+    instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
-    let ea_data =
-        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |instr_word| {
+    let ea_data = pc.get_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
+        instr_word,
+        reg,
+        mem,
+        |instr_word| {
             match instr_word & 0x0038 {
                 0x0000 => {
                     // DRegDirect
@@ -88,7 +97,8 @@ pub fn get_disassembly<'a>(
                     Ok(OperationSize::Byte)
                 }
             }
-        })?;
+        },
+    )?;
 
     let ea_format = Cpu::get_ea_format(ea_data.ea_mode, pc, Some(OperationSize::Byte), mem);
 

@@ -18,11 +18,11 @@ use crate::{cpu::Cpu, register::STATUS_REGISTER_MASK_NEGATIVE};
 // 020+ get_disassembly: TODO
 
 pub fn step<'a>(
+    instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<(), StepError> {
-    let instr_word = pc.fetch_next_word(mem);
     let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9)?;
     let data = Cpu::get_byte_from_word(instr_word);
     let mut status_register = 0x0000;
@@ -49,11 +49,11 @@ pub fn step<'a>(
 }
 
 pub fn get_disassembly<'a>(
+    instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
-    let instr_word = pc.fetch_next_word(mem);
     let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9)?;
     let data = Cpu::get_byte_from_word(instr_word);
     let data = Cpu::sign_extend_byte(data);

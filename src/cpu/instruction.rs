@@ -22,6 +22,7 @@ pub mod cmp;
 pub mod cmpi;
 pub mod cmpm;
 pub mod dbcc;
+pub mod exg;
 pub mod jmp;
 pub mod jsr;
 pub mod lea;
@@ -35,6 +36,8 @@ pub mod mulu;
 pub mod nop;
 pub mod not;
 pub mod pea;
+pub mod rolrmem;
+pub mod rolrreg;
 pub mod rts;
 pub mod sub;
 pub mod subi;
@@ -221,6 +224,142 @@ pub enum EffectiveAddressingMode {
     },
 }
 
+impl fmt::Display for EffectiveAddressingMode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            EffectiveAddressingMode::DRegDirect { ea_register } => {
+                write!(f, "EffectiveAddressingMode::DRegDirect D{}", ea_register)
+            }
+            EffectiveAddressingMode::ARegDirect { ea_register } => {
+                write!(f, "EffectiveAddressingMode::ARegDirect A{}", ea_register)
+            }
+            EffectiveAddressingMode::ARegIndirect {
+                ea_register,
+                ea_address,
+            } => {
+                write!(
+                    f,
+                    "EffectiveAddressingMode::ARegIndirect (A{}) [${:08X}]",
+                    ea_register, ea_address
+                )
+            }
+            EffectiveAddressingMode::ARegIndirectWithPostIncrement {
+                operation_size,
+                ea_register,
+            } => {
+                write!(
+                    f,
+                    "EffectiveAddressingMode::ARegIndirectWithPostIncrement (A{})+ {}",
+                    ea_register, operation_size
+                )
+            }
+            EffectiveAddressingMode::ARegIndirectWithPreDecrement {
+                operation_size,
+                ea_register,
+            } => {
+                write!(
+                    f,
+                    "EffectiveAddressingMode::ARegIndirectWithPreDecrement -(A{}) {}",
+                    ea_register, operation_size
+                )
+            }
+            EffectiveAddressingMode::ARegIndirectWithDisplacement {
+                ea_register,
+                ea_address,
+                ea_displacement,
+            } => {
+                write!(
+                    f,
+                    "EffectiveAddressingMode::ARegIndirectWithDisplacement ({},A{}) [${:08X}]",
+                    ea_displacement, ea_register, ea_address
+                )
+            }
+            EffectiveAddressingMode::ARegIndirectWithIndexOrMemoryIndirect {
+                ea_register,
+                ea_address,
+                extension_word,
+                displacement,
+                register_type,
+                register,
+                index_size,
+                scale_factor,
+            } => {
+                write!(
+                    f,
+                    "EffectiveAddressingMode::ARegIndirectWithIndexOrMemoryIndirect A{} TODO fmt::Display() [${:08X}]",
+                    ea_register, ea_address
+                )
+            }
+            EffectiveAddressingMode::PcIndirectWithDisplacement {
+                ea_address,
+                displacement,
+            } => {
+                write!(
+                    f,
+                    "EffectiveAddressingMode::PcIndirectWithDisplacement ({},PC) [${:08X}]",
+                    displacement, ea_address
+                )
+            }
+            EffectiveAddressingMode::PcIndirectWithIndexOrPcMemoryIndirect {
+                ea_register,
+                ea_address,
+                extension_word,
+                displacement,
+                register_type,
+                register,
+                index_size,
+                scale_factor,
+            } => {
+                write!(
+                    f,
+                    "EffectiveAddressingMode::PcIndirectWithIndexOrPcMemoryIndirect PC A/D{} TODO fmt::Display() [${:08X}]",
+                    ea_register, ea_address
+                )
+            }
+            EffectiveAddressingMode::AbsoluteShortAddressing {
+                ea_address,
+                displacement,
+            } => {
+                write!(
+                    f,
+                    "EffectiveAddressingMode::AbsoluteShortAddressing (${:04X}) [${:08X}]",
+                    displacement, ea_address
+                )
+            }
+
+            EffectiveAddressingMode::AbsolutLongAddressing { ea_address } => {
+                write!(
+                    f,
+                    "EffectiveAddressingMode::AbsolutLongAddressing [${:08X}]",
+                    ea_address
+                )
+            }
+
+            EffectiveAddressingMode::ImmediateDataByte { data } => {
+                write!(
+                    f,
+                    "EffectiveAddressingMode::ImmediateDataByte #${:02X}",
+                    data
+                )
+            }
+            EffectiveAddressingMode::ImmediateDataWord { data } => {
+                write!(
+                    f,
+                    "EffectiveAddressingMode::ImmediateDataWord #${:04X}",
+                    data
+                )
+            }
+            EffectiveAddressingMode::ImmediateDataLong { data } => {
+                write!(
+                    f,
+                    "EffectiveAddressingMode::ImmediateDataLong #${:08X}",
+                    data
+                )
+            }
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum OperationSize {
     Byte,
@@ -242,6 +381,22 @@ impl OperationSize {
             OperationSize::Byte => 'B',
             OperationSize::Word => 'W',
             OperationSize::Long => 'L',
+        }
+    }
+}
+
+impl fmt::Display for OperationSize {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            OperationSize::Byte => {
+                write!(f, "Byte")
+            }
+            OperationSize::Word => {
+                write!(f, "Word")
+            }
+            OperationSize::Long => {
+                write!(f, "Long")
+            }
         }
     }
 }
@@ -281,7 +436,6 @@ impl fmt::Display for ScaleFactor {
                 write!(f, "*8")
             }
         }
-        // write!(f, "{}", self.format)
     }
 }
 
@@ -374,7 +528,6 @@ impl fmt::Display for ConditionalTest {
                 write!(f, "LE")
             }
         }
-        // write!(f, "{}", self.format)
     }
 }
 
@@ -383,10 +536,16 @@ pub struct Instruction {
     pub mask: u16,
     pub opcode: u16,
     pub ex_mask: u16,
-    pub ex_code: u16,
-    pub step:
-        fn(pc: &mut ProgramCounter, reg: &mut Register, mem: &mut Mem) -> Result<(), StepError>,
+    pub ex_code: Vec<u16>,
+    pub match_check: fn(instruction: &Instruction, instr_word: u16) -> bool,
+    pub step: fn(
+        instr_word: u16,
+        pc: &mut ProgramCounter,
+        reg: &mut Register,
+        mem: &mut Mem,
+    ) -> Result<(), StepError>,
     pub get_disassembly: fn(
+        instr_word: u16,
         pc: &mut ProgramCounter,
         reg: &Register,
         mem: &Mem,
@@ -398,12 +557,15 @@ impl Instruction {
         name: String,
         mask: u16,
         opcode: u16,
+        match_check: fn(instruction: &Instruction, instr_word: u16) -> bool,
         step: fn(
+            instr_word: u16,
             pc: &mut ProgramCounter,
             reg: &mut Register,
             mem: &mut Mem,
         ) -> Result<(), StepError>,
         get_disassembly: fn(
+            instr_word: u16,
             pc: &mut ProgramCounter,
             reg: &Register,
             mem: &Mem,
@@ -414,7 +576,8 @@ impl Instruction {
             mask,
             opcode,
             ex_mask: 0x0000,
-            ex_code: 0xffff,
+            ex_code: vec![],
+            match_check,
             step,
             get_disassembly,
         };
@@ -426,13 +589,16 @@ impl Instruction {
         mask: u16,
         opcode: u16,
         ex_mask: u16,
-        ex_code: u16,
+        ex_code: Vec<u16>,
+        match_check: fn(instruction: &Instruction, instr_word: u16) -> bool,
         step: fn(
+            instr_word: u16,
             pc: &mut ProgramCounter,
             reg: &mut Register,
             mem: &mut Mem,
         ) -> Result<(), StepError>,
         get_disassembly: fn(
+            instr_word: u16,
             pc: &mut ProgramCounter,
             reg: &Register,
             mem: &Mem,
@@ -444,6 +610,7 @@ impl Instruction {
             opcode,
             ex_mask,
             ex_code,
+            match_check,
             step,
             get_disassembly,
         };

@@ -15,11 +15,11 @@ use crate::{
 // 020+ get_disassembly: TODO
 
 pub fn step<'a>(
+    instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<(), StepError> {
-    let instr_word = pc.fetch_next_word(mem);
     let register = Cpu::extract_register_index_from_bit_pos_0(instr_word)?;
 
     let restored_sp = reg.get_a_reg_long(register);
@@ -40,11 +40,11 @@ pub fn step<'a>(
 }
 
 pub fn get_disassembly<'a>(
+    instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
-    let instr_word = pc.fetch_next_word(mem);
     let register = Cpu::extract_register_index_from_bit_pos_0(instr_word)?;
 
     Ok(GetDisassemblyResult::from_pc(

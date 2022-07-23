@@ -45,11 +45,11 @@ impl TryFrom<u16> for CmpOpMode {
 }
 
 pub fn step<'a>(
+    instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<(), StepError> {
-    let instr_word = pc.peek_next_word(mem);
     let operation_mode = Cpu::extract_op_mode_from_bit_pos_6_new::<CmpOpMode>(instr_word)?;
     let operation_size = match operation_mode {
         CmpOpMode::CmpByte => OperationSize::Byte,
@@ -58,10 +58,12 @@ pub fn step<'a>(
         CmpOpMode::CmpaWord => OperationSize::Word,
         CmpOpMode::CmpaLong => OperationSize::Long,
     };
-    let ea_data =
-        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |_| {
-            Ok(operation_size)
-        })?;
+    let ea_data = pc.get_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
+        instr_word,
+        reg,
+        mem,
+        |_| Ok(operation_size),
+    )?;
     let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;
 
     let status_register = match operation_mode {
@@ -121,11 +123,11 @@ pub fn step<'a>(
 }
 
 pub fn get_disassembly<'a>(
+    instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
-    let instr_word = pc.peek_next_word(mem);
     let operation_mode = Cpu::extract_op_mode_from_bit_pos_6_new::<CmpOpMode>(instr_word)?;
     let (instruction_name, operation_size, register_type) = match operation_mode {
         CmpOpMode::CmpByte => ("CMP", OperationSize::Byte, RegisterType::Data),
@@ -134,10 +136,12 @@ pub fn get_disassembly<'a>(
         CmpOpMode::CmpaWord => ("CMPA", OperationSize::Word, RegisterType::Address),
         CmpOpMode::CmpaLong => ("CMPA", OperationSize::Long, RegisterType::Address),
     };
-    let ea_data =
-        pc.fetch_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(reg, mem, |_| {
-            Ok(operation_size)
-        })?;
+    let ea_data = pc.get_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
+        instr_word,
+        reg,
+        mem,
+        |_| Ok(operation_size),
+    )?;
     let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;
 
     let ea_format = Cpu::get_ea_format(ea_data.ea_mode, pc, None, mem);

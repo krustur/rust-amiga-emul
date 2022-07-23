@@ -15,11 +15,11 @@ use crate::{
 // 020+ get_disassembly: TODO
 
 pub fn step<'a>(
+    instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<(), StepError> {
-    let instr_word = pc.fetch_next_word(mem);
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
     let condition = reg.reg_sr.evaluate_condition(&conditional_test);
 
@@ -48,11 +48,11 @@ pub fn step<'a>(
 }
 
 pub fn get_disassembly<'a>(
+    instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
-    let instr_word = pc.fetch_next_word(mem);
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
 
     let displacement = Cpu::get_byte_from_word(instr_word);
