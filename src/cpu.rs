@@ -51,16 +51,6 @@ impl Cpu {
         let pc_address = mem.get_long(0x4);
         let reg_pc = ProgramCounter::from_address(pc_address);
         let instructions = vec![
-            Instruction::new_with_exclude(
-                String::from("ADDX"),
-                0xf130,
-                0xd100,
-                0x00c0,
-                vec![0x00c0],
-                crate::cpu::match_check,
-                instruction::addx::step,
-                instruction::addx::get_disassembly,
-            ),
             Instruction::new(
                 String::from("ADD"),
                 0xf000,
@@ -84,6 +74,14 @@ impl Cpu {
                 instruction::addq::match_check,
                 instruction::addq::step,
                 instruction::addq::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("ADDX"),
+                0xf130,
+                0xd100,
+                instruction::addx::match_check,
+                instruction::addx::step,
+                instruction::addx::get_disassembly,
             ),
             Instruction::new_with_exclude(
                 String::from("AND"),
