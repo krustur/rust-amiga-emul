@@ -228,7 +228,7 @@ impl Cpu {
                 String::from("CLR"),
                 0xff00,
                 0x4200,
-                crate::cpu::match_check,
+                instruction::clr::match_check,
                 instruction::clr::step,
                 instruction::clr::get_disassembly,
             ),
