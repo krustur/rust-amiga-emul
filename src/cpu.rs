@@ -65,7 +65,7 @@ impl Cpu {
                 String::from("ADD"),
                 0xf000,
                 0xd000,
-                crate::cpu::match_check,
+                instruction::add::match_check,
                 instruction::add::step,
                 instruction::add::get_disassembly,
             ),

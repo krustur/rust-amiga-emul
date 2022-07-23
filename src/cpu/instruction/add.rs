@@ -1,4 +1,6 @@
-use super::{GetDisassemblyResult, GetDisassemblyResultError, OperationSize, StepError};
+use super::{
+    GetDisassemblyResult, GetDisassemblyResultError, Instruction, OperationSize, StepError,
+};
 use crate::cpu::{Cpu, StatusRegisterResult};
 use crate::mem::Mem;
 use crate::register::{ProgramCounter, Register};
@@ -21,6 +23,49 @@ const ADD_WORD_EA_AS_DEST: usize = 0b101;
 const ADD_LONG_EA_AS_DEST: usize = 0b110;
 const ADDA_WORD: usize = 0b011;
 const ADDA_LONG: usize = 0b111;
+
+pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
+    match crate::cpu::match_check(instruction, instr_word) {
+        true => {
+            let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
+            match opmode {
+                ADD_BYTE_DN_AS_DEST | ADD_WORD_DN_AS_DEST | ADD_LONG_DN_AS_DEST => {
+                    // EA is source, all addressing modes
+                    match instr_word & 0b111111 {
+                        0b111101 => false,
+                        0b111110 => false,
+                        0b111111 => false,
+                        _ => true,
+                    }
+                }
+                ADD_BYTE_EA_AS_DEST | ADD_WORD_EA_AS_DEST | ADD_LONG_EA_AS_DEST => {
+                    // EA is dest, only memory alterable addressing modes
+                    match instr_word & 0b111111 {
+                        0b000000..=0b001111 => false, // Dn / An
+                        0b111100 => false,            // #data
+                        0b111010 => false,            // (d16,PC)
+                        0b111011 => false,            // (d8,PC,Xn)
+                        0b111101 => false,
+                        0b111110 => false,
+                        0b111111 => false,
+                        _ => true,
+                    }
+                }
+                ADDA_WORD | ADDA_LONG => {
+                    // ADDA, all addressing modes
+                    match instr_word & 0b111111 {
+                        0b111101 => false,
+                        0b111110 => false,
+                        0b111111 => false,
+                        _ => true,
+                    }
+                }
+                _ => false,
+            }
+        }
+        false => false,
+    }
+}
 
 pub fn step<'a>(
     instr_word: u16,
