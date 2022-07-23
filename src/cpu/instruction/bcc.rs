@@ -1,4 +1,6 @@
-use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError};
+use super::{
+    ConditionalTest, GetDisassemblyResult, GetDisassemblyResultError, Instruction, StepError,
+};
 use crate::{
     cpu::Cpu,
     mem::Mem,
@@ -13,6 +15,19 @@ use crate::{
 
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
+
+pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
+    match crate::cpu::match_check(instruction, instr_word) {
+        true => {
+            let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
+            match conditional_test {
+                ConditionalTest::F | ConditionalTest::T => false,
+                _ => true,
+            }
+        }
+        false => false,
+    }
+}
 
 pub fn step<'a>(
     instr_word: u16,

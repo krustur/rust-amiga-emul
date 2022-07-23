@@ -169,6 +169,30 @@ impl Cpu {
                 instruction::andi::get_disassembly,
             ),
             Instruction::new(
+                String::from("Bcc"),
+                0xf000,
+                0x6000,
+                instruction::bcc::match_check,
+                instruction::bcc::step,
+                instruction::bcc::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("BCLR"), // Bit Number Dynamic
+                0xf1c0,
+                0x0180,
+                instruction::bclr::match_check,
+                instruction::bclr::step,
+                instruction::bclr::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("BCLR"), // Bit Number Static
+                0xffc0,
+                0x0880,
+                instruction::bclr::match_check,
+                instruction::bclr::step,
+                instruction::bclr::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("BRA"),
                 0xff00,
                 0x6000,
@@ -201,36 +225,12 @@ impl Cpu {
                 instruction::btst::get_disassembly,
             ),
             Instruction::new(
-                String::from("BCLR"), // Bit Number Dynamic
-                0xf1c0,
-                0x0180,
-                crate::cpu::match_check,
-                instruction::bclr::step,
-                instruction::bclr::get_disassembly,
-            ),
-            Instruction::new(
-                String::from("BCLR"), // Bit Number Static
-                0xffc0,
-                0x0880,
-                crate::cpu::match_check,
-                instruction::bclr::step,
-                instruction::bclr::get_disassembly,
-            ),
-            Instruction::new(
                 String::from("DBcc"), // DBcc need to be before ADDQ
                 0xf0f8,
                 0x50c8,
                 crate::cpu::match_check,
                 instruction::dbcc::step,
                 instruction::dbcc::get_disassembly,
-            ),
-            Instruction::new(
-                String::from("Bcc"),
-                0xf000,
-                0x6000,
-                crate::cpu::match_check,
-                instruction::bcc::step,
-                instruction::bcc::get_disassembly,
             ),
             Instruction::new(
                 String::from("CLR"),
