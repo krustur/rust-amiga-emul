@@ -539,10 +539,17 @@ impl Cpu {
                 String::from("RTS"),
                 0xffff,
                 0x4e75,
-                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::rts::step,
                 instruction::rts::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("RTE"),
+                0xffff,
+                0x4e73,
+                crate::cpu::match_check,
+                instruction::rte::step,
+                instruction::rte::get_disassembly,
             ),
             Instruction::new_with_exclude(
                 String::from("SUBX"),

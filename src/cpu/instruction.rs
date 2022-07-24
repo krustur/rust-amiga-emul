@@ -43,6 +43,7 @@ pub mod ori_to_sr;
 pub mod pea;
 pub mod rolrmem;
 pub mod rolrreg;
+pub mod rte;
 pub mod rts;
 pub mod scc;
 pub mod sub;

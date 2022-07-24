@@ -552,6 +552,21 @@ impl Register {
         }
     }
 
+    pub fn stack_pop_word(&mut self, mem: &mut Mem) -> u16 {
+        match self.reg_sr.is_sr_supervisor_set() {
+            true => {
+                let result = mem.get_word(self.reg_ssp);
+                self.reg_ssp = self.reg_ssp.wrapping_add(2);
+                result
+            }
+            false => {
+                let result = mem.get_word(self.reg_usp);
+                self.reg_usp = self.reg_usp.wrapping_add(2);
+                result
+            }
+        }
+    }
+
     pub fn stack_push_long(&mut self, mem: &mut Mem, value: u32) {
         match self.reg_sr.is_sr_supervisor_set() {
             true => {
