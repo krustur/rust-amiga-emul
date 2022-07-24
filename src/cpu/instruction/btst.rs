@@ -126,15 +126,11 @@ pub fn step_static<'a>(
         }
     };
 
-    println!("operation_size: {}", operation_size);
-
     // Bit Number Static, Specified as Immediate Data
     let bit_number = match operation_size {
         OperationSize::Long => Cpu::get_byte_from_word(pc.fetch_next_word(mem)) % 32,
         _ => Cpu::get_byte_from_word(pc.fetch_next_word(mem)) % 8,
     };
-
-    println!("bit_numer: {}", bit_number);
 
     let ea_data = pc.get_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
         instr_word,
@@ -147,20 +143,16 @@ pub fn step_static<'a>(
         OperationSize::Long => {
             let bit_number_mask = 1 << bit_number;
             let value = ea_data.get_value_long(pc, reg, mem, true);
-            println!("value: {}", value);
             (value & bit_number_mask) != 0
         }
         _ => {
             let bit_number_mask = 1 << bit_number;
             let value = ea_data.get_value_byte(pc, reg, mem, true);
-            println!("value: {}", value);
             (value & bit_number_mask) != 0
         }
     };
-    println!("bit_set: {}", bit_set);
 
     let zero_flag = !bit_set;
-    println!("zero_flag: {}", zero_flag);
 
     match zero_flag {
         false => reg.reg_sr.clear_zero(),
