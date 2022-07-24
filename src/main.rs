@@ -131,27 +131,62 @@ fn main() {
             
             0x00F802A0 => Some(String::from("Setting up MemHeader for chip memory")),
 
+            0x00F80F16 => Some(String::from("Scan for RomTag structs A4=start address D4=end address")),
+            0x00F80F1A => Some(String::from("RomTag matchword ($4AFC)")),
+
             // ExecLibrary
+            // misc
+            0x0000513E => Some(String::from("ExecLibrary.Supervisor -30")),
+            0x00F80C46 => Some(String::from("ExecLibrary.Supervisor http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_2._guide/node0386.html")), 
             
+            // special patchable hooks to internal exec activity
+            0x0000512C => Some(String::from("ExecLibrary.????? -48")),
+            0x00F829EE => Some(String::from("ExecLibrary.????? [code]")),
+
+            // module creation
             0x00004364 => Some(String::from("ExecLibrary.InitCode -72")),
-            0x00F810BA => Some(String::from("ExecLibrary.InitCode [code]")),
+            0x00F810BA => Some(String::from("ExecLibrary.InitCode http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_2._guide/node035B.html")),
             0x00004358 => Some(String::from("ExecLibrary.MakeLibrary -84")),
-            0x00F81C88 => Some(String::from("ExecLibrary.MakeLibrary [code]")),
+            0x00F81C88 => Some(String::from("ExecLibrary.MakeLibrary http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_2._guide/node0361.html")),
             0x00004352 => Some(String::from("ExecLibrary.MakeFunctions -90")),
-            0x00F81D10 => Some(String::from("ExecLibrary.MakeFunctions [code]")),
+            0x00F81D10 => Some(String::from("ExecLibrary.MakeFunctions http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_2._guide/node0360.html")),
             0x00004346 => Some(String::from("ExecLibrary.InitResident -102")),
-            0x00F810F2 => Some(String::from("ExecLibrary.InitResident [code]")),
+            0x00F810F2 => Some(String::from("ExecLibrary.InitResident http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_2._guide/node035C.html")),
+
+            // interrupts
+            0x000050D8 => Some(String::from("ExecLibrary.Forbid -132")),
+            0x00F82A10 => Some(String::from("ExecLibrary.Forbid http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_2._guide/node0353.html")),
+            0x000050D2 => Some(String::from("ExecLibrary.Permit -138")),
+            0x00F82A18 => Some(String::from("ExecLibrary.Permit http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_3._guide/node0224.html")),
+
+            // memory allocation
             0x000042E6 => Some(String::from("ExecLibrary.AllocMem -198")),
-            0x00F8060C => Some(String::from("ExecLibrary.AllocMem -198 (B)")),
-            0x00F81F5C => Some(String::from("ExecLibrary.AllocMem [code]")),
-
+            0x00005096 => Some(String::from("ExecLibrary.AllocMem -198 (B)")),
+            0x00F81F5C => Some(String::from("ExecLibrary.AllocMem http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_2._guide/node0332.html")),
             0x00005090 => Some(String::from("ExecLibrary.AllocAbs -204")),
-            0x00F8202C => Some(String::from("ExecLibrary.AllocAbs [code]")),
-
+            0x00F8202C => Some(String::from("ExecLibrary.AllocAbs http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_3._guide/node01E4.html")),
             0x000042DA => Some(String::from("ExecLibrary.FreeMem -210")),
-            0x00F81E1C => Some(String::from("ExecLibrary.FreeMem [code]")),
+            0x00F81E1C => Some(String::from("ExecLibrary.FreeMem http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_2._guide/node0355.html")),
+            0x0000507E => Some(String::from("ExecLibrary.AllocEntry -222")),
+            0x00F82146 => Some(String::from("ExecLibrary.AllocEntry http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_3._guide/node01E6.html")),
+
+            // lists
+            0x0000506C => Some(String::from("ExecLibrary.AddHead -240")),
+            0x00F81A2C => Some(String::from("ExecLibrary.AddHead http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_2._guide/node0325.html")),
+            0x00005060 => Some(String::from("ExecLibrary.Remove -252")),
+            0x00F81A62 => Some(String::from("ExecLibrary.Remove http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_3._guide/node022F.html")),
+
+            // tasks
+            0x00005042 => Some(String::from("ExecLibrary.AddTask -282")),
+            0x00F826C8 => Some(String::from("ExecLibrary.AddTask http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_3._guide/node01E2.html")), 
+            
+            // libraries
+            0x00004FB2 => Some(String::from("ExecLibrary.SumLibrary -426")),
+            0x00F81C3C => Some(String::from("ExecLibrary.SumLibrary http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_2._guide/node0384.html")),
+
+            // cache
             0x00004130 => Some(String::from("ExecLibrary.CacheClearU -636")),
-            0x00F80D60 => Some(String::from("ExecLibrary.CacheClearU [code]")),
+            0x00F80D60 => Some(String::from("ExecLibrary.CacheClearU http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_3._guide/node01F0.html")),
             
             _ => None,
         };
@@ -165,6 +200,7 @@ fn main() {
             _ => true,
         };
         let print_registers_after_step = match pc_address {
+            0x00F80F16 => true, // scan for RomTag
             // 0x00F800EC => true,
             // 0x00F80D50 => true,
             // 0x00F80D52 => true,
@@ -174,14 +210,20 @@ fn main() {
             // 0x00F80F22 => true,
             // 0x00F80F24 => true,
             // 0x00F80F26 => true,
-            0x00F8060C => true,
-            0x00F82002=> true,
+            // 0x00F8060C => true,
+            // 0x00F82002=> true,
+            // 0x0000513E => true,
+            // 0x00F80C46 => true,
+            // 0x00F82A3E => true,
+            // 0x00F82A44 => true,
+            // 0x00F81A6C => true,
+            // 0x00F80828 => true,
             _ => false,
         };
         let (dump_memory_after_step, dump_memory_start, dump_memory_end) = match pc_address {
-            0x00F8060C => (true, 0x00f8008d, 0x00f800ad),
+            // 0x00F8060C => (true, 0x00f8008d, 0x00f800ad),
             // 0x00F82002 => (true, 0x0000515C, 0x0000516C),
-            0x00F82002 => (true, 0x00f8008d, 0x00f800ad),
+            // 0x00F82002 => (true, 0x00f8008d, 0x00f800ad),
             _ => (false, 0, 0)
         };
         if print_disassembly_before_step {
