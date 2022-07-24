@@ -52,9 +52,17 @@ pub fn match_check_size000110_from_bit_pos_6(instr_word: u16) -> bool {
     }
 }
 
+pub fn match_check_size011110_from_bit_pos(instr_word: u16, bit_pos: u8) -> bool {
+    let operation_size = Cpu::extract_size011110_from_bit_pos(instr_word, bit_pos);
+    match operation_size {
+        None => false,
+        Some(_) => true,
+    }
+}
+
 pub fn match_check_ea_all_addressing_modes_pos_0(instr_word: u16) -> bool {
     // All addressing modes
-    match instr_word & 0b111111 {
+    match instr_word & 0b_111_111 {
         0b_111_101 => false, // These ea modes don't exist
         0b_111_110 => false,
         0b_111_111 => false,
@@ -64,7 +72,7 @@ pub fn match_check_ea_all_addressing_modes_pos_0(instr_word: u16) -> bool {
 
 pub fn match_check_ea_only_data_addressing_modes_pos_0(instr_word: u16) -> bool {
     // All addressing modes
-    match instr_word & 0b111111 {
+    match instr_word & 0b_111_111 {
         0b_111_101 => false, // These ea modes don't exist
         0b_111_110 => false,
         0b_111_111 => false,
@@ -75,7 +83,7 @@ pub fn match_check_ea_only_data_addressing_modes_pos_0(instr_word: u16) -> bool 
 
 pub fn match_check_ea_only_alterable_addressing_modes_pos_0(instr_word: u16) -> bool {
     // Only alterable addressing modes
-    match instr_word & 0b111111 {
+    match instr_word & 0b_111_111 {
         0b_111_101 => false, // These ea modes don't exist
         0b_111_110 => false,
         0b_111_111 => false,
@@ -86,9 +94,28 @@ pub fn match_check_ea_only_alterable_addressing_modes_pos_0(instr_word: u16) -> 
     }
 }
 
+pub fn match_check_ea_only_data_alterable_addressing_modes_and_areg_direct_pos(
+    instr_word: u16,
+    bit_pos: u8,
+    reg_bit_pos: u8,
+) -> bool {
+    // Only data alterable addressing modes
+    let mode = (instr_word >> bit_pos) & 0b_111;
+    let reg = (instr_word >> reg_bit_pos) & 0b_111;
+    match (mode, reg) {
+        (0b_111, 0b_101) => false, // These ea modes don't exist
+        (0b_111, 0b_110) => false,
+        (0b_111, 0b_111) => false,
+        (0b_111, 0b_100) => false, // #data
+        (0b_111, 0b_010) => false, // (d16,PC)
+        (0b_111, 0b_011) => false, // (d8,PC,Xn)
+        _ => true,
+    }
+}
+
 pub fn match_check_ea_only_data_alterable_addressing_modes_pos_0(instr_word: u16) -> bool {
     // Only data alterable addressing modes
-    match instr_word & 0b111111 {
+    match instr_word & 0b_111_111 {
         0b_111_101 => false, // These ea modes don't exist
         0b_111_110 => false,
         0b_111_111 => false,
@@ -102,7 +129,7 @@ pub fn match_check_ea_only_data_alterable_addressing_modes_pos_0(instr_word: u16
 
 pub fn match_check_ea_only_memory_alterable_addressing_modes_pos_0(instr_word: u16) -> bool {
     // Only memory alterable addressing modes
-    match instr_word & 0b111111 {
+    match instr_word & 0b_111_111 {
         0b_111_101 => false, // These ea modes don't exist
         0b_111_110 => false,
         0b_111_111 => false,
@@ -354,30 +381,20 @@ impl Cpu {
                 instruction::lslr::get_disassembly,
             ),
             Instruction::new(
-                String::from("SUBI"), // SUBI need to be before MOVE
-                0xff00,
-                0x0400,
-                // TODO: match_check
-                crate::cpu::match_check,
-                instruction::subi::step,
-                instruction::subi::get_disassembly,
-            ),
-            Instruction::new(
-                String::from("ORI"), // ORI need to be before MOVE
-                0xff00,
-                0x0000,
-                instruction::ori::match_check,
-                instruction::ori::step,
-                instruction::ori::get_disassembly,
-            ),
-            Instruction::new(
                 String::from("MOVE"),
                 0xc000,
                 0x0000,
-                // TODO: match_check
-                crate::cpu::match_check,
+                instruction::mov::match_check,
                 instruction::mov::step,
                 instruction::mov::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("MOVE from SR"),
+                0xffc0,
+                0x40c0,
+                instruction::move_from_sr::match_check,
+                instruction::move_from_sr::step,
+                instruction::move_from_sr::get_disassembly,
             ),
             Instruction::new(
                 String::from("MOVEC"),
@@ -450,6 +467,22 @@ impl Cpu {
                 instruction::not::get_disassembly,
             ),
             Instruction::new(
+                String::from("ORI"),
+                0xff00,
+                0x0000,
+                instruction::ori::match_check,
+                instruction::ori::step,
+                instruction::ori::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("ORI to SR"),
+                0xffff,
+                0x007c,
+                crate::cpu::match_check,
+                instruction::ori_to_sr::step,
+                instruction::ori_to_sr::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("ROLR"), // register
                 0xf018,
                 0xe018,
@@ -468,6 +501,15 @@ impl Cpu {
                 instruction::rolrmem::get_disassembly,
             ),
             Instruction::new(
+                String::from("SUBI"),
+                0xff00,
+                0x0400,
+                // TODO: match_check
+                crate::cpu::match_check,
+                instruction::subi::step,
+                instruction::subi::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("SWAP"), // SWAP need to be before PEA
                 0xfff8,
                 0x4840,
@@ -475,6 +517,14 @@ impl Cpu {
                 crate::cpu::match_check,
                 instruction::swap::step,
                 instruction::swap::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("Scc"),
+                0xf0c0,
+                0x50c0,
+                instruction::scc::match_check,
+                instruction::scc::step,
+                instruction::scc::get_disassembly,
             ),
             Instruction::new(
                 String::from("PEA"),
@@ -724,21 +774,13 @@ impl Cpu {
         }
     }
 
-    pub fn extract_size011110_from_bit_pos(
-        word: u16,
-        bit_pos: u8,
-    ) -> Result<OperationSize, InstructionError> {
+    pub fn extract_size011110_from_bit_pos(word: u16, bit_pos: u8) -> Option<OperationSize> {
         let size = (word >> bit_pos) & 0x0003;
         match size {
-            0b01 => Ok(OperationSize::Byte),
-            0b11 => Ok(OperationSize::Word),
-            0b10 => Ok(OperationSize::Long),
-            _ => Err(InstructionError {
-                details: format!(
-                    "Failed to extract operation size 011110 from bit pos {}, got size: {} from word: ${:04X}",
-                    bit_pos, size, word
-                ),
-            }),
+            0b01 => Some(OperationSize::Byte),
+            0b11 => Some(OperationSize::Word),
+            0b10 => Some(OperationSize::Long),
+            _ => None,
         }
     }
 

@@ -1,6 +1,6 @@
 use super::{
-    EffectiveAddressingMode, GetDisassemblyResult, GetDisassemblyResultError, OperationSize,
-    StepError,
+    EffectiveAddressingMode, GetDisassemblyResult, GetDisassemblyResultError, Instruction,
+    OperationSize, StepError,
 };
 use crate::{
     cpu::Cpu,
@@ -17,6 +17,23 @@ use crate::{
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
+pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
+    match crate::cpu::match_check(instruction, instr_word) {
+        true => match crate::cpu::match_check_size011110_from_bit_pos(instr_word, 12) {
+            true => match crate::cpu::match_check_ea_all_addressing_modes_pos_0(instr_word) {
+                true => {
+                    crate::cpu::match_check_ea_only_data_alterable_addressing_modes_and_areg_direct_pos(
+                                    instr_word, 6, 9,
+                                )
+                }
+                false => false,
+            },
+            false => false,
+        },
+        false => false,
+    }
+}
+
 pub fn step<'a>(
     instr_word: u16,
     pc: &mut ProgramCounter,
@@ -27,7 +44,7 @@ pub fn step<'a>(
         instr_word,
         reg,
         mem,
-        |instr_word| Cpu::extract_size011110_from_bit_pos(instr_word, 12),
+        |instr_word| Ok(Cpu::extract_size011110_from_bit_pos(instr_word, 12).unwrap()),
     )?;
 
     let dst_ea_data = pc.get_effective_addressing_data_from_instr_word_bit_pos(
@@ -70,7 +87,7 @@ pub fn get_disassembly<'a>(
         instr_word,
         reg,
         mem,
-        |instr_word| Cpu::extract_size011110_from_bit_pos(instr_word, 12),
+        |instr_word| Ok(Cpu::extract_size011110_from_bit_pos(instr_word, 12).unwrap()),
     )?;
     let src_ea_mode = src_ea_data.ea_mode;
 

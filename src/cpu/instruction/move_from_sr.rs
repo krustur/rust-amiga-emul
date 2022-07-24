@@ -1,4 +1,6 @@
-use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError};
+use super::{
+    GetDisassemblyResult, GetDisassemblyResultError, Instruction, OperationSize, StepError,
+};
 use crate::{
     cpu::Cpu,
     mem::Mem,
@@ -17,24 +19,28 @@ use crate::{
 // TODO: Tests!
 // TODO: Require supervisor!
 
+pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
+    match crate::cpu::match_check(instruction, instr_word) {
+        true => crate::cpu::match_check_ea_only_data_alterable_addressing_modes_pos_0(instr_word),
+        false => false,
+    }
+}
+
 pub fn step<'a>(
     instr_word: u16,
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<(), StepError> {
-    let register = Cpu::extract_register_index_from_bit_pos_0(instr_word)?;
+    let ea_data = pc.get_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
+        instr_word,
+        reg,
+        mem,
+        |instr_word| Ok(OperationSize::Word),
+    )?;
 
-    match instr_word & 0x0008 {
-        0x0008 => {
-            let usp = reg.get_usp_reg();
-            reg.set_a_reg_long(register, usp);
-        }
-        _ => {
-            let a_reg = reg.get_a_reg_long(register);
-            reg.set_usp_reg(a_reg);
-        }
-    };
+    let sr = reg.reg_sr.get_value();
+    let data = ea_data.set_value_word(pc, reg, mem, sr, true);
 
     Ok(())
 }
@@ -45,20 +51,20 @@ pub fn get_disassembly<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
-    let register = Cpu::extract_register_index_from_bit_pos_0(instr_word)?;
+    let ea_data = pc.get_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
+        instr_word,
+        reg,
+        mem,
+        |instr_word| Ok(OperationSize::Word),
+    )?;
 
-    match instr_word & 0x0008 {
-        0x0008 => Ok(GetDisassemblyResult::from_pc(
-            pc,
-            String::from("MOVE.L"),
-            format!("USP,A{}", register),
-        )),
-        _ => Ok(GetDisassemblyResult::from_pc(
-            pc,
-            String::from("MOVE.L"),
-            format!("A{},USP", register),
-        )),
-    }
+    let ea_format = Cpu::get_ea_format(ea_data.ea_mode, pc, None, mem);
+
+    Ok(GetDisassemblyResult::from_pc(
+        pc,
+        String::from("MOVE.W"),
+        format!("SR,{}", ea_format.format),
+    ))
 }
 
 #[cfg(test)]

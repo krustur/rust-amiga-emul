@@ -1,5 +1,5 @@
 use super::{
-    GetDisassemblyResult, GetDisassemblyResultError, Instruction, OperationSize, StepError,
+    GetDisassemblyResult, GetDisassemblyResultError, StepError,
 };
 use crate::cpu::Cpu;
 use crate::mem::Mem;
@@ -15,18 +15,7 @@ use crate::register::{ProgramCounter, Register};
 // 020+ get_disassembly: TODO
 
 // TODO: Tests!
-
-pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
-    match crate::cpu::match_check(instruction, instr_word) {
-        true => match crate::cpu::match_check_size000110_from_bit_pos_6(instr_word) {
-            true => {
-                crate::cpu::match_check_ea_only_data_alterable_addressing_modes_pos_0(instr_word)
-            }
-            false => false,
-        },
-        false => false,
-    }
-}
+// TODO: Check Supervisor
 
 pub fn step<'a>(
     instr_word: u16,
@@ -34,63 +23,13 @@ pub fn step<'a>(
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<(), StepError> {
-    let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word).unwrap();
-    let status_register_result = match operation_size {
-        OperationSize::Byte => {
-            pc.skip_byte();
-            let source = pc.fetch_next_byte(mem);
+    let immediate_data = pc.fetch_next_word(mem);
 
-            let ea_data = pc.get_effective_addressing_data_from_instr_word_bit_pos(
-                instr_word,
-                reg,
-                mem,
-                |instr_word| Ok(operation_size),
-                3,
-                0,
-            )?;
-            let dest = ea_data.get_value_byte(pc, reg, mem, true);
+    let dest = reg.reg_sr.get_value();
 
-            let result = Cpu::or_bytes(source, dest);
-            ea_data.set_value_byte(pc, reg, mem, result.result, true);
-            result.status_register_result
-        }
-        OperationSize::Word => {
-            let source = pc.fetch_next_word(mem);
+    let result = Cpu::or_words(immediate_data, dest);
 
-            let ea_data = pc.get_effective_addressing_data_from_instr_word_bit_pos(
-                instr_word,
-                reg,
-                mem,
-                |instr_word| Ok(operation_size),
-                3,
-                0,
-            )?;
-            let dest = ea_data.get_value_word(pc, reg, mem, true);
-
-            let result = Cpu::or_words(source, dest);
-            ea_data.set_value_word(pc, reg, mem, result.result, true);
-            result.status_register_result
-        }
-        OperationSize::Long => {
-            let source = pc.fetch_next_long(mem);
-
-            let ea_data = pc.get_effective_addressing_data_from_instr_word_bit_pos(
-                instr_word,
-                reg,
-                mem,
-                |instr_word| Ok(operation_size),
-                3,
-                0,
-            )?;
-            let dest = ea_data.get_value_long(pc, reg, mem, true);
-
-            let result = Cpu::or_longs(source, dest);
-            ea_data.set_value_long(pc, reg, mem, result.result, true);
-            result.status_register_result
-        }
-    };
-
-    reg.reg_sr.merge_status_register(status_register_result);
+    reg.reg_sr.set_value(result.result);
 
     Ok(())
 }
@@ -101,31 +40,12 @@ pub fn get_disassembly<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
-    let operation_size = Cpu::extract_size000110_from_bit_pos_6(instr_word).unwrap();
-    let immediate_data = match operation_size {
-        OperationSize::Byte => {
-            pc.skip_byte();
-            format!("#${:02X}", pc.fetch_next_byte(mem))
-        }
-        OperationSize::Word => format!("#${:04X}", pc.fetch_next_word(mem)),
-        OperationSize::Long => format!("#${:08X}", pc.fetch_next_long(mem)),
-    };
-
-    let ea_data = pc.get_effective_addressing_data_from_instr_word_bit_pos(
-        instr_word,
-        reg,
-        mem,
-        |instr_word| Ok(operation_size),
-        3,
-        0,
-    )?;
-
-    let ea_format = Cpu::get_ea_format(ea_data.ea_mode, pc, None, mem);
+    let immediate_data = format!("#${:04X}", pc.fetch_next_word(mem));
 
     Ok(GetDisassemblyResult::from_pc(
         pc,
-        format!("ORI.{}", ea_data.operation_size.get_format()),
-        format!("{},{}", immediate_data, ea_format),
+        format!("ORI"),
+        format!("{},SR", immediate_data),
     ))
 }
 

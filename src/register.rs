@@ -596,7 +596,7 @@ impl Register {
         print!(" USP ${:08X} ", self.reg_usp);
         print!(" SSP ${:08X} ", self.reg_ssp);
         println!();
-        print!(" SR ${:04X} ", self.reg_sr.get_sr_reg_flags_abcde());
+        print!(" SR ${:04X} ", self.reg_sr.get_value());
         print!("  ");
         if self.reg_sr.is_sr_supervisor_set() {
             print!("S");
@@ -651,6 +651,10 @@ impl StatusRegister {
 
     pub fn get_value(&self) -> u16 {
         self.reg_sr
+    }
+
+    pub fn set_value(&mut self, reg_sr: u16) {
+        self.reg_sr = reg_sr;
     }
 
     pub fn get_sr_reg_flags_abcde(&self) -> u16 {
