@@ -363,6 +363,14 @@ impl Cpu {
                 instruction::subi::get_disassembly,
             ),
             Instruction::new(
+                String::from("ORI"), // ORI need to be before MOVE
+                0xff00,
+                0x0000,
+                instruction::ori::match_check,
+                instruction::ori::step,
+                instruction::ori::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("MOVE"),
                 0xc000,
                 0x0000,
@@ -1049,6 +1057,28 @@ impl Cpu {
         }
     }
 
+    pub fn or_bytes(source: u8, dest: u8) -> ResultWithStatusRegister<u8> {
+        let result = source | dest;
+
+        let mut status_register = 0x0000;
+        match result {
+            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            0x80..=0xff => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+            _ => (),
+        }
+
+        ResultWithStatusRegister {
+            result,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
+        }
+    }
+
     pub fn and_words(source: u16, dest: u16) -> ResultWithStatusRegister<u16> {
         let result = source & dest;
 
@@ -1071,8 +1101,52 @@ impl Cpu {
         }
     }
 
+    pub fn or_words(source: u16, dest: u16) -> ResultWithStatusRegister<u16> {
+        let result = source | dest;
+
+        let mut status_register = 0x0000;
+        match result {
+            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            0x8000..=0xffff => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+            _ => (),
+        }
+
+        ResultWithStatusRegister {
+            result,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
+        }
+    }
+
     pub fn and_longs(source: u32, dest: u32) -> ResultWithStatusRegister<u32> {
         let result = source & dest;
+
+        let mut status_register = 0x0000;
+        match result {
+            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            0x80000000..=0xffffffff => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+            _ => (),
+        }
+
+        ResultWithStatusRegister {
+            result,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
+        }
+    }
+
+    pub fn or_longs(source: u32, dest: u32) -> ResultWithStatusRegister<u32> {
+        let result = source | dest;
 
         let mut status_register = 0x0000;
         match result {

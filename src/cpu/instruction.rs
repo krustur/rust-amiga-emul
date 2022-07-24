@@ -36,6 +36,7 @@ pub mod mulu;
 pub mod neg;
 pub mod nop;
 pub mod not;
+pub mod ori;
 pub mod pea;
 pub mod rolrmem;
 pub mod rolrreg;

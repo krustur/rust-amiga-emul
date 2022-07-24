@@ -212,13 +212,6 @@ pub fn get_disassembly_static<'a>(
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        cpu::instruction::GetDisassemblyResult,
-        register::{
-            STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE,
-            STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
-        },
-    };
 
     // // long (data register direct)
 

@@ -8,9 +8,9 @@ use crate::register::{
 
 // Instruction State
 // =================
-// step: DONE
-// step cc: DONE
-// get_disassembly: DONE
+// step: TODO
+// step cc: TODO
+// get_disassembly: TODO
 
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
@@ -139,13 +139,6 @@ pub fn get_disassembly<'a>(
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        cpu::instruction::GetDisassemblyResult,
-        register::{
-            STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE,
-            STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
-        },
-    };
 
     // rol/ror memory(ea) by 1 / XNZC / word
 

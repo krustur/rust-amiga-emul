@@ -1,16 +1,13 @@
 use super::{GetDisassemblyResult, GetDisassemblyResultError, Instruction, StepError};
 use crate::{
-    cpu::{Cpu, StatusRegisterResult},
+    cpu::Cpu,
     mem::Mem,
-    register::{
-        ProgramCounter, Register, STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_NEGATIVE,
-        STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
-    },
+    register::{ProgramCounter, Register},
 };
 
-// step: DONE
-// step cc: DONE
-// get_disassembly: DONE
+// step: TODO
+// step cc: TODO
+// get_disassembly: TODO
 
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
