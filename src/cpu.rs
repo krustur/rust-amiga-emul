@@ -181,16 +181,16 @@ impl Cpu {
                 0xf1c0,
                 0x0180,
                 instruction::bclr::match_check,
-                instruction::bclr::step,
-                instruction::bclr::get_disassembly,
+                instruction::bclr::step_dynamic,
+                instruction::bclr::get_disassembly_dynamic,
             ),
             Instruction::new(
                 String::from("BCLR"), // Bit Number Static
                 0xffc0,
                 0x0880,
                 instruction::bclr::match_check,
-                instruction::bclr::step,
-                instruction::bclr::get_disassembly,
+                instruction::bclr::step_static,
+                instruction::bclr::get_disassembly_static,
             ),
             Instruction::new(
                 String::from("BRA"),
