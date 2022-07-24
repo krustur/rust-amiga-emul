@@ -407,6 +407,14 @@ impl Cpu {
                 instruction::moveq::get_disassembly,
             ),
             Instruction::new(
+                String::from("MOVE USP"),
+                0xfff0,
+                0x4e60,
+                crate::cpu::match_check,
+                instruction::move_usp::step,
+                instruction::move_usp::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("MULU"),
                 0xf1c0,
                 0xc0c0,

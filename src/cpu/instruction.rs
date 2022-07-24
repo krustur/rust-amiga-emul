@@ -29,6 +29,7 @@ pub mod lea;
 pub mod link;
 pub mod lslr;
 pub mod mov;
+pub mod move_usp;
 pub mod movec;
 pub mod movem;
 pub mod moveq;
