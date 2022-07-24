@@ -229,16 +229,16 @@ impl Cpu {
                 0xf1c0,
                 0x0100,
                 instruction::btst::match_check,
-                instruction::btst::step,
-                instruction::btst::get_disassembly,
+                instruction::btst::step_dynamic,
+                instruction::btst::get_disassembly_dynamic,
             ),
             Instruction::new(
                 String::from("BTST"), // Bit Number Static
                 0xffc0,
                 0x0800,
                 instruction::btst::match_check,
-                instruction::btst::step,
-                instruction::btst::get_disassembly,
+                instruction::btst::step_static,
+                instruction::btst::get_disassembly_static,
             ),
             Instruction::new(
                 String::from("CLR"),
