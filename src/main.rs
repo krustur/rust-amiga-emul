@@ -28,10 +28,10 @@ fn main() {
     let rom = RomMemory::from_file(0xF80000, ROM_FILE_PATH).unwrap();
     mem_ranges.push(Box::new(rom));
 
-    // Hack for "CDTV & CD32 Extended ROM / A4000 Diagnostics ROM"
+    // Hack "CDTV & CD32 Extended ROM / A4000 Diagnostics ROM" as RAM
     // ROM code checks for $1111 at 0F00000 ()
-    // let no_extended_rom_hack = RamMemory::from_range(0x00f00000, 0x00F7FFFF);
-    // mem_ranges.push(MemRange::from_memory(Box::new(no_extended_rom_hack)));
+    let no_extended_rom_hack = RamMemory::from_range(0x00f00000, 0x00F7FFFF);
+    mem_ranges.push(Box::new(no_extended_rom_hack));
 
     // Hack for "A600 & A1200 IDE controller"
     // $00DA8000 -> $ 00DAFFFF = Credit Card & IDE configuration registers
@@ -44,10 +44,6 @@ fn main() {
     // 2 MB chip ram
     let chip_ram = RamMemory::from_range(0x00000000, 0x001FFFFF);
     mem_ranges.push(Box::new(chip_ram));
-
-    // wtf ram?
-    // let wtf_ram = RamMemory::from_range(0x00f00000, 0x00f7FFFF);
-    // mem_ranges.push(Box::new(wtf_ram));
 
     // CIA memory
     let cia_memory = CiaMemory::new();
