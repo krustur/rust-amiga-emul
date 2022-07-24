@@ -196,6 +196,14 @@ impl Cpu {
                 instruction::andi::get_disassembly,
             ),
             Instruction::new(
+                String::from("ANDI to SR"),
+                0xffff,
+                0x027c,
+                crate::cpu::match_check,
+                instruction::andi_to_sr::step,
+                instruction::andi_to_sr::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("Bcc"),
                 0xf000,
                 0x6000,

@@ -25,7 +25,7 @@ pub fn step<'a>(
 
     let dest = reg.reg_sr.get_value();
 
-    let result = Cpu::or_words(immediate_data, dest);
+    let result = Cpu::and_words(immediate_data, dest);
 
     reg.reg_sr.set_value(result.result);
 
@@ -42,7 +42,7 @@ pub fn get_disassembly<'a>(
 
     Ok(GetDisassemblyResult::from_pc(
         pc,
-        format!("ORI.W"),
+        format!("ANDI.W"),
         format!("{},SR", immediate_data),
     ))
 }
