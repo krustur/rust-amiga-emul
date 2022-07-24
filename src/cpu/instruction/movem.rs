@@ -32,7 +32,7 @@ pub fn step<'a>(
 ) -> Result<(), StepError> {
     let mut register_list_mask = pc.fetch_next_word(mem);
 
-    let ea_data = pc.get_effective_addressing_data_from_instr_word_bit_pos(
+    let ea_data = pc.get_effective_addressing_data_from_bit_pos(
         instr_word,
         reg,
         mem,
@@ -221,7 +221,7 @@ pub fn get_disassembly<'a>(
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let mut register_list_mask = pc.fetch_next_word(mem);
 
-    let ea_data = pc.get_effective_addressing_data_from_instr_word_bit_pos(
+    let ea_data = pc.get_effective_addressing_data_from_bit_pos(
         instr_word,
         reg,
         mem,

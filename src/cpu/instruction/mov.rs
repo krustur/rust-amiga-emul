@@ -47,7 +47,7 @@ pub fn step<'a>(
         |instr_word| Ok(Cpu::extract_size011110_from_bit_pos(instr_word, 12).unwrap()),
     )?;
 
-    let dst_ea_data = pc.get_effective_addressing_data_from_instr_word_bit_pos(
+    let dst_ea_data = pc.get_effective_addressing_data_from_bit_pos(
         src_ea_data.instr_word,
         reg,
         mem,
@@ -91,7 +91,7 @@ pub fn get_disassembly<'a>(
     )?;
     let src_ea_mode = src_ea_data.ea_mode;
 
-    let dst_ea_data = pc.get_effective_addressing_data_from_instr_word_bit_pos(
+    let dst_ea_data = pc.get_effective_addressing_data_from_bit_pos(
         src_ea_data.instr_word,
         reg,
         mem,

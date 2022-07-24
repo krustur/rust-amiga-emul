@@ -29,7 +29,7 @@ pub fn step<'a>(
 ) -> Result<(), StepError> {
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
 
-    let ea_data = pc.get_effective_addressing_data_from_instr_word_bit_pos(
+    let ea_data = pc.get_effective_addressing_data_from_bit_pos(
         instr_word,
         reg,
         mem,
@@ -57,7 +57,7 @@ pub fn get_disassembly<'a>(
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
 
-    let ea_data = pc.get_effective_addressing_data_from_instr_word_bit_pos(
+    let ea_data = pc.get_effective_addressing_data_from_bit_pos(
         instr_word,
         reg,
         mem,

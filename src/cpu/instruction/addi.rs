@@ -38,7 +38,7 @@ pub fn step<'a>(
             pc.skip_byte();
             let source = pc.fetch_next_byte(mem);
 
-            let ea_data = pc.get_effective_addressing_data_from_instr_word_bit_pos(
+            let ea_data = pc.get_effective_addressing_data_from_bit_pos(
                 instr_word,
                 reg,
                 mem,
@@ -55,7 +55,7 @@ pub fn step<'a>(
         OperationSize::Word => {
             let source = pc.fetch_next_word(mem);
 
-            let ea_data = pc.get_effective_addressing_data_from_instr_word_bit_pos(
+            let ea_data = pc.get_effective_addressing_data_from_bit_pos(
                 instr_word,
                 reg,
                 mem,
@@ -72,7 +72,7 @@ pub fn step<'a>(
         OperationSize::Long => {
             let source = pc.fetch_next_long(mem);
 
-            let ea_data = pc.get_effective_addressing_data_from_instr_word_bit_pos(
+            let ea_data = pc.get_effective_addressing_data_from_bit_pos(
                 instr_word,
                 reg,
                 mem,
@@ -109,7 +109,7 @@ pub fn get_disassembly<'a>(
         OperationSize::Long => format!("#${:08X}", pc.fetch_next_long(mem)),
     };
 
-    let ea_data = pc.get_effective_addressing_data_from_instr_word_bit_pos(
+    let ea_data = pc.get_effective_addressing_data_from_bit_pos(
         instr_word,
         reg,
         mem,

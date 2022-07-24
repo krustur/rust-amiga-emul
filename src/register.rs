@@ -168,7 +168,7 @@ impl ProgramCounter {
     where
         T: Fn(u16) -> Result<OperationSize, InstructionError>,
     {
-        self.get_effective_addressing_data_from_instr_word_bit_pos(
+        self.get_effective_addressing_data_from_bit_pos(
             instr_word,
             reg,
             mem,
@@ -178,7 +178,7 @@ impl ProgramCounter {
         )
     }
 
-    pub fn get_effective_addressing_data_from_instr_word_bit_pos<T>(
+    pub fn get_effective_addressing_data_from_bit_pos<T>(
         &mut self,
         instr_word: u16,
         reg: &Register,
