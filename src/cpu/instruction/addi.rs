@@ -17,10 +17,10 @@ use crate::{
 pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
     match crate::cpu::match_check(instruction, instr_word) {
         true => match crate::cpu::match_check_size000110_from_bit_pos_6(instr_word) {
-            false => false,
             true => {
                 crate::cpu::match_check_ea_only_data_alterable_addressing_modes_pos_0(instr_word)
             }
+            false => false,
         },
         false => false,
     }

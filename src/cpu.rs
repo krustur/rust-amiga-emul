@@ -523,6 +523,14 @@ impl Cpu {
                 instruction::ori_to_sr::get_disassembly,
             ),
             Instruction::new(
+                String::from("PEA"),
+                0xffc0,
+                0x4840,
+                instruction::pea::match_check,
+                instruction::pea::step,
+                instruction::pea::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("ROLR"), // register
                 0xf018,
                 0xe018,
@@ -544,16 +552,14 @@ impl Cpu {
                 String::from("SUBI"),
                 0xff00,
                 0x0400,
-                // TODO: match_check
-                crate::cpu::match_check,
+                instruction::subi::match_check,
                 instruction::subi::step,
                 instruction::subi::get_disassembly,
             ),
             Instruction::new(
-                String::from("SWAP"), // SWAP need to be before PEA
+                String::from("SWAP"),
                 0xfff8,
                 0x4840,
-                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::swap::step,
                 instruction::swap::get_disassembly,
@@ -565,15 +571,6 @@ impl Cpu {
                 instruction::scc::match_check,
                 instruction::scc::step,
                 instruction::scc::get_disassembly,
-            ),
-            Instruction::new(
-                String::from("PEA"),
-                0xffc0,
-                0x4840,
-                // TODO: match_check
-                crate::cpu::match_check,
-                instruction::pea::step,
-                instruction::pea::get_disassembly,
             ),
             Instruction::new(
                 String::from("RTS"),
@@ -597,8 +594,7 @@ impl Cpu {
                 0x9100,
                 0x00c0,
                 vec![0x00c0],
-                // TODO: match_check
-                crate::cpu::match_check,
+                instruction::subx::match_check,
                 instruction::subx::step,
                 instruction::subx::get_disassembly,
             ),
