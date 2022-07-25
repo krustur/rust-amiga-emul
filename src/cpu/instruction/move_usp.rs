@@ -7,15 +7,12 @@ use crate::{
 
 // Instruction State
 // =================
-// step: TODO
-// step cc: TODO (not affected)
-// get_disassembly: TODO
+// step: DONE
+// step cc: DONE (not affected)
+// get_disassembly: DONE
 
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
-
-// TODO: Tests!
-// TODO: Require supervisor!
 
 pub fn step<'a>(
     instr_word: u16,
@@ -23,20 +20,25 @@ pub fn step<'a>(
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<(), StepError> {
-    let register = Cpu::extract_register_index_from_bit_pos_0(instr_word)?;
+    match reg.reg_sr.is_sr_supervisor_set() {
+        true => {
+            let register = Cpu::extract_register_index_from_bit_pos_0(instr_word)?;
 
-    match instr_word & 0x0008 {
-        0x0008 => {
-            let usp = reg.get_usp_reg();
-            reg.set_a_reg_long(register, usp);
-        }
-        _ => {
-            let a_reg = reg.get_a_reg_long(register);
-            reg.set_usp_reg(a_reg);
-        }
-    };
+            match instr_word & 0x0008 {
+                0x0008 => {
+                    let usp = reg.get_usp_reg();
+                    reg.set_a_reg_long(register, usp);
+                }
+                _ => {
+                    let a_reg = reg.get_a_reg_long(register);
+                    reg.set_usp_reg(a_reg);
+                }
+            };
 
-    Ok(())
+            Ok(())
+        }
+        false => Err(StepError::PriviliegeViolation),
+    }
 }
 
 pub fn get_disassembly<'a>(
@@ -65,19 +67,19 @@ pub fn get_disassembly<'a>(
 mod tests {
     use crate::{
         cpu::instruction::GetDisassemblyResult,
-        mem::rammemory::RamMemory,
         register::{
             STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE,
-            STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
+            STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_SUPERVISOR_STATE,
+            STATUS_REGISTER_MASK_ZERO,
         },
     };
 
     #[test]
-    fn lea_absolute_short_addressing_mode_to_a0() {
+    fn move_usp_to_address_register() {
         // arrange
-        let code = [0x41, 0xf8, 0x05, 0x00].to_vec(); // LEA ($0500).W,A0
+        let code = [0x4e, 0x6e].to_vec(); // MOVE.L USP,A6
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.set_a_reg_long(0, 0x00000000);
+        cpu.register.set_usp_reg(0x11123334);
         cpu.register.reg_sr.set_sr_reg_flags_abcde(
             STATUS_REGISTER_MASK_CARRY
                 | STATUS_REGISTER_MASK_OVERFLOW
@@ -90,16 +92,16 @@ mod tests {
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
-                0xC00004,
-                String::from("LEA"),
-                String::from("($0500).W,A0")
+                0xC00002,
+                String::from("MOVE.L"),
+                String::from("USP,A6")
             ),
             debug_result
         );
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x500, cpu.register.get_a_reg_long(0));
+        assert_eq!(0x11123334, cpu.register.get_a_reg_long(6));
         assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
         assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
         assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
@@ -108,34 +110,83 @@ mod tests {
     }
 
     #[test]
-    fn lea_absolute_long_addressing_mode_to_a0() {
+    fn move_usp_from_address_register() {
         // arrange
-        let code = [0x43, 0xf9, 0x00, 0xf8, 0x00, 0x00].to_vec(); // LEA ($00F80000).L,A1
-        let mem_range = RamMemory::from_bytes(0xf80000, [0x00, 0x00, 0x00, 0x00].to_vec());
-        let mut mem_ranges = Vec::new();
-        mem_ranges.push(mem_range);
-        let mut cpu = crate::instr_test_setup(code, Some(mem_ranges));
-        cpu.register.set_a_reg_long(0, 0x00000000);
-        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
+        let code = [0x4e, 0x61].to_vec(); // MOVE.L A1,USP
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long(1, 0x11123334);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
-                0xC00006,
-                String::from("LEA"),
-                String::from("($00F80000).L,A1")
+                0xC00002,
+                String::from("MOVE.L"),
+                String::from("A1,USP")
             ),
             debug_result
         );
-        // // act
+        // act
         cpu.execute_next_instruction();
-        // // assert
-        assert_eq!(0x00F80000, cpu.register.get_a_reg_long(1));
-        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
-        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
-        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+        // assert
+        assert_eq!(0x11123334, cpu.register.get_usp_reg());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
+    fn move_usp_from_address_privilege_violation() {
+        // arrange
+        let code = [0x4e, 0x61].to_vec(); // MOVE.L A1,USP
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.reg_sr.set_value(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_EXTEND
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO,
+        );
+        cpu.memory.set_long(0x00000020, 0x11223344);
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("MOVE.L"),
+                String::from("A1,USP")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_EXTEND
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_SUPERVISOR_STATE,
+            cpu.register.reg_sr.get_value()
+        );
+        assert_eq!(0x11223344, cpu.register.reg_pc.get_address());
+        assert_eq!(0x11223344, cpu.register.reg_pc.get_address_next());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_supervisor_set());
     }
 }

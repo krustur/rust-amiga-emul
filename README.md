@@ -88,7 +88,7 @@ MOVE from CCR (todo)|||X|X|X|X|||X
 MOVE to CCR (todo)|X|X|X|X|X|X|||X
 MOVE from SR 1|X 4|X 4|X|X|X|X|||X
 MOVE to SR 1 (todo)|X|X|X|X|X|X|||X
-MOVE USP 1 (todo)|X|X|X|X|X|X|||X
+MOVE USP 1|X|X|X|X|X|X|||X
 MOVE16 (todo)||||||X|||
 MOVEC 1 (todo)|||X|X|X|X|||X
 MOVEM|X|X|X|X|X|X|||X
