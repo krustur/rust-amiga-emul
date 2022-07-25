@@ -1,6 +1,6 @@
 use super::{
-    EffectiveAddressingMode, GetDisassemblyResult, GetDisassemblyResultError, OperationSize,
-    StepError,
+    EffectiveAddressingMode, GetDisassemblyResult, GetDisassemblyResultError, Instruction,
+    OperationSize, StepError,
 };
 use crate::{
     cpu::Cpu,
@@ -17,6 +17,16 @@ use std::collections::BTreeMap;
 
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
+
+pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
+    match crate::cpu::match_check(instruction, instr_word) {
+        true => match instr_word & 0x0400 {
+            0x0400 => crate::cpu::match_check_ea_only_control_or_postincrement_addressing_modes_pos_0(instr_word),
+            _ => crate::cpu::match_check_ea_only_control_alterable_or_predecrement_addressing_modes_pos_0(instr_word),
+        },
+        false => false,
+    }
+}
 
 #[derive(Debug, Clone)]
 enum MovemDirection {

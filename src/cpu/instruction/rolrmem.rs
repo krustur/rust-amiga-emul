@@ -48,22 +48,25 @@ pub fn step<'a>(
         _ => RolrDirection::Right,
     };
 
-    let value = ea_data.get_value_word(pc, reg, mem, false) as u32;
+    let value = ea_data.get_value_word(pc, reg, mem, false);
     println!("value: ${:08X}", value);
     let (result, overflow) = match rolr_direction {
         RolrDirection::Left => {
             // println!("rolr_direction: left");
-            let result = value.checked_shl(1).unwrap_or(0);
-            let overflow = result & 0x10000 != 0;
-            let result = (result & 0xffff) as u16;
-            (result, overflow)
+            // let result = value.checked_shl(1).unwrap_or(0);
+            // let overflow = result & 0x10000 != 0;
+            // let result = (result & 0xffff) as u16;
+            let result = value.rotate_left(1);
+            (result, (result & 0x00000001) != 0)
         }
         RolrDirection::Right => {
             // println!("rolr_direction: right");
-            let result = (value << 1).checked_shr(1).unwrap_or(0);
-            let overflow = result & 0x0001 != 0;
-            let result = ((result >> 1) & 0xffff) as u16;
-            (result, overflow)
+            // let result = (value << 1).checked_shr(1).unwrap_or(0);
+            // let overflow = result & 0x0001 != 0;
+            // let result = ((result >> 1) & 0xffff) as u16;
+            let result = value.rotate_right(1);
+
+            (result, (result & 0x00000001) != 0)
         }
     };
 

@@ -141,6 +141,49 @@ pub fn match_check_ea_only_memory_alterable_addressing_modes_pos_0(instr_word: u
     }
 }
 
+pub fn match_check_ea_only_control_addressing_modes_pos_0(instr_word: u16) -> bool {
+    // Only memory alterable addressing modes
+    match instr_word & 0b_111_111 {
+        0b_111_101 => false, // These ea modes don't exist
+        0b_111_110 => false,
+        0b_111_111 => false,
+        0b_000_000..=0b_001_111 => false, // Dn / An
+        0b_011_000..=0b_100_111 => false, // (An)+ / -(An)
+        0b_111_100 => false,              // #data
+        _ => true,
+    }
+}
+
+pub fn match_check_ea_only_control_alterable_or_predecrement_addressing_modes_pos_0(
+    instr_word: u16,
+) -> bool {
+    // Only memory alterable addressing modes
+    match instr_word & 0b_111_111 {
+        0b_111_101 => false, // These ea modes don't exist
+        0b_111_110 => false,
+        0b_111_111 => false,
+        0b_000_000..=0b_001_111 => false, // Dn / An
+        0b_011_000..=0b_011_111 => false, // (An)+
+        0b_111_100 => false,              // #data
+        _ => true,
+    }
+}
+
+pub fn match_check_ea_only_control_or_postincrement_addressing_modes_pos_0(
+    instr_word: u16,
+) -> bool {
+    // Only memory alterable addressing modes
+    match instr_word & 0b_111_111 {
+        0b_111_101 => false, // These ea modes don't exist
+        0b_111_110 => false,
+        0b_111_111 => false,
+        0b_000_000..=0b_001_111 => false, // Dn / An
+        0b_100_000..=0b_100_111 => false, // -(An)
+        0b_111_100 => false,              // #data
+        _ => true,
+    }
+}
+
 impl Cpu {
     pub fn new(mem: Mem) -> Cpu {
         let reg_ssp = mem.get_long(0x0);
@@ -329,8 +372,7 @@ impl Cpu {
                 String::from("JMP"),
                 0xffc0,
                 0x4ec0,
-                // TODO: match_check
-                crate::cpu::match_check,
+                instruction::jmp::match_check,
                 instruction::jmp::step,
                 instruction::jmp::get_disassembly,
             ),
@@ -338,8 +380,7 @@ impl Cpu {
                 String::from("JSR"),
                 0xffc0,
                 0x4e80,
-                // TODO: match_check
-                crate::cpu::match_check,
+                instruction::jsr::match_check,
                 instruction::jsr::step,
                 instruction::jsr::get_disassembly,
             ),
@@ -347,8 +388,7 @@ impl Cpu {
                 String::from("LEA"),
                 0xf1c0,
                 0x41c0,
-                // TODO: match_check
-                crate::cpu::match_check,
+                instruction::lea::match_check,
                 instruction::lea::step,
                 instruction::lea::get_disassembly,
             ),
@@ -356,7 +396,6 @@ impl Cpu {
                 String::from("LINK"), // word
                 0xfff8,
                 0x4e50,
-                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::link::step,
                 instruction::link::get_disassembly,
@@ -365,7 +404,6 @@ impl Cpu {
                 String::from("LINK"), // long
                 0xfff8,
                 0x4808,
-                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::link::step_long,
                 instruction::link::get_disassembly_long,
@@ -408,7 +446,6 @@ impl Cpu {
                 String::from("MOVEC"),
                 0xfffe,
                 0x4e7a,
-                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::movec::step,
                 instruction::movec::get_disassembly,
@@ -417,8 +454,7 @@ impl Cpu {
                 String::from("MOVEM"),
                 0xfb80,
                 0x4880,
-                // TODO: match_check
-                crate::cpu::match_check,
+                instruction::movem::match_check,
                 instruction::movem::step,
                 instruction::movem::get_disassembly,
             ),
