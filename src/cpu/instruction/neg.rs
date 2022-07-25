@@ -45,21 +45,21 @@ pub fn step<'a>(
         OperationSize::Byte => {
             let value = ea_data.get_value_byte(pc, reg, mem, false);
 
-            let result = Cpu::sub_bytes(0, value);
+            let result = Cpu::sub_bytes(value, 0);
             ea_data.set_value_byte(pc, reg, mem, result.result, true);
             result.status_register_result
         }
         OperationSize::Word => {
             let value = ea_data.get_value_word(pc, reg, mem, false);
 
-            let result = Cpu::sub_words(0, value);
+            let result = Cpu::sub_words(value, 0);
             ea_data.set_value_word(pc, reg, mem, result.result, true);
             result.status_register_result
         }
         OperationSize::Long => {
             let value = ea_data.get_value_long(pc, reg, mem, false);
 
-            let result = Cpu::sub_longs(0, value);
+            let result = Cpu::sub_longs(value, 0);
             ea_data.set_value_long(pc, reg, mem, result.result, true);
             result.status_register_result
         }
