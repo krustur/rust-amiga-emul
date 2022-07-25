@@ -72,7 +72,7 @@ EOR (todo)|X|X|X|X|X|X|||X
 EORI (todo)|X|X|X|X|X|X|||X
 EORI to CCR (todo)|X|X|X|X|X|X|||X
 EORI to SR 1 (todo)|X|X|X|X|X|X|||X
-EXG (todo)|X|X|X|X|X|X|||X
+EXG|X|X|X|X|X|X|||X
 EXT (todo)|X|X|X|X|X|X|||X
 todo: EXTB - FTWOTOX|||||||||
 ILLEGAL (todo)|X|X|X|X|X|X|||X
