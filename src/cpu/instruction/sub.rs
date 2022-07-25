@@ -1,4 +1,4 @@
-use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError};
+use super::{GetDisassemblyResult, GetDisassemblyResultError, Instruction, StepError};
 use crate::{
     cpu::{instruction::OperationSize, Cpu, StatusRegisterResult},
     mem::Mem,
@@ -22,6 +22,29 @@ const WORD_WITH_EA_AS_DEST: usize = 0b101;
 const LONG_WITH_EA_AS_DEST: usize = 0b110;
 const WORD_WITH_AN_AS_DEST: usize = 0b011;
 const LONG_WITH_AN_AS_DEST: usize = 0b111;
+
+pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
+    match crate::cpu::match_check(instruction, instr_word) {
+        true => {
+            let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
+            match opmode {
+                BYTE_WITH_DN_AS_DEST | WORD_WITH_DN_AS_DEST | LONG_WITH_DN_AS_DEST => {
+                    crate::cpu::match_check_ea_all_addressing_modes_pos_0(instr_word)
+                }
+                BYTE_WITH_EA_AS_DEST | WORD_WITH_EA_AS_DEST | LONG_WITH_EA_AS_DEST => {
+                    crate::cpu::match_check_ea_only_memory_alterable_addressing_modes_pos_0(
+                        instr_word,
+                    )
+                }
+                WORD_WITH_AN_AS_DEST | LONG_WITH_AN_AS_DEST => {
+                    crate::cpu::match_check_ea_all_addressing_modes_pos_0(instr_word)
+                }
+                _ => false,
+            }
+        }
+        false => false,
+    }
+}
 
 pub fn step<'a>(
     instr_word: u16,
