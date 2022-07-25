@@ -119,11 +119,10 @@ mod tests {
     }
 
     #[test]
-    fn andi_to_sr_word_privilege_error() {
+    fn andi_to_sr_word_privilege_violation() {
         // arrange
         let code = [0x02, 0x7c, 0x00, 0x00].to_vec(); // ANDI.W #$0000,SR
         let mut cpu = crate::instr_test_setup(code, None);
-        // println!("xxxx: ${:04X}", cpu.register.reg)
         cpu.register.reg_sr.set_value(
             STATUS_REGISTER_MASK_CARRY
                 | STATUS_REGISTER_MASK_EXTEND

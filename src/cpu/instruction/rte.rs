@@ -6,15 +6,12 @@ use crate::{
 
 // Instruction State
 // =================
-// step: TODO
-// step cc: TODO
-// get_disassembly: TODO
+// step: DONE
+// step cc: DONE
+// get_disassembly: DONE
 
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
-
-// TODO: Tests!
-// TODO: Check Supervisor
 
 pub fn step<'a>(
     instr_word: u16,
@@ -22,10 +19,18 @@ pub fn step<'a>(
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<(), StepError> {
-    let sr = reg.stack_pop_word(mem);
-    reg.reg_sr.set_value(sr);
-    reg.stack_pop_pc(mem, pc);
-    Ok(())
+    match reg.reg_sr.is_sr_supervisor_set() {
+        true => {
+            let sr = reg.stack_pop_word(mem);
+
+            reg.stack_pop_pc(mem, pc);
+            reg.reg_sr.set_value(sr);
+            let hey = pc.get_step_next_pc();
+
+            Ok(())
+        }
+        false => Err(StepError::PriviliegeViolation),
+    }
 }
 
 pub fn get_disassembly<'a>(
@@ -43,80 +48,100 @@ pub fn get_disassembly<'a>(
 
 #[cfg(test)]
 mod tests {
+    use crate::{
+        cpu::instruction::GetDisassemblyResult,
+        register::{
+            STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE,
+            STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_SUPERVISOR_STATE,
+            STATUS_REGISTER_MASK_ZERO,
+        },
+    };
 
-    // #[test]
-    // fn rts_dont_set_any_sr() {
-    //     // arrange
-    //     let code = [0x4e, 0x75].to_vec(); // RTS
-    //     let mem_range = RamMemory::from_bytes(0x00F80000, [0x00, 0xc0, 0x12, 0x48].to_vec());
-    //     let mut mem_ranges = Vec::new();
-    //     mem_ranges.push(mem_range);
+    #[test]
+    fn rte() {
+        // arrange
+        let code = [0x4e, 0x73].to_vec(); // RTE
+        let mut cpu = crate::instr_test_setup(code, None);
 
-    //     let mut cpu = crate::instr_test_setup(code, Some(mem_ranges));
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
-    //     cpu.register.set_a_reg_long(7, 0x00F80000);
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("RTS"),
-    //             String::from("")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0xC01248, cpu.register.reg_pc.get_address());
-    //     assert_eq!(0x00F80004, cpu.register.get_a_reg_long(7));
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
+        cpu.memory.set_word(
+            0x010003FA,
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+        cpu.memory.set_long(0x010003FC, 0x00C01248);
+        cpu.register.set_a_reg_long(7, 0x010003FA);
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("RTE"),
+                String::from("")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00C01248, cpu.register.reg_pc.get_address());
+        assert_eq!(0x01000400, cpu.register.get_ssp_reg());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_supervisor_set());
+    }
 
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn rte_privilege_viloation() {
+        // arrange
+        let code = [0x4e, 0x73].to_vec(); // RTE
+        let mut cpu = crate::instr_test_setup(code, None);
 
-    // #[test]
-    // fn rts_dont_clear_any_sr() {
-    //     // arrange
-    //     let code = [0x4e, 0x75].to_vec(); // RTS
-    //     let mem_range = RamMemory::from_bytes(0x00F80000, [0x00, 0xc0, 0x12, 0x48].to_vec());
-    //     let mut mem_ranges = Vec::new();
-    //     mem_ranges.push(mem_range);
-
-    //     let mut cpu = crate::instr_test_setup(code, Some(mem_ranges));
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(
-    //         STATUS_REGISTER_MASK_CARRY
-    //             | STATUS_REGISTER_MASK_OVERFLOW
-    //             | STATUS_REGISTER_MASK_ZERO
-    //             | STATUS_REGISTER_MASK_NEGATIVE
-    //             | STATUS_REGISTER_MASK_EXTEND,
-    //     );
-    //     cpu.register.set_a_reg_long(7, 0x00F80000);
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("RTS"),
-    //             String::from("")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0xC01248, cpu.register.reg_pc.get_address());
-    //     assert_eq!(0x00F80004, cpu.register.get_a_reg_long(7));
-
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+        cpu.register.reg_sr.set_value(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_EXTEND
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO,
+        );
+        cpu.memory.set_long(0x00000020, 0x11223344);
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("RTE"),
+                String::from("")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_EXTEND
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_SUPERVISOR_STATE,
+            cpu.register.reg_sr.get_value()
+        );
+        assert_eq!(0x11223344, cpu.register.reg_pc.get_address());
+        assert_eq!(0x11223344, cpu.register.reg_pc.get_address_next());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_supervisor_set());
+    }
 }

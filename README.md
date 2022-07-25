@@ -115,7 +115,7 @@ RESET 1 (todo)|X|X|X|X|X|X|||X
 ROL,ROR (todo)|X|X|X|X|X|X|||X
 ROXL,ROXR (todo)|X|X|X|X|X|X|||X
 RTD (todo)|||X|X|X|X|||X
-RTE 1 (todo)|X|X|X|X|X|X|||X
+RTE 1|X|X|X|X|X|X|||X
 RTM (todo)||||X|||||
 RTR (todo)|X|X|X|X|X|X|||X
 RTS|X|X|X|X|X|X|||X
