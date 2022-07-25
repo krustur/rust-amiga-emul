@@ -462,7 +462,6 @@ impl Cpu {
                 String::from("MOVEQ"),
                 0xf100,
                 0x7000,
-                // TODO: match_check
                 crate::cpu::match_check,
                 instruction::moveq::step,
                 instruction::moveq::get_disassembly,
@@ -479,19 +478,9 @@ impl Cpu {
                 String::from("MULU"),
                 0xf1c0,
                 0xc0c0,
-                // TODO: match_check
-                crate::cpu::match_check,
+                instruction::mulu::match_check,
                 instruction::mulu::step,
                 instruction::mulu::get_disassembly,
-            ),
-            Instruction::new(
-                String::from("NOP"),
-                0xffff,
-                0x4e71,
-                // TODO: match_check
-                crate::cpu::match_check,
-                instruction::nop::step,
-                instruction::nop::get_disassembly,
             ),
             Instruction::new(
                 String::from("NEG"),
@@ -502,11 +491,18 @@ impl Cpu {
                 instruction::neg::get_disassembly,
             ),
             Instruction::new(
+                String::from("NOP"),
+                0xffff,
+                0x4e71,
+                crate::cpu::match_check,
+                instruction::nop::step,
+                instruction::nop::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("NOT"),
                 0xff00,
                 0x4600,
-                // TODO: match_check
-                crate::cpu::match_check,
+                instruction::not::match_check,
                 instruction::not::step,
                 instruction::not::get_disassembly,
             ),

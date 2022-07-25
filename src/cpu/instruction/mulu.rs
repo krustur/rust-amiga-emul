@@ -1,4 +1,6 @@
-use super::{GetDisassemblyResult, GetDisassemblyResultError, OperationSize, StepError};
+use super::{
+    GetDisassemblyResult, GetDisassemblyResultError, Instruction, OperationSize, StepError,
+};
 use crate::cpu::Cpu;
 use crate::mem::Mem;
 use crate::register::{ProgramCounter, Register};
@@ -11,6 +13,13 @@ use crate::register::{ProgramCounter, Register};
 
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
+
+pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
+    match crate::cpu::match_check(instruction, instr_word) {
+        true => crate::cpu::match_check_ea_only_data_addressing_modes_pos_0(instr_word),
+        false => false,
+    }
+}
 
 pub fn step<'a>(
     instr_word: u16,

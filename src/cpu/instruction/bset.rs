@@ -7,9 +7,9 @@ use crate::{
     register::{ProgramCounter, Register},
 };
 
-// step: DONE
-// step cc: DONE
-// get_disassembly: DONE
+// step: TODO
+// step cc: TODO
+// get_disassembly: TODO
 
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
