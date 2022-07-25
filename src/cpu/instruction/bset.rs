@@ -7,14 +7,12 @@ use crate::{
     register::{ProgramCounter, Register},
 };
 
-// step: TODO
-// step cc: TODO
-// get_disassembly: TODO
+// step: DONE
+// step cc: DONE
+// get_disassembly: DONE
 
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
-
-// TODO: Tests!
 
 pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
     match crate::cpu::match_check(instruction, instr_word) {
@@ -213,276 +211,282 @@ pub fn get_disassembly_static<'a>(
 #[cfg(test)]
 mod tests {
 
-    // // long (data register direct)
+    // long (data register direct)
 
-    // #[test]
-    // fn bclr_long_bit_number_static_data_register_direct_bit_set() {
-    //     // arrange
-    //     let code = [0x08, 0x81, 0x00, 0x00].to_vec(); // BCLR.L #$00,D1
-    //     let mut cpu = crate::instr_test_setup(code, None);
+    use crate::{
+        cpu::instruction::GetDisassemblyResult,
+        register::{
+            STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE,
+            STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
+        },
+    };
 
-    //     cpu.register.set_d_reg_long(1, 0x00000001);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(
-    //         STATUS_REGISTER_MASK_CARRY
-    //             | STATUS_REGISTER_MASK_EXTEND
-    //             | STATUS_REGISTER_MASK_NEGATIVE
-    //             | STATUS_REGISTER_MASK_OVERFLOW
-    //             | STATUS_REGISTER_MASK_ZERO,
-    //     );
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00004,
-    //             String::from("BCLR.L"),
-    //             String::from("#$00,D1")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x00000000, cpu.register.get_d_reg_long(1));
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn bset_long_bit_number_static_data_register_direct_bit_set() {
+        // arrange
+        let code = [0x08, 0xc1, 0x00, 0x00].to_vec(); // BSET.L #$00,D1
+        let mut cpu = crate::instr_test_setup(code, None);
 
-    // #[test]
-    // fn bclr_long_bit_number_static_data_register_direct_bit_clear() {
-    //     // arrange
-    //     let code = [0x08, 0x82, 0x00, 0x21].to_vec(); // BCLR.L #$21,D2
-    //     let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long(1, 0x00000001);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_EXTEND
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO,
+        );
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00004,
+                String::from("BSET.L"),
+                String::from("#$00,D1")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00000001, cpu.register.get_d_reg_long(1));
+        assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
-    //     cpu.register.set_d_reg_long(2, 0x0000000d);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00004,
-    //             String::from("BCLR.L"),
-    //             String::from("#$21,D2")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x0000000d, cpu.register.get_d_reg_long(2));
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn bset_long_bit_number_static_data_register_direct_bit_clear() {
+        // arrange
+        let code = [0x08, 0xc2, 0x00, 0x21].to_vec(); // BSET.L #$21,D2
+        let mut cpu = crate::instr_test_setup(code, None);
 
-    // #[test]
-    // fn bclr_long_bit_number_dynamic_data_register_direct_bit_set() {
-    //     // arrange
-    //     let code = [0x01, 0x83].to_vec(); // BCLR.L D0,D3
-    //     let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long(2, 0x0000000d);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00004,
+                String::from("BSET.L"),
+                String::from("#$21,D2")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x0000000f, cpu.register.get_d_reg_long(2));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
-    //     cpu.register.set_d_reg_long(0, 0x00000002);
-    //     cpu.register.set_d_reg_long(3, 0x0000fff7);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(
-    //         STATUS_REGISTER_MASK_CARRY
-    //             | STATUS_REGISTER_MASK_EXTEND
-    //             | STATUS_REGISTER_MASK_NEGATIVE
-    //             | STATUS_REGISTER_MASK_OVERFLOW
-    //             | STATUS_REGISTER_MASK_ZERO,
-    //     );
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("BCLR.L"),
-    //             String::from("D0,D3")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x0000fff3, cpu.register.get_d_reg_long(3));
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn bset_long_bit_number_dynamic_data_register_direct_bit_set() {
+        // arrange
+        let code = [0x01, 0xc3].to_vec(); // BSET.L D0,D3
+        let mut cpu = crate::instr_test_setup(code, None);
 
-    // #[test]
-    // fn bclr_long_bit_number_dynamic_data_data_register_direct_bit_clear() {
-    //     // arrange
-    //     let code = [0x0f, 0x86].to_vec(); // BCLR.L D7,D6
-    //     let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long(0, 0x00000002);
+        cpu.register.set_d_reg_long(3, 0x0000fff7);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_EXTEND
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO,
+        );
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("BSET.L"),
+                String::from("D0,D3")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x0000fff7, cpu.register.get_d_reg_long(3));
+        assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
-    //     cpu.register.set_d_reg_long(7, 0x00000003);
-    //     cpu.register.set_d_reg_long(6, 0x0000fff7);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("BCLR.L"),
-    //             String::from("D7,D6")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x0000fff7, cpu.register.get_d_reg_long(6));
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn bset_long_bit_number_dynamic_data_data_register_direct_bit_clear() {
+        // arrange
+        let code = [0x0f, 0xc6].to_vec(); // BSET.L D7,D6
+        let mut cpu = crate::instr_test_setup(code, None);
 
-    // // byte
+        cpu.register.set_d_reg_long(7, 0x00000003);
+        cpu.register.set_d_reg_long(6, 0x0000fff7);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("BSET.L"),
+                String::from("D7,D6")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x0000ffff, cpu.register.get_d_reg_long(6));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
-    // #[test]
-    // fn bclr_byte_bit_number_static_address_register_indirect_bit_set() {
-    //     // arrange
-    //     let code = [0x08, 0x90, 0x00, 0x08, /* DC  */ 0x01].to_vec(); // BCLR.B #$08,(A0)
-    //     let mut cpu = crate::instr_test_setup(code, None);
+    // byte
 
-    //     cpu.register.set_d_reg_long(1, 0x00000001);
-    //     cpu.register.set_a_reg_long(0, 0x00c00004);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(
-    //         STATUS_REGISTER_MASK_CARRY
-    //             | STATUS_REGISTER_MASK_EXTEND
-    //             | STATUS_REGISTER_MASK_NEGATIVE
-    //             | STATUS_REGISTER_MASK_OVERFLOW
-    //             | STATUS_REGISTER_MASK_ZERO,
-    //     );
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00004,
-    //             String::from("BCLR.B"),
-    //             String::from("#$08,(A0)")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x00, cpu.memory.get_byte(0x00c00004));
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn bset_byte_bit_number_static_address_register_indirect_bit_set() {
+        // arrange
+        let code = [0x08, 0xd0, 0x00, 0x08, /* DC  */ 0x01].to_vec(); // BSET.B #$08,(A0)
+        let mut cpu = crate::instr_test_setup(code, None);
 
-    // #[test]
-    // fn bclr_byte_bit_number_static_address_register_indirect_bit_clear() {
-    //     // arrange
-    //     let code = [0x08, 0x90, 0x00, 0x09, /* DC  */ 0x01].to_vec(); // BCLR.B #$09,(A0)
-    //     let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long(0, 0x00c00004);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_EXTEND
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO,
+        );
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00004,
+                String::from("BSET.B"),
+                String::from("#$08,(A0)")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x01, cpu.memory.get_byte(0x00c00004));
+        assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
-    //     cpu.register.set_d_reg_long(2, 0x0000fffd);
-    //     cpu.register.set_a_reg_long(0, 0x00c00004);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00004,
-    //             String::from("BCLR.B"),
-    //             String::from("#$09,(A0)")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x01, cpu.memory.get_byte(0x00c00004));
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn bset_byte_bit_number_static_address_register_indirect_bit_clear() {
+        // arrange
+        let code = [0x08, 0xd0, 0x00, 0x09, /* DC  */ 0x01].to_vec(); // BSET.B #$09,(A0)
+        let mut cpu = crate::instr_test_setup(code, None);
 
-    // #[test]
-    // fn bclr_byte_bit_number_dynamic_address_register_indirect_bit_clear() {
-    //     // arrange
-    //     let code = [0x0b, 0x90, /* DC  */ 0x01].to_vec(); // BCLR.B D5,(A0)
-    //     let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long(0, 0x00c00004);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00004,
+                String::from("BSET.B"),
+                String::from("#$09,(A0)")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x03, cpu.memory.get_byte(0x00c00004));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
-    //     cpu.register.set_d_reg_long(5, 0x00000001);
-    //     cpu.register.set_a_reg_long(0, 0x00c00002);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(
-    //         STATUS_REGISTER_MASK_CARRY
-    //             | STATUS_REGISTER_MASK_EXTEND
-    //             | STATUS_REGISTER_MASK_NEGATIVE
-    //             | STATUS_REGISTER_MASK_OVERFLOW,
-    //     );
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("BCLR.B"),
-    //             String::from("D5,(A0)")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x01, cpu.memory.get_byte(0x00c00002));
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn bset_byte_bit_number_dynamic_address_register_indirect_bit_clear() {
+        // arrange
+        let code = [0x0b, 0xd0, /* DC  */ 0x01].to_vec(); // BSET.B D5,(A0)
+        let mut cpu = crate::instr_test_setup(code, None);
 
-    // #[test]
-    // fn bclr_byte_bit_number_dynamic_address_register_indirect_bit_set() {
-    //     // arrange
-    //     let code = [0x0b, 0x90, /* DC  */ 0x01].to_vec(); // BCLR.B D5,(A0)
-    //     let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long(5, 0x00000001);
+        cpu.register.set_a_reg_long(0, 0x00c00002);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_EXTEND
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_OVERFLOW,
+        );
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("BSET.B"),
+                String::from("D5,(A0)")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x03, cpu.memory.get_byte(0x00c00002));
+        assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
-    //     cpu.register.set_d_reg_long(7, 0x00000000);
-    //     cpu.register.set_a_reg_long(0, 0x00c00002);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("BCLR.B"),
-    //             String::from("D5,(A0)")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x00, cpu.memory.get_byte(0x00c00002));
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn bset_byte_bit_number_dynamic_address_register_indirect_bit_set() {
+        // arrange
+        let code = [0x0b, 0xd0, /* DC  */ 0x01].to_vec(); // BSET.B D5,(A0)
+        let mut cpu = crate::instr_test_setup(code, None);
+
+        cpu.register.set_d_reg_long(7, 0x00000000);
+        cpu.register.set_a_reg_long(0, 0x00c00002);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("BSET.B"),
+                String::from("D5,(A0)")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x01, cpu.memory.get_byte(0x00c00002));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
 }

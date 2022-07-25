@@ -48,7 +48,7 @@ BFTST (todo)||||X|X|X|||
 BGND (todo)|||||||||X
 BKPT (todo)|||X|X|X|X|||X
 BRA|X|X|X|X|X|X|||X
-BSET (todo)|X|X|X|X|X|X|||X
+BSET|X|X|X|X|X|X|||X
 BSR|X|X|X|X|X|X|||X
 BTST|X|X|X|X|X|X|||X
 CALLM (todo)||||X|||||
