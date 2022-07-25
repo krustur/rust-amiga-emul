@@ -1,5 +1,6 @@
 use super::{
-    GetDisassemblyResult, GetDisassemblyResultError, InstructionError, OperationSize, StepError,
+    GetDisassemblyResult, GetDisassemblyResultError, Instruction, InstructionError, OperationSize,
+    StepError,
 };
 use crate::{
     cpu::{Cpu, StatusRegisterResult},
@@ -20,6 +21,27 @@ use std::convert::TryFrom;
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
+pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
+    match crate::cpu::match_check(instruction, instr_word) {
+        true => {
+            let operation_mode = CmpOpMode::from_u16(instr_word);
+            match operation_mode {
+                Some(operation_mode) => match operation_mode {
+                    CmpOpMode::CmpByte | CmpOpMode::CmpWord | CmpOpMode::CmpLong => {
+                        crate::cpu::match_check_ea_all_addressing_modes_pos_0(instr_word)
+                    }
+
+                    CmpOpMode::CmpaWord | CmpOpMode::CmpaLong => {
+                        crate::cpu::match_check_ea_all_addressing_modes_pos_0(instr_word)
+                    }
+                },
+                _ => false,
+            }
+        }
+        false => false,
+    }
+}
+
 enum CmpOpMode {
     CmpByte,
     CmpWord,
@@ -28,18 +50,15 @@ enum CmpOpMode {
     CmpaLong,
 }
 
-impl TryFrom<u16> for CmpOpMode {
-    type Error = InstructionError;
-    fn try_from(value: u16) -> Result<Self, Self::Error> {
-        match value {
-            0b000 => Ok(CmpOpMode::CmpByte),
-            0b001 => Ok(CmpOpMode::CmpWord),
-            0b010 => Ok(CmpOpMode::CmpLong),
-            0b011 => Ok(CmpOpMode::CmpaWord),
-            0b111 => Ok(CmpOpMode::CmpaLong),
-            _ => Err(InstructionError {
-                details: format!("Failed to get CmpOpMode from u16 with value {}", value),
-            }),
+impl CmpOpMode {
+    fn from_u16(value: u16) -> Option<Self> {
+        match (value >> 6) & 0b111 {
+            0b000 => Some(CmpOpMode::CmpByte),
+            0b001 => Some(CmpOpMode::CmpWord),
+            0b010 => Some(CmpOpMode::CmpLong),
+            0b011 => Some(CmpOpMode::CmpaWord),
+            0b111 => Some(CmpOpMode::CmpaLong),
+            _ => None,
         }
     }
 }
@@ -50,7 +69,7 @@ pub fn step<'a>(
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<(), StepError> {
-    let operation_mode = Cpu::extract_op_mode_from_bit_pos_6_new::<CmpOpMode>(instr_word)?;
+    let operation_mode = CmpOpMode::from_u16(instr_word).unwrap();
     let operation_size = match operation_mode {
         CmpOpMode::CmpByte => OperationSize::Byte,
         CmpOpMode::CmpWord => OperationSize::Word,
@@ -128,7 +147,7 @@ pub fn get_disassembly<'a>(
     reg: &Register,
     mem: &Mem,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
-    let operation_mode = Cpu::extract_op_mode_from_bit_pos_6_new::<CmpOpMode>(instr_word)?;
+    let operation_mode = CmpOpMode::from_u16(instr_word).unwrap();
     let (instruction_name, operation_size, register_type) = match operation_mode {
         CmpOpMode::CmpByte => ("CMP", OperationSize::Byte, RegisterType::Data),
         CmpOpMode::CmpWord => ("CMP", OperationSize::Word, RegisterType::Data),

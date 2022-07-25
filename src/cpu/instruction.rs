@@ -591,37 +591,4 @@ impl Instruction {
         };
         instr
     }
-
-    pub fn new_with_exclude(
-        name: String,
-        mask: u16,
-        opcode: u16,
-        ex_mask: u16,
-        ex_code: Vec<u16>,
-        match_check: fn(instruction: &Instruction, instr_word: u16) -> bool,
-        step: fn(
-            instr_word: u16,
-            pc: &mut ProgramCounter,
-            reg: &mut Register,
-            mem: &mut Mem,
-        ) -> Result<(), StepError>,
-        get_disassembly: fn(
-            instr_word: u16,
-            pc: &mut ProgramCounter,
-            reg: &Register,
-            mem: &Mem,
-        ) -> Result<GetDisassemblyResult, GetDisassemblyResultError>,
-    ) -> Instruction {
-        let instr = Instruction {
-            name,
-            mask,
-            opcode,
-            ex_mask,
-            ex_code,
-            match_check,
-            step,
-            get_disassembly,
-        };
-        instr
-    }
 }

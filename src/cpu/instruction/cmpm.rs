@@ -1,5 +1,6 @@
 use super::{
-    GetDisassemblyResult, GetDisassemblyResultError, InstructionError, OperationSize, StepError,
+    GetDisassemblyResult, GetDisassemblyResultError, Instruction, InstructionError, OperationSize,
+    StepError,
 };
 use crate::{
     cpu::{Cpu, StatusRegisterResult},
@@ -19,6 +20,13 @@ use std::convert::TryFrom;
 
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
+
+pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
+    match crate::cpu::match_check(instruction, instr_word) {
+        true => crate::cpu::match_check_size000110_from_bit_pos_6(instr_word),
+        false => false,
+    }
+}
 
 enum CmpOpMode {
     CmpByte,

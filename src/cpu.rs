@@ -326,13 +326,11 @@ impl Cpu {
                 instruction::clr::step,
                 instruction::clr::get_disassembly,
             ),
-            Instruction::new_with_exclude(
+            Instruction::new(
                 String::from("CMPM"),
                 0xf138,
                 0xb108,
-                0x00c0,
-                vec![0x00c0],
-                crate::cpu::match_check,
+                instruction::cmpm::match_check,
                 instruction::cmpm::step,
                 instruction::cmpm::get_disassembly,
             ),
@@ -340,7 +338,8 @@ impl Cpu {
                 String::from("CMP"),
                 0xb000,
                 0xb000,
-                crate::cpu::match_check,
+                // TODO: match_check
+                instruction::cmp::match_check,
                 instruction::cmp::step,
                 instruction::cmp::get_disassembly,
             ),
@@ -348,7 +347,7 @@ impl Cpu {
                 String::from("CMPI"),
                 0xff00,
                 0x0c00,
-                crate::cpu::match_check,
+                instruction::cmpi::match_check,
                 instruction::cmpi::step,
                 instruction::cmpi::get_disassembly,
             ),
@@ -735,20 +734,6 @@ impl Cpu {
             5 => 5,
             6 => 6,
             _ => 7,
-        };
-        op_mode
-    }
-
-    fn extract_op_mode_from_bit_pos_6_new<T>(word: u16) -> Result<T, InstructionError>
-    where
-        T: TryFrom<u16>,
-    {
-        let op_mode = (word >> 6) & 0x0007;
-        let op_mode = match op_mode.try_into() {
-            Ok(a) => Ok(a),
-            Err(e) => Err(InstructionError {
-                details: format!("Failed to extract op_mode from bit pos 6"),
-            }),
         };
         op_mode
     }
