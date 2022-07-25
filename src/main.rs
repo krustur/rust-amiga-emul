@@ -407,10 +407,12 @@ fn main() {
 fn instr_test_setup(code: Vec<u8>, mem_ranges: Option<Vec<RamMemory>>) -> cpu::Cpu {
     let mut mem_ranges_internal: Vec<Box<dyn Memory>> = Vec::new();
     let code = RamMemory::from_bytes(0xC00000, code);
-    let stack = RamMemory::from_range(0x1000000, 0x1000400);
+    let stack = RamMemory::from_range(0x1000000, 0x10003ff);
+    let vectors = RamMemory::from_range(0x0000000, 0x00003ff);
     let cia_memory = CiaMemory::new();
     mem_ranges_internal.push(Box::new(code));
     mem_ranges_internal.push(Box::new(stack));
+    mem_ranges_internal.push(Box::new(vectors));
     mem_ranges_internal.push(Box::new(cia_memory));
     if let Some(mem_ranges) = mem_ranges {
         for mem_range in mem_ranges {

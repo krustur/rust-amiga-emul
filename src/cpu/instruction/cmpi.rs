@@ -343,8 +343,8 @@ mod tests {
     #[test]
     fn cmpi_long_immediate_data_to_absolute_short() {
         // arrange
-        let code = [0x0C, 0xB8, 0x4C, 0x4F, 0x57, 0x4D, 0x00, 0x00].to_vec(); // CMPI.L #$4C4F574D,($0000).W
-        let mem_range = RamMemory::from_bytes(0x00000000, [0x4C, 0x4F, 0x57, 0x4D].to_vec());
+        let code = [0x0C, 0xB8, 0x4C, 0x4F, 0x57, 0x4D, 0x04, 0x00].to_vec(); // CMPI.L #$4C4F574D,($0400).W
+        let mem_range = RamMemory::from_bytes(0x00000400, [0x4C, 0x4F, 0x57, 0x4D].to_vec());
         let mut mem_ranges = Vec::new();
         mem_ranges.push(mem_range);
         let mut cpu = crate::instr_test_setup(code, Some(mem_ranges));
@@ -359,14 +359,14 @@ mod tests {
                 0xC00000,
                 0xC00008,
                 String::from("CMPI.L"),
-                String::from("#$4C4F574D,($0000).W")
+                String::from("#$4C4F574D,($0400).W")
             ),
             debug_result
         );
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x4C4F574D, cpu.memory.get_long(0x0000));
+        assert_eq!(0x4C4F574D, cpu.memory.get_long(0x00000400));
         assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set(), "carry");
         assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set(), "overflow");
         assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set(), "zero");

@@ -1804,6 +1804,10 @@ impl Cpu {
                     self.exception(&mut pc, 4);
                     self.register.reg_pc = pc.get_step_next_pc();
                 }
+                StepError::PriviliegeViolation => {
+                    self.exception(&mut pc, 8);
+                    self.register.reg_pc = pc.get_step_next_pc();
+                }
                 _ => {
                     println!("Runtime error occured when running instruction.");
                     println!(

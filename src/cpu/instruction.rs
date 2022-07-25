@@ -64,6 +64,9 @@ pub enum StepError {
     AddressError,
     IllegalInstruction,
     IntegerDivideByZero,
+    CHK_CHK2_Instruction,
+    FRAPcc_TRAPcc_TRAPV_Instruction,
+    PriviliegeViolation,
     // InstructionError isn't an actual hardware error. This error
     // is probably the result of an unimplemented instruction or an
     // instruction that is incorrectly implemented. And if not, this
@@ -80,6 +83,11 @@ impl Display for StepError {
             StepError::AddressError => write!(f, "AddressError"),
             StepError::IllegalInstruction => write!(f, "IllegalInstruction"),
             StepError::IntegerDivideByZero => write!(f, "IntegerDivideByZero"),
+            StepError::CHK_CHK2_Instruction => write!(f, "CHK_CHK2_Instruction"),
+            StepError::FRAPcc_TRAPcc_TRAPV_Instruction => {
+                write!(f, "FRAPcc_TRAPcc_TRAPV_Instruction")
+            }
+            StepError::PriviliegeViolation => write!(f, "PriviliegeViolation"),
             StepError::InstructionError { details } => write!(f, "InstructionError: {}", details),
         }
     }

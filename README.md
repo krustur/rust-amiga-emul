@@ -32,7 +32,7 @@ ADDX|X|X|X|X|X|X|||X
 AND|X|X|X|X|X|X|||X
 ANDI|X|X|X|X|X|X|||X
 ANDI to CCR (todo)|X|X|X|X|X|X|||X
-ANDI to SR 1 (todo)|X|X|X|X|X|X|||X
+ANDI to SR 1|X|X|X|X|X|X|||X
 ASL,ASR (todo)|X|X|X|X|X|X|||X
 Bcc|X|X|X|X|X|X|||X
 BCHG (todo)|X|X|X|X|X|X|||X
