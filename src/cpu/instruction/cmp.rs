@@ -1,6 +1,5 @@
 use super::{
-    GetDisassemblyResult, GetDisassemblyResultError, Instruction, InstructionError, OperationSize,
-    StepError,
+    GetDisassemblyResult, GetDisassemblyResultError, Instruction, OperationSize, StepError,
 };
 use crate::{
     cpu::{Cpu, StatusRegisterResult},
@@ -10,7 +9,6 @@ use crate::{
         STATUS_REGISTER_MASK_NEGATIVE, STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
     },
 };
-use std::convert::TryFrom;
 
 // Instruction State
 // =================

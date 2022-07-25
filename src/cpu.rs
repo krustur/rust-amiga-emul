@@ -2,7 +2,7 @@ use crate::register::*;
 use crate::{cpu::instruction::*, mem::Mem};
 use byteorder::{BigEndian, ReadBytesExt};
 use core::panic;
-use std::convert::{TryFrom, TryInto};
+use std::convert::TryInto;
 
 use self::ea::EffectiveAddressDebug;
 
