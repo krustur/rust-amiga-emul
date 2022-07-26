@@ -1500,6 +1500,120 @@ impl Cpu {
         }
     }
 
+    pub fn neg_byte(dest: u8) -> ResultWithStatusRegister<u8> {
+        let dest_signed = Cpu::get_signed_byte_from_byte(dest);
+
+        let (result, _) = u8::overflowing_sub(0, dest);
+        let (result_signed, overflow) = i8::overflowing_sub(0, dest_signed);
+
+        let mut status_register = 0x0000;
+        // match carry {
+        //     true => status_register |= STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND,
+        //     false => (),
+        // }
+        match overflow {
+            true => status_register |= STATUS_REGISTER_MASK_OVERFLOW,
+            false => (),
+        }
+        match result_signed {
+            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            i8::MIN..=-1 => {
+                status_register |= STATUS_REGISTER_MASK_NEGATIVE
+                    | STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_EXTEND
+            }
+            _ => status_register |= STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND,
+        }
+
+        ResultWithStatusRegister {
+            result,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_EXTEND
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
+        }
+    }
+
+    pub fn neg_word(dest: u16) -> ResultWithStatusRegister<u16> {
+        let dest_signed = Cpu::get_signed_word_from_word(dest);
+
+        let (result, _) = u16::overflowing_sub(0, dest);
+        let (result_signed, overflow) = i16::overflowing_sub(0, dest_signed);
+
+        let mut status_register = 0x0000;
+        // match carry {
+        //     true => status_register |= STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND,
+        //     false => (),
+        // }
+        match overflow {
+            true => status_register |= STATUS_REGISTER_MASK_OVERFLOW,
+            false => (),
+        }
+        match result_signed {
+            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            i16::MIN..=-1 => {
+                status_register |= STATUS_REGISTER_MASK_NEGATIVE
+                    | STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_EXTEND
+            }
+            _ => status_register |= STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND,
+        }
+
+        ResultWithStatusRegister {
+            result,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_EXTEND
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
+        }
+    }
+
+    pub fn neg_long(dest: u32) -> ResultWithStatusRegister<u32> {
+        let dest_signed = Cpu::get_signed_long_from_long(dest);
+
+        let (result, _) = u32::overflowing_sub(0, dest);
+        let (result_signed, overflow) = i32::overflowing_sub(0, dest_signed);
+
+        let mut status_register = 0x0000;
+        // match carry {
+        //     true => status_register |= STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND,
+        //     false => (),
+        // }
+        match overflow {
+            true => status_register |= STATUS_REGISTER_MASK_OVERFLOW,
+            false => (),
+        }
+        match result_signed {
+            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            i32::MIN..=-1 => {
+                status_register |= STATUS_REGISTER_MASK_NEGATIVE
+                    | STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_EXTEND
+            }
+            _ => status_register |= STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_EXTEND,
+        }
+
+        ResultWithStatusRegister {
+            result,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_EXTEND
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
+        }
+    }
+
     pub fn not_byte(dest: u8) -> ResultWithStatusRegister<u8> {
         let result = !dest;
 
