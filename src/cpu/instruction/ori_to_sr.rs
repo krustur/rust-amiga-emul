@@ -21,15 +21,20 @@ pub fn step<'a>(
     reg: &mut Register,
     mem: &mut Mem,
 ) -> Result<(), StepError> {
-    let immediate_data = pc.fetch_next_word(mem);
+    match reg.reg_sr.is_sr_supervisor_set() {
+        true => {
+            let immediate_data = pc.fetch_next_word(mem);
 
-    let dest = reg.reg_sr.get_value();
+            let dest = reg.reg_sr.get_value();
 
-    let result = Cpu::or_words(immediate_data, dest);
+            let result = Cpu::or_words(immediate_data, dest);
 
-    reg.reg_sr.set_value(result.result);
+            reg.reg_sr.set_value(result.result);
 
-    Ok(())
+            Ok(())
+        }
+        false => Err(StepError::PriviliegeViolation),
+    }
 }
 
 pub fn get_disassembly<'a>(
