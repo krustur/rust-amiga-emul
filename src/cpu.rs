@@ -1878,12 +1878,12 @@ impl Cpu {
     pub fn exception(&mut self, pc: &mut ProgramCounter, vector: u32) {
         println!("Exception occured!");
         println!("vector: {} [${:02X}]", vector, vector);
+        let sr_to_push = self.register.reg_sr.get_value();
         self.register.reg_sr.set_supervisor();
         // TODO: T bit clear
         // TODO: Do we push PC or PC+2?
         self.register.stack_push_pc(&mut self.memory);
-        self.register
-            .stack_push_word(&mut self.memory, self.register.reg_sr.get_value());
+        self.register.stack_push_word(&mut self.memory, sr_to_push);
 
         let vector_offset = (vector) * 4;
         println!("vector_offset: ${:08X}", vector_offset);
@@ -1900,42 +1900,47 @@ impl Cpu {
             .instructions
             .iter()
             .position(|x| (x.match_check)(x, instr_word));
-        let instruction = match instruction_pos {
-            None => panic!(
-                "{:#010X} Unidentified instruction {:#06X}",
-                pc.get_address(),
-                instr_word
-            ),
-            Some(instruction_pos) => &self.instructions[instruction_pos],
+        match instruction_pos {
+            None => {
+                panic!(
+                    "{:#010X} Unidentified instruction {:#06X}",
+                    pc.get_address(),
+                    instr_word
+                );
+                // self.exception(&mut pc, 4);
+                // self.register.reg_pc = pc.get_step_next_pc();
+            }
+            Some(instruction_pos) => {
+                let instruction = &self.instructions[instruction_pos];
+                let step_result =
+                    (instruction.step)(instr_word, &mut pc, &mut self.register, &mut self.memory);
+                match step_result {
+                    Ok(step_result) => self.register.reg_pc = pc.get_step_next_pc(),
+                    Err(step_error) => match step_error {
+                        StepError::IllegalInstruction => {
+                            self.exception(&mut pc, 4);
+                            self.register.reg_pc = pc.get_step_next_pc();
+                        }
+                        StepError::PriviliegeViolation => {
+                            self.exception(&mut pc, 8);
+                            self.register.reg_pc = pc.get_step_next_pc();
+                        }
+                        _ => {
+                            println!("Runtime error occured when running instruction.");
+                            println!(
+                                " Instruction word: ${:04X} ({}) at address ${:08X}",
+                                instr_word,
+                                instruction.name,
+                                pc.get_address()
+                            );
+                            println!(" Error: {}", step_error);
+                            self.register.print_registers();
+                            panic!();
+                        }
+                    },
+                }
+            }
         };
-
-        let step_result =
-            (instruction.step)(instr_word, &mut pc, &mut self.register, &mut self.memory);
-        match step_result {
-            Ok(step_result) => self.register.reg_pc = pc.get_step_next_pc(),
-            Err(step_error) => match step_error {
-                StepError::IllegalInstruction => {
-                    self.exception(&mut pc, 4);
-                    self.register.reg_pc = pc.get_step_next_pc();
-                }
-                StepError::PriviliegeViolation => {
-                    self.exception(&mut pc, 8);
-                    self.register.reg_pc = pc.get_step_next_pc();
-                }
-                _ => {
-                    println!("Runtime error occured when running instruction.");
-                    println!(
-                        " Instruction word: ${:04X} ({}) at address ${:08X}",
-                        instr_word,
-                        instruction.name,
-                        pc.get_address()
-                    );
-                    println!(" Error: {}", step_error);
-                    self.register.print_registers();
-                    panic!();
-                }
-            },
-        }
     }
 
     pub fn get_next_disassembly(self: &mut Cpu) -> GetDisassemblyResult {
