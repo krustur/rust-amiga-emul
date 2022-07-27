@@ -98,7 +98,7 @@ MOVES 1 (todo)|||X|X|X|X|||X
 MULS (todo)|X|X|X|X|X|X|||X
 MULU|X|X|X|X|X|X|||X
 NBCD (todo)|X|X|X|X|X|X|||X
-NEG (todo)|X|X|X|X|X|X|||X
+NEG|X|X|X|X|X|X|||X
 NEGX (todo)|X|X|X|X|X|X|||X
 NOP|X|X|X|X|X|X|||X
 NOT|X|X|X|X|X|X|||X
