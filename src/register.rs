@@ -494,18 +494,34 @@ impl Register {
     }
 
     pub fn get_ssp_reg(&self) -> u32 {
+        // println!(
+        //     "get_ssp_reg: [SSP_Access] [Read ____]  ${:08X}",
+        //     self.reg_ssp
+        // );
         self.reg_ssp
     }
 
     pub fn set_ssp_reg(&mut self, value: u32) {
+        // println!(
+        //     "set_ssp_reg: [SSP_Access] [Write ____] ${:08X} [from: ${:08X}]",
+        //     value, self.reg_ssp
+        // );
         self.reg_ssp = value;
     }
 
     pub fn get_usp_reg(&self) -> u32 {
+        // println!(
+        //     "get_usp_reg: [USP_Access] [Write ____] ${:08X}",
+        //     self.reg_usp
+        // );
         self.reg_usp
     }
 
     pub fn set_usp_reg(&mut self, value: u32) {
+        // println!(
+        //     "set_usp_reg: [USP_Access] [Write ____] ${:08X} [from: ${:08X}]",
+        //     value, self.reg_usp
+        // );
         self.reg_usp = value;
     }
 
@@ -513,11 +529,21 @@ impl Register {
         let pc = self.reg_pc.address;
         match self.reg_sr.is_sr_supervisor_set() {
             true => {
-                self.reg_ssp = self.reg_ssp.wrapping_sub(4);
+                let new_ssp = self.reg_ssp.wrapping_sub(4);
+                // println!(
+                //     "stack_push_pc: [SSP_Access] [Write Long] Value: ${:08X} SSP: ${:08X} [from: ${:08X}]",
+                //     pc, new_ssp, self.reg_ssp
+                // );
+                self.reg_ssp = new_ssp;
                 mem.set_long(self.reg_ssp, pc);
             }
             false => {
-                self.reg_usp = self.reg_usp.wrapping_sub(4);
+                let new_usp = self.reg_usp.wrapping_sub(4);
+                // println!(
+                //     "stack_push_pc: [USP_Access] [Write Long] Value: ${:08X} USP: ${:08X} [from: ${:08X}]",
+                //     pc, new_usp, self.reg_usp
+                // );
+                self.reg_usp = new_usp;
                 mem.set_long(self.reg_usp, pc);
             }
         }
@@ -527,12 +553,22 @@ impl Register {
         let pc_address = match self.reg_sr.is_sr_supervisor_set() {
             true => {
                 let pc_address = mem.get_long(self.reg_ssp);
-                self.reg_ssp = self.reg_ssp.wrapping_add(4);
+                let new_ssp = self.reg_ssp.wrapping_add(4);
+                // println!(
+                //     "stack_pop_pc: [SSP_Access] [Read Long]  Value: ${:08X} SSP: ${:08X} [from: ${:08X}]",
+                //     pc_address, new_ssp, self.reg_ssp
+                // );
+                self.reg_ssp = new_ssp;
                 pc_address
             }
             false => {
                 let pc_address = mem.get_long(self.reg_usp);
-                self.reg_usp = self.reg_usp.wrapping_add(4);
+                let new_usp = self.reg_usp.wrapping_add(4);
+                // println!(
+                //     "stack_pop_pc: [USP_Access] [Read Long]  Value: ${:08X} USP: ${:08X} [from: ${:08X}]",
+                //     pc_address, new_usp, self.reg_usp
+                // );
+                self.reg_usp = new_usp;
                 pc_address
             }
         };
@@ -542,11 +578,21 @@ impl Register {
     pub fn stack_push_word(&mut self, mem: &mut Mem, value: u16) {
         match self.reg_sr.is_sr_supervisor_set() {
             true => {
-                self.reg_ssp = self.reg_ssp.wrapping_sub(2);
+                let new_ssp = self.reg_ssp.wrapping_sub(2);
+                // println!(
+                //     "stack_push_word: [SSP_Access] [Write Word] Value: ${:08X} SSP: ${:08X} [from: ${:08X}]",
+                //     value, new_ssp, self.reg_ssp
+                // );
+                self.reg_ssp = new_ssp;
                 mem.set_word(self.reg_ssp, value);
             }
             false => {
-                self.reg_usp = self.reg_usp.wrapping_sub(2);
+                let new_usp = self.reg_usp.wrapping_sub(2);
+                // println!(
+                //     "stack_push_word: [USP_Access] [Write Word] Value: ${:08X} USP: ${:08X} [from: ${:08X}]",
+                //     value, new_usp, self.reg_usp
+                // );
+                self.reg_usp = new_usp;
                 mem.set_word(self.reg_usp, value);
             }
         }
@@ -556,12 +602,22 @@ impl Register {
         match self.reg_sr.is_sr_supervisor_set() {
             true => {
                 let result = mem.get_word(self.reg_ssp);
-                self.reg_ssp = self.reg_ssp.wrapping_add(2);
+                let new_ssp = self.reg_ssp.wrapping_add(2);
+                // println!(
+                //     "stack_pop_word: [SSP_Access] [Read Word]  Value: ${:08X} SSP: ${:08X} [from: ${:08X}]",
+                //     result, new_ssp, self.reg_ssp
+                // );
+                self.reg_ssp = new_ssp;
                 result
             }
             false => {
                 let result = mem.get_word(self.reg_usp);
-                self.reg_usp = self.reg_usp.wrapping_add(2);
+                let new_usp = self.reg_usp.wrapping_add(2);
+                // println!(
+                //     "stack_pop_word: [USP_Access] [Read Word]  Value: ${:08X} USP: ${:08X} [from: ${:08X}]",
+                //     result, new_usp, self.reg_usp
+                // );
+                self.reg_usp = new_usp;
                 result
             }
         }
@@ -570,11 +626,21 @@ impl Register {
     pub fn stack_push_long(&mut self, mem: &mut Mem, value: u32) {
         match self.reg_sr.is_sr_supervisor_set() {
             true => {
-                self.reg_ssp = self.reg_ssp.wrapping_sub(4);
+                let new_ssp = self.reg_ssp.wrapping_sub(4);
+                // println!(
+                //     "stack_push_long: [SSP_Access] [Write Long] Value: ${:08X} SSP: ${:08X} [from: ${:08X}]",
+                //     value, new_ssp, self.reg_ssp
+                // );
+                self.reg_ssp = new_ssp;
                 mem.set_long(self.reg_ssp, value);
             }
             false => {
-                self.reg_usp = self.reg_usp.wrapping_sub(4);
+                let new_usp = self.reg_usp.wrapping_sub(4);
+                // println!(
+                //     "stack_push_long: [USP_Access] [Write Long] Value: ${:08X} USP: ${:08X} [from: ${:08X}]",
+                //     value, new_usp, self.reg_usp
+                // );
+                self.reg_usp = new_usp;
                 mem.set_long(self.reg_usp, value);
             }
         }
@@ -584,12 +650,22 @@ impl Register {
         match self.reg_sr.is_sr_supervisor_set() {
             true => {
                 let result = mem.get_long(self.reg_ssp);
-                self.reg_ssp = self.reg_ssp.wrapping_add(4);
+                let new_ssp = self.reg_ssp.wrapping_add(4);
+                // println!(
+                //     "stack_pop_long: [SSP_Access] [Read Long]  Value: ${:08X} SSP: ${:08X} [from: ${:08X}]",
+                //     result, new_ssp, self.reg_ssp
+                // );
+                self.reg_ssp = new_ssp;
                 result
             }
             false => {
                 let result = mem.get_long(self.reg_usp);
-                self.reg_usp = self.reg_usp.wrapping_add(4);
+                let new_usp = self.reg_usp.wrapping_add(4);
+                // println!(
+                //     "stack_pop_long: [USP_Access] [Read Long]  Value: ${:08X} USP: ${:08X} [from: ${:08X}]",
+                //     result, new_usp, self.reg_usp
+                // );
+                self.reg_usp = new_usp;
                 result
             }
         }
