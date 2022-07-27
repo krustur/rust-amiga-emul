@@ -2,6 +2,7 @@ use super::memory::{Memory, SetMemoryResult};
 use std::{any::Any, fmt};
 
 pub struct CustomMemory {
+    pub intena: u16,
     pub color_rgb4: [u16; 32],
 }
 
@@ -43,19 +44,87 @@ impl Memory for CustomMemory {
     }
 
     fn get_word(self: &CustomMemory, address: u32) -> u16 {
-        panic!("custom memory get_word: ${:06X}", address);
+        match address {
+            // 0xDFF002 => {
+            //     // DMACONR
+            // }
+            0xDFF01C => {
+                self.read_intena_bits()
+                // INTENAR
+            }
+            // 0xDFF01E => {
+            //     // INTREQR
+            // }
+            0xDFF096 => {
+                // DMACON
+                0x0000
+            }
+            0xDFF09A => {
+                // INTENA
+                0x0000
+            }
+            0xDFF09C => {
+                // INTREQ
+                0x0000
+            }
+            // 0xDFF100 => {
+            //     // BPLCON0
+            // }
+            // 0xDFF180..=0xDFF1Be => {
+            //     // COLORxx
+            //     let color_index = (address as usize - 0xDFF180) / 2;
+            //     self.set_color_rgb4(color_index, value);
+            // }
+            _ => {
+                println!(
+                    "   -CUSTOM: TODO: get_word() for CUSTOM memory ${:06X}",
+                    address
+                );
+                0x0000
+            }
+        }
     }
 
     fn set_word(self: &mut CustomMemory, address: u32, value: u16) {
         match address {
+            // 0xDFF002 => {
+            //     // DMACONR
+            // }
+            0xDFF01C => {
+                // INTENAR
+            }
+            // 0xDFF01E => {
+            //     // INTREQR
+            // }
+            // 0xDFF096 => {
+            //     // DMACON
+            // }
+            0xDFF09A => {
+                // INTENA
+                match value & 0x8000 {
+                    0x8000 => {
+                        self.set_intena_bits(value & 0x7fff);
+                    }
+                    _ => {
+                        self.clear_intena_bits(value & 0x7fff);
+                    }
+                }
+            }
+            0xDFF09C => {
+                // INTREQ
+            }
+            // 0xDFF100 => {
+            //     // BPLCON0
+            // }
             0xDFF180..=0xDFF1Be => {
+                // COLORxx
                 let color_index = (address as usize - 0xDFF180) / 2;
                 self.set_color_rgb4(color_index, value);
             }
             _ => {
                 println!(
-                    "   -CUSTOM: TODO: set_word() for CUSTOM memory ${:06X} to {}",
-                    address, value
+                    "   -CUSTOM: TODO: set_word() for CUSTOM memory ${:06X} to ${:04X} [%{:016b}]",
+                    address, value, value
                 );
             }
         }
@@ -73,6 +142,7 @@ impl Memory for CustomMemory {
 impl CustomMemory {
     pub fn new() -> CustomMemory {
         CustomMemory {
+            intena: 0x0000,
             color_rgb4: [0x0000; 32],
         }
     }
@@ -100,9 +170,35 @@ impl CustomMemory {
         // let r = 0xff;
         // let b = 0xff;
         println!(
-            "   -CUSTOM: Changing color_rgb4 for {} to {:04X} [\x1b[38;2;{};{};{}m\u{25A0}\u{25A0}\u{25A0}\u{25A0}\u{25A0}\u{25A0}\x1b[0m]",
+            "   -CUSTOM: Changing COLOR{:02} rgb4  to {:04X} [\x1b[38;2;{};{};{}m\u{25A0}\u{25A0}\u{25A0}\u{25A0}\u{25A0}\u{25A0}\x1b[0m]",
             color_index, color_rgb4, r, g, b,
         );
         self.color_rgb4[color_index] = color_rgb4;
+    }
+
+    pub fn set_intena_bits(&mut self, bits: u16) {
+        let bits = bits & 0x7fff;
+        let new_intena = self.intena | bits;
+        println!(
+            "   -CUSTOM: Changing INTENA to ${:04X}. [from: ${:04X}, bits set was ${:04X}",
+            new_intena, self.intena, bits
+        );
+        self.intena = new_intena;
+    }
+
+    pub fn clear_intena_bits(&mut self, bits: u16) {
+        let bits = bits & 0x7fff;
+        let new_intena = self.intena & !bits;
+        println!(
+            "   -CUSTOM: Changing INTENA to ${:04X}. [from: ${:04X}, bits set was ${:04X}",
+            new_intena, self.intena, bits
+        );
+        self.intena = new_intena;
+    }
+
+    pub fn read_intena_bits(&self) -> u16 {
+        let result = self.intena & 0x7fff;
+        println!("   -CUSTOM: Reading INTENAR, returns ${:04X}", result);
+        result
     }
 }
