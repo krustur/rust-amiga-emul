@@ -77,6 +77,8 @@ fn main() {
     //     cpu.print_disassembly(&disassembly_result);
     // }
 
+    // NTSC has 262/263 scan lines
+    // PAL has 312/313 scan lines
     loop {
         // cpu.print_registers();
         let pc_address = cpu.register.reg_pc.get_address();
@@ -152,6 +154,10 @@ fn main() {
             0x00F80F3A => Some(String::from("RomTag Match found? Check if actually RomTag ..")),
             0x00F80F42 => Some(String::from("Yes, was a RomTag!")),
 
+            0x00F80346 => Some(String::from("Check for expansion RAM in 00C00000 => 00DA0000")),
+            0x00F803BA => Some(String::from("RAM expansion check! Will mess with INTENA and UNMAPPED memory if no RAM expansion exists")),
+            0x00F80458 => Some(String::from("A4=0, no RAM expansion found!")),
+
             // ExecLibrary
             0x00F82D2C => Some(String::from("ExecLibrary.XXXXXXXXXXXXXXXXXXXXX -6  ")),
             0x00F82D34 => Some(String::from("ExecLibrary.XXXXXXXXXXXXXXXXXXXXX -12 ")),
@@ -161,7 +167,7 @@ fn main() {
             0x00F80C46 => Some(String::from("ExecLibrary.Supervisor -30 http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_2._guide/node0386.html")),
             // special patchable hooks to internal exec activity
             0x00F81456 => Some(String::from("ExecLibrary.XXXXXXXXXXXXXXXXXXXXX -36 ")),
-            0x00F81478 => Some(String::from("ExecLibrary.XXXXXXXXXXXXXXXXXXXXX -42 ")),
+            0x00F81478 => Some(String::from("ExecLibrary._Internal_Scheduling??? -42 ")),
             0x00F829EE => Some(String::from("ExecLibrary.XXXXXXXXXXXXXXXXXXXXX -48 ")),
             0x00F814D2 => Some(String::from("ExecLibrary.XXXXXXXXXXXXXXXXXXXXX -54 ")),
             0x00F81520 => Some(String::from("ExecLibrary.XXXXXXXXXXXXXXXXXXXXX -60 ")),
@@ -189,7 +195,7 @@ fn main() {
             0x00F817D8 => Some(String::from("ExecLibrary.RemIntServer -174")),
             0x00F818AA => Some(String::from("ExecLibrary.Cause -180")),
             // memory allocation
-            0x00F81E5A => Some(String::from("ExecLibrary.Allocate -186 http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_3._guide/node01E5.html")),
+            0x00F81E5A => Some(String::from("ExecLibrary.Allocate -186 memoryBlock D0=Allocate(memHeader A0, byteSize D0) http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_3._guide/node01E5.html")),
             0x00F81D74 => Some(String::from("ExecLibrary.Deallocate -192")),
             0x00F81F5C => Some(String::from("ExecLibrary.AllocMem -198 http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_2._guide/node0332.html")),
             0x00F8202C => Some(String::from("ExecLibrary.AllocAbs -204 http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_3._guide/node01E4.html")),
@@ -406,9 +412,9 @@ fn main() {
 
 fn instr_test_setup(code: Vec<u8>, mem_ranges: Option<Vec<RamMemory>>) -> cpu::Cpu {
     let mut mem_ranges_internal: Vec<Box<dyn Memory>> = Vec::new();
-    let code = RamMemory::from_bytes(0xC00000, code);
-    let stack = RamMemory::from_range(0x1000000, 0x10003ff);
-    let vectors = RamMemory::from_range(0x0000000, 0x00003ff);
+    let code = RamMemory::from_bytes(0x00C00000, code);
+    let stack = RamMemory::from_range(0x01000000, 0x010003ff);
+    let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem_ranges_internal.push(Box::new(code));
     mem_ranges_internal.push(Box::new(stack));
@@ -423,6 +429,6 @@ fn instr_test_setup(code: Vec<u8>, mem_ranges: Option<Vec<RamMemory>>) -> cpu::C
     let mem = mem::Mem::new(mem_ranges_internal, overlay_hack);
     let mut cpu = cpu::Cpu::new(mem);
     cpu.register.reg_pc = ProgramCounter::from_address(0xC00000);
-    cpu.register.set_ssp_reg(0x1000400);
+    cpu.register.set_ssp_reg(0x01000400);
     cpu
 }
