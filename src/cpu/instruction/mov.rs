@@ -452,7 +452,7 @@ mod tests {
         mem_ranges.push(mem_range);
         let mut cpu = crate::instr_test_setup(code, Some(mem_ranges));
         cpu.register.set_d_reg_long(7, 0xffffff00);
-        cpu.register.set_a_reg_long(6, 0xffff9001 - 0x7c + 0x100);
+        cpu.register.set_a_reg_long(6, 0xffff9085);
         cpu.register
             .reg_sr
             .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_CARRY | STATUS_REGISTER_MASK_OVERFLOW);

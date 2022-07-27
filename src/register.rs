@@ -236,7 +236,14 @@ impl ProgramCounter {
             }
             0b110 => {
                 let extension_word = self.fetch_next_word(mem);
-                let displacement = Cpu::get_byte_from_word(extension_word);
+                let extension_word_format = match extension_word & 0x0100 {
+                    0x0100 => 'F', // full
+                    _ => 'B',      // brief
+                };
+                if extension_word_format == 'F' {
+                    todo!("Full extension word format not implemented")
+                }
+
                 let register = Cpu::extract_register_index_from_bit_pos(extension_word, 12)?;
                 let (register_value, register_type) = match extension_word & 0x8000 {
                     0x8000 => (reg.get_a_reg_long(register), RegisterType::Address),
@@ -250,24 +257,20 @@ impl ProgramCounter {
                     ),
                 };
                 let scale_factor = Cpu::extract_scale_factor_from_bit_pos(extension_word, 9);
-                let extension_word_format = match extension_word & 0x0100 {
-                    0x0100 => 'F', // full
-                    _ => 'B',      // brief
-                };
-                if extension_word_format == 'F' {
-                    todo!("Full extension word format not implemented")
-                }
+
                 let register_value = match scale_factor {
                     ScaleFactor::One => register_value,
-                    ScaleFactor::Two => register_value << 1,
-                    ScaleFactor::Four => register_value << 2,
-                    ScaleFactor::Eight => register_value << 3,
+                    ScaleFactor::Two => register_value * 2,
+                    ScaleFactor::Four => register_value * 4,
+                    ScaleFactor::Eight => register_value * 8,
                 };
 
+                let displacement = Cpu::get_byte_from_word(extension_word);
                 let displacement_long = Cpu::sign_extend_byte(displacement);
-                let (ea_address, _) = reg
-                    .get_a_reg_long(ea_register)
-                    .overflowing_add(displacement_long);
+
+                let areg_address = reg.get_a_reg_long(ea_register);
+
+                let (ea_address, _) = areg_address.overflowing_add(displacement_long);
                 let (ea_address, _) = ea_address.overflowing_add(register_value);
 
                 EffectiveAddressingMode::ARegIndirectWithIndexOrMemoryIndirect {
@@ -294,26 +297,7 @@ impl ProgramCounter {
                     }
                 }
                 0b011 => {
-                    // panic!();
                     let extension_word = self.fetch_next_word(mem);
-                    let register = Cpu::extract_register_index_from_bit_pos(extension_word, 12)?;
-                    // BUG: Compare this with ARegIndirectWithIndexOrMemoryIndirect above. Is it really correct to use index_size_bytes below?
-                    //      Scale factor is never use! Probably green cause we test with *4 and .L that have a matching size
-                    let (index_size, index_size_bytes) = match extension_word & 0x0800 {
-                        0x0800 => (OperationSize::Long, 4),
-                        _ => (OperationSize::Word, 2),
-                    };
-                    let scale_factor = Cpu::extract_scale_factor_from_bit_pos(extension_word, 9);
-                    let (register_type, register_displacement) = match extension_word & 0x8000 {
-                        0x8000 => (
-                            RegisterType::Address,
-                            reg.get_a_reg_long(register) * index_size_bytes,
-                        ),
-                        _ => (
-                            RegisterType::Data,
-                            reg.get_d_reg_long(register) * index_size_bytes,
-                        ),
-                    };
                     let extension_word_format = match extension_word & 0x0100 {
                         0x0100 => 'F', // full
                         _ => 'B',      // brief
@@ -321,13 +305,35 @@ impl ProgramCounter {
                     if extension_word_format == 'F' {
                         todo!("Full extension word format not implemented")
                     }
+
+                    let register = Cpu::extract_register_index_from_bit_pos(extension_word, 12)?;
+                    let (register_value, register_type) = match extension_word & 0x8000 {
+                        0x8000 => (reg.get_a_reg_long(register), RegisterType::Address),
+                        _ => (reg.get_d_reg_long(register), RegisterType::Data),
+                    };
+                    let (register_value, index_size) = match extension_word & 0x0800 {
+                        0x0800 => (register_value, OperationSize::Long),
+                        _ => (
+                            Cpu::sign_extend_word(Cpu::get_word_from_long(register_value)),
+                            OperationSize::Word,
+                        ),
+                    };
+                    let scale_factor = Cpu::extract_scale_factor_from_bit_pos(extension_word, 9);
+
+                    let register_value = match scale_factor {
+                        ScaleFactor::One => register_value,
+                        ScaleFactor::Two => register_value * 2,
+                        ScaleFactor::Four => register_value * 4,
+                        ScaleFactor::Eight => register_value * 8,
+                    };
+
                     let displacement = Cpu::get_byte_from_word(extension_word);
-                    let address = Cpu::get_address_with_byte_displacement_sign_extended(
-                        reg.reg_pc.get_address() + 2,
-                        displacement,
-                    );
-                    let ea_address =
-                        Cpu::get_address_with_long_displacement(address, register_displacement);
+                    let displacement_long = Cpu::sign_extend_byte(displacement);
+
+                    let (pc_address, _) = reg.reg_pc.get_address().overflowing_add(2);
+
+                    let (ea_address, _) = pc_address.overflowing_add(displacement_long);
+                    let (ea_address, _) = ea_address.overflowing_add(register_value);
 
                     EffectiveAddressingMode::PcIndirectWithIndexOrPcMemoryIndirect {
                         ea_register,
