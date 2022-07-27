@@ -21,8 +21,6 @@ const LONG_WITH_DN_AS_DEST: usize = 0b010;
 const BYTE_WITH_EA_AS_DEST: usize = 0b100;
 const WORD_WITH_EA_AS_DEST: usize = 0b101;
 const LONG_WITH_EA_AS_DEST: usize = 0b110;
-const WORD_WITH_AN_AS_DEST: usize = 0b011;
-const LONG_WITH_AN_AS_DEST: usize = 0b111;
 
 pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
     match crate::cpu::match_check(instruction, instr_word) {
@@ -137,8 +135,6 @@ pub fn get_disassembly<'a>(
         BYTE_WITH_EA_AS_DEST => OperationSize::Byte,
         WORD_WITH_EA_AS_DEST => OperationSize::Word,
         LONG_WITH_EA_AS_DEST => OperationSize::Long,
-        WORD_WITH_AN_AS_DEST => OperationSize::Word,
-        LONG_WITH_AN_AS_DEST => OperationSize::Long,
         _ => panic!("Unrecognized opmode"),
     };
 
