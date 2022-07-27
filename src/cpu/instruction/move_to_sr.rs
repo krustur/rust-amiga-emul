@@ -9,15 +9,12 @@ use crate::{
 
 // Instruction State
 // =================
-// step: TODO
-// step cc: TODO (not affected)
-// get_disassembly: TODO
+// step: DONE
+// step cc: DONE (not affected)
+// get_disassembly: DONE
 
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
-
-// TODO: Tests
-// TODO: Check Supervisor
 
 pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
     match crate::cpu::match_check(instruction, instr_word) {
@@ -83,12 +80,12 @@ mod tests {
     };
 
     #[test]
-    fn move_from_sr_to_data_register_direct_ff00() {
+    fn move_to_sr_to_data_register_direct_ff00() {
         // arrange
-        let code = [0x40, 0xc0].to_vec(); // MOVE.W SR,D0
+        let code = [0x46, 0xc0].to_vec(); // MOVE.W D0,SR
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.set_d_reg_long(0, 0xffffffff);
-        cpu.register.reg_sr.set_value(0xff00);
+        cpu.register.set_d_reg_long(0, 0xffffff00);
+        cpu.register.reg_sr.set_value(0x2000);
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -96,14 +93,14 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("MOVE.W"),
-                String::from("SR,D0")
+                String::from("D0,SR")
             ),
             debug_result
         );
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0xffff_ff00, cpu.register.get_d_reg_long(0));
+        assert_eq!(0xff00, cpu.register.reg_sr.get_value());
         assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
@@ -112,12 +109,12 @@ mod tests {
     }
 
     #[test]
-    fn move_from_sr_to_data_register_direct_020f() {
+    fn move_to_sr_to_data_register_direct_020f() {
         // arrange
-        let code = [0x40, 0xc7].to_vec(); // MOVE.W SR,D7
+        let code = [0x46, 0xc7].to_vec(); // MOVE.W D7,SR
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.set_d_reg_long(7, 0xffffffff);
-        cpu.register.reg_sr.set_value(0x200F);
+        cpu.register.set_d_reg_long(7, 0xffff020f);
+        cpu.register.reg_sr.set_value(0x2000);
         // act assert - debug
         let debug_result = cpu.get_next_disassembly();
         assert_eq!(
@@ -125,14 +122,14 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("MOVE.W"),
-                String::from("SR,D7")
+                String::from("D7,SR")
             ),
             debug_result
         );
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0xffff_200f, cpu.register.get_d_reg_long(7));
+        assert_eq!(0x020f, cpu.register.reg_sr.get_value());
         assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
         assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
         assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
@@ -141,9 +138,9 @@ mod tests {
     }
 
     #[test]
-    fn move_from_sr_privilege_violation() {
+    fn move_to_sr_privilege_violation() {
         // arrange
-        let code = [0x40, 0xc7].to_vec(); // MOVE.W SR,D7
+        let code = [0x46, 0xc7].to_vec(); // MOVE.W D7,SR
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.reg_sr.set_value(
             STATUS_REGISTER_MASK_CARRY
@@ -160,7 +157,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("MOVE.W"),
-                String::from("SR,D7")
+                String::from("D7,SR")
             ),
             debug_result
         );
