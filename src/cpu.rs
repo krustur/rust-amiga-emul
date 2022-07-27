@@ -466,6 +466,14 @@ impl Cpu {
                 instruction::moveq::get_disassembly,
             ),
             Instruction::new(
+                String::from("MOVE to SR"),
+                0xffc0,
+                0x46c0,
+                instruction::move_to_sr::match_check,
+                instruction::move_to_sr::step,
+                instruction::move_to_sr::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("MOVE USP"),
                 0xfff0,
                 0x4e60,
@@ -504,6 +512,14 @@ impl Cpu {
                 instruction::not::match_check,
                 instruction::not::step,
                 instruction::not::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("OR"),
+                0xf000,
+                0x8000,
+                instruction::or::match_check,
+                instruction::or::step,
+                instruction::or::get_disassembly,
             ),
             Instruction::new(
                 String::from("ORI"),
