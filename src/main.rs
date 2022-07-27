@@ -158,6 +158,8 @@ fn main() {
             0x00F803BA => Some(String::from("RAM expansion check! Will mess with INTENA and UNMAPPED memory if no RAM expansion exists")),
             0x00F80458 => Some(String::from("A4=0, no RAM expansion found!")),
 
+            0x00F81D0E => Some(String::from("ExecLibrary.MakeLibrary done!")),
+            
             // ExecLibrary
             0x00F82D2C => Some(String::from("ExecLibrary.XXXXXXXXXXXXXXXXXXXXX -6  ")),
             0x00F82D34 => Some(String::from("ExecLibrary.XXXXXXXXXXXXXXXXXXXXX -12 ")),
@@ -175,7 +177,7 @@ fn main() {
             // module creation
             0x00F810BA => Some(String::from("ExecLibrary.InitCode -72 http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_2._guide/node035B.html")),
             0x00F811B8 => Some(String::from("ExecLibrary.InitStruct -78 ")),
-            0x00F81C88 => Some(String::from("ExecLibrary.MakeLibrary -84 http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_2._guide/node0361.html")),
+            0x00F81C88 => Some(String::from("ExecLibrary.MakeLibrary -84 library D0= MakeLibrary(vectors A0, structure A1, init A2, dSize D0, segList D1) http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_2._guide/node0361.html")),
             0x00F81D10 => Some(String::from("ExecLibrary.MakeFunctions -90 http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_2._guide/node0360.html")),
             0x00F8108A => Some(String::from("ExecLibrary.FindResident -96 ")),
             0x00F810F2 => Some(String::from("ExecLibrary.InitResident -102 http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_2._guide/node035C.html")),
@@ -360,7 +362,9 @@ fn main() {
             // 0x00F802A8 => true, // D0=length of memory area
             // 0x00F80F16 => true, // scan for RomTag
 
-            0x00F82A32 => true,
+
+
+            0x00F81D0E => true, // ExecLibrary.MakeLibrary done
             _ => false,
         };
         let (dump_memory_after_step, dump_memory_start, dump_memory_end) = match pc_address {
