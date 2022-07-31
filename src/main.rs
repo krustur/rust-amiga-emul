@@ -399,6 +399,7 @@ fn main() {
         if print_disassembly_before_step {
             print!(";");
             step_log.print_logs();
+        }
         if cpu.memory.overlay == false {
             let new_exec_base = cpu.memory.get_long_no_log(0x00000004);
             if exec_base != new_exec_base {
