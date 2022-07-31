@@ -776,148 +776,42 @@ impl Register {
 
     pub fn stack_push_pc(&mut self, mem: &mut Mem, step_log: &mut StepLog) {
         let pc = self.reg_pc.address;
-        match self.reg_sr.is_sr_supervisor_set_no_log() {
-            true => {
-                let new_ssp = self.reg_ssp.wrapping_sub(4);
-                // println!(
-                //     "stack_push_pc: [SSP_Access] [Write Long] Value: ${:08X} SSP: ${:08X} [from: ${:08X}]",
-                //     pc, new_ssp, self.reg_ssp
-                // );
-                self.reg_ssp = new_ssp;
-                mem.set_long(step_log, self.reg_ssp, pc);
-            }
-            false => {
-                let new_usp = self.reg_usp.wrapping_sub(4);
-                // println!(
-                //     "stack_push_pc: [USP_Access] [Write Long] Value: ${:08X} USP: ${:08X} [from: ${:08X}]",
-                //     pc, new_usp, self.reg_usp
-                // );
-                self.reg_usp = new_usp;
-                mem.set_long(step_log, self.reg_usp, pc);
-            }
-        }
+        self.decrement_a_reg(7, step_log, OperationSize::Long);
+        let sp = self.get_a_reg_long(7, step_log);
+        mem.set_long(step_log, sp, pc);
     }
 
     pub fn stack_pop_pc(&mut self, mem: &mut Mem, pc: &mut ProgramCounter, step_log: &mut StepLog) {
-        let pc_address = match self.reg_sr.is_sr_supervisor_set_no_log() {
-            true => {
-                let pc_address = mem.get_long(step_log, self.reg_ssp);
-                let new_ssp = self.reg_ssp.wrapping_add(4);
-                // println!(
-                //     "stack_pop_pc: [SSP_Access] [Read Long]  Value: ${:08X} SSP: ${:08X} [from: ${:08X}]",
-                //     pc_address, new_ssp, self.reg_ssp
-                // );
-                self.reg_ssp = new_ssp;
-                pc_address
-            }
-            false => {
-                let pc_address = mem.get_long(step_log, self.reg_usp);
-                let new_usp = self.reg_usp.wrapping_add(4);
-                // println!(
-                //     "stack_pop_pc: [USP_Access] [Read Long]  Value: ${:08X} USP: ${:08X} [from: ${:08X}]",
-                //     pc_address, new_usp, self.reg_usp
-                // );
-                self.reg_usp = new_usp;
-                pc_address
-            }
-        };
+        let sp = self.get_a_reg_long(7, step_log);
+        let pc_address = mem.get_long(step_log, sp);
+        self.increment_a_reg(7, step_log, OperationSize::Long);
         pc.address_jump = Some(pc_address);
     }
 
     pub fn stack_push_word(&mut self, mem: &mut Mem, step_log: &mut StepLog, value: u16) {
-        match self.reg_sr.is_sr_supervisor_set_no_log() {
-            true => {
-                let new_ssp = self.reg_ssp.wrapping_sub(2);
-                // println!(
-                //     "stack_push_word: [SSP_Access] [Write Word] Value: ${:08X} SSP: ${:08X} [from: ${:08X}]",
-                //     value, new_ssp, self.reg_ssp
-                // );
-                self.reg_ssp = new_ssp;
-                mem.set_word(step_log, self.reg_ssp, value);
-            }
-            false => {
-                let new_usp = self.reg_usp.wrapping_sub(2);
-                // println!(
-                //     "stack_push_word: [USP_Access] [Write Word] Value: ${:08X} USP: ${:08X} [from: ${:08X}]",
-                //     value, new_usp, self.reg_usp
-                // );
-                self.reg_usp = new_usp;
-                mem.set_word(step_log, self.reg_usp, value);
-            }
-        }
+        self.decrement_a_reg(7, step_log, OperationSize::Word);
+        let sp = self.get_a_reg_long(7, step_log);
+        mem.set_word(step_log, sp, value);
     }
 
     pub fn stack_pop_word(&mut self, mem: &mut Mem, step_log: &mut StepLog) -> u16 {
-        match self.reg_sr.is_sr_supervisor_set_no_log() {
-            true => {
-                let result = mem.get_word(step_log, self.reg_ssp);
-                let new_ssp = self.reg_ssp.wrapping_add(2);
-                // println!(
-                //     "stack_pop_word: [SSP_Access] [Read Word]  Value: ${:08X} SSP: ${:08X} [from: ${:08X}]",
-                //     result, new_ssp, self.reg_ssp
-                // );
-                self.reg_ssp = new_ssp;
-                result
-            }
-            false => {
-                let result = mem.get_word(step_log, self.reg_usp);
-                let new_usp = self.reg_usp.wrapping_add(2);
-                // println!(
-                //     "stack_pop_word: [USP_Access] [Read Word]  Value: ${:08X} USP: ${:08X} [from: ${:08X}]",
-                //     result, new_usp, self.reg_usp
-                // );
-                self.reg_usp = new_usp;
-                result
-            }
-        }
+        let sp = self.get_a_reg_long(7, step_log);
+        let result = mem.get_word(step_log, sp);
+        self.increment_a_reg(7, step_log, OperationSize::Word);
+        result
     }
 
     pub fn stack_push_long(&mut self, mem: &mut Mem, step_log: &mut StepLog, value: u32) {
-        match self.reg_sr.is_sr_supervisor_set_no_log() {
-            true => {
-                let new_ssp = self.reg_ssp.wrapping_sub(4);
-                // println!(
-                //     "stack_push_long: [SSP_Access] [Write Long] Value: ${:08X} SSP: ${:08X} [from: ${:08X}]",
-                //     value, new_ssp, self.reg_ssp
-                // );
-                self.reg_ssp = new_ssp;
-                mem.set_long(step_log, self.reg_ssp, value);
-            }
-            false => {
-                let new_usp = self.reg_usp.wrapping_sub(4);
-                // println!(
-                //     "stack_push_long: [USP_Access] [Write Long] Value: ${:08X} USP: ${:08X} [from: ${:08X}]",
-                //     value, new_usp, self.reg_usp
-                // );
-                self.reg_usp = new_usp;
-                mem.set_long(step_log, self.reg_usp, value);
-            }
-        }
+        self.decrement_a_reg(7, step_log, OperationSize::Long);
+        let sp = self.get_a_reg_long(7, step_log);
+        mem.set_long(step_log, sp, value);
     }
 
     pub fn stack_pop_long(&mut self, mem: &mut Mem, step_log: &mut StepLog) -> u32 {
-        match self.reg_sr.is_sr_supervisor_set_no_log() {
-            true => {
-                let result = mem.get_long(step_log, self.reg_ssp);
-                let new_ssp = self.reg_ssp.wrapping_add(4);
-                // println!(
-                //     "stack_pop_long: [SSP_Access] [Read Long]  Value: ${:08X} SSP: ${:08X} [from: ${:08X}]",
-                //     result, new_ssp, self.reg_ssp
-                // );
-                self.reg_ssp = new_ssp;
-                result
-            }
-            false => {
-                let result = mem.get_long(step_log, self.reg_usp);
-                let new_usp = self.reg_usp.wrapping_add(4);
-                // println!(
-                //     "stack_pop_long: [USP_Access] [Read Long]  Value: ${:08X} USP: ${:08X} [from: ${:08X}]",
-                //     result, new_usp, self.reg_usp
-                // );
-                self.reg_usp = new_usp;
-                result
-            }
-        }
+        let sp = self.get_a_reg_long(7, step_log);
+        let result = mem.get_long(step_log, sp);
+        self.increment_a_reg(7, step_log, OperationSize::Long);
+        result
     }
 
     pub fn print_registers(&self) {
