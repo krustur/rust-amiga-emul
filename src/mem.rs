@@ -1,5 +1,8 @@
 use self::memory::Memory;
-use crate::mem::unmappedmemory::UnmappedMemory;
+use crate::{
+    cpu::step_log::{StepLog, StepLogEntry},
+    mem::unmappedmemory::UnmappedMemory,
+};
 
 pub mod ciamemory;
 pub mod custommemory;
@@ -12,7 +15,7 @@ pub struct Mem {
     ranges: Vec<Box<dyn Memory>>,
     default_range: Box<dyn Memory>,
     overlay_memory: Box<dyn Memory>,
-    overlay: bool,
+    pub overlay: bool,
 }
 
 impl Mem {
@@ -120,35 +123,90 @@ impl Mem {
         }
     }
 
-    pub fn get_long(self: &Mem, address: u32) -> u32 {
+    pub fn get_long(self: &Mem, step_log: &mut StepLog, address: u32) -> u32 {
+        let range = self.get_memory(address);
+        let result = range.get_long(address);
+        step_log.add_log(StepLogEntry::ReadMemLong {
+            address,
+            value: result,
+        });
+        result
+    }
+
+    pub fn get_long_no_log(self: &Mem, address: u32) -> u32 {
         let range = self.get_memory(address);
         let result = range.get_long(address);
         result
     }
 
-    pub fn set_long(self: &mut Mem, address: u32, value: u32) {
+    pub fn set_long(self: &mut Mem, step_log: &mut StepLog, address: u32, value: u32) {
+        let range = self.get_memory_mut(address);
+        step_log.add_log(StepLogEntry::WriteMemLong { address, value });
+        let result = range.set_long(address, value);
+    }
+
+    pub fn set_long_no_log(self: &mut Mem, address: u32, value: u32) {
         let range = self.get_memory_mut(address);
         let result = range.set_long(address, value);
     }
 
-    pub fn get_word(self: &Mem, address: u32) -> u16 {
+    pub fn get_word(self: &Mem, step_log: &mut StepLog, address: u32) -> u16 {
+        let range = self.get_memory(address);
+        let result = range.get_word(address);
+        step_log.add_log(StepLogEntry::ReadMemWord {
+            address,
+            value: result,
+        });
+        result
+    }
+
+    pub fn get_word_no_log(self: &Mem, address: u32) -> u16 {
         let range = self.get_memory(address);
         let result = range.get_word(address);
         result
     }
 
-    pub fn set_word(self: &mut Mem, address: u32, value: u16) {
+    pub fn set_word(self: &mut Mem, step_log: &mut StepLog, address: u32, value: u16) {
+        let range = self.get_memory_mut(address);
+        step_log.add_log(StepLogEntry::WriteMemWord { address, value });
+        let result = range.set_word(address, value);
+    }
+
+    pub fn set_word_no_log(self: &mut Mem, address: u32, value: u16) {
         let range = self.get_memory_mut(address);
         let result = range.set_word(address, value);
     }
 
-    pub fn get_byte(self: &Mem, address: u32) -> u8 {
+    pub fn get_byte(self: &Mem, step_log: &mut StepLog, address: u32) -> u8 {
+        let range = self.get_memory(address);
+        let result = range.get_byte(address);
+        step_log.add_log(StepLogEntry::ReadMemByte {
+            address,
+            value: result,
+        });
+        result
+    }
+
+    pub fn get_byte_no_log(self: &Mem, address: u32) -> u8 {
         let range = self.get_memory(address);
         let result = range.get_byte(address);
         result
     }
 
-    pub fn set_byte(self: &mut Mem, address: u32, value: u8) {
+    pub fn set_byte(self: &mut Mem, step_log: &mut StepLog, address: u32, value: u8) {
+        let range = self.get_memory_mut(address);
+        step_log.add_log(StepLogEntry::WriteMemByte { address, value });
+        match range.set_byte(address, value) {
+            Some(r) => {
+                if let Some(overlay) = r.set_overlay {
+                    self.overlay = overlay;
+                }
+            }
+            None => (),
+        }
+    }
+
+    pub fn set_byte_no_log(self: &mut Mem, address: u32, value: u8) {
         let range = self.get_memory_mut(address);
         match range.set_byte(address, value) {
             Some(r) => {
@@ -167,7 +225,7 @@ impl Mem {
             if col_cnt == 0 {
                 print!(" {:010x}", address);
             }
-            print!(" {:02x}", self.get_byte(address));
+            print!(" {:02x}", self.get_byte_no_log(address));
             col_cnt = col_cnt + 1;
             if col_cnt == 16 {
                 col_cnt = 0;

@@ -2,7 +2,7 @@ use super::{
     ConditionalTest, GetDisassemblyResult, GetDisassemblyResultError, Instruction, StepError,
 };
 use crate::{
-    cpu::Cpu,
+    cpu::{step_log::StepLog, Cpu},
     mem::Mem,
     register::{ProgramCounter, Register},
 };
@@ -34,6 +34,7 @@ pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
+    step_log: &mut StepLog,
 ) -> Result<(), StepError> {
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
     let condition = reg.reg_sr.evaluate_condition(&conditional_test);
@@ -67,6 +68,7 @@ pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
+    step_log: &mut StepLog,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
 
@@ -129,7 +131,7 @@ mod tests {
         cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
 
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -154,7 +156,7 @@ mod tests {
             .reg_sr
             .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_CARRY);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -179,7 +181,7 @@ mod tests {
             .reg_sr
             .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_ZERO);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -206,7 +208,7 @@ mod tests {
             .reg_sr
             .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_ZERO);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -231,7 +233,7 @@ mod tests {
             .reg_sr
             .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_ZERO);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -254,7 +256,7 @@ mod tests {
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -281,7 +283,7 @@ mod tests {
             .reg_sr
             .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -304,7 +306,7 @@ mod tests {
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -329,7 +331,7 @@ mod tests {
             .reg_sr
             .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_ZERO);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,

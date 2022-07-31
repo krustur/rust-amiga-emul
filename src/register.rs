@@ -1,9 +1,12 @@
+use std::fmt;
+
 use crate::{
     cpu::{
         ea::EffectiveAddressingData,
         instruction::{
             ConditionalTest, EffectiveAddressingMode, InstructionError, OperationSize, ScaleFactor,
         },
+        step_log::{StepLog, StepLogEntry},
         Cpu, StatusRegisterResult,
     },
     mem::Mem,
@@ -109,13 +112,13 @@ impl ProgramCounter {
     }
 
     pub fn fetch_next_byte(&mut self, mem: &Mem) -> u8 {
-        let word = mem.get_byte(self.address_next);
+        let word = mem.get_byte_no_log(self.address_next);
         self.address_next = self.address_next.wrapping_add(1);
         word
     }
 
     pub fn peek_next_word(&self, mem: &Mem) -> u16 {
-        let word = mem.get_word(self.address_next);
+        let word = mem.get_word_no_log(self.address_next);
         word
     }
 
@@ -124,13 +127,13 @@ impl ProgramCounter {
     }
 
     pub fn fetch_next_word(&mut self, mem: &Mem) -> u16 {
-        let word = mem.get_word(self.address_next);
+        let word = mem.get_word_no_log(self.address_next);
         self.address_next = self.address_next.wrapping_add(2);
         word
     }
 
     pub fn fetch_next_long(&mut self, mem: &Mem) -> u32 {
-        let word = mem.get_long(self.address_next);
+        let word = mem.get_long_no_log(self.address_next);
         self.address_next = self.address_next.wrapping_add(4);
         word
     }
@@ -163,6 +166,7 @@ impl ProgramCounter {
         instr_word: u16,
         reg: &Register,
         mem: &Mem,
+        step_log: &mut StepLog,
         get_operation_size_func: T,
     ) -> Result<EffectiveAddressingData, InstructionError>
     where
@@ -172,6 +176,7 @@ impl ProgramCounter {
             instr_word,
             reg,
             mem,
+            step_log,
             get_operation_size_func,
             3,
             0,
@@ -183,6 +188,7 @@ impl ProgramCounter {
         instr_word: u16,
         reg: &Register,
         mem: &Mem,
+        step_log: &mut StepLog,
         get_operation_size_func: T,
         bit_pos: u8,
         reg_bit_pos: u8,
@@ -201,7 +207,7 @@ impl ProgramCounter {
                 ea_register: (ea_register),
             },
             0b010 => {
-                let address = reg.get_a_reg_long(ea_register);
+                let address = reg.get_a_reg_long(ea_register, step_log);
 
                 EffectiveAddressingMode::ARegIndirect {
                     ea_register,
@@ -209,7 +215,7 @@ impl ProgramCounter {
                 }
             }
             0b011 => {
-                let address = reg.get_a_reg_long(ea_register);
+                let address = reg.get_a_reg_long(ea_register, step_log);
                 EffectiveAddressingMode::ARegIndirectWithPostIncrement {
                     operation_size,
                     ea_register,
@@ -225,9 +231,11 @@ impl ProgramCounter {
             0b101 => {
                 let displacement = self.fetch_next_word(mem);
                 let (address, _) = reg
-                    .get_a_reg_long(ea_register)
+                    .get_a_reg_long(ea_register, step_log)
                     .overflowing_add(Cpu::sign_extend_word(displacement));
 
+                // println!("EffectiveAddressingMode::ARegIndirectWithDisplacement: A{}=${:08X}, displacement=${:08X}", ea_register,reg
+                // .get_a_reg_long(ea_register), Cpu::sign_extend_word(displacement));
                 EffectiveAddressingMode::ARegIndirectWithDisplacement {
                     ea_register,
                     ea_address: address,
@@ -244,10 +252,14 @@ impl ProgramCounter {
                     todo!("Full extension word format not implemented")
                 }
 
+                // TODO: Fix step_log here
                 let register = Cpu::extract_register_index_from_bit_pos(extension_word, 12)?;
                 let (register_value, register_type) = match extension_word & 0x8000 {
-                    0x8000 => (reg.get_a_reg_long(register), RegisterType::Address),
-                    _ => (reg.get_d_reg_long(register), RegisterType::Data),
+                    0x8000 => (
+                        reg.get_a_reg_long(register, step_log),
+                        RegisterType::Address,
+                    ),
+                    _ => (reg.get_d_reg_long(register, step_log), RegisterType::Data),
                 };
                 let (register_value, index_size) = match extension_word & 0x0800 {
                     0x0800 => (register_value, OperationSize::Long),
@@ -268,7 +280,7 @@ impl ProgramCounter {
                 let displacement = Cpu::get_byte_from_word(extension_word);
                 let displacement_long = Cpu::sign_extend_byte(displacement);
 
-                let areg_address = reg.get_a_reg_long(ea_register);
+                let areg_address = reg.get_a_reg_long(ea_register, step_log);
 
                 let (ea_address, _) = areg_address.overflowing_add(displacement_long);
                 let (ea_address, _) = ea_address.overflowing_add(register_value);
@@ -308,8 +320,11 @@ impl ProgramCounter {
 
                     let register = Cpu::extract_register_index_from_bit_pos(extension_word, 12)?;
                     let (register_value, register_type) = match extension_word & 0x8000 {
-                        0x8000 => (reg.get_a_reg_long(register), RegisterType::Address),
-                        _ => (reg.get_d_reg_long(register), RegisterType::Data),
+                        0x8000 => (
+                            reg.get_a_reg_long(register, step_log),
+                            RegisterType::Address,
+                        ),
+                        _ => (reg.get_d_reg_long(register, step_log), RegisterType::Data),
                     };
                     let (register_value, index_size) = match extension_word & 0x0800 {
                         0x0800 => (register_value, OperationSize::Long),
@@ -407,71 +422,221 @@ impl Register {
         register
     }
 
-    pub fn get_d_reg_long(&self, reg_index: usize) -> u32 {
-        self.reg_d[reg_index]
+    pub fn get_d_reg_long(&self, reg_index: usize, step_log: &mut StepLog) -> u32 {
+        let value = self.reg_d[reg_index];
+        step_log.add_log(StepLogEntry::ReadRegister {
+            reg_type: RegisterType::Data,
+            reg_index,
+            value,
+        });
+        value
     }
 
-    pub fn get_d_reg_word(&self, reg_index: usize) -> u16 {
-        Cpu::get_word_from_long(self.reg_d[reg_index])
+    pub fn get_d_reg_long_no_log(&self, reg_index: usize) -> u32 {
+        let value = self.reg_d[reg_index];
+        value
     }
 
-    pub fn get_d_reg_byte(&self, reg_index: usize) -> u8 {
-        Cpu::get_byte_from_long(self.reg_d[reg_index])
+    pub fn get_d_reg_word(&self, reg_index: usize, step_log: &mut StepLog) -> u16 {
+        let value = self.reg_d[reg_index];
+        step_log.add_log(StepLogEntry::ReadRegister {
+            reg_type: RegisterType::Data,
+            reg_index,
+            value,
+        });
+        Cpu::get_word_from_long(value)
     }
 
-    pub fn get_a_reg_long(&self, reg_index: usize) -> u32 {
-        match reg_index {
-            7 => match self.reg_sr.is_sr_supervisor_set() {
+    pub fn get_d_reg_word_no_log(&self, reg_index: usize) -> u16 {
+        let value = self.reg_d[reg_index];
+        Cpu::get_word_from_long(value)
+    }
+
+    pub fn get_d_reg_byte(&self, reg_index: usize, step_log: &mut StepLog) -> u8 {
+        let value = self.reg_d[reg_index];
+        step_log.add_log(StepLogEntry::ReadRegister {
+            reg_type: RegisterType::Data,
+            reg_index,
+            value,
+        });
+        Cpu::get_byte_from_long(value)
+    }
+
+    pub fn get_d_reg_byte_no_log(&self, reg_index: usize) -> u8 {
+        let value = self.reg_d[reg_index];
+        Cpu::get_byte_from_long(value)
+    }
+
+    pub fn get_a_reg_long(&self, reg_index: usize, step_log: &mut StepLog) -> u32 {
+        let value = match reg_index {
+            7 => match self.reg_sr.is_sr_supervisor_set_no_log() {
                 true => self.get_ssp_reg(),
                 false => self.get_usp_reg(),
             },
             _ => self.reg_a[reg_index],
-        }
+        };
+        step_log.add_log(StepLogEntry::ReadRegister {
+            reg_type: RegisterType::Address,
+            reg_index,
+            value,
+        });
+        value
     }
 
-    pub fn get_a_reg_word(&self, reg_index: usize) -> u16 {
-        Cpu::get_word_from_long(self.get_a_reg_long(reg_index))
-    }
-
-    pub fn get_a_reg_byte(&self, reg_index: usize) -> u8 {
-        Cpu::get_byte_from_long(self.get_a_reg_long(reg_index))
-    }
-
-    pub fn increment_a_reg(&mut self, reg_index: usize, operation_size: OperationSize) {
-        match reg_index {
-            7 => match self.reg_sr.is_sr_supervisor_set() {
-                true => self.reg_ssp += operation_size.size_in_bytes(),
-                false => self.reg_usp += operation_size.size_in_bytes(),
+    pub fn get_a_reg_long_no_log(&self, reg_index: usize) -> u32 {
+        let value = match reg_index {
+            7 => match self.reg_sr.is_sr_supervisor_set_no_log() {
+                true => self.get_ssp_reg(),
+                false => self.get_usp_reg(),
             },
-            _ => self.reg_a[reg_index] += operation_size.size_in_bytes(),
-        }
+            _ => self.reg_a[reg_index],
+        };
+        value
     }
 
-    pub fn decrement_a_reg(&mut self, reg_index: usize, operation_size: OperationSize) {
+    pub fn get_a_reg_word(&self, reg_index: usize, step_log: &mut StepLog) -> u16 {
+        Cpu::get_word_from_long(self.get_a_reg_long(reg_index, step_log))
+    }
+
+    pub fn get_a_reg_word_no_log(&self, reg_index: usize) -> u16 {
+        Cpu::get_word_from_long(self.get_a_reg_long_no_log(reg_index))
+    }
+
+    pub fn get_a_reg_byte(&self, reg_index: usize, step_log: &mut StepLog) -> u8 {
+        Cpu::get_byte_from_long(self.get_a_reg_long(reg_index, step_log))
+    }
+
+    pub fn get_a_reg_byte_no_log(&self, reg_index: usize) -> u8 {
+        Cpu::get_byte_from_long(self.get_a_reg_long_no_log(reg_index))
+    }
+
+    pub fn increment_a_reg(
+        &mut self,
+        reg_index: usize,
+        step_log: &mut StepLog,
+        operation_size: OperationSize,
+    ) {
         match reg_index {
-            7 => match self.reg_sr.is_sr_supervisor_set() {
-                true => self.reg_ssp -= operation_size.size_in_bytes(),
-                false => self.reg_usp -= operation_size.size_in_bytes(),
+            7 => match self.reg_sr.is_sr_supervisor_set_no_log() {
+                true => {
+                    let value = self.reg_ssp + operation_size.size_in_bytes();
+                    step_log.add_log(StepLogEntry::WriteRegister {
+                        reg_type: RegisterType::Address,
+                        reg_index,
+                        value,
+                    });
+                    self.reg_ssp = value;
+                }
+                false => {
+                    let value = self.reg_usp + operation_size.size_in_bytes();
+                    step_log.add_log(StepLogEntry::WriteRegister {
+                        reg_type: RegisterType::Address,
+                        reg_index,
+                        value,
+                    });
+                    self.reg_usp = value;
+                }
             },
-            _ => self.reg_a[reg_index] -= operation_size.size_in_bytes(),
+            _ => {
+                let value = self.reg_a[reg_index] + operation_size.size_in_bytes();
+                step_log.add_log(StepLogEntry::WriteRegister {
+                    reg_type: RegisterType::Address,
+                    reg_index,
+                    value,
+                });
+                self.reg_a[reg_index] = value;
+            }
         }
     }
 
-    pub fn set_d_reg_long(&mut self, reg_index: usize, value: u32) {
+    pub fn decrement_a_reg(
+        &mut self,
+        reg_index: usize,
+        step_log: &mut StepLog,
+        operation_size: OperationSize,
+    ) {
+        match reg_index {
+            7 => match self.reg_sr.is_sr_supervisor_set_no_log() {
+                true => {
+                    let value = self.reg_ssp - operation_size.size_in_bytes();
+                    step_log.add_log(StepLogEntry::WriteRegister {
+                        reg_type: RegisterType::Address,
+                        reg_index,
+                        value,
+                    });
+                    self.reg_ssp = value;
+                }
+                false => {
+                    let value = self.reg_usp - operation_size.size_in_bytes();
+                    step_log.add_log(StepLogEntry::WriteRegister {
+                        reg_type: RegisterType::Address,
+                        reg_index,
+                        value,
+                    });
+                    self.reg_usp = value;
+                }
+            },
+            _ => {
+                let value = self.reg_a[reg_index] - operation_size.size_in_bytes();
+                step_log.add_log(StepLogEntry::WriteRegister {
+                    reg_type: RegisterType::Address,
+                    reg_index,
+                    value,
+                });
+                self.reg_a[reg_index] = value;
+            }
+        }
+    }
+
+    pub fn set_d_reg_long(&mut self, step_log: &mut StepLog, reg_index: usize, value: u32) {
+        step_log.add_log(StepLogEntry::WriteRegister {
+            reg_type: RegisterType::Data,
+            reg_index,
+            value,
+        });
         self.reg_d[reg_index] = value;
     }
 
-    pub fn set_d_reg_word(&mut self, reg_index: usize, value: u16) {
+    pub fn set_d_reg_long_no_log(&mut self, reg_index: usize, value: u32) {
+        self.reg_d[reg_index] = value;
+    }
+
+    pub fn set_d_reg_word(&mut self, step_log: &mut StepLog, reg_index: usize, value: u16) {
+        let value = Cpu::set_word_in_long(value, self.reg_d[reg_index]);
+        step_log.add_log(StepLogEntry::WriteRegister {
+            reg_type: RegisterType::Data,
+            reg_index,
+            value,
+        });
+        self.reg_d[reg_index] = value;
+    }
+
+    pub fn set_d_reg_word_no_log(&mut self, reg_index: usize, value: u16) {
         self.reg_d[reg_index] = Cpu::set_word_in_long(value, self.reg_d[reg_index]);
     }
 
-    pub fn set_d_reg_byte(&mut self, reg_index: usize, value: u8) {
+    pub fn set_d_reg_byte(&mut self, step_log: &mut StepLog, reg_index: usize, value: u8) {
+        let value = Cpu::set_byte_in_long(value, self.reg_d[reg_index]);
+        step_log.add_log(StepLogEntry::WriteRegister {
+            reg_type: RegisterType::Data,
+            reg_index,
+            value,
+        });
+        self.reg_d[reg_index] = value;
+    }
+
+    pub fn set_d_reg_byte_no_log(&mut self, reg_index: usize, value: u8) {
         self.reg_d[reg_index] = Cpu::set_byte_in_long(value, self.reg_d[reg_index]);
     }
 
-    pub fn set_a_reg_long(&mut self, reg_index: usize, value: u32) {
+    pub fn set_a_reg_long(&mut self, step_log: &mut StepLog, reg_index: usize, value: u32) {
+        step_log.add_log(StepLogEntry::WriteRegister {
+            reg_type: RegisterType::Address,
+            reg_index,
+            value,
+        });
         match reg_index {
-            7 => match self.reg_sr.is_sr_supervisor_set() {
+            7 => match self.reg_sr.is_sr_supervisor_set_no_log() {
                 true => self.set_ssp_reg(value),
                 false => self.set_usp_reg(value),
             },
@@ -479,9 +644,53 @@ impl Register {
         };
     }
 
-    pub fn set_a_reg_word(&mut self, reg_index: usize, value: u16) {
+    pub fn set_a_reg_long_no_log(&mut self, reg_index: usize, value: u32) {
         match reg_index {
-            7 => match self.reg_sr.is_sr_supervisor_set() {
+            7 => match self.reg_sr.is_sr_supervisor_set_no_log() {
+                true => self.set_ssp_reg(value),
+                false => self.set_usp_reg(value),
+            },
+            _ => self.reg_a[reg_index] = value,
+        };
+    }
+
+    pub fn set_a_reg_word(&mut self, step_log: &mut StepLog, reg_index: usize, value: u16) {
+        match reg_index {
+            7 => match self.reg_sr.is_sr_supervisor_set_no_log() {
+                true => {
+                    let value = Cpu::set_word_in_long(value, self.reg_ssp);
+                    step_log.add_log(StepLogEntry::WriteRegister {
+                        reg_type: RegisterType::Address,
+                        reg_index,
+                        value,
+                    });
+                    self.reg_ssp = value;
+                }
+                false => {
+                    let value = Cpu::set_word_in_long(value, self.reg_usp);
+                    step_log.add_log(StepLogEntry::WriteRegister {
+                        reg_type: RegisterType::Address,
+                        reg_index,
+                        value,
+                    });
+                    self.reg_usp = value;
+                }
+            },
+            _ => {
+                let value = Cpu::set_word_in_long(value, self.reg_a[reg_index]);
+                step_log.add_log(StepLogEntry::WriteRegister {
+                    reg_type: RegisterType::Address,
+                    reg_index,
+                    value,
+                });
+                self.reg_a[reg_index] = value;
+            }
+        };
+    }
+
+    pub fn set_a_reg_word_no_log(&mut self, reg_index: usize, value: u16) {
+        match reg_index {
+            7 => match self.reg_sr.is_sr_supervisor_set_no_log() {
                 true => self.reg_ssp = Cpu::set_word_in_long(value, self.reg_ssp),
                 false => self.reg_usp = Cpu::set_word_in_long(value, self.reg_usp),
             },
@@ -489,9 +698,43 @@ impl Register {
         };
     }
 
-    pub fn set_a_reg_byte(&mut self, reg_index: usize, value: u8) {
+    pub fn set_a_reg_byte(&mut self, step_log: &mut StepLog, reg_index: usize, value: u8) {
         match reg_index {
-            7 => match self.reg_sr.is_sr_supervisor_set() {
+            7 => match self.reg_sr.is_sr_supervisor_set_no_log() {
+                true => {
+                    let value = Cpu::set_byte_in_long(value, self.reg_ssp);
+                    step_log.add_log(StepLogEntry::WriteRegister {
+                        reg_type: RegisterType::Address,
+                        reg_index,
+                        value,
+                    });
+                    self.reg_ssp = value;
+                }
+                false => {
+                    let value = Cpu::set_byte_in_long(value, self.reg_usp);
+                    step_log.add_log(StepLogEntry::WriteRegister {
+                        reg_type: RegisterType::Address,
+                        reg_index,
+                        value,
+                    });
+                    self.reg_usp = value;
+                }
+            },
+            _ => {
+                let value = Cpu::set_byte_in_long(value, self.reg_a[reg_index]);
+                step_log.add_log(StepLogEntry::WriteRegister {
+                    reg_type: RegisterType::Address,
+                    reg_index,
+                    value,
+                });
+                self.reg_a[reg_index] = value;
+            }
+        };
+    }
+
+    pub fn set_a_reg_byte_no_log(&mut self, reg_index: usize, value: u8) {
+        match reg_index {
+            7 => match self.reg_sr.is_sr_supervisor_set_no_log() {
                 true => self.reg_ssp = Cpu::set_byte_in_long(value, self.reg_ssp),
                 false => self.reg_usp = Cpu::set_byte_in_long(value, self.reg_usp),
             },
@@ -531,9 +774,9 @@ impl Register {
         self.reg_usp = value;
     }
 
-    pub fn stack_push_pc(&mut self, mem: &mut Mem) {
+    pub fn stack_push_pc(&mut self, mem: &mut Mem, step_log: &mut StepLog) {
         let pc = self.reg_pc.address;
-        match self.reg_sr.is_sr_supervisor_set() {
+        match self.reg_sr.is_sr_supervisor_set_no_log() {
             true => {
                 let new_ssp = self.reg_ssp.wrapping_sub(4);
                 // println!(
@@ -541,7 +784,7 @@ impl Register {
                 //     pc, new_ssp, self.reg_ssp
                 // );
                 self.reg_ssp = new_ssp;
-                mem.set_long(self.reg_ssp, pc);
+                mem.set_long(step_log, self.reg_ssp, pc);
             }
             false => {
                 let new_usp = self.reg_usp.wrapping_sub(4);
@@ -550,15 +793,15 @@ impl Register {
                 //     pc, new_usp, self.reg_usp
                 // );
                 self.reg_usp = new_usp;
-                mem.set_long(self.reg_usp, pc);
+                mem.set_long(step_log, self.reg_usp, pc);
             }
         }
     }
 
-    pub fn stack_pop_pc(&mut self, mem: &mut Mem, pc: &mut ProgramCounter) {
-        let pc_address = match self.reg_sr.is_sr_supervisor_set() {
+    pub fn stack_pop_pc(&mut self, mem: &mut Mem, pc: &mut ProgramCounter, step_log: &mut StepLog) {
+        let pc_address = match self.reg_sr.is_sr_supervisor_set_no_log() {
             true => {
-                let pc_address = mem.get_long(self.reg_ssp);
+                let pc_address = mem.get_long(step_log, self.reg_ssp);
                 let new_ssp = self.reg_ssp.wrapping_add(4);
                 // println!(
                 //     "stack_pop_pc: [SSP_Access] [Read Long]  Value: ${:08X} SSP: ${:08X} [from: ${:08X}]",
@@ -568,7 +811,7 @@ impl Register {
                 pc_address
             }
             false => {
-                let pc_address = mem.get_long(self.reg_usp);
+                let pc_address = mem.get_long(step_log, self.reg_usp);
                 let new_usp = self.reg_usp.wrapping_add(4);
                 // println!(
                 //     "stack_pop_pc: [USP_Access] [Read Long]  Value: ${:08X} USP: ${:08X} [from: ${:08X}]",
@@ -581,8 +824,8 @@ impl Register {
         pc.address_jump = Some(pc_address);
     }
 
-    pub fn stack_push_word(&mut self, mem: &mut Mem, value: u16) {
-        match self.reg_sr.is_sr_supervisor_set() {
+    pub fn stack_push_word(&mut self, mem: &mut Mem, step_log: &mut StepLog, value: u16) {
+        match self.reg_sr.is_sr_supervisor_set_no_log() {
             true => {
                 let new_ssp = self.reg_ssp.wrapping_sub(2);
                 // println!(
@@ -590,7 +833,7 @@ impl Register {
                 //     value, new_ssp, self.reg_ssp
                 // );
                 self.reg_ssp = new_ssp;
-                mem.set_word(self.reg_ssp, value);
+                mem.set_word(step_log, self.reg_ssp, value);
             }
             false => {
                 let new_usp = self.reg_usp.wrapping_sub(2);
@@ -599,15 +842,15 @@ impl Register {
                 //     value, new_usp, self.reg_usp
                 // );
                 self.reg_usp = new_usp;
-                mem.set_word(self.reg_usp, value);
+                mem.set_word(step_log, self.reg_usp, value);
             }
         }
     }
 
-    pub fn stack_pop_word(&mut self, mem: &mut Mem) -> u16 {
-        match self.reg_sr.is_sr_supervisor_set() {
+    pub fn stack_pop_word(&mut self, mem: &mut Mem, step_log: &mut StepLog) -> u16 {
+        match self.reg_sr.is_sr_supervisor_set_no_log() {
             true => {
-                let result = mem.get_word(self.reg_ssp);
+                let result = mem.get_word(step_log, self.reg_ssp);
                 let new_ssp = self.reg_ssp.wrapping_add(2);
                 // println!(
                 //     "stack_pop_word: [SSP_Access] [Read Word]  Value: ${:08X} SSP: ${:08X} [from: ${:08X}]",
@@ -617,7 +860,7 @@ impl Register {
                 result
             }
             false => {
-                let result = mem.get_word(self.reg_usp);
+                let result = mem.get_word(step_log, self.reg_usp);
                 let new_usp = self.reg_usp.wrapping_add(2);
                 // println!(
                 //     "stack_pop_word: [USP_Access] [Read Word]  Value: ${:08X} USP: ${:08X} [from: ${:08X}]",
@@ -629,8 +872,8 @@ impl Register {
         }
     }
 
-    pub fn stack_push_long(&mut self, mem: &mut Mem, value: u32) {
-        match self.reg_sr.is_sr_supervisor_set() {
+    pub fn stack_push_long(&mut self, mem: &mut Mem, step_log: &mut StepLog, value: u32) {
+        match self.reg_sr.is_sr_supervisor_set_no_log() {
             true => {
                 let new_ssp = self.reg_ssp.wrapping_sub(4);
                 // println!(
@@ -638,7 +881,7 @@ impl Register {
                 //     value, new_ssp, self.reg_ssp
                 // );
                 self.reg_ssp = new_ssp;
-                mem.set_long(self.reg_ssp, value);
+                mem.set_long(step_log, self.reg_ssp, value);
             }
             false => {
                 let new_usp = self.reg_usp.wrapping_sub(4);
@@ -647,15 +890,15 @@ impl Register {
                 //     value, new_usp, self.reg_usp
                 // );
                 self.reg_usp = new_usp;
-                mem.set_long(self.reg_usp, value);
+                mem.set_long(step_log, self.reg_usp, value);
             }
         }
     }
 
-    pub fn stack_pop_long(&mut self, mem: &mut Mem) -> u32 {
-        match self.reg_sr.is_sr_supervisor_set() {
+    pub fn stack_pop_long(&mut self, mem: &mut Mem, step_log: &mut StepLog) -> u32 {
+        match self.reg_sr.is_sr_supervisor_set_no_log() {
             true => {
-                let result = mem.get_long(self.reg_ssp);
+                let result = mem.get_long(step_log, self.reg_ssp);
                 let new_ssp = self.reg_ssp.wrapping_add(4);
                 // println!(
                 //     "stack_pop_long: [SSP_Access] [Read Long]  Value: ${:08X} SSP: ${:08X} [from: ${:08X}]",
@@ -665,7 +908,7 @@ impl Register {
                 result
             }
             false => {
-                let result = mem.get_long(self.reg_usp);
+                let result = mem.get_long(step_log, self.reg_usp);
                 let new_usp = self.reg_usp.wrapping_add(4);
                 // println!(
                 //     "stack_pop_long: [USP_Access] [Read Long]  Value: ${:08X} USP: ${:08X} [from: ${:08X}]",
@@ -685,7 +928,7 @@ impl Register {
         for n in 0..7 {
             print!(" A{} ${:08X}", n, self.reg_a[n]);
         }
-        match self.reg_sr.is_sr_supervisor_set() {
+        match self.reg_sr.is_sr_supervisor_set_no_log() {
             true => print!(" A7 ${:08X}", self.reg_ssp),
             false => print!(" A7 ${:08X}", self.reg_usp),
         }
@@ -693,39 +936,8 @@ impl Register {
         print!(" USP ${:08X} ", self.reg_usp);
         print!(" SSP ${:08X} ", self.reg_ssp);
         println!();
-        print!(" SR ${:04X} ", self.reg_sr.get_value());
-        print!("  ");
-        if self.reg_sr.is_sr_supervisor_set() {
-            print!("S");
-        } else {
-            print!("-");
-        }
-        print!("  0    000");
-        if self.reg_sr.is_sr_extend_set() {
-            print!("X");
-        } else {
-            print!("-");
-        }
-        if self.reg_sr.is_sr_negative_set() {
-            print!(" N");
-        } else {
-            print!(" -");
-        }
-        if self.reg_sr.is_sr_zero_set() {
-            print!("Z");
-        } else {
-            print!("-");
-        }
-        if self.reg_sr.is_sr_overflow_set() {
-            print!("V");
-        } else {
-            print!("-");
-        }
-        if self.reg_sr.is_sr_carry_set() {
-            print!("C");
-        } else {
-            print!("-");
-        }
+        print!(" SR ${:04X} {}", self.reg_sr.get_value(), self.reg_sr);
+
         println!();
         print!(" PC ${:08X}", self.reg_pc.get_address());
         println!();
@@ -762,51 +974,64 @@ impl StatusRegister {
         self.reg_sr = (self.reg_sr & 0b1111111111100000) | value;
     }
 
-    pub fn merge_status_register(&mut self, status_register_result: StatusRegisterResult) {
-        self.reg_sr = (self.reg_sr & !status_register_result.status_register_mask)
+    pub fn merge_status_register(
+        &mut self,
+        step_log: &mut StepLog,
+        status_register_result: StatusRegisterResult,
+    ) {
+        let new_sr = (self.reg_sr & !status_register_result.status_register_mask)
             | (status_register_result.status_register
                 & status_register_result.status_register_mask);
+        if new_sr != self.reg_sr {
+            step_log.add_log(StepLogEntry::SrChanged {
+                value: new_sr,
+                value_old: self.reg_sr,
+            });
+        } else {
+            step_log.add_log(StepLogEntry::SrNotChanged { value: new_sr });
+        }
+        self.reg_sr = new_sr;
     }
 
-    pub fn clear_carry(&mut self) {
-        self.reg_sr &= !STATUS_REGISTER_MASK_CARRY;
-    }
+    // pub fn clear_carry(&mut self) {
+    //     self.reg_sr &= !STATUS_REGISTER_MASK_CARRY;
+    // }
 
-    pub fn set_carry(&mut self) {
-        self.reg_sr |= STATUS_REGISTER_MASK_CARRY;
-    }
+    // pub fn set_carry(&mut self) {
+    //     self.reg_sr |= STATUS_REGISTER_MASK_CARRY;
+    // }
 
-    pub fn clear_overflow(&mut self) {
-        self.reg_sr &= !STATUS_REGISTER_MASK_OVERFLOW;
-    }
+    // pub fn clear_overflow(&mut self) {
+    //     self.reg_sr &= !STATUS_REGISTER_MASK_OVERFLOW;
+    // }
 
-    pub fn set_overflow(&mut self) {
-        self.reg_sr |= STATUS_REGISTER_MASK_OVERFLOW;
-    }
+    // pub fn set_overflow(&mut self) {
+    //     self.reg_sr |= STATUS_REGISTER_MASK_OVERFLOW;
+    // }
 
-    pub fn clear_zero(&mut self) {
-        self.reg_sr &= !STATUS_REGISTER_MASK_ZERO;
-    }
+    // pub fn clear_zero(&mut self) {
+    //     self.reg_sr &= !STATUS_REGISTER_MASK_ZERO;
+    // }
 
-    pub fn set_zero(&mut self) {
-        self.reg_sr |= STATUS_REGISTER_MASK_ZERO;
-    }
+    // pub fn set_zero(&mut self) {
+    //     self.reg_sr |= STATUS_REGISTER_MASK_ZERO;
+    // }
 
-    pub fn clear_negative(&mut self) {
-        self.reg_sr &= !STATUS_REGISTER_MASK_NEGATIVE;
-    }
+    // pub fn clear_negative(&mut self) {
+    //     self.reg_sr &= !STATUS_REGISTER_MASK_NEGATIVE;
+    // }
 
-    pub fn set_negative(&mut self) {
-        self.reg_sr |= STATUS_REGISTER_MASK_NEGATIVE;
-    }
+    // pub fn set_negative(&mut self) {
+    //     self.reg_sr |= STATUS_REGISTER_MASK_NEGATIVE;
+    // }
 
-    pub fn clear_extend(&mut self) {
-        self.reg_sr &= !STATUS_REGISTER_MASK_EXTEND;
-    }
+    // pub fn clear_extend(&mut self) {
+    //     self.reg_sr &= !STATUS_REGISTER_MASK_EXTEND;
+    // }
 
-    pub fn set_extend(&mut self) {
-        self.reg_sr |= STATUS_REGISTER_MASK_EXTEND;
-    }
+    // pub fn set_extend(&mut self) {
+    //     self.reg_sr |= STATUS_REGISTER_MASK_EXTEND;
+    // }
 
     pub fn clear_supervisor(&mut self) {
         self.reg_sr &= !STATUS_REGISTER_MASK_SUPERVISOR_STATE;
@@ -836,9 +1061,17 @@ impl StatusRegister {
         return (self.reg_sr & STATUS_REGISTER_MASK_EXTEND) == STATUS_REGISTER_MASK_EXTEND;
     }
 
-    pub fn is_sr_supervisor_set(&self) -> bool {
-        return (self.reg_sr & STATUS_REGISTER_MASK_SUPERVISOR_STATE)
+    pub fn is_sr_supervisor_set(&self, step_log: &mut StepLog) -> bool {
+        let value = (self.reg_sr & STATUS_REGISTER_MASK_SUPERVISOR_STATE)
             == STATUS_REGISTER_MASK_SUPERVISOR_STATE;
+        step_log.add_log(StepLogEntry::SrReadSupervisorBit { value });
+        value
+    }
+
+    pub fn is_sr_supervisor_set_no_log(&self) -> bool {
+        let value = (self.reg_sr & STATUS_REGISTER_MASK_SUPERVISOR_STATE)
+            == STATUS_REGISTER_MASK_SUPERVISOR_STATE;
+        value
     }
 
     pub fn evaluate_condition(&self, conditional_test: &ConditionalTest) -> bool {
@@ -905,5 +1138,42 @@ impl StatusRegister {
             ConditionalTest::VC => self.reg_sr & STATUS_REGISTER_MASK_OVERFLOW == 0x0000,
             ConditionalTest::VS => self.reg_sr & STATUS_REGISTER_MASK_OVERFLOW != 0x0000,
         }
+    }
+}
+
+impl fmt::Display for StatusRegister {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.is_sr_supervisor_set_no_log() {
+            write!(f, "S");
+        } else {
+            write!(f, "-");
+        }
+        write!(f, " ");
+        if self.is_sr_extend_set() {
+            write!(f, "X");
+        } else {
+            write!(f, "-");
+        }
+        if self.is_sr_negative_set() {
+            write!(f, "N");
+        } else {
+            write!(f, "-");
+        }
+        if self.is_sr_zero_set() {
+            write!(f, "Z");
+        } else {
+            write!(f, "-");
+        }
+        if self.is_sr_overflow_set() {
+            write!(f, "V");
+        } else {
+            write!(f, "-");
+        }
+        if self.is_sr_carry_set() {
+            write!(f, "C");
+        } else {
+            write!(f, "-");
+        }
+        Ok(())
     }
 }

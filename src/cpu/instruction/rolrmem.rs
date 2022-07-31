@@ -1,4 +1,5 @@
 use super::{GetDisassemblyResult, GetDisassemblyResultError, OperationSize, StepError};
+use crate::cpu::step_log::StepLog;
 use crate::cpu::{Cpu, StatusRegisterResult};
 use crate::mem::Mem;
 use crate::register::{
@@ -36,11 +37,13 @@ pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
+    step_log: &mut StepLog,
 ) -> Result<(), StepError> {
     let ea_data = pc.get_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
         instr_word,
         reg,
         mem,
+        step_log,
         |instr_word| Ok(OperationSize::Word),
     )?;
     let rolr_direction = match ea_data.instr_word & 0x0100 {
@@ -48,7 +51,7 @@ pub fn step<'a>(
         _ => RolrDirection::Right,
     };
 
-    let value = ea_data.get_value_word(pc, reg, mem, false);
+    let value = ea_data.get_value_word(pc, reg, mem, step_log, false);
     println!("value: ${:08X}", value);
     let (result, overflow) = match rolr_direction {
         RolrDirection::Left => {
@@ -70,7 +73,7 @@ pub fn step<'a>(
         }
     };
 
-    ea_data.set_value_word(pc, reg, mem, result, true);
+    ea_data.set_value_word(pc, reg, mem, step_log, result, true);
     let mut status_register = 0x0000;
     match result {
         0 => status_register |= STATUS_REGISTER_MASK_ZERO,
@@ -93,7 +96,8 @@ pub fn step<'a>(
     //     "status_register_result: ${:04X}-${:04X}",
     //     status_register_result.status_register, status_register_result.status_register_mask
     // );
-    reg.reg_sr.merge_status_register(status_register_result);
+    reg.reg_sr
+        .merge_status_register(step_log, status_register_result);
 
     Ok(())
 }
@@ -121,11 +125,13 @@ pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
+    step_log: &mut StepLog,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let ea_data = pc.get_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
         instr_word,
         reg,
         mem,
+        step_log,
         |instr_word| Ok(OperationSize::Word),
     )?;
     let rolr_direction = match ea_data.instr_word & 0x0100 {
@@ -160,7 +166,7 @@ mod tests {
     //     );
 
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -197,7 +203,7 @@ mod tests {
     //     );
 
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -234,7 +240,7 @@ mod tests {
     //     );
 
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -271,7 +277,7 @@ mod tests {
     //     );
 
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -308,7 +314,7 @@ mod tests {
     //     );
 
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -345,7 +351,7 @@ mod tests {
     //     );
 
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -382,7 +388,7 @@ mod tests {
     //     );
 
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,

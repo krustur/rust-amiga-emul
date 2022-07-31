@@ -5,9 +5,11 @@ use core::panic;
 use std::convert::TryInto;
 
 use self::ea::EffectiveAddressDebug;
+use self::step_log::StepLog;
 
 pub mod ea;
 pub mod instruction;
+pub mod step_log;
 
 #[derive(Debug, PartialEq)]
 pub struct ResultWithStatusRegister<T> {
@@ -186,8 +188,8 @@ pub fn match_check_ea_only_control_or_postincrement_addressing_modes_pos_0(
 
 impl Cpu {
     pub fn new(mem: Mem) -> Cpu {
-        let reg_ssp = mem.get_long(0x0);
-        let pc_address = mem.get_long(0x4);
+        let reg_ssp = mem.get_long_no_log(0x0);
+        let pc_address = mem.get_long_no_log(0x4);
         let reg_pc = ProgramCounter::from_address(pc_address);
         let instructions = vec![
             Instruction::new(
@@ -1891,24 +1893,31 @@ impl Cpu {
         }
     }
 
-    pub fn exception(&mut self, pc: &mut ProgramCounter, vector: u32) {
+    pub fn exception(&mut self, pc: &mut ProgramCounter, step_log: &mut StepLog, vector: u32) {
+        // TODO: This could probably be a StepLogEntry
         println!("Exception occured!");
         println!("vector: {} [${:02X}]", vector, vector);
         let sr_to_push = self.register.reg_sr.get_value();
         self.register.reg_sr.set_supervisor();
         // TODO: T bit clear
         // TODO: Do we push PC or PC+2?
-        self.register.stack_push_pc(&mut self.memory);
-        self.register.stack_push_word(&mut self.memory, sr_to_push);
+        self.register.stack_push_pc(&mut self.memory, step_log);
+        self.register
+            .stack_push_word(&mut self.memory, step_log, sr_to_push);
 
         let vector_offset = (vector) * 4;
         println!("vector_offset: ${:08X}", vector_offset);
-        let vector_address = self.memory.get_long(vector_offset);
+        let vector_address = self.memory.get_long(step_log, vector_offset);
         println!("vector_address: ${:08X}", vector_address);
         pc.set_long(vector_address);
     }
 
     pub fn execute_next_instruction(self: &mut Cpu) {
+        let mut step_log = StepLog::new();
+        self.execute_next_instruction_step_log(&mut step_log)
+    }
+
+    pub fn execute_next_instruction_step_log(self: &mut Cpu, step_log: &mut StepLog) {
         let mut pc = self.register.reg_pc.clone();
         let instr_word = pc.fetch_next_word(&self.memory);
 
@@ -1928,17 +1937,22 @@ impl Cpu {
             }
             Some(instruction_pos) => {
                 let instruction = &self.instructions[instruction_pos];
-                let step_result =
-                    (instruction.step)(instr_word, &mut pc, &mut self.register, &mut self.memory);
+                let step_result = (instruction.step)(
+                    instr_word,
+                    &mut pc,
+                    &mut self.register,
+                    &mut self.memory,
+                    step_log,
+                );
                 match step_result {
                     Ok(step_result) => self.register.reg_pc = pc.get_step_next_pc(),
                     Err(step_error) => match step_error {
                         StepError::IllegalInstruction => {
-                            self.exception(&mut pc, 4);
+                            self.exception(&mut pc, step_log, 4);
                             self.register.reg_pc = pc.get_step_next_pc();
                         }
                         StepError::PriviliegeViolation => {
-                            self.exception(&mut pc, 8);
+                            self.exception(&mut pc, step_log, 8);
                             self.register.reg_pc = pc.get_step_next_pc();
                         }
                         _ => {
@@ -1959,12 +1973,21 @@ impl Cpu {
         };
     }
 
-    pub fn get_next_disassembly(self: &mut Cpu) -> GetDisassemblyResult {
-        let get_disassembly_result = self.get_disassembly(&mut self.register.reg_pc.clone());
+    pub fn get_next_disassembly_no_log(self: &mut Cpu) -> GetDisassemblyResult {
+        self.get_next_disassembly(&mut StepLog::new())
+    }
+
+    pub fn get_next_disassembly(self: &mut Cpu, step_log: &mut StepLog) -> GetDisassemblyResult {
+        let get_disassembly_result =
+            self.get_disassembly(&mut self.register.reg_pc.clone(), step_log);
         get_disassembly_result
     }
 
-    pub fn get_disassembly(self: &mut Cpu, pc: &mut ProgramCounter) -> GetDisassemblyResult {
+    pub fn get_disassembly(
+        self: &mut Cpu,
+        pc: &mut ProgramCounter,
+        step_log: &mut StepLog,
+    ) -> GetDisassemblyResult {
         let instr_word = pc.fetch_next_word(&self.memory);
 
         let instruction_pos = self
@@ -1981,6 +2004,7 @@ impl Cpu {
                     pc,
                     &mut self.register,
                     &mut self.memory,
+                    step_log,
                 );
 
                 match get_disassembly_result {
@@ -2003,7 +2027,11 @@ impl Cpu {
         }
     }
 
-    pub fn print_disassembly(self: &mut Cpu, disassembly_result: &GetDisassemblyResult) {
+    pub fn print_disassembly(
+        self: &mut Cpu,
+        disassembly_result: &GetDisassemblyResult,
+        line_feed: bool,
+    ) {
         let instr_format = format!(
             "{} {}",
             disassembly_result.name, disassembly_result.operands_format
@@ -2013,13 +2041,16 @@ impl Cpu {
         print!("${:08X} ", instr_address);
         for i in (instr_address..instr_address + 8).step_by(2) {
             if i < next_instr_address {
-                let op_mem = self.memory.get_word(i);
+                let op_mem = self.memory.get_word_no_log(i);
                 print!("{:04X} ", op_mem);
             } else {
                 print!("     ");
             }
         }
-        println!("{: <30}", instr_format);
+        print!("{: <30}", instr_format);
+        if line_feed {
+            println!();
+        }
     }
 
     // fn get_instruction(self: &mut Cpu, instr_addr: u32, instr_word: u16) -> &Instruction {
@@ -2849,7 +2880,7 @@ mod tests {
         let code = [0x49, 0x54].to_vec(); // DC.W $4954
         let mut cpu = crate::instr_test_setup(code, None);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,

@@ -10,6 +10,7 @@ use crate::{
 
 use super::{
     instruction::{EffectiveAddressingMode, OperationSize},
+    step_log::StepLog,
     Cpu, StatusRegisterResult,
 };
 
@@ -46,7 +47,13 @@ impl EffectiveAddressingData {
         }
     }
 
-    pub fn get_address(&self, pc: &mut ProgramCounter, reg: &mut Register, mem: &Mem) -> u32 {
+    pub fn get_address(
+        &self,
+        pc: &mut ProgramCounter,
+        reg: &mut Register,
+        mem: &Mem,
+        step_log: &mut StepLog,
+    ) -> u32 {
         match self.ea_mode {
             EffectiveAddressingMode::DRegDirect {
                 ea_register: register,
@@ -72,7 +79,7 @@ impl EffectiveAddressingData {
                 ea_register,
             } => {
                 // (An)+
-                reg.get_a_reg_long(ea_register)
+                reg.get_a_reg_long(ea_register, step_log)
             }
             EffectiveAddressingMode::ARegIndirectWithPreDecrement {
                 operation_size,
@@ -80,7 +87,7 @@ impl EffectiveAddressingData {
             } => {
                 // (-An)
                 let (ea_address, _) = reg
-                    .get_a_reg_long(ea_register)
+                    .get_a_reg_long(ea_register, step_log)
                     .overflowing_sub(operation_size.size_in_bytes());
                 ea_address
             }
@@ -156,34 +163,35 @@ impl EffectiveAddressingData {
         pc: &mut ProgramCounter,
         reg: &mut Register,
         mem: &Mem,
+        step_log: &mut StepLog,
         apply_increment_decrement: bool,
     ) -> u8 {
         match self.ea_mode {
             EffectiveAddressingMode::DRegDirect { ea_register } => {
                 // Dn
-                reg.get_d_reg_byte(ea_register)
+                reg.get_d_reg_byte(ea_register, step_log)
             }
             EffectiveAddressingMode::ARegDirect { ea_register } => {
                 // An
-                reg.get_a_reg_byte(ea_register)
+                reg.get_a_reg_byte(ea_register, step_log)
             }
             EffectiveAddressingMode::ImmediateDataByte { data } => {
                 // #<xxx>
                 data
             }
             _ => {
-                let ea = self.get_address(pc, reg, mem);
-                let result = mem.get_byte(ea);
+                let ea = self.get_address(pc, reg, mem, step_log);
+                let result = mem.get_byte(step_log, ea);
                 if apply_increment_decrement {
                     match self.ea_mode {
                         EffectiveAddressingMode::ARegIndirectWithPostIncrement {
                             operation_size,
                             ea_register,
-                        } => reg.increment_a_reg(ea_register, self.operation_size),
+                        } => reg.increment_a_reg(ea_register, step_log, self.operation_size),
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
                             operation_size,
                             ea_register,
-                        } => reg.decrement_a_reg(ea_register, self.operation_size),
+                        } => reg.decrement_a_reg(ea_register, step_log, self.operation_size),
                         _ => (),
                     }
                 }
@@ -197,36 +205,37 @@ impl EffectiveAddressingData {
         pc: &mut ProgramCounter,
         reg: &mut Register,
         mem: &Mem,
+        step_log: &mut StepLog,
         apply_increment_decrement: bool,
     ) -> u16 {
         match self.ea_mode {
             EffectiveAddressingMode::DRegDirect { ea_register } => {
                 // Dn
-                reg.get_d_reg_word(ea_register)
+                reg.get_d_reg_word(ea_register, step_log)
             }
             EffectiveAddressingMode::ARegDirect { ea_register } => {
                 // An
-                reg.get_a_reg_word(ea_register)
+                reg.get_a_reg_word(ea_register, step_log)
             }
             EffectiveAddressingMode::ImmediateDataWord { data } => {
                 // #<xxx>
                 data
             }
             _ => {
-                let ea = self.get_address(pc, reg, mem);
-                let result = mem.get_word(ea);
+                let ea = self.get_address(pc, reg, mem, step_log);
+                let result = mem.get_word(step_log, ea);
                 if apply_increment_decrement {
                     match self.ea_mode {
                         EffectiveAddressingMode::ARegIndirectWithPostIncrement {
                             operation_size,
                             ea_register,
-                        } => reg.increment_a_reg(ea_register, self.operation_size),
+                        } => reg.increment_a_reg(ea_register, step_log, self.operation_size),
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
                             operation_size,
                             // operation_size,
                             ea_register,
                             // ea_address,
-                        } => reg.decrement_a_reg(ea_register, self.operation_size),
+                        } => reg.decrement_a_reg(ea_register, step_log, self.operation_size),
                         _ => (),
                     }
                 }
@@ -240,36 +249,37 @@ impl EffectiveAddressingData {
         pc: &mut ProgramCounter,
         reg: &mut Register,
         mem: &Mem,
+        step_log: &mut StepLog,
         apply_increment_decrement: bool,
     ) -> u32 {
         match self.ea_mode {
             EffectiveAddressingMode::DRegDirect { ea_register } => {
                 // Dn
-                reg.get_d_reg_long(ea_register)
+                reg.get_d_reg_long(ea_register, step_log)
             }
             EffectiveAddressingMode::ARegDirect { ea_register } => {
                 // An
-                reg.get_a_reg_long(ea_register)
+                reg.get_a_reg_long(ea_register, step_log)
             }
             EffectiveAddressingMode::ImmediateDataLong { data } => {
                 // #<xxx>
                 data
             }
             _ => {
-                let ea = self.get_address(pc, reg, mem);
-                let result = mem.get_long(ea);
+                let ea = self.get_address(pc, reg, mem, step_log);
+                let result = mem.get_long(step_log, ea);
                 if apply_increment_decrement {
                     match self.ea_mode {
                         EffectiveAddressingMode::ARegIndirectWithPostIncrement {
                             operation_size,
                             ea_register,
-                        } => reg.increment_a_reg(ea_register, self.operation_size),
+                        } => reg.increment_a_reg(ea_register, step_log, self.operation_size),
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
                             operation_size,
                             // operation_size,
                             ea_register,
                             // ea_address,
-                        } => reg.decrement_a_reg(ea_register, self.operation_size),
+                        } => reg.decrement_a_reg(ea_register, step_log, self.operation_size),
                         _ => (),
                     }
                 }
@@ -283,6 +293,7 @@ impl EffectiveAddressingData {
         pc: &mut ProgramCounter,
         reg: &mut Register,
         mem: &mut Mem,
+        step_log: &mut StepLog,
         value: u8,
         apply_increment_decrement: bool,
     ) -> SetEffectiveAddressValueResult {
@@ -291,13 +302,13 @@ impl EffectiveAddressingData {
                 ea_register: register,
             } => {
                 // Dn
-                reg.set_d_reg_byte(register, value);
+                reg.set_d_reg_byte(step_log, register, value);
             }
             EffectiveAddressingMode::ARegDirect {
                 ea_register: register,
             } => {
                 // An
-                reg.set_a_reg_long(register, value as u32);
+                reg.set_a_reg_long(step_log, register, value as u32);
             }
             EffectiveAddressingMode::ImmediateDataByte { .. }
             | EffectiveAddressingMode::ImmediateDataWord { .. }
@@ -306,19 +317,19 @@ impl EffectiveAddressingData {
                 panic!("set_ea_value_word invalid EffectiveAddressingMode::ImmediateData");
             }
             _ => {
-                let ea = self.get_address(pc, reg, mem);
-                mem.set_byte(ea, value);
+                let ea = self.get_address(pc, reg, mem, step_log);
+                mem.set_byte(step_log, ea, value);
                 if apply_increment_decrement {
                     match self.ea_mode {
                         EffectiveAddressingMode::ARegIndirectWithPostIncrement {
                             operation_size,
                             ea_register,
-                        } => reg.increment_a_reg(ea_register, self.operation_size),
+                        } => reg.increment_a_reg(ea_register, step_log, self.operation_size),
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
                             operation_size,
                             ea_register,
                             // ea_address,
-                        } => reg.decrement_a_reg(ea_register, self.operation_size),
+                        } => reg.decrement_a_reg(ea_register, step_log, self.operation_size),
                         _ => (),
                     }
                 }
@@ -351,6 +362,7 @@ impl EffectiveAddressingData {
         pc: &mut ProgramCounter,
         reg: &mut Register,
         mem: &mut Mem,
+        step_log: &mut StepLog,
         value: u16,
         apply_increment_decrement: bool,
     ) -> SetEffectiveAddressValueResult {
@@ -359,13 +371,13 @@ impl EffectiveAddressingData {
                 ea_register: register,
             } => {
                 // Dn
-                reg.set_d_reg_word(register, value);
+                reg.set_d_reg_word(step_log, register, value);
             }
             EffectiveAddressingMode::ARegDirect {
                 ea_register: register,
             } => {
                 // An
-                reg.set_a_reg_long(register, value as u32);
+                reg.set_a_reg_long(step_log, register, value as u32);
             }
             EffectiveAddressingMode::ImmediateDataByte { .. }
             | EffectiveAddressingMode::ImmediateDataWord { .. }
@@ -374,19 +386,19 @@ impl EffectiveAddressingData {
                 panic!("set_ea_value_word invalid EffectiveAddressingMode::ImmediateData");
             }
             _ => {
-                let ea = self.get_address(pc, reg, mem);
-                mem.set_word(ea, value);
+                let ea = self.get_address(pc, reg, mem, step_log);
+                mem.set_word(step_log, ea, value);
                 if apply_increment_decrement {
                     match self.ea_mode {
                         EffectiveAddressingMode::ARegIndirectWithPostIncrement {
                             operation_size,
                             ea_register,
-                        } => reg.increment_a_reg(ea_register, self.operation_size),
+                        } => reg.increment_a_reg(ea_register, step_log, self.operation_size),
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
                             operation_size,
                             ea_register,
                             // ea_address,
-                        } => reg.decrement_a_reg(ea_register, self.operation_size),
+                        } => reg.decrement_a_reg(ea_register, step_log, self.operation_size),
                         _ => (),
                     }
                 }
@@ -419,6 +431,7 @@ impl EffectiveAddressingData {
         pc: &mut ProgramCounter,
         reg: &mut Register,
         mem: &mut Mem,
+        step_log: &mut StepLog,
         value: u32,
         apply_increment_decrement: bool,
     ) -> SetEffectiveAddressValueResult {
@@ -427,13 +440,13 @@ impl EffectiveAddressingData {
                 ea_register: register,
             } => {
                 // Dn
-                reg.set_d_reg_long(register, value);
+                reg.set_d_reg_long(step_log, register, value);
             }
             EffectiveAddressingMode::ARegDirect {
                 ea_register: register,
             } => {
                 // An
-                reg.set_a_reg_long(register, value);
+                reg.set_a_reg_long(step_log, register, value);
             }
             EffectiveAddressingMode::ImmediateDataByte { .. }
             | EffectiveAddressingMode::ImmediateDataWord { .. }
@@ -442,21 +455,21 @@ impl EffectiveAddressingData {
                 panic!("set_ea_value_word invalid EffectiveAddressingMode::ImmediateData");
             }
             _ => {
-                let ea = self.get_address(pc, reg, mem);
-                mem.set_long(ea, value);
+                let ea = self.get_address(pc, reg, mem, step_log);
+                mem.set_long(step_log, ea, value);
                 if apply_increment_decrement {
                     match self.ea_mode {
                         EffectiveAddressingMode::ARegIndirectWithPostIncrement {
                             operation_size,
                             ea_register,
                         } => {
-                            reg.increment_a_reg(ea_register, self.operation_size);
+                            reg.increment_a_reg(ea_register, step_log, self.operation_size);
                         }
                         EffectiveAddressingMode::ARegIndirectWithPreDecrement {
                             operation_size,
                             ea_register,
                         } => {
-                            reg.decrement_a_reg(ea_register, self.operation_size);
+                            reg.decrement_a_reg(ea_register, step_log, self.operation_size);
                         }
                         _ => (),
                     }

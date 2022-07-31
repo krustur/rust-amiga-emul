@@ -1,5 +1,6 @@
 use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError};
 use crate::{
+    cpu::step_log::StepLog,
     mem::Mem,
     register::{ProgramCounter, Register},
 };
@@ -18,6 +19,7 @@ pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
+    step_log: &mut StepLog,
 ) -> Result<(), StepError> {
     Ok(())
 }
@@ -27,6 +29,7 @@ pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
+    step_log: &mut StepLog,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     Ok(GetDisassemblyResult::from_pc(
         pc,
@@ -58,7 +61,7 @@ mod tests {
                 | STATUS_REGISTER_MASK_EXTEND,
         );
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -87,7 +90,7 @@ mod tests {
                 | STATUS_REGISTER_MASK_EXTEND,
         );
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -114,7 +117,7 @@ mod tests {
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,

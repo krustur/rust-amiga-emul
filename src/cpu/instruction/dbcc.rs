@@ -1,6 +1,6 @@
 use super::{GetDisassemblyResultError, StepError};
 use crate::{
-    cpu::{instruction::GetDisassemblyResult, Cpu},
+    cpu::{instruction::GetDisassemblyResult, step_log::StepLog, Cpu},
     mem::Mem,
     register::{ProgramCounter, Register},
 };
@@ -19,6 +19,7 @@ pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
+    step_log: &mut StepLog,
 ) -> Result<(), StepError> {
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
     let condition_result = reg.reg_sr.evaluate_condition(&conditional_test);
@@ -27,9 +28,9 @@ pub fn step<'a>(
     match condition_result {
         false => {
             let register = Cpu::extract_register_index_from_bit_pos_0(instr_word)?;
-            let reg_word = reg.get_d_reg_word(register);
+            let reg_word = reg.get_d_reg_word(register, step_log);
             let reg_word = reg_word.wrapping_sub(1);
-            reg.set_d_reg_word(register, reg_word);
+            reg.set_d_reg_word(step_log, register, reg_word);
 
             match reg_word {
                 0xffff => {
@@ -52,6 +53,7 @@ pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
+    step_log: &mut StepLog,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let conditional_test = Cpu::extract_conditional_test_pos_8(instr_word);
     let register = Cpu::extract_register_index_from_bit_pos_0(instr_word)?;
@@ -88,12 +90,12 @@ mod tests {
         // arrange
         let code = [0x54, 0xc8, 0x00, 0x04].to_vec(); // DBCC D0,$0004
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.set_d_reg_long(0, 0xffff0001);
+        cpu.register.set_d_reg_long_no_log(0, 0xffff0001);
         cpu.register
             .reg_sr
             .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_CARRY);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -106,7 +108,7 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0xffff0000, cpu.register.get_d_reg_long(0));
+        assert_eq!(0xffff0000, cpu.register.get_d_reg_long_no_log(0));
         assert_eq!(0xC00006, cpu.register.reg_pc.get_address());
     }
 
@@ -115,12 +117,12 @@ mod tests {
         // arrange
         let code = [0x54, 0xc9, 0x00, 0x04].to_vec(); // DBCC D1,$0004
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.set_d_reg_long(1, 0x11110000);
+        cpu.register.set_d_reg_long_no_log(1, 0x11110000);
         cpu.register
             .reg_sr
             .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_CARRY);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -133,7 +135,7 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x1111ffff, cpu.register.get_d_reg_long(1));
+        assert_eq!(0x1111ffff, cpu.register.get_d_reg_long_no_log(1));
         assert_eq!(0xc00004, cpu.register.reg_pc.get_address());
     }
 
@@ -142,11 +144,11 @@ mod tests {
         // arrange
         let code = [0x54, 0xca, 0x00, 0x04].to_vec(); // DBCC D2,$0004
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.set_d_reg_long(2, 0xffff0001);
+        cpu.register.set_d_reg_long_no_log(2, 0xffff0001);
         cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
 
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -159,7 +161,7 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0xffff0001, cpu.register.get_d_reg_long(2));
+        assert_eq!(0xffff0001, cpu.register.get_d_reg_long_no_log(2));
         assert_eq!(0xC00004, cpu.register.reg_pc.get_address());
     }
 }

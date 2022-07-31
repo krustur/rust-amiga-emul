@@ -1,4 +1,5 @@
 use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError};
+use crate::cpu::step_log::StepLog;
 use crate::cpu::Cpu;
 use crate::mem::Mem;
 use crate::register::{ProgramCounter, Register};
@@ -20,8 +21,9 @@ pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
+    step_log: &mut StepLog,
 ) -> Result<(), StepError> {
-    match reg.reg_sr.is_sr_supervisor_set() {
+    match reg.reg_sr.is_sr_supervisor_set(step_log) {
         true => {
             let immediate_data = pc.fetch_next_word(mem);
 
@@ -42,6 +44,7 @@ pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
+    step_log: &mut StepLog,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let immediate_data = format!("#${:04X}", pc.fetch_next_word(mem));
 
@@ -69,7 +72,7 @@ mod tests {
     //             | STATUS_REGISTER_MASK_EXTEND,
     //     );
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -105,7 +108,7 @@ mod tests {
     //             | STATUS_REGISTER_MASK_NEGATIVE,
     //     );
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -140,7 +143,7 @@ mod tests {
     //             | STATUS_REGISTER_MASK_EXTEND,
     //     );
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -176,7 +179,7 @@ mod tests {
     //             | STATUS_REGISTER_MASK_NEGATIVE,
     //     );
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -211,7 +214,7 @@ mod tests {
     //             | STATUS_REGISTER_MASK_EXTEND,
     //     );
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -247,7 +250,7 @@ mod tests {
     //             | STATUS_REGISTER_MASK_NEGATIVE,
     //     );
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,

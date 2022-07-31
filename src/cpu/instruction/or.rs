@@ -1,6 +1,7 @@
 use super::{
     GetDisassemblyResult, GetDisassemblyResultError, Instruction, OperationSize, StepError,
 };
+use crate::cpu::step_log::StepLog;
 use crate::cpu::Cpu;
 use crate::mem::Mem;
 use crate::register::{ProgramCounter, Register};
@@ -14,6 +15,8 @@ use std::panic;
 
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
+
+// TODO: Tests
 
 const BYTE_WITH_DN_AS_DEST: usize = 0b000;
 const WORD_WITH_DN_AS_DEST: usize = 0b001;
@@ -47,6 +50,7 @@ pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
+    step_log: &mut StepLog,
 ) -> Result<(), StepError> {
     let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
     let operation_size = match opmode {
@@ -63,60 +67,62 @@ pub fn step<'a>(
         instr_word,
         reg,
         mem,
+        step_log,
         |instr_word| Ok(operation_size),
     )?;
     let register = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;
 
     let status_register_result = match opmode {
         BYTE_WITH_DN_AS_DEST => {
-            let ea_value = ea_data.get_value_byte(pc, reg, mem, true);
-            let reg_value = reg.get_d_reg_byte(register);
+            let ea_value = ea_data.get_value_byte(pc, reg, mem, step_log, true);
+            let reg_value = reg.get_d_reg_byte(register, step_log);
             let add_result = Cpu::or_bytes(ea_value, reg_value);
 
-            reg.set_d_reg_byte(register, add_result.result);
+            reg.set_d_reg_byte(step_log, register, add_result.result);
             add_result.status_register_result
         }
         WORD_WITH_DN_AS_DEST => {
-            let ea_value = ea_data.get_value_word(pc, reg, mem, true);
-            let reg_value = reg.get_d_reg_word(register);
+            let ea_value = ea_data.get_value_word(pc, reg, mem, step_log, true);
+            let reg_value = reg.get_d_reg_word(register, step_log);
             let add_result = Cpu::or_words(ea_value, reg_value);
 
-            reg.set_d_reg_word(register, add_result.result);
+            reg.set_d_reg_word(step_log, register, add_result.result);
             add_result.status_register_result
         }
         LONG_WITH_DN_AS_DEST => {
-            let ea_value = ea_data.get_value_long(pc, reg, mem, true);
-            let reg_value = reg.get_d_reg_long(register);
+            let ea_value = ea_data.get_value_long(pc, reg, mem, step_log, true);
+            let reg_value = reg.get_d_reg_long(register, step_log);
             let add_result = Cpu::or_longs(ea_value, reg_value);
 
-            reg.set_d_reg_long(register, add_result.result);
+            reg.set_d_reg_long(step_log, register, add_result.result);
             add_result.status_register_result
         }
         BYTE_WITH_EA_AS_DEST => {
-            let ea_value = ea_data.get_value_byte(pc, reg, mem, false);
-            let reg_value = reg.get_d_reg_byte(register);
+            let ea_value = ea_data.get_value_byte(pc, reg, mem, step_log, false);
+            let reg_value = reg.get_d_reg_byte(register, step_log);
             let add_result = Cpu::or_bytes(ea_value, reg_value);
-            ea_data.set_value_byte(pc, reg, mem, add_result.result, true);
+            ea_data.set_value_byte(pc, reg, mem, step_log, add_result.result, true);
             add_result.status_register_result
         }
         WORD_WITH_EA_AS_DEST => {
-            let ea_value = ea_data.get_value_word(pc, reg, mem, false);
-            let reg_value = reg.get_d_reg_word(register);
+            let ea_value = ea_data.get_value_word(pc, reg, mem, step_log, false);
+            let reg_value = reg.get_d_reg_word(register, step_log);
             let add_result = Cpu::or_words(ea_value, reg_value);
-            ea_data.set_value_word(pc, reg, mem, add_result.result, true);
+            ea_data.set_value_word(pc, reg, mem, step_log, add_result.result, true);
             add_result.status_register_result
         }
         LONG_WITH_EA_AS_DEST => {
-            let ea_value = ea_data.get_value_long(pc, reg, mem, false);
-            let reg_value = reg.get_d_reg_long(register);
+            let ea_value = ea_data.get_value_long(pc, reg, mem, step_log, false);
+            let reg_value = reg.get_d_reg_long(register, step_log);
             let add_result = Cpu::or_longs(ea_value, reg_value);
-            ea_data.set_value_long(pc, reg, mem, add_result.result, true);
+            ea_data.set_value_long(pc, reg, mem, step_log, add_result.result, true);
             add_result.status_register_result
         }
         _ => panic!("Unhandled ea_opmode"),
     };
 
-    reg.reg_sr.merge_status_register(status_register_result);
+    reg.reg_sr
+        .merge_status_register(step_log, status_register_result);
 
     Ok(())
 }
@@ -126,6 +132,7 @@ pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
+    step_log: &mut StepLog,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let opmode = Cpu::extract_op_mode_from_bit_pos_6(instr_word);
     let operation_size = match opmode {
@@ -142,6 +149,7 @@ pub fn get_disassembly<'a>(
         instr_word,
         reg,
         mem,
+        step_log,
         |instr_word| Ok(operation_size),
     )?;
     let opmode = Cpu::extract_op_mode_from_bit_pos_6(ea_data.instr_word);
@@ -208,7 +216,7 @@ mod tests {
     //             | STATUS_REGISTER_MASK_EXTEND,
     //     );
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -239,7 +247,7 @@ mod tests {
     //     cpu.register.set_d_reg_long(0, 0x00000087);
     //     cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -270,7 +278,7 @@ mod tests {
     //     cpu.register.set_d_reg_long(0, 0x0000000f);
     //     cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -307,7 +315,7 @@ mod tests {
     //             | STATUS_REGISTER_MASK_EXTEND,
     //     );
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -338,7 +346,7 @@ mod tests {
     //     cpu.register.set_d_reg_long(0, 0x00008fff);
     //     cpu.register.reg_sr.set_sr_reg_flags_abcde(0x000);
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -375,7 +383,7 @@ mod tests {
     //             | STATUS_REGISTER_MASK_EXTEND,
     //     );
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -412,7 +420,7 @@ mod tests {
     //             | STATUS_REGISTER_MASK_EXTEND,
     //     );
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -443,7 +451,7 @@ mod tests {
     //     cpu.register.set_d_reg_long(0, 0x8fff8fff);
     //     cpu.register.reg_sr.set_sr_reg_flags_abcde(0x000);
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -480,7 +488,7 @@ mod tests {
     //             | STATUS_REGISTER_MASK_EXTEND,
     //     );
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -517,7 +525,7 @@ mod tests {
     //             | STATUS_REGISTER_MASK_EXTEND,
     //     );
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -548,7 +556,7 @@ mod tests {
     //     cpu.register.set_d_reg_long(0, 0x00000087);
     //     cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -579,7 +587,7 @@ mod tests {
     //     cpu.register.set_d_reg_long(0, 0x0000000f);
     //     cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -616,7 +624,7 @@ mod tests {
     //             | STATUS_REGISTER_MASK_EXTEND,
     //     );
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -647,7 +655,7 @@ mod tests {
     //     cpu.register.set_d_reg_long(0, 0x00008fff);
     //     cpu.register.reg_sr.set_sr_reg_flags_abcde(0x000);
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -684,7 +692,7 @@ mod tests {
     //             | STATUS_REGISTER_MASK_EXTEND,
     //     );
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -721,7 +729,7 @@ mod tests {
     //             | STATUS_REGISTER_MASK_EXTEND,
     //     );
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -752,7 +760,7 @@ mod tests {
     //     cpu.register.set_d_reg_long(0, 0x8fff8fff);
     //     cpu.register.reg_sr.set_sr_reg_flags_abcde(0x000);
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,
@@ -789,7 +797,7 @@ mod tests {
     //             | STATUS_REGISTER_MASK_EXTEND,
     //     );
     //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly();
+    //     let debug_result = cpu.get_next_disassembly_no_log();
     //     assert_eq!(
     //         GetDisassemblyResult::from_address_and_address_next(
     //             0xC00000,

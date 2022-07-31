@@ -1,6 +1,6 @@
 use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError};
 use crate::{
-    cpu::Cpu,
+    cpu::{step_log::StepLog, Cpu},
     mem::Mem,
     register::{ProgramCounter, Register},
 };
@@ -19,6 +19,7 @@ pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
+    step_log: &mut StepLog,
 ) -> Result<(), StepError> {
     let displacement = Cpu::get_byte_from_word(instr_word);
 
@@ -35,7 +36,7 @@ pub fn step<'a>(
             pc.branch_byte(displacement);
         }
     };
-    reg.stack_push_long(mem, pc.get_address_next());
+    reg.stack_push_long(mem, step_log, pc.get_address_next());
     Ok(())
 }
 
@@ -44,6 +45,7 @@ pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
+    step_log: &mut StepLog,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let displacement = Cpu::get_byte_from_word(instr_word);
 
@@ -98,7 +100,7 @@ mod tests {
         cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
 
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -112,8 +114,8 @@ mod tests {
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0xC00004, cpu.register.reg_pc.get_address());
-        assert_eq!(0x10003fc, cpu.register.get_a_reg_long(7));
-        assert_eq!(0xC00002, cpu.memory.get_long(0x10003fc));
+        assert_eq!(0x10003fc, cpu.register.get_a_reg_long_no_log(7));
+        assert_eq!(0xC00002, cpu.memory.get_long_no_log(0x10003fc));
     }
 
     #[test]
@@ -123,10 +125,10 @@ mod tests {
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
 
-        println!("sp: ${:08X}", cpu.register.get_a_reg_long(7));
+        println!("sp: ${:08X}", cpu.register.get_a_reg_long_no_log(7));
 
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -140,8 +142,8 @@ mod tests {
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0xBFFFFE, cpu.register.reg_pc.get_address());
-        assert_eq!(0x10003fc, cpu.register.get_a_reg_long(7));
-        assert_eq!(0xC00002, cpu.memory.get_long(0x10003fc));
+        assert_eq!(0x10003fc, cpu.register.get_a_reg_long_no_log(7));
+        assert_eq!(0xC00002, cpu.memory.get_long_no_log(0x10003fc));
     }
 
     // word
@@ -153,10 +155,10 @@ mod tests {
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
 
-        println!("sp: ${:08X}", cpu.register.get_a_reg_long(7));
+        println!("sp: ${:08X}", cpu.register.get_a_reg_long_no_log(7));
 
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -170,8 +172,8 @@ mod tests {
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0xC00006, cpu.register.reg_pc.get_address());
-        assert_eq!(0x10003fc, cpu.register.get_a_reg_long(7));
-        assert_eq!(0xC00004, cpu.memory.get_long(0x10003fc));
+        assert_eq!(0x10003fc, cpu.register.get_a_reg_long_no_log(7));
+        assert_eq!(0xC00004, cpu.memory.get_long_no_log(0x10003fc));
     }
 
     #[test]
@@ -181,10 +183,10 @@ mod tests {
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
 
-        println!("sp: ${:08X}", cpu.register.get_a_reg_long(7));
+        println!("sp: ${:08X}", cpu.register.get_a_reg_long_no_log(7));
 
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -198,8 +200,8 @@ mod tests {
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0xBFFFFE, cpu.register.reg_pc.get_address());
-        assert_eq!(0x10003fc, cpu.register.get_a_reg_long(7));
-        assert_eq!(0xC00004, cpu.memory.get_long(0x10003fc));
+        assert_eq!(0x10003fc, cpu.register.get_a_reg_long_no_log(7));
+        assert_eq!(0xC00004, cpu.memory.get_long_no_log(0x10003fc));
     }
 
     // long
@@ -211,10 +213,10 @@ mod tests {
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
 
-        println!("sp: ${:08X}", cpu.register.get_a_reg_long(7));
+        println!("sp: ${:08X}", cpu.register.get_a_reg_long_no_log(7));
 
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -228,8 +230,8 @@ mod tests {
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0xC00008, cpu.register.reg_pc.get_address());
-        assert_eq!(0x10003fc, cpu.register.get_a_reg_long(7));
-        assert_eq!(0xC00006, cpu.memory.get_long(0x10003fc));
+        assert_eq!(0x10003fc, cpu.register.get_a_reg_long_no_log(7));
+        assert_eq!(0xC00006, cpu.memory.get_long_no_log(0x10003fc));
     }
 
     #[test]
@@ -239,10 +241,10 @@ mod tests {
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
 
-        println!("sp: ${:08X}", cpu.register.get_a_reg_long(7));
+        println!("sp: ${:08X}", cpu.register.get_a_reg_long_no_log(7));
 
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -256,7 +258,7 @@ mod tests {
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0xBFFFFE, cpu.register.reg_pc.get_address());
-        assert_eq!(0x10003fc, cpu.register.get_a_reg_long(7));
-        assert_eq!(0xC00006, cpu.memory.get_long(0x10003fc));
+        assert_eq!(0x10003fc, cpu.register.get_a_reg_long_no_log(7));
+        assert_eq!(0xC00006, cpu.memory.get_long_no_log(0x10003fc));
     }
 }

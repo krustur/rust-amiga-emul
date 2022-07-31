@@ -1,5 +1,6 @@
 use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError};
 use crate::{
+    cpu::step_log::StepLog,
     mem::Mem,
     register::{ProgramCounter, Register},
 };
@@ -18,6 +19,7 @@ pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
+    step_log: &mut StepLog,
 ) -> Result<(), StepError> {
     let _ = pc.fetch_next_word(mem);
 
@@ -29,6 +31,7 @@ pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
+    step_log: &mut StepLog,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     Ok(GetDisassemblyResult::from_pc(
         pc,

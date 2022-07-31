@@ -2,7 +2,7 @@ use super::{
     GetDisassemblyResult, GetDisassemblyResultError, Instruction, OperationSize, StepError,
 };
 use crate::{
-    cpu::Cpu,
+    cpu::{step_log::StepLog, Cpu},
     mem::Mem,
     register::{ProgramCounter, Register},
 };
@@ -28,16 +28,18 @@ pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
+    step_log: &mut StepLog,
 ) -> Result<(), StepError> {
     let ea_data = pc.get_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
         instr_word,
         reg,
         mem,
+        step_log,
         |instr_word| Ok(OperationSize::Long),
     )?;
-    let ea_address = ea_data.get_address(pc, reg, mem);
+    let ea_address = ea_data.get_address(pc, reg, mem, step_log);
 
-    reg.stack_push_long(mem, ea_address);
+    reg.stack_push_long(mem, step_log, ea_address);
     Ok(())
 }
 
@@ -46,11 +48,13 @@ pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
+    step_log: &mut StepLog,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let ea_data = pc.get_effective_addressing_data_from_bit_pos_3_and_reg_pos_0(
         instr_word,
         reg,
         mem,
+        step_log,
         |instr_word| Ok(OperationSize::Long),
     )?;
     let ea_mode = ea_data.ea_mode;
@@ -87,7 +91,7 @@ mod tests {
                 | STATUS_REGISTER_MASK_EXTEND,
         );
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -100,8 +104,8 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x010003fc, cpu.register.get_a_reg_long(7));
-        assert_eq!(0x00C0001a, cpu.memory.get_long(0x010003fc));
+        assert_eq!(0x010003fc, cpu.register.get_a_reg_long_no_log(7));
+        assert_eq!(0x00C0001a, cpu.memory.get_long_no_log(0x010003fc));
         assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
         assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
         assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
@@ -116,7 +120,7 @@ mod tests {
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -129,8 +133,8 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x010003fc, cpu.register.get_a_reg_long(7));
-        assert_eq!(0x00004000, cpu.memory.get_long(0x010003fc));
+        assert_eq!(0x010003fc, cpu.register.get_a_reg_long_no_log(7));
+        assert_eq!(0x00004000, cpu.memory.get_long_no_log(0x010003fc));
         assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());

@@ -1,5 +1,6 @@
 use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError};
 use crate::{
+    cpu::step_log::StepLog,
     mem::Mem,
     register::{ProgramCounter, Register},
 };
@@ -18,12 +19,13 @@ pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
+    step_log: &mut StepLog,
 ) -> Result<(), StepError> {
-    match reg.reg_sr.is_sr_supervisor_set() {
+    match reg.reg_sr.is_sr_supervisor_set(step_log) {
         true => {
-            let sr = reg.stack_pop_word(mem);
+            let sr = reg.stack_pop_word(mem, step_log);
 
-            reg.stack_pop_pc(mem, pc);
+            reg.stack_pop_pc(mem, pc, step_log);
             reg.reg_sr.set_value(sr);
             let hey = pc.get_step_next_pc();
 
@@ -38,6 +40,7 @@ pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
+    step_log: &mut StepLog,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     Ok(GetDisassemblyResult::from_pc(
         pc,
@@ -64,7 +67,7 @@ mod tests {
         let mut cpu = crate::instr_test_setup(code, None);
 
         cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
-        cpu.memory.set_word(
+        cpu.memory.set_word_no_log(
             0x010003FA,
             STATUS_REGISTER_MASK_CARRY
                 | STATUS_REGISTER_MASK_OVERFLOW
@@ -72,10 +75,10 @@ mod tests {
                 | STATUS_REGISTER_MASK_NEGATIVE
                 | STATUS_REGISTER_MASK_EXTEND,
         );
-        cpu.memory.set_long(0x010003FC, 0x00C01248);
-        cpu.register.set_a_reg_long(7, 0x010003FA);
+        cpu.memory.set_long_no_log(0x010003FC, 0x00C01248);
+        cpu.register.set_a_reg_long_no_log(7, 0x010003FA);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -95,7 +98,7 @@ mod tests {
         assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
         assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
         assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
-        assert_eq!(false, cpu.register.reg_sr.is_sr_supervisor_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_supervisor_set_no_log());
     }
 
     #[test]
@@ -111,9 +114,9 @@ mod tests {
                 | STATUS_REGISTER_MASK_OVERFLOW
                 | STATUS_REGISTER_MASK_ZERO,
         );
-        cpu.memory.set_long(0x00000020, 0x11223344);
+        cpu.memory.set_long_no_log(0x00000020, 0x11223344);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -142,6 +145,6 @@ mod tests {
         assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
         assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
         assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
-        assert_eq!(true, cpu.register.reg_sr.is_sr_supervisor_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_supervisor_set_no_log());
     }
 }

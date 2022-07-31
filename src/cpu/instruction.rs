@@ -5,6 +5,8 @@ use crate::{
     register::{ProgramCounter, Register, RegisterType},
 };
 
+use super::step_log::StepLog;
+
 pub mod add;
 pub mod addi;
 pub mod addq;
@@ -561,12 +563,14 @@ pub struct Instruction {
         pc: &mut ProgramCounter,
         reg: &mut Register,
         mem: &mut Mem,
+        step_log: &mut StepLog,
     ) -> Result<(), StepError>,
     pub get_disassembly: fn(
         instr_word: u16,
         pc: &mut ProgramCounter,
         reg: &Register,
         mem: &Mem,
+        step_log: &mut StepLog,
     ) -> Result<GetDisassemblyResult, GetDisassemblyResultError>,
 }
 
@@ -581,12 +585,14 @@ impl Instruction {
             pc: &mut ProgramCounter,
             reg: &mut Register,
             mem: &mut Mem,
+            step_log: &mut StepLog,
         ) -> Result<(), StepError>,
         get_disassembly: fn(
             instr_word: u16,
             pc: &mut ProgramCounter,
             reg: &Register,
             mem: &Mem,
+            step_log: &mut StepLog,
         ) -> Result<GetDisassemblyResult, GetDisassemblyResultError>,
     ) -> Instruction {
         let instr = Instruction {

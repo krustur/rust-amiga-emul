@@ -4,7 +4,7 @@
 
 use mem::memory::Memory;
 
-use crate::{mem::custommemory::CustomMemory, register::ProgramCounter};
+use crate::{mem::custommemory::CustomMemory, register::{ProgramCounter}, cpu::step_log::{StepLog}};
 use {
     cpu::Cpu,
     mem::{ciamemory::CiaMemory, rammemory::RamMemory, rommemory::RomMemory, Mem},
@@ -79,6 +79,14 @@ fn main() {
 
     // NTSC has 262/263 scan lines
     // PAL has 312/313 scan lines
+    let mut exec_base :u32= 0xffffffff;
+    let mut step_log = StepLog::new();
+    // step_log.add_log(StepLogEntry::ReadRegisterLong{register_type: RegisterType::Data, register_index:1, value: 0xdddddd11});
+    // step_log.add_log(StepLogEntry::WriteRegisterLong{register_type:RegisterType::Address,register_index:2, value:  0xaaaaaa22});
+    // step_log.print_logs();    
+    // step_log.reset_log();
+    // step_log.add_log(StepLogEntry::WriteRegisterLong{register_type:RegisterType::Address,register_index:7, value:  0xaaaaaa77});
+    // step_log.print_logs();    
     loop {
         // cpu.print_registers();
         let pc_address = cpu.register.reg_pc.get_address();
@@ -371,6 +379,11 @@ fn main() {
             // 0x00F8060C => (true, 0x00f8008d, 0x00f800ad),
             // 0x00F82002 => (true, 0x0000515C, 0x0000516C),
             // 0x00F82002 => (true, 0x00f8008d, 0x00f800ad),
+            0x00F81C88 => (true, 0x4, 0x8), // ExecLibrary.MakeLibrary 
+            0x00F81D0E => (true, 0x4, 0x8), // ExecLibrary.MakeLibrary done!
+            0x00F82A18 => (true, 0x4, 0x8),
+            0x00FC391E => (true, 0x4, 0x8),
+            0x00FC3B60 => (true, 0x4, 0x8),
             _ => (false, 0, 0)
         };
         let (print_disassembly_after_step, disasm_memory_start, disasm_memory_end) = match pc_address {
@@ -378,10 +391,22 @@ fn main() {
             _ => (false, 0, 0)
         };
         if print_disassembly_before_step {
-            let disassembly_result = cpu.get_next_disassembly();
-            cpu.print_disassembly(&disassembly_result);
+            let disassembly_result = cpu.get_next_disassembly(&mut step_log);
+            cpu.print_disassembly(&disassembly_result, false);
         }
-        cpu.execute_next_instruction();
+        step_log.reset_log();
+        cpu.execute_next_instruction_step_log(&mut step_log);
+        if print_disassembly_before_step {
+            print!(";");
+            step_log.print_logs();
+        if cpu.memory.overlay == false {
+            let new_exec_base = cpu.memory.get_long_no_log(0x00000004);
+            if exec_base != new_exec_base {
+                println!("ExecBase changed from ${:08X} to ${:08X}", exec_base, new_exec_base);
+                exec_base = new_exec_base;
+            }
+        }
+
         if print_registers_after_step {
             cpu.register.print_registers();
         }
@@ -392,22 +417,11 @@ fn main() {
 
             let mut disassembly_pc = ProgramCounter::from_address(disasm_memory_start);
             while disassembly_pc.get_address() <= disasm_memory_end {
-                let disassembly_result = cpu.get_disassembly(&mut disassembly_pc);
-                cpu.print_disassembly(&disassembly_result);
+                step_log.reset_log();
+                let disassembly_result = cpu.get_disassembly(&mut disassembly_pc, &mut step_log);
+                cpu.print_disassembly(&disassembly_result, true);
                 disassembly_pc = ProgramCounter::from_address(disassembly_result.address_next);
             }
-            // let mut disassembly_pc = cpu.register.reg_pc.clone();
-            // for i in 0..70 {
-            //     let disassembly_result = cpu.register.get_disassembly(&mut disassembly_pc);
-
-            //     disassembly_pc = ProgramCounter::from_address(disassembly_result.address_next);
-
-            //     cpu.print_disassembly(&disassembly_result);
-            // }
-
-
-            // let disassembly_result = cpu.get_next_disassembly();
-            // cpu.print_disassembly(&disassembly_result);
         }
     }
 }

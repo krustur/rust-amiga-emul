@@ -1,5 +1,6 @@
 use super::{GetDisassemblyResult, GetDisassemblyResultError, StepError};
 use crate::{
+    cpu::step_log::StepLog,
     mem::Mem,
     register::{ProgramCounter, Register},
 };
@@ -18,8 +19,9 @@ pub fn step<'a>(
     pc: &mut ProgramCounter,
     reg: &mut Register,
     mem: &mut Mem,
+    step_log: &mut StepLog,
 ) -> Result<(), StepError> {
-    reg.stack_pop_pc(mem, pc);
+    reg.stack_pop_pc(mem, pc, step_log);
     Ok(())
 }
 
@@ -28,6 +30,7 @@ pub fn get_disassembly<'a>(
     pc: &mut ProgramCounter,
     reg: &Register,
     mem: &Mem,
+    step_log: &mut StepLog,
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     Ok(GetDisassemblyResult::from_pc(
         pc,
@@ -57,9 +60,9 @@ mod tests {
 
         let mut cpu = crate::instr_test_setup(code, Some(mem_ranges));
         cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
-        cpu.register.set_a_reg_long(7, 0x00F80000);
+        cpu.register.set_a_reg_long_no_log(7, 0x00F80000);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -73,7 +76,7 @@ mod tests {
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0xC01248, cpu.register.reg_pc.get_address());
-        assert_eq!(0x00F80004, cpu.register.get_a_reg_long(7));
+        assert_eq!(0x00F80004, cpu.register.get_a_reg_long_no_log(7));
 
         assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
@@ -98,9 +101,9 @@ mod tests {
                 | STATUS_REGISTER_MASK_NEGATIVE
                 | STATUS_REGISTER_MASK_EXTEND,
         );
-        cpu.register.set_a_reg_long(7, 0x00F80000);
+        cpu.register.set_a_reg_long_no_log(7, 0x00F80000);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly();
+        let debug_result = cpu.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -114,7 +117,7 @@ mod tests {
         cpu.execute_next_instruction();
         // assert
         assert_eq!(0xC01248, cpu.register.reg_pc.get_address());
-        assert_eq!(0x00F80004, cpu.register.get_a_reg_long(7));
+        assert_eq!(0x00F80004, cpu.register.get_a_reg_long_no_log(7));
 
         assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
         assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
