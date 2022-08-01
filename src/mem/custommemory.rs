@@ -190,7 +190,7 @@ impl CustomMemory {
         let bits = bits & 0x7fff;
         let new_intena = self.intena & !bits;
         println!(
-            "   -CUSTOM: Changing INTENA to ${:04X}. [from: ${:04X}, bits set was ${:04X}",
+            "   -CUSTOM: Changing INTENA to ${:04X}. [from: ${:04X}, bits cleared was ${:04X}",
             new_intena, self.intena, bits
         );
         self.intena = new_intena;
