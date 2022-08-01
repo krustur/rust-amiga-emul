@@ -2,7 +2,9 @@ use super::memory::{Memory, SetMemoryResult};
 use std::{any::Any, fmt};
 
 pub struct CustomMemory {
-    pub intena: u16,
+    pub dmacon: u16, // 096 / 002
+    pub intena: u16, // 09A / 01C
+    pub intreq: u16, // 09C / 01E
     pub color_rgb4: [u16; 32],
 }
 
@@ -45,16 +47,18 @@ impl Memory for CustomMemory {
 
     fn get_word(self: &CustomMemory, address: u32) -> u16 {
         match address {
-            // 0xDFF002 => {
-            //     // DMACONR
-            // }
-            0xDFF01C => {
-                self.read_intena_bits()
-                // INTENAR
+            0xDFF002 => {
+                // DMACONR
+                self.read_dmacon_bits()
             }
-            // 0xDFF01E => {
-            //     // INTREQR
-            // }
+            0xDFF01C => {
+                // INTENAR
+                self.read_intena_bits()
+            }
+            0xDFF01E => {
+                // INTREQR
+                self.read_intreq_bits()
+            }
             0xDFF096 => {
                 // DMACON
                 0x0000
@@ -87,18 +91,29 @@ impl Memory for CustomMemory {
 
     fn set_word(self: &mut CustomMemory, address: u32, value: u16) {
         match address {
-            // 0xDFF002 => {
-            //     // DMACONR
-            // }
+            0xDFF002 => {
+                // DMACONR
+                ()
+            }
             0xDFF01C => {
                 // INTENAR
+                ()
             }
-            // 0xDFF01E => {
-            //     // INTREQR
-            // }
-            // 0xDFF096 => {
-            //     // DMACON
-            // }
+            0xDFF01E => {
+                // INTREQR
+                ()
+            }
+            0xDFF096 => {
+                // DMACON
+                match value & 0x8000 {
+                    0x8000 => {
+                        self.set_dmacon_bits(value & 0x7fff);
+                    }
+                    _ => {
+                        self.clear_dmacon_bits(value & 0x7fff);
+                    }
+                }
+            }
             0xDFF09A => {
                 // INTENA
                 match value & 0x8000 {
@@ -112,6 +127,14 @@ impl Memory for CustomMemory {
             }
             0xDFF09C => {
                 // INTREQ
+                match value & 0x8000 {
+                    0x8000 => {
+                        self.set_intreq_bits(value & 0x7fff);
+                    }
+                    _ => {
+                        self.clear_intreq_bits(value & 0x7fff);
+                    }
+                }
             }
             // 0xDFF100 => {
             //     // BPLCON0
@@ -143,6 +166,8 @@ impl CustomMemory {
     pub fn new() -> CustomMemory {
         CustomMemory {
             intena: 0x0000,
+            intreq: 0x0000,
+            dmacon: 0x0000,
             color_rgb4: [0x0000; 32],
         }
     }
@@ -176,29 +201,81 @@ impl CustomMemory {
         self.color_rgb4[color_index] = color_rgb4;
     }
 
+    pub fn set_dmacon_bits(&mut self, bits: u16) {
+        let bits = bits & 0x7fff;
+        let dmacon = self.dmacon | bits;
+        println!(
+            "   -CUSTOM: Changing DMACON to ${:04X}. [from: ${:04X}, bits set was ${:04X}",
+            dmacon, self.dmacon, bits
+        );
+        self.dmacon = dmacon;
+    }
+
+    pub fn clear_dmacon_bits(&mut self, bits: u16) {
+        let bits = bits & 0x7fff;
+        let dmacon = self.dmacon & !bits;
+        println!(
+            "   -CUSTOM: Changing DMACON to ${:04X}. [from: ${:04X}, bits cleared was ${:04X}",
+            dmacon, self.dmacon, bits
+        );
+        self.dmacon = dmacon;
+    }
+
+    pub fn read_dmacon_bits(&self) -> u16 {
+        let result = self.dmacon & 0x7fff;
+        println!("   -CUSTOM: Reading DMACON, returns ${:04X}", result);
+        result
+    }
+
     pub fn set_intena_bits(&mut self, bits: u16) {
         let bits = bits & 0x7fff;
-        let new_intena = self.intena | bits;
+        let intena = self.intena | bits;
         println!(
             "   -CUSTOM: Changing INTENA to ${:04X}. [from: ${:04X}, bits set was ${:04X}",
-            new_intena, self.intena, bits
+            intena, self.intena, bits
         );
-        self.intena = new_intena;
+        self.intena = intena;
     }
 
     pub fn clear_intena_bits(&mut self, bits: u16) {
         let bits = bits & 0x7fff;
-        let new_intena = self.intena & !bits;
+        let intena = self.intena & !bits;
         println!(
             "   -CUSTOM: Changing INTENA to ${:04X}. [from: ${:04X}, bits cleared was ${:04X}",
-            new_intena, self.intena, bits
+            intena, self.intena, bits
         );
-        self.intena = new_intena;
+        self.intena = intena;
     }
 
     pub fn read_intena_bits(&self) -> u16 {
         let result = self.intena & 0x7fff;
-        println!("   -CUSTOM: Reading INTENAR, returns ${:04X}", result);
+        println!("   -CUSTOM: Reading INTENA, returns ${:04X}", result);
+        result
+    }
+
+    pub fn set_intreq_bits(&mut self, bits: u16) {
+        let bits = bits & 0x7fff;
+        let intreq = self.intreq | bits;
+        println!(
+            "   -CUSTOM: Changing INTREQ to ${:04X}. [from: ${:04X}, bits set was ${:04X}",
+            intreq, self.intreq, bits
+        );
+        self.intreq = intreq;
+    }
+
+    pub fn clear_intreq_bits(&mut self, bits: u16) {
+        let bits = bits & 0x7fff;
+        let intreq = self.intreq & !bits;
+        println!(
+            "   -CUSTOM: Changing INTREQ to ${:04X}. [from: ${:04X}, bits cleared was ${:04X}",
+            intreq, self.intreq, bits
+        );
+        self.intreq = intreq;
+    }
+
+    pub fn read_intreq_bits(&self) -> u16 {
+        let result = self.intreq & 0x7fff;
+        println!("   -CUSTOM: Reading INTREQ, returns ${:04X}", result);
         result
     }
 }
