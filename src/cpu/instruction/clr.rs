@@ -2,9 +2,12 @@ use super::{
     GetDisassemblyResult, GetDisassemblyResultError, Instruction, OperationSize, StepError,
 };
 use crate::{
-    cpu::{step_log::StepLog, Cpu},
+    cpu::{step_log::StepLog, Cpu, StatusRegisterResult},
     mem::Mem,
-    register::{ProgramCounter, Register, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_ZERO},
+    register::{
+        ProgramCounter, Register, STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_NEGATIVE,
+        STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
+    },
 };
 
 // step: DONE
@@ -47,10 +50,15 @@ pub fn step<'a>(
         OperationSize::Long => ea_data.set_value_long(pc, reg, mem, step_log, 0x00000000, true),
     };
 
-    reg.reg_sr.set_sr_reg_flags_abcde(
-        (reg.reg_sr.get_sr_reg_flags_abcde() & STATUS_REGISTER_MASK_EXTEND)
-            | STATUS_REGISTER_MASK_ZERO,
-    );
+    let status_register_result = StatusRegisterResult {
+        status_register: STATUS_REGISTER_MASK_ZERO,
+        status_register_mask: STATUS_REGISTER_MASK_NEGATIVE
+            | STATUS_REGISTER_MASK_ZERO
+            | STATUS_REGISTER_MASK_OVERFLOW
+            | STATUS_REGISTER_MASK_CARRY,
+    };
+    reg.reg_sr
+        .merge_status_register(step_log, status_register_result);
 
     Ok(())
 }
