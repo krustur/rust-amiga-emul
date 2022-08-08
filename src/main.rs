@@ -167,6 +167,7 @@ fn main() {
             0x00F80458 => Some(String::from("A4=0, no RAM expansion found!")),
 
             0x00F81D0E => Some(String::from("ExecLibrary.MakeLibrary done!")),
+            0x00F83F46 => Some(String::from("Flashing LEDs on and off")),
             
             // ExecLibrary
             0x00F82D2C => Some(String::from("ExecLibrary.XXXXXXXXXXXXXXXXXXXXX -6  ")),
@@ -354,6 +355,13 @@ fn main() {
             // 0x00F82462 => Some(String::from("ExecLibrary.AVL_FindLastNode -906")),
             // (10 function slots reserved here)
 
+            // expansion.library
+            
+            0x00F846A4 => Some(String::from("ExpansionLibrary.AllocConfigDev -48")),
+            0x00F84634 => Some(String::from("ExpansionLibrary.ConfigChain -66")),
+            0x00F8479A => Some(String::from("ExpansionLibrary.FreeExpansionMem -90")),
+            0x00F8483E => Some(String::from("ExpansionLibrary.ReadExpansionByte -96")),
+            0x00F848AA => Some(String::from("ExpansionLibrary.ReadExpansionRom -102")),
             _ => None,
         };
         if let Some(comment) = comment {
@@ -363,6 +371,9 @@ fn main() {
         let print_disassembly_before_step = match pc_address {
             0x00F800E2..=0x00F800E8 => false, // calculate check sum
             0x00F80F2E..=0x00F80F30 => false, // scan for RomTag
+            0x00F81CAE..=0x00F81CB0 => false, // ExecLibrary.MakeLibrary count vectors
+            0x00F83F48..=0x00F83F5c => false, // Flash LEDs loops
+            0x00F81D18..=0x00F81D40 => false, // ExecLibrary.MakeFunctions loop
             _ => true,
         };
         let print_registers_after_step = match pc_address {
