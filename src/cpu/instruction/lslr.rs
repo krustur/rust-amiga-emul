@@ -87,11 +87,11 @@ pub fn step<'a>(
                 OperationSize::Byte => {
                     let value = reg.get_d_reg_byte(dest_register, step_log) as u16;
 
-                    println!("value: {}", value);
-                    println!("shift_count: {}", shift_count);
+                    // println!("value: {}", value);
+                    // println!("shift_count: {}", shift_count);
                     let (result, overflow) = match lslr_direction {
                         LslrDirection::Left => {
-                            println!("lslr_direction: left");
+                            // println!("lslr_direction: left");
                             let result = value.checked_shl(shift_count).unwrap_or(0);
                             // let result = value << shift_count;
                             let overflow = result & 0x100 != 0;
@@ -99,15 +99,15 @@ pub fn step<'a>(
                             (result, overflow)
                         }
                         LslrDirection::Right => {
-                            println!("lslr_direction: right");
+                            // println!("lslr_direction: right");
                             let result = (value << 1).checked_shr(shift_count).unwrap_or(0);
                             let overflow = result & 0x01 != 0;
                             let result = ((result >> 1) & 0xff) as u8;
                             (result, overflow)
                         }
                     };
-                    println!("result: {}", result);
-                    println!("overflow: {}", overflow);
+                    // println!("result: {}", result);
+                    // println!("overflow: {}", overflow);
                     reg.set_d_reg_byte(step_log, dest_register, result);
                     let mut status_register = 0x0000;
                     match result {
@@ -224,7 +224,7 @@ pub fn step<'a>(
             )?;
 
             let value = ea_data.get_value_word(pc, reg, mem, step_log, false) as u32;
-            println!("value: ${:08X}", value);
+            // println!("value: ${:08X}", value);
             let (result, overflow) = match lslr_direction {
                 LslrDirection::Left => {
                     // println!("lslr_direction: left");
