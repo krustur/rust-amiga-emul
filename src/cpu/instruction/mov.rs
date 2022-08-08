@@ -17,8 +17,6 @@ use crate::{
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
-// BUG: MOVEA should not affect SR
-
 pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
     match crate::cpu::match_check(instruction, instr_word) {
         true => match crate::cpu::match_check_size011110_from_bit_pos(instr_word, 12) {
@@ -77,8 +75,16 @@ pub fn step<'a>(
         }
     };
 
-    reg.reg_sr
-        .merge_status_register(step_log, set_result.status_register_result);
+    match dst_ea_mode {
+        EffectiveAddressingMode::ARegDirect {
+            ea_register: register,
+        } => (),
+        _ => {
+            reg.reg_sr
+                .merge_status_register(step_log, set_result.status_register_result);
+        }
+    };
+
     Ok(())
 }
 
@@ -238,7 +244,9 @@ mod tests {
         cpu.register.reg_sr.set_sr_reg_flags_abcde(
             STATUS_REGISTER_MASK_CARRY
                 | STATUS_REGISTER_MASK_OVERFLOW
-                | STATUS_REGISTER_MASK_NEGATIVE,
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_EXTEND,
         );
         // act assert - debug
         let debug_result = cpu.get_next_disassembly_no_log();
@@ -256,11 +264,11 @@ mod tests {
         // // assert
         assert_eq!(0x00001234, cpu.register.get_a_reg_long_no_log(1));
         assert_eq!(0x00C00002, cpu.register.reg_pc.get_address());
-        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
-        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
-        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
     }
 
     #[test]
@@ -626,8 +634,8 @@ mod tests {
         cpu.execute_next_instruction();
         // // assert
         assert_eq!(0x00000008, cpu.register.get_a_reg_long_no_log(0));
-        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
