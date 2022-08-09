@@ -548,6 +548,14 @@ impl Cpu {
                 instruction::pea::get_disassembly,
             ),
             Instruction::new(
+                String::from("RESET"),
+                0xffff,
+                0x4e70,
+                crate::cpu::match_check,
+                instruction::reset::step,
+                instruction::reset::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("ROLR"), // register
                 0xf018,
                 0xe018,

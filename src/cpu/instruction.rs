@@ -46,6 +46,7 @@ pub mod or;
 pub mod ori;
 pub mod ori_to_sr;
 pub mod pea;
+pub mod reset;
 pub mod rolrmem;
 pub mod rolrreg;
 pub mod rte;
