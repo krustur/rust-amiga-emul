@@ -1,14 +1,15 @@
+use super::memory::{Memory, SetMemoryResult};
+use crate::cpu::step_log::StepLog;
+use byteorder::{BigEndian, ReadBytesExt};
 use std::{
     any::Any,
     convert::TryInto,
     fmt::{self},
 };
 
-use byteorder::{BigEndian, ReadBytesExt};
-
-use crate::cpu::step_log::StepLog;
-
-use super::memory::{Memory, SetMemoryResult};
+// TODO: See if there is a cleaner way to handle "overlapping" memory access, like
+//       when reading a 4 byte long from the last 2 bytes of RAM memory. Currently
+//       hacked by allocating 4 extra bytes at the start and end of the RAM memory.
 
 pub struct RamMemory {
     pub start_address: u32,
@@ -97,7 +98,7 @@ impl Memory for RamMemory {
 impl RamMemory {
     pub fn from_range<'a>(start_address: u32, end_address: u32) -> RamMemory {
         let length = end_address as usize - start_address as usize + 1;
-        let bytes = vec![0; length];
+        let bytes = vec![0; length + 8];
         let mem = RamMemory {
             start_address,
             end_address,
@@ -111,11 +112,15 @@ impl RamMemory {
         assert_eq!(true, length > 0);
         let end_address = start_address + length - 1;
         let length = bytes.len();
+        let mut new_bytes = vec![0; length + 8];
+        for i in 0..length {
+            new_bytes[i + 4] = bytes[i];
+        }
         let mem = RamMemory {
             start_address,
             end_address,
             length,
-            bytes,
+            bytes: new_bytes,
         };
         mem
     }
@@ -124,7 +129,7 @@ impl RamMemory {
         if address < self.start_address || address > self.end_address {
             panic!("Can't remap address to index. Address {:#010x} not in range of {:#010x} to {:#010x}", address, self.start_address, self.end_address)
         }
-        let index = address - self.start_address;
+        let index = address - self.start_address + 4;
 
         return index.try_into().unwrap();
     }
