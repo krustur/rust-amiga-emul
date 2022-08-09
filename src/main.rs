@@ -83,10 +83,11 @@ fn main() {
     let mut step_log = StepLog::new();
     // step_log.add_log(StepLogEntry::ReadRegisterLong{register_type: RegisterType::Data, register_index:1, value: 0xdddddd11});
     // step_log.add_log(StepLogEntry::WriteRegisterLong{register_type:RegisterType::Address,register_index:2, value:  0xaaaaaa22});
-    // step_log.print_logs();    
+    // step_log.print_logs();
     // step_log.reset_log();
     // step_log.add_log(StepLogEntry::WriteRegisterLong{register_type:RegisterType::Address,register_index:7, value:  0xaaaaaa77});
-    // step_log.print_logs();    
+    // step_log.print_logs();
+
     loop {
         // cpu.print_registers();
         let pc_address = cpu.register.reg_pc.get_address();
@@ -369,11 +370,38 @@ fn main() {
 
             // expansion.library
             
-            0x00F846A4 => Some(String::from("ExpansionLibrary.AllocConfigDev -48")),
-            0x00F84634 => Some(String::from("ExpansionLibrary.ConfigChain -66")),
-            0x00F8479A => Some(String::from("ExpansionLibrary.FreeExpansionMem -90")),
-            0x00F8483E => Some(String::from("ExpansionLibrary.ReadExpansionByte -96")),
+            0x00F8488C => Some(String::from("ExpansionLibrary.XXXXXXX -162")),
+            0x00F8469E => Some(String::from("ExpansionLibrary.XXXXXXX -156")),
+            0x00F84AA8 => Some(String::from("ExpansionLibrary.AddDosNode -150")),
+            0x00F84998 => Some(String::from("ExpansionLibrary.MakeDosNode -144")),
+            0x00F84972 => Some(String::from("ExpansionLibrary.GetCurrentBinding -138")),
+            0x00F8496C => Some(String::from("ExpansionLibrary.SetCurrentBinding -132")),
+            0x00F8495A => Some(String::from("ExpansionLibrary.ReleaseConfigBinding -126")),
+            0x00F84948 => Some(String::from("ExpansionLibrary.ObtainConfigBinding -120")),
+            0x00F84866 => Some(String::from("ExpansionLibrary.WriteExpansionByte -114")),
+            0x00F847EC => Some(String::from("ExpansionLibrary.RemConfigDev -108")),
             0x00F848AA => Some(String::from("ExpansionLibrary.ReadExpansionRom -102")),
+            0x00F8483E => Some(String::from("ExpansionLibrary.ReadExpansionByte -96")),
+            0x00F8479A => Some(String::from("ExpansionLibrary.FreeExpansionMem -90")),
+            0x00F846BA => Some(String::from("ExpansionLibrary.FreeConfigDev -84")),
+            0x00F84780 => Some(String::from("ExpansionLibrary.FreeBoardMem -78")),
+            0x00F8480A => Some(String::from("ExpansionLibrary.FindConfigDev -72")),
+            0x00F84634 => Some(String::from("ExpansionLibrary.ConfigChain -66")),
+            0x00F84360 => Some(String::from("ExpansionLibrary.ConfigBoard -60")),
+            0x00F846CC => Some(String::from("ExpansionLibrary.AllocExpansionMem -54")),
+            0x00F846A4 => Some(String::from("ExpansionLibrary.AllocConfigDev -48")),
+            0x00F8476A => Some(String::from("ExpansionLibrary.AllocBoardMem -42")),
+            0x00F84AAA => Some(String::from("ExpansionLibrary.AddBootNode -36")),
+            0x00F847D0 => Some(String::from("ExpansionLibrary.AddConfigDev -30")),
+            0x00F841B0 => Some(String::from("ExpansionLibrary.XXXXXXX -24")),
+            // 0x00F841B0 => Some(String::from("ExpansionLibrary.XXXXXXX -18")),
+            0x00F841AC => Some(String::from("ExpansionLibrary.XXXXXXX -12")),
+            0x00F841A4 => Some(String::from("ExpansionLibrary.XXXXXXX -6")),
+
+            // utility.library
+
+            0x00F80C12 => Some(String::from("UtilityLibrary.AllocNamedObject -228")),
+
             _ => None,
         };
         if let Some(comment) = comment {
@@ -384,8 +412,11 @@ fn main() {
             0x00F800E2..=0x00F800E8 => false, // calculate check sum
             0x00F80F2E..=0x00F80F30 => false, // scan for RomTag
             0x00F81CAE..=0x00F81CB0 => false, // ExecLibrary.MakeLibrary count vectors
+            0x00F81FBC..=0x00F81FC4 => false, // ExecLibrary.MakeLibrary clear memory loop
             0x00F83F48..=0x00F83F5c => false, // Flash LEDs loops
             0x00F81D18..=0x00F81D40 => false, // ExecLibrary.MakeFunctions loop
+            0x00F804A2..=0x00F804AC => false, // Reset black screen loop
+            0x00F80AD8..=0x00F80AF2 => false, // ExecLibrary.FindName loop
             _ => true,
         };
         let print_registers_after_step = match pc_address {
@@ -393,24 +424,23 @@ fn main() {
             // 0x00F802A8 => true, // D0=length of memory area
             // 0x00F80F16 => true, // scan for RomTag
 
+            // 0x00FC087E => true, // A6=What library?
+            // 0x00F8420E => true, // ExpansionLib mapping! => 0x000046CC
 
-
-            0x00F81D0E => true, // ExecLibrary.MakeLibrary done
             _ => false,
         };
         let (dump_memory_after_step, dump_memory_start, dump_memory_end) = match pc_address {
             // 0x00F8060C => (true, 0x00f8008d, 0x00f800ad),
             // 0x00F82002 => (true, 0x0000515C, 0x0000516C),
             // 0x00F82002 => (true, 0x00f8008d, 0x00f800ad),
-            0x00F81C88 => (true, 0x4, 0x8), // ExecLibrary.MakeLibrary 
-            0x00F81D0E => (true, 0x4, 0x8), // ExecLibrary.MakeLibrary done!
-            0x00F82A18 => (true, 0x4, 0x8),
-            0x00FC391E => (true, 0x4, 0x8),
-            0x00FC3B60 => (true, 0x4, 0x8),
+
+            // 0x00FC087E => (true, 0x0000D09C, 0x0000D09C + 16), // A6=What library (libbase)?
+            // 0x00FC087E => (true, 0x00fc077a, 0x00fc077a + 32), // A6=What library (name)?
             _ => (false, 0, 0)
         };
         let (print_disassembly_after_step, disasm_memory_start, disasm_memory_end) = match pc_address {
             // 0x00F82A32 => (true, 0x00004dcc, 0x0000515C),
+            // 0x00F8420E => (true, (0x000046CC-150)-12, 0x000046CC), // ExpansionLib mapping! => 0x00F8420E
             _ => (false, 0, 0)
         };
         if print_disassembly_before_step {
