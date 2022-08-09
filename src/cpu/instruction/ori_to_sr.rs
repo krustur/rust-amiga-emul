@@ -14,7 +14,6 @@ use crate::register::{ProgramCounter, Register};
 // 020+ get_disassembly: TODO
 
 // TODO: Tests!
-// TODO: Check Supervisor
 
 pub fn step<'a>(
     instr_word: u16,
