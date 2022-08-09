@@ -400,7 +400,58 @@ fn main() {
 
             // utility.library
 
+            0x00F80C2E => Some(String::from("UtilityLibrary.XXXXXXX -312")),             
+            0x00F80C2C => Some(String::from("UtilityLibrary.XXXXXXX -306")),             
+            0x00F80C2A => Some(String::from("UtilityLibrary.XXXXXXX -300")),             
+            0x00F80C28 => Some(String::from("UtilityLibrary.XXXXXXX -294")),             
+            0x00F80C26 => Some(String::from("UtilityLibrary.XXXXXXX -288")),             
+            0x00F80C24 => Some(String::from("UtilityLibrary.XXXXXXX -282")),             
+            0x00F80C22 => Some(String::from("UtilityLibrary.XXXXXXX -276")),             
+            0x00F80C20 => Some(String::from("UtilityLibrary.GetUniqueID -270")),             
+            0x00F80C1E => Some(String::from("UtilityLibrary.RemNamedObject -264")),             
+            0x00F80C1C => Some(String::from("UtilityLibrary.ReleaseNamedObject -258")),             
+            0x00F80C1A => Some(String::from("UtilityLibrary.NamedObjectName -252")),             
+            0x00F80C18 => Some(String::from("UtilityLibrary.FreeNamedObject -246")),             
+            0x00F80C16 => Some(String::from("UtilityLibrary.FindNamedObject -240")),             
+            0x00F80C14 => Some(String::from("UtilityLibrary.AttemptRemNamedObject -234")),             
             0x00F80C12 => Some(String::from("UtilityLibrary.AllocNamedObject -228")),
+            0x00F80C10 => Some(String::from("UtilityLibrary.AddNamedObject -222")),             
+            0x00F80C0E => Some(String::from("UtilityLibrary.UnpackStructureTags -216")),             
+            0x00F80C0C => Some(String::from("UtilityLibrary.PackStructureTags -210")),             
+            0x00F80C0A => Some(String::from("UtilityLibrary.UMult64 -204")),             
+            0x00F80C08 => Some(String::from("UtilityLibrary.SMult64 -198")),             
+            0x00F80C06 => Some(String::from("UtilityLibrary.XXXXXXX -192")),             
+            0x00F80C04 => Some(String::from("UtilityLibrary.ApplyTagChanges -186")),             
+            0x00F80C02 => Some(String::from("UtilityLibrary.ToLower -180")),             
+            0x00F80C00 => Some(String::from("UtilityLibrary.ToUpper -174")),             
+            0x00F80BFE => Some(String::from("UtilityLibrary.Strnicmp -168")),             
+            0x00F80BFC => Some(String::from("UtilityLibrary.Stricmp -162")),             
+            0x00F80BFA => Some(String::from("UtilityLibrary.UDivMod32 -156")),             
+            0x00F80BF8 => Some(String::from("UtilityLibrary.SDivMod32 -150")),             
+            0x00F80BF6 => Some(String::from("UtilityLibrary.UMult32 -144")),             
+            0x00F80BF4 => Some(String::from("UtilityLibrary.SMult32 -138")),             
+            0x00F80BF2 => Some(String::from("UtilityLibrary.CheckDate -132")),             
+            0x00F80BF0 => Some(String::from("UtilityLibrary.Date2Amiga -126")),             
+            0x00F80EA6 => Some(String::from("UtilityLibrary.Amiga2Date -120")),             
+            0x00F81412 => Some(String::from("UtilityLibrary.XXXXXXX -114")),             
+            0x00F813C8 => Some(String::from("UtilityLibrary.XXXXXXX -108")),             
+            0x00F81328 => Some(String::from("UtilityLibrary.CallHookPkt -102")),             
+            0x00F812D0 => Some(String::from("UtilityLibrary.FilterTagItems -96")),             
+            0x00F81290 => Some(String::from("UtilityLibrary.TagInArray -90")),             
+            0x00F81238 => Some(String::from("UtilityLibrary.RefreshTagItemClones -84")),             
+            0x00F80B82 => Some(String::from("UtilityLibrary.FreeTagItems -78")),             
+            0x00F80B80 => Some(String::from("UtilityLibrary.CloneTagItems -72")),             
+            0x00F80B7E => Some(String::from("UtilityLibrary.AllocateTagItems -66")),             
+            0x00F80B7C => Some(String::from("UtilityLibrary.MapTags -60")),             
+            0x00F80B7A => Some(String::from("UtilityLibrary.FilterTagChanges -54")),             
+            0x00F80B78 => Some(String::from("UtilityLibrary.NextTagItem -48")),             
+            0x00F80B76 => Some(String::from("UtilityLibrary.PackBoolTags -42")),             
+            0x00F80B74 => Some(String::from("UtilityLibrary.GetTagData -36")),             
+            0x00F80B72 => Some(String::from("UtilityLibrary.FindTagItem -30")),             
+            0x00F80B70 => Some(String::from("UtilityLibrary.XXXXXXX -24")),             
+            0x00F80B6E => Some(String::from("UtilityLibrary.XXXXXXX -18")),             
+            0x00F80B6C => Some(String::from("UtilityLibrary.XXXXXXX -12")),             
+            0x00F80B6A => Some(String::from("UtilityLibrary.XXXXXXX -6")),  
 
             _ => None,
         };
@@ -424,8 +475,8 @@ fn main() {
             // 0x00F802A8 => true, // D0=length of memory area
             // 0x00F80F16 => true, // scan for RomTag
 
-            // 0x00FC087E => true, // A6=What library?
-            // 0x00F8420E => true, // ExpansionLib mapping! => 0x000046CC
+            // 0x00FC087E => true, // A6=What Library?
+            // 0x00FC087E => true, // Library mapping! => 0x0000D09C
 
             _ => false,
         };
@@ -434,13 +485,13 @@ fn main() {
             // 0x00F82002 => (true, 0x0000515C, 0x0000516C),
             // 0x00F82002 => (true, 0x00f8008d, 0x00f800ad),
 
-            // 0x00FC087E => (true, 0x0000D09C, 0x0000D09C + 16), // A6=What library (libbase)?
-            // 0x00FC087E => (true, 0x00fc077a, 0x00fc077a + 32), // A6=What library (name)?
+            // 0x00FC087E => (true, 0x0000D09C, 0x0000D09C + 16), // A6=What Library (libbase)?
+            // 0x00FC087E => (true, 0x00fc077a, 0x00fc077a + 32), // A6=What Library (name)?
             _ => (false, 0, 0)
         };
         let (print_disassembly_after_step, disasm_memory_start, disasm_memory_end) = match pc_address {
             // 0x00F82A32 => (true, 0x00004dcc, 0x0000515C),
-            // 0x00F8420E => (true, (0x000046CC-150)-12, 0x000046CC), // ExpansionLib mapping! => 0x00F8420E
+            // 0x00FC087E => (true, (0x0000D09C-270)-42, 0x0000D09C-6), // Library mapping! => 0x00F8420E
             _ => (false, 0, 0)
         };
         if print_disassembly_before_step {
