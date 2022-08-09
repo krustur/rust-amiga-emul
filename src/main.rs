@@ -166,9 +166,20 @@ fn main() {
             0x00F803BA => Some(String::from("RAM expansion check! Will mess with INTENA and UNMAPPED memory if no RAM expansion exists")),
             0x00F80458 => Some(String::from("A4=0, no RAM expansion found!")),
 
-            0x00F81D0E => Some(String::from("ExecLibrary.MakeLibrary done!")),
-            0x00F83F46 => Some(String::from("Flashing LEDs on and off")),
+            0x00F83EC6 => Some(String::from("Check if the stack is working by pushing a signature and trying to pop it off again.")),
+            0x00F83ED2 => Some(String::from("Test if unrecoverable alter number (high bit)")),
             
+            0x00F83F10 => Some(String::from("Unrecoverable crash (stack not working)")),
+            0x00F83F1C => Some(String::from("Unrecoverable crash (stack working entry point)")),
+            0x00F83F46 => Some(String::from("Flashing LEDs on and off")),
+            0x00F83F66 => Some(String::from("Read Serial")),
+            0x00F83F6E => Some(String::from("Check if DEL ascii ($7F) received?")),
+           
+            0x00F84666 => Some(String::from("Call to expansion.library!")),
+            
+            0x00F81D0E => Some(String::from("ExecLibrary.MakeLibrary done!")),
+            0x00F83E8E => Some(String::from("ExecLibrary.Alertish")),
+
             // ExecLibrary
             0x00F82D2C => Some(String::from("ExecLibrary.XXXXXXXXXXXXXXXXXXXXX -6  ")),
             0x00F82D34 => Some(String::from("ExecLibrary.XXXXXXXXXXXXXXXXXXXXX -12 ")),
@@ -176,6 +187,7 @@ fn main() {
             // 0x00F82D38 => Some(String::from("ExecLibrary.XXXXXXXXXXXXXXXXXXXXX -24 ")),
             // misc
             0x00F80C46 => Some(String::from("ExecLibrary.Supervisor -30 http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_2._guide/node0386.html")),
+            0x00F80C68 => Some(String::from("ExecLibrary.Supervisor (60010+) -30 http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_2._guide/node0386.html")),
             // special patchable hooks to internal exec activity
             0x00F81456 => Some(String::from("ExecLibrary.XXXXXXXXXXXXXXXXXXXXX -36 ")),
             0x00F81478 => Some(String::from("ExecLibrary._Internal_Scheduling??? -42 ")),
