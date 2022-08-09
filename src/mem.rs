@@ -125,8 +125,8 @@ impl Mem {
 
     pub fn get_long(self: &Mem, step_log: &mut StepLog, address: u32) -> u32 {
         let range = self.get_memory(address);
-        let result = range.get_long(address);
-        step_log.add_log(StepLogEntry::ReadMemLong {
+        let result = range.get_long(step_log, address);
+        step_log.add_log_entry(StepLogEntry::ReadMemLong {
             address,
             value: result,
         });
@@ -135,25 +135,25 @@ impl Mem {
 
     pub fn get_long_no_log(self: &Mem, address: u32) -> u32 {
         let range = self.get_memory(address);
-        let result = range.get_long(address);
+        let result = range.get_long(&mut StepLog::new(), address);
         result
     }
 
     pub fn set_long(self: &mut Mem, step_log: &mut StepLog, address: u32, value: u32) {
         let range = self.get_memory_mut(address);
-        step_log.add_log(StepLogEntry::WriteMemLong { address, value });
-        let result = range.set_long(address, value);
+        step_log.add_log_entry(StepLogEntry::WriteMemLong { address, value });
+        let result = range.set_long(step_log, address, value);
     }
 
     pub fn set_long_no_log(self: &mut Mem, address: u32, value: u32) {
         let range = self.get_memory_mut(address);
-        let result = range.set_long(address, value);
+        let result = range.set_long(&mut StepLog::new(), address, value);
     }
 
     pub fn get_word(self: &Mem, step_log: &mut StepLog, address: u32) -> u16 {
         let range = self.get_memory(address);
-        let result = range.get_word(address);
-        step_log.add_log(StepLogEntry::ReadMemWord {
+        let result = range.get_word(step_log, address);
+        step_log.add_log_entry(StepLogEntry::ReadMemWord {
             address,
             value: result,
         });
@@ -162,25 +162,25 @@ impl Mem {
 
     pub fn get_word_no_log(self: &Mem, address: u32) -> u16 {
         let range = self.get_memory(address);
-        let result = range.get_word(address);
+        let result = range.get_word(&mut StepLog::new(), address);
         result
     }
 
     pub fn set_word(self: &mut Mem, step_log: &mut StepLog, address: u32, value: u16) {
         let range = self.get_memory_mut(address);
-        step_log.add_log(StepLogEntry::WriteMemWord { address, value });
-        let result = range.set_word(address, value);
+        step_log.add_log_entry(StepLogEntry::WriteMemWord { address, value });
+        let result = range.set_word(step_log, address, value);
     }
 
     pub fn set_word_no_log(self: &mut Mem, address: u32, value: u16) {
         let range = self.get_memory_mut(address);
-        let result = range.set_word(address, value);
+        let result = range.set_word(&mut StepLog::new(), address, value);
     }
 
     pub fn get_byte(self: &Mem, step_log: &mut StepLog, address: u32) -> u8 {
         let range = self.get_memory(address);
-        let result = range.get_byte(address);
-        step_log.add_log(StepLogEntry::ReadMemByte {
+        let result = range.get_byte(step_log, address);
+        step_log.add_log_entry(StepLogEntry::ReadMemByte {
             address,
             value: result,
         });
@@ -189,14 +189,14 @@ impl Mem {
 
     pub fn get_byte_no_log(self: &Mem, address: u32) -> u8 {
         let range = self.get_memory(address);
-        let result = range.get_byte(address);
+        let result = range.get_byte(&mut StepLog::new(), address);
         result
     }
 
     pub fn set_byte(self: &mut Mem, step_log: &mut StepLog, address: u32, value: u8) {
         let range = self.get_memory_mut(address);
-        step_log.add_log(StepLogEntry::WriteMemByte { address, value });
-        match range.set_byte(address, value) {
+        step_log.add_log_entry(StepLogEntry::WriteMemByte { address, value });
+        match range.set_byte(step_log, address, value) {
             Some(r) => {
                 if let Some(overlay) = r.set_overlay {
                     self.overlay = overlay;
@@ -208,7 +208,7 @@ impl Mem {
 
     pub fn set_byte_no_log(self: &mut Mem, address: u32, value: u8) {
         let range = self.get_memory_mut(address);
-        match range.set_byte(address, value) {
+        match range.set_byte(&mut StepLog::new(), address, value) {
             Some(r) => {
                 if let Some(overlay) = r.set_overlay {
                     self.overlay = overlay;

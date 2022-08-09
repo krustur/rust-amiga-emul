@@ -1,4 +1,4 @@
-use crate::mem::memory::SetMemoryResult;
+use crate::{cpu::step_log::StepLog, mem::memory::SetMemoryResult};
 
 use super::memory::Memory;
 use byteorder::{BigEndian, ReadBytesExt};
@@ -42,18 +42,18 @@ impl Memory for RomMemory {
         return self.length;
     }
 
-    fn get_long(self: &RomMemory, address: u32) -> u32 {
+    fn get_long(self: &RomMemory, step_log: &mut StepLog, address: u32) -> u32 {
         let index = self.remap_address_to_index(address);
         let mut bytes = &self.bytes[index..index + 4];
         let result = bytes.read_u32::<BigEndian>().unwrap();
         result
     }
 
-    fn set_long(self: &mut RomMemory, address: u32, value: u32) {
-        println!("   -ROM: Trying to set_long: ${:08X}", address);
+    fn set_long(self: &mut RomMemory, step_log: &mut StepLog, address: u32, value: u32) {
+        step_log.add_log(format!("ROM: Trying to set_long: ${:08X}", address));
     }
 
-    fn get_word(self: &RomMemory, address: u32) -> u16 {
+    fn get_word(self: &RomMemory, step_log: &mut StepLog, address: u32) -> u16 {
         let index = self.remap_address_to_index(address);
         let mut bytes = &self.bytes[index..index + 2];
         let result = bytes.read_u16::<BigEndian>().unwrap();
@@ -63,19 +63,24 @@ impl Memory for RomMemory {
         result
     }
 
-    fn set_word(self: &mut RomMemory, address: u32, value: u16) {
-        println!("   -ROM: Trying to set_word: ${:08X}", address);
+    fn set_word(self: &mut RomMemory, step_log: &mut StepLog, address: u32, value: u16) {
+        step_log.add_log(format!("ROM: Trying to set_word: ${:08X}", address));
     }
 
-    fn get_byte(self: &RomMemory, address: u32) -> u8 {
+    fn get_byte(self: &RomMemory, step_log: &mut StepLog, address: u32) -> u8 {
         let index = self.remap_address_to_index(address);
         let mut bytes = &self.bytes[index..index + 1];
         let result = bytes.read_u8().unwrap();
         result
     }
 
-    fn set_byte(self: &mut RomMemory, address: u32, value: u8) -> Option<SetMemoryResult> {
-        println!("   -ROM: Trying to set_byte: ${:08X}", address);
+    fn set_byte(
+        self: &mut RomMemory,
+        step_log: &mut StepLog,
+        address: u32,
+        value: u8,
+    ) -> Option<SetMemoryResult> {
+        step_log.add_log(format!("ROM: Trying to set_byte: ${:08X}", address));
         None
     }
 }

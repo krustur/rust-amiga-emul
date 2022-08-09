@@ -1,3 +1,5 @@
+use crate::cpu::step_log::StepLog;
+
 use super::memory::{Memory, SetMemoryResult};
 use std::{any::Any, fmt};
 
@@ -36,28 +38,36 @@ impl Memory for CiaMemory {
         self.get_length()
     }
 
-    fn get_long(self: &CiaMemory, address: u32) -> u32 {
+    fn get_long(self: &CiaMemory, step_log: &mut StepLog, address: u32) -> u32 {
         panic!("cia memory get_long: ${:06X}", address);
     }
 
-    fn set_long(self: &mut CiaMemory, address: u32, value: u32) {
+    fn set_long(self: &mut CiaMemory, step_log: &mut StepLog, address: u32, value: u32) {
         panic!("cia memory set_long: ${:06X}", address);
     }
 
-    fn get_word(self: &CiaMemory, address: u32) -> u16 {
+    fn get_word(self: &CiaMemory, step_log: &mut StepLog, address: u32) -> u16 {
         panic!("cia memory get_word: ${:06X}", address);
     }
 
-    fn set_word(self: &mut CiaMemory, address: u32, value: u16) {
+    fn set_word(self: &mut CiaMemory, step_log: &mut StepLog, address: u32, value: u16) {
         panic!("cia memory set_word: ${:06X}", address);
     }
 
-    fn get_byte(self: &CiaMemory, address: u32) -> u8 {
-        println!("   -CIA: TODO: get_byte() for CIA memory ${:06X}", address);
+    fn get_byte(self: &CiaMemory, step_log: &mut StepLog, address: u32) -> u8 {
+        step_log.add_log(format!(
+            "CIA: TODO: get_byte() for CIA memory ${:06X}",
+            address
+        ));
         0
     }
 
-    fn set_byte(self: &mut CiaMemory, address: u32, value: u8) -> Option<SetMemoryResult> {
+    fn set_byte(
+        self: &mut CiaMemory,
+        step_log: &mut StepLog,
+        address: u32,
+        value: u8,
+    ) -> Option<SetMemoryResult> {
         match address {
             0xBFE001 => {
                 let pra_fir1 = (value & 0x80) == 0x80;
@@ -69,19 +79,19 @@ impl Memory for CiaMemory {
                 let pra_led = (value & 0x02) == 0x02;
                 let pra_ovl = (value & 0x01) == 0x01;
                 self.set_overlay(pra_ovl);
-                println!(
-                    "   -CIA: TODO: set_byte() for CIA memory ${:06X} to {}",
+                step_log.add_log(format!(
+                    "CIA: TODO: set_byte() for CIA memory ${:06X} to {}",
                     address, value
-                );
+                ));
                 Some(SetMemoryResult {
                     set_overlay: Some(pra_ovl),
                 })
             }
             _ => {
-                println!(
-                    "   -CIA: TODO: set_byte() for CIA memory ${:06X} to {}",
+                step_log.add_log(format!(
+                    "CIA: TODO: set_byte() for CIA memory ${:06X} to {}",
                     address, value
-                );
+                ));
                 None
             }
         }

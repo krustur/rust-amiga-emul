@@ -1,3 +1,5 @@
+use crate::cpu::step_log::StepLog;
+
 use super::memory::{Memory, SetMemoryResult};
 use std::{any::Any, fmt};
 
@@ -37,27 +39,27 @@ impl Memory for CustomMemory {
         self.get_length()
     }
 
-    fn get_long(self: &CustomMemory, address: u32) -> u32 {
+    fn get_long(self: &CustomMemory, step_log: &mut StepLog, address: u32) -> u32 {
         panic!("custom memory get_long: ${:06X}", address);
     }
 
-    fn set_long(self: &mut CustomMemory, address: u32, value: u32) {
+    fn set_long(self: &mut CustomMemory, step_log: &mut StepLog, address: u32, value: u32) {
         panic!("custom memory set_long: ${:06X}", address);
     }
 
-    fn get_word(self: &CustomMemory, address: u32) -> u16 {
+    fn get_word(self: &CustomMemory, step_log: &mut StepLog, address: u32) -> u16 {
         match address {
             0xDFF002 => {
                 // DMACONR
-                self.read_dmacon_bits()
+                self.read_dmacon_bits(step_log)
             }
             0xDFF01C => {
                 // INTENAR
-                self.read_intena_bits()
+                self.read_intena_bits(step_log)
             }
             0xDFF01E => {
                 // INTREQR
-                self.read_intreq_bits()
+                self.read_intreq_bits(step_log)
             }
             0xDFF096 => {
                 // DMACON
@@ -80,16 +82,16 @@ impl Memory for CustomMemory {
             //     self.set_color_rgb4(color_index, value);
             // }
             _ => {
-                println!(
-                    "   -CUSTOM: TODO: get_word() for CUSTOM memory ${:06X}",
+                step_log.add_log(format!(
+                    "CUSTOM: TODO: get_word() for CUSTOM memory ${:06X}",
                     address
-                );
+                ));
                 0x0000
             }
         }
     }
 
-    fn set_word(self: &mut CustomMemory, address: u32, value: u16) {
+    fn set_word(self: &mut CustomMemory, step_log: &mut StepLog, address: u32, value: u16) {
         match address {
             0xDFF002 => {
                 // DMACONR
@@ -107,10 +109,10 @@ impl Memory for CustomMemory {
                 // DMACON
                 match value & 0x8000 {
                     0x8000 => {
-                        self.set_dmacon_bits(value & 0x7fff);
+                        self.set_dmacon_bits(step_log, value & 0x7fff);
                     }
                     _ => {
-                        self.clear_dmacon_bits(value & 0x7fff);
+                        self.clear_dmacon_bits(step_log, value & 0x7fff);
                     }
                 }
             }
@@ -118,10 +120,10 @@ impl Memory for CustomMemory {
                 // INTENA
                 match value & 0x8000 {
                     0x8000 => {
-                        self.set_intena_bits(value & 0x7fff);
+                        self.set_intena_bits(step_log, value & 0x7fff);
                     }
                     _ => {
-                        self.clear_intena_bits(value & 0x7fff);
+                        self.clear_intena_bits(step_log, value & 0x7fff);
                     }
                 }
             }
@@ -129,10 +131,10 @@ impl Memory for CustomMemory {
                 // INTREQ
                 match value & 0x8000 {
                     0x8000 => {
-                        self.set_intreq_bits(value & 0x7fff);
+                        self.set_intreq_bits(step_log, value & 0x7fff);
                     }
                     _ => {
-                        self.clear_intreq_bits(value & 0x7fff);
+                        self.clear_intreq_bits(step_log, value & 0x7fff);
                     }
                 }
             }
@@ -142,22 +144,27 @@ impl Memory for CustomMemory {
             0xDFF180..=0xDFF1Be => {
                 // COLORxx
                 let color_index = (address as usize - 0xDFF180) / 2;
-                self.set_color_rgb4(color_index, value);
+                self.set_color_rgb4(step_log, color_index, value);
             }
             _ => {
-                println!(
-                    "   -CUSTOM: TODO: set_word() for CUSTOM memory ${:06X} to ${:04X} [%{:016b}]",
+                step_log.add_log(format!(
+                    "CUSTOM: TODO: set_word() for CUSTOM memory ${:06X} to ${:04X} [%{:016b}]",
                     address, value, value
-                );
+                ));
             }
         }
     }
 
-    fn get_byte(self: &CustomMemory, address: u32) -> u8 {
+    fn get_byte(self: &CustomMemory, step_log: &mut StepLog, address: u32) -> u8 {
         panic!("custom memory get_byte: ${:06X}", address);
     }
 
-    fn set_byte(self: &mut CustomMemory, address: u32, value: u8) -> Option<SetMemoryResult> {
+    fn set_byte(
+        self: &mut CustomMemory,
+        step_log: &mut StepLog,
+        address: u32,
+        value: u8,
+    ) -> Option<SetMemoryResult> {
         panic!("custom memory set_byte: ${:06X}", address);
     }
 }
@@ -184,7 +191,7 @@ impl CustomMemory {
         0x001FF
     }
 
-    pub fn set_color_rgb4(&mut self, color_index: usize, color_rgb4: u16) {
+    pub fn set_color_rgb4(&mut self, step_log: &mut StepLog, color_index: usize, color_rgb4: u16) {
         let mut r = (color_rgb4 >> 8) & 0x000f;
         let mut g = (color_rgb4 >> 4) & 0x000f;
         let mut b = color_rgb4 & 0x000f;
@@ -194,88 +201,88 @@ impl CustomMemory {
         b = (b << 4) + b;
         // let r = 0xff;
         // let b = 0xff;
-        println!(
-            "   -CUSTOM: Changing COLOR{:02} rgb4  to {:04X} [\x1b[38;2;{};{};{}m\u{25A0}\u{25A0}\u{25A0}\u{25A0}\u{25A0}\u{25A0}\x1b[0m]",
+        step_log.add_log(format!(
+            "CUSTOM: Changing COLOR{:02} rgb4  to {:04X} [\x1b[38;2;{};{};{}m\u{25A0}\u{25A0}\u{25A0}\u{25A0}\u{25A0}\u{25A0}\x1b[0m]",
             color_index, color_rgb4, r, g, b,
-        );
+        ));
         self.color_rgb4[color_index] = color_rgb4;
     }
 
-    pub fn set_dmacon_bits(&mut self, bits: u16) {
+    pub fn set_dmacon_bits(&mut self, step_log: &mut StepLog, bits: u16) {
         let bits = bits & 0x7fff;
         let dmacon = self.dmacon | bits;
-        println!(
-            "   -CUSTOM: Changing DMACON to ${:04X}. [from: ${:04X}, bits set was ${:04X}",
+        step_log.add_log(format!(
+            "CUSTOM: Changing DMACON to ${:04X}. [from: ${:04X}, bits set was ${:04X}",
             dmacon, self.dmacon, bits
-        );
+        ));
         self.dmacon = dmacon;
     }
 
-    pub fn clear_dmacon_bits(&mut self, bits: u16) {
+    pub fn clear_dmacon_bits(&mut self, step_log: &mut StepLog, bits: u16) {
         let bits = bits & 0x7fff;
         let dmacon = self.dmacon & !bits;
-        println!(
-            "   -CUSTOM: Changing DMACON to ${:04X}. [from: ${:04X}, bits cleared was ${:04X}",
+        step_log.add_log(format!(
+            "CUSTOM: Changing DMACON to ${:04X}. [from: ${:04X}, bits cleared was ${:04X}",
             dmacon, self.dmacon, bits
-        );
+        ));
         self.dmacon = dmacon;
     }
 
-    pub fn read_dmacon_bits(&self) -> u16 {
+    pub fn read_dmacon_bits(&self, step_log: &mut StepLog) -> u16 {
         let result = self.dmacon & 0x7fff;
-        println!("   -CUSTOM: Reading DMACON, returns ${:04X}", result);
+        step_log.add_log(format!("CUSTOM: Reading DMACON, returns ${:04X}", result));
         result
     }
 
-    pub fn set_intena_bits(&mut self, bits: u16) {
+    pub fn set_intena_bits(&mut self, step_log: &mut StepLog, bits: u16) {
         let bits = bits & 0x7fff;
         let intena = self.intena | bits;
-        println!(
-            "   -CUSTOM: Changing INTENA to ${:04X}. [from: ${:04X}, bits set was ${:04X}",
+        step_log.add_log(format!(
+            "CUSTOM: Changing INTENA to ${:04X}. [from: ${:04X}, bits set was ${:04X}",
             intena, self.intena, bits
-        );
+        ));
         self.intena = intena;
     }
 
-    pub fn clear_intena_bits(&mut self, bits: u16) {
+    pub fn clear_intena_bits(&mut self, step_log: &mut StepLog, bits: u16) {
         let bits = bits & 0x7fff;
         let intena = self.intena & !bits;
-        println!(
-            "   -CUSTOM: Changing INTENA to ${:04X}. [from: ${:04X}, bits cleared was ${:04X}",
+        step_log.add_log(format!(
+            "CUSTOM: Changing INTENA to ${:04X}. [from: ${:04X}, bits cleared was ${:04X}",
             intena, self.intena, bits
-        );
+        ));
         self.intena = intena;
     }
 
-    pub fn read_intena_bits(&self) -> u16 {
+    pub fn read_intena_bits(&self, step_log: &mut StepLog) -> u16 {
         let result = self.intena & 0x7fff;
-        println!("   -CUSTOM: Reading INTENA, returns ${:04X}", result);
+        step_log.add_log(format!("CUSTOM: Reading INTENA, returns ${:04X}", result));
         result
     }
 
-    pub fn set_intreq_bits(&mut self, bits: u16) {
+    pub fn set_intreq_bits(&mut self, step_log: &mut StepLog, bits: u16) {
         let bits = bits & 0x7fff;
         let intreq = self.intreq | bits;
-        println!(
-            "   -CUSTOM: Changing INTREQ to ${:04X}. [from: ${:04X}, bits set was ${:04X}",
+        step_log.add_log(format!(
+            "CUSTOM: Changing INTREQ to ${:04X}. [from: ${:04X}, bits set was ${:04X}",
             intreq, self.intreq, bits
-        );
+        ));
         self.intreq = intreq;
     }
 
-    pub fn clear_intreq_bits(&mut self, bits: u16) {
+    pub fn clear_intreq_bits(&mut self, step_log: &mut StepLog, bits: u16) {
         let bits = bits & 0x7fff;
         let intreq = self.intreq & !bits;
-        println!(
-            "   -CUSTOM: Changing INTREQ to ${:04X}. [from: ${:04X}, bits cleared was ${:04X}",
+        step_log.add_log(format!(
+            "CUSTOM: Changing INTREQ to ${:04X}. [from: ${:04X}, bits cleared was ${:04X}",
             intreq, self.intreq, bits
-        );
+        ));
         self.intreq = intreq;
     }
 
-    pub fn read_intreq_bits(&self) -> u16 {
+    pub fn read_intreq_bits(&self, step_log: &mut StepLog) -> u16 {
         let result = self.intreq & 0x7fff;
-        println!("   -CUSTOM: Reading INTREQ, returns ${:04X}", result);
+        step_log.add_log(format!("CUSTOM: Reading INTREQ, returns ${:04X}", result));
         result
     }
 }

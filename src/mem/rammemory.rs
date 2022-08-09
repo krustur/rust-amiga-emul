@@ -6,6 +6,8 @@ use std::{
 
 use byteorder::{BigEndian, ReadBytesExt};
 
+use crate::cpu::step_log::StepLog;
+
 use super::memory::{Memory, SetMemoryResult};
 
 pub struct RamMemory {
@@ -42,14 +44,14 @@ impl Memory for RamMemory {
         return self.length;
     }
 
-    fn get_long(self: &RamMemory, address: u32) -> u32 {
+    fn get_long(self: &RamMemory, step_log: &mut StepLog, address: u32) -> u32 {
         let index = self.remap_address_to_index(address);
         let mut bytes = &self.bytes[index..index + 4];
         let result = bytes.read_u32::<BigEndian>().unwrap();
         result
     }
 
-    fn set_long(self: &mut RamMemory, address: u32, value: u32) {
+    fn set_long(self: &mut RamMemory, step_log: &mut StepLog, address: u32, value: u32) {
         let index = self.remap_address_to_index(address);
         self.bytes[index] = ((value >> 24) & 0x000000ff) as u8;
         self.bytes[index + 1] = ((value >> 16) & 0x000000ff) as u8;
@@ -57,7 +59,7 @@ impl Memory for RamMemory {
         self.bytes[index + 3] = ((value) & 0x000000ff) as u8;
     }
 
-    fn get_word(self: &RamMemory, address: u32) -> u16 {
+    fn get_word(self: &RamMemory, step_log: &mut StepLog, address: u32) -> u16 {
         let index = self.remap_address_to_index(address);
         let mut bytes = &self.bytes[index..index + 2];
         let result = bytes.read_u16::<BigEndian>().unwrap();
@@ -67,20 +69,25 @@ impl Memory for RamMemory {
         result
     }
 
-    fn set_word(self: &mut RamMemory, address: u32, value: u16) {
+    fn set_word(self: &mut RamMemory, step_log: &mut StepLog, address: u32, value: u16) {
         let index = self.remap_address_to_index(address);
         self.bytes[index] = ((value >> 8) & 0x000000ff) as u8;
         self.bytes[index + 1] = ((value) & 0x000000ff) as u8;
     }
 
-    fn get_byte(self: &RamMemory, address: u32) -> u8 {
+    fn get_byte(self: &RamMemory, step_log: &mut StepLog, address: u32) -> u8 {
         let index = self.remap_address_to_index(address);
         let mut bytes = &self.bytes[index..index + 1];
         let result = bytes.read_u8().unwrap();
         result
     }
 
-    fn set_byte(self: &mut RamMemory, address: u32, value: u8) -> Option<SetMemoryResult> {
+    fn set_byte(
+        self: &mut RamMemory,
+        step_log: &mut StepLog,
+        address: u32,
+        value: u8,
+    ) -> Option<SetMemoryResult> {
         let index = self.remap_address_to_index(address);
         self.bytes[index] = ((value) & 0x000000ff) as u8;
         None

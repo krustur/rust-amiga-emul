@@ -116,6 +116,7 @@ impl Display for StepLogEntry {
 pub struct StepLog {
     log_count: usize,
     logs: [StepLogEntry; 60],
+    log_strings: Vec<String>,
 }
 
 impl StepLog {
@@ -123,16 +124,22 @@ impl StepLog {
         StepLog {
             log_count: 0,
             logs: [StepLogEntry::Null; 60],
+            log_strings: vec![],
         }
     }
 
     pub fn reset_log(&mut self) {
         self.log_count = 0;
+        self.log_strings.clear();
     }
 
-    pub fn add_log(&mut self, log_entry: StepLogEntry) {
+    pub fn add_log_entry(&mut self, log_entry: StepLogEntry) {
         self.logs[self.log_count] = log_entry;
         self.log_count += 1;
+    }
+
+    pub fn add_log(&mut self, log: String) {
+        self.log_strings.push(log);
     }
 
     pub fn print_logs(&self) {
@@ -140,5 +147,12 @@ impl StepLog {
             print!(" > {}", self.logs[i]);
         }
         println!("");
+
+        for l in &self.log_strings {
+            println!(
+                "                                                            ; {}",
+                l
+            );
+        }
     }
 }
