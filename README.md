@@ -120,7 +120,7 @@ RTM (todo)||||X|||||
 RTR (todo)|X|X|X|X|X|X|||X
 RTS|X|X|X|X|X|X|||X
 SBCD (todo)|X|X|X|X|X|X|||X
-Scc (todo)|X|X|X|X|X|X|||X
+Scc|X|X|X|X|X|X|||X
 STOP 1 (todo)|X|X|X|X|X|X|||X
 SUB|X|X|X|X|X|X|||X
 SUBA|X|X|X|X|X|X|||X
