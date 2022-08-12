@@ -19,7 +19,7 @@ There's no ambition to make this a fully functional Amiga emulator.
 
 <https://wandel.ca/homepage/execdis/exec_disassembly.txt>
 
-68000 instructions left to do: 30
+68000 instructions left to do: 28
 
 instruction|68000|68008|68010|68020|68030|68040|68881/68882|68851|CPU32
 -|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:
