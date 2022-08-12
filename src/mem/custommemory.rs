@@ -1,4 +1,4 @@
-use crate::cpu::step_log::StepLog;
+use crate::cpu::{instruction::add, step_log::StepLog, Cpu};
 
 use super::memory::{Memory, SetMemoryResult};
 use std::{any::Any, fmt};
@@ -44,7 +44,10 @@ impl Memory for CustomMemory {
     }
 
     fn set_long(self: &mut CustomMemory, step_log: &mut StepLog, address: u32, value: u32) {
-        panic!("custom memory set_long: ${:06X}", address);
+        let hi = Cpu::get_word_from_long(value >> 16);
+        self.set_word(step_log, address, hi);
+        let low = Cpu::get_word_from_long(value);
+        self.set_word(step_log, address + 2, low);
     }
 
     fn get_word(self: &CustomMemory, step_log: &mut StepLog, address: u32) -> u16 {
