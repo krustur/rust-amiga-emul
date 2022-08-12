@@ -19,7 +19,7 @@ There's no ambition to make this a fully functional Amiga emulator.
 
 <https://wandel.ca/homepage/execdis/exec_disassembly.txt>
 
-68000 instructions left to do: 31
+68000 instructions left to do: 30
 
 instruction|68000|68008|68010|68020|68030|68040|68881/68882|68851|CPU32
 -|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:
@@ -102,8 +102,8 @@ NEG|X|X|X|X|X|X|||X
 NEGX (todo)|X|X|X|X|X|X|||X
 NOP|X|X|X|X|X|X|||X
 NOT|X|X|X|X|X|X|||X
-OR (todo)|X|X|X|X|X|X|||X
-ORI (todo)|X|X|X|X|X|X|||X
+OR|X|X|X|X|X|X|||X
+ORI|X|X|X|X|X|X|||X
 ORI to CCR (todo)|X|X|X|X|X|X|||X
 ORI to SR 1 (todo)|X|X|X|X|X|X|||X
 PACK (todo)||||X|X|X|||

@@ -9,14 +9,12 @@ use std::panic;
 
 // Instruction State
 // =================
-// step: TODO
-// step cc: TODO
-// get_disassembly: TODO
+// step: DONE
+// step cc: DONE
+// get_disassembly: DONE
 
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
-
-// TODO: Tests
 
 const BYTE_WITH_DN_AS_DEST: usize = 0b000;
 const WORD_WITH_DN_AS_DEST: usize = 0b001;
@@ -192,629 +190,629 @@ pub fn get_disassembly<'a>(
 
 #[cfg(test)]
 mod tests {
-    // use crate::{
-    //     cpu::instruction::GetDisassemblyResult,
-    //     register::{
-    //         STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE,
-    //         STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
-    //     },
-    // };
+    use crate::{
+        cpu::instruction::GetDisassemblyResult,
+        register::{
+            STATUS_REGISTER_MASK_CARRY, STATUS_REGISTER_MASK_EXTEND, STATUS_REGISTER_MASK_NEGATIVE,
+            STATUS_REGISTER_MASK_OVERFLOW, STATUS_REGISTER_MASK_ZERO,
+        },
+    };
 
-    // #[test]
-    // fn or_byte_address_register_indirect_to_data_register_direct() {
-    //     // arrange
-    //     let code = [0xc0, 0x10, /* DC */ 0x33].to_vec(); // OR.B (A0),D0
-    //                                                      // DC.B 0x33
-    //     let mut cpu = crate::instr_test_setup(code, None);
-    //     cpu.register.set_a_reg_long(0, 0x00C00002);
-    //     cpu.register.set_d_reg_long(0, 0x000000f1);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(
-    //         STATUS_REGISTER_MASK_CARRY
-    //             | STATUS_REGISTER_MASK_OVERFLOW
-    //             | STATUS_REGISTER_MASK_ZERO
-    //             | STATUS_REGISTER_MASK_NEGATIVE
-    //             | STATUS_REGISTER_MASK_EXTEND,
-    //     );
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly_no_log();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("OR.B"),
-    //             String::from("(A0),D0")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x31, cpu.register.get_d_reg_long(0));
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn or_byte_address_register_indirect_to_data_register_direct() {
+        // arrange
+        let code = [0x80, 0x10, /* DC */ 0x33].to_vec(); // OR.B (A0),D0
+                                                         // DC.B 0x33
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long_no_log(0, 0x00C00002);
+        cpu.register.set_d_reg_long_no_log(0, 0x00000071);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("OR.B"),
+                String::from("(A0),D0")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x73, cpu.register.get_d_reg_long_no_log(0));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
-    // #[test]
-    // fn or_byte_address_register_indirect_to_data_register_direct_negative() {
-    //     // arrange
-    //     let code = [0xc0, 0x10, /* DC */ 0x81].to_vec(); // OR.B (A0),D0
-    //                                                      // DC.B 0x81
-    //     let mut cpu = crate::instr_test_setup(code, None);
-    //     cpu.register.set_a_reg_long(0, 0x00C00002);
-    //     cpu.register.set_d_reg_long(0, 0x00000087);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly_no_log();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("OR.B"),
-    //             String::from("(A0),D0")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x81, cpu.register.get_d_reg_long(0));
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn or_byte_address_register_indirect_to_data_register_direct_negative() {
+        // arrange
+        let code = [0x80, 0x10, /* DC */ 0x02].to_vec(); // OR.B (A0),D0
+                                                         // DC.B 0x81
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long_no_log(0, 0x00C00002);
+        cpu.register.set_d_reg_long_no_log(0, 0x00000085);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("OR.B"),
+                String::from("(A0),D0")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x87, cpu.register.get_d_reg_long_no_log(0));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
-    // #[test]
-    // fn or_byte_address_register_indirect_to_data_register_direct_zero() {
-    //     // arrange
-    //     let code = [0xc0, 0x10, /* DC */ 0xf0].to_vec(); // OR.B (A0),D0
-    //                                                      // DC.B 0xf0
-    //     let mut cpu = crate::instr_test_setup(code, None);
-    //     cpu.register.set_a_reg_long(0, 0x00C00002);
-    //     cpu.register.set_d_reg_long(0, 0x0000000f);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly_no_log();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("OR.B"),
-    //             String::from("(A0),D0")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x00, cpu.register.get_d_reg_long(0));
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn or_byte_address_register_indirect_to_data_register_direct_zero() {
+        // arrange
+        let code = [0x80, 0x10, /* DC */ 0x00].to_vec(); // OR.B (A0),D0
+                                                         // DC.B 0xf0
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long_no_log(0, 0x00C00002);
+        cpu.register.set_d_reg_long_no_log(0, 0x00000000);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("OR.B"),
+                String::from("(A0),D0")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00, cpu.register.get_d_reg_long_no_log(0));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
-    // #[test]
-    // fn or_word_address_register_indirect_to_data_register_direct() {
-    //     // arrange
-    //     let code = [0xc0, 0x50, /* DC */ 0x01, 0x0f].to_vec(); // OR.W (A0),D0
-    //                                                            // DC.W $010F
-    //     let mut cpu = crate::instr_test_setup(code, None);
-    //     cpu.register.set_a_reg_long(0, 0x00C00002);
-    //     cpu.register.set_d_reg_long(0, 0x000087ff);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(
-    //         STATUS_REGISTER_MASK_CARRY
-    //             | STATUS_REGISTER_MASK_OVERFLOW
-    //             | STATUS_REGISTER_MASK_ZERO
-    //             | STATUS_REGISTER_MASK_NEGATIVE
-    //             | STATUS_REGISTER_MASK_EXTEND,
-    //     );
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly_no_log();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("OR.W"),
-    //             String::from("(A0),D0")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x010F, cpu.register.get_d_reg_long(0));
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn or_word_address_register_indirect_to_data_register_direct() {
+        // arrange
+        let code = [0x80, 0x50, /* DC */ 0x01, 0x0f].to_vec(); // OR.W (A0),D0
+                                                               // DC.W $010F
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long_no_log(0, 0x00C00002);
+        cpu.register.set_d_reg_long_no_log(0, 0x000047ff);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("OR.W"),
+                String::from("(A0),D0")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x47ff, cpu.register.get_d_reg_long_no_log(0));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
-    // #[test]
-    // fn or_word_address_register_indirect_to_data_register_direct_negative() {
-    //     // arrange
-    //     let code = [0xc0, 0x50, /* DC */ 0xc0, 0xff].to_vec(); // OR.W (A0),D0
-    //                                                            // DC.W $C0FF
-    //     let mut cpu = crate::instr_test_setup(code, None);
-    //     cpu.register.set_a_reg_long(0, 0x00C00002);
-    //     cpu.register.set_d_reg_long(0, 0x00008fff);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(0x000);
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly_no_log();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("OR.W"),
-    //             String::from("(A0),D0")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x80ff, cpu.register.get_d_reg_long(0));
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn or_word_address_register_indirect_to_data_register_direct_negative() {
+        // arrange
+        let code = [0x80, 0x50, /* DC */ 0xc0, 0x0f].to_vec(); // OR.W (A0),D0
+                                                               // DC.W $C0FF
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long_no_log(0, 0x00C00002);
+        cpu.register.set_d_reg_long_no_log(0, 0x00008f0f);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x000);
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("OR.W"),
+                String::from("(A0),D0")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0xcf0f, cpu.register.get_d_reg_long_no_log(0));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
-    // #[test]
-    // fn or_word_address_register_indirect_to_data_register_direct_zero() {
-    //     // arrange
-    //     let code = [0xc0, 0x50, /* DC */ 0xff, 0x0f].to_vec(); // OR.W (A0),D0
-    //                                                            // DC.W 0xff0f
-    //     let mut cpu = crate::instr_test_setup(code, None);
-    //     cpu.register.set_a_reg_long(0, 0x00C00002);
-    //     cpu.register.set_d_reg_long(0, 0x00000080);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(
-    //         STATUS_REGISTER_MASK_CARRY
-    //             | STATUS_REGISTER_MASK_OVERFLOW
-    //             | STATUS_REGISTER_MASK_ZERO
-    //             | STATUS_REGISTER_MASK_NEGATIVE
-    //             | STATUS_REGISTER_MASK_EXTEND,
-    //     );
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly_no_log();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("OR.W"),
-    //             String::from("(A0),D0")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x0000, cpu.register.get_d_reg_long(0));
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn or_word_address_register_indirect_to_data_register_direct_zero() {
+        // arrange
+        let code = [0x80, 0x50, /* DC */ 0x00, 0x00].to_vec(); // OR.W (A0),D0
+                                                               // DC.W 0xff0f
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long_no_log(0, 0x00C00002);
+        cpu.register.set_d_reg_long_no_log(0, 0x00000000);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("OR.W"),
+                String::from("(A0),D0")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x0000, cpu.register.get_d_reg_long_no_log(0));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
-    // #[test]
-    // fn or_long_address_register_indirect_to_data_register_direct() {
-    //     // arrange
-    //     let code = [0xc0, 0x90, /* DC */ 0x01, 0x0f, 0x01, 0x0f].to_vec(); // OR.L (A0),D0
-    //                                                                        // DC.W $010F010F
-    //     let mut cpu = crate::instr_test_setup(code, None);
-    //     cpu.register.set_a_reg_long(0, 0x00C00002);
-    //     cpu.register.set_d_reg_long(0, 0x87ff87ff);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(
-    //         STATUS_REGISTER_MASK_CARRY
-    //             | STATUS_REGISTER_MASK_OVERFLOW
-    //             | STATUS_REGISTER_MASK_ZERO
-    //             | STATUS_REGISTER_MASK_NEGATIVE
-    //             | STATUS_REGISTER_MASK_EXTEND,
-    //     );
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly_no_log();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("OR.L"),
-    //             String::from("(A0),D0")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x010F010F, cpu.register.get_d_reg_long(0));
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn or_long_address_register_indirect_to_data_register_direct() {
+        // arrange
+        let code = [0x80, 0x90, /* DC */ 0x01, 0x0f, 0x01, 0x0f].to_vec(); // OR.L (A0),D0
+                                                                           // DC.W $010F010F
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long_no_log(0, 0x00C00002);
+        cpu.register.set_d_reg_long_no_log(0, 0x270087ff);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("OR.L"),
+                String::from("(A0),D0")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x270f87ff, cpu.register.get_d_reg_long_no_log(0));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
-    // #[test]
-    // fn or_long_address_register_indirect_to_data_register_direct_negative() {
-    //     // arrange
-    //     let code = [0xc0, 0x90, /* DC */ 0xc0, 0xff, 0xc0, 0xff].to_vec(); // OR.L (A0),D0
-    //                                                                        // DC.W $C0FFC0FF
-    //     let mut cpu = crate::instr_test_setup(code, None);
-    //     cpu.register.set_a_reg_long(0, 0x00C00002);
-    //     cpu.register.set_d_reg_long(0, 0x8fff8fff);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(0x000);
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly_no_log();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("OR.L"),
-    //             String::from("(A0),D0")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x80ff80ff, cpu.register.get_d_reg_long(0));
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn or_long_address_register_indirect_to_data_register_direct_negative() {
+        // arrange
+        let code = [0x80, 0x90, /* DC */ 0xc0, 0xff, 0xc0, 0xff].to_vec(); // OR.L (A0),D0
+                                                                           // DC.W $C0FFC0FF
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long_no_log(0, 0x00C00002);
+        cpu.register.set_d_reg_long_no_log(0, 0x8fff8fff);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x000);
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("OR.L"),
+                String::from("(A0),D0")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0xcfffcfff, cpu.register.get_d_reg_long_no_log(0));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
-    // #[test]
-    // fn or_long_address_register_indirect_to_data_register_direct_zero() {
-    //     // arrange
-    //     let code = [0xc0, 0x90, /* DC */ 0xff, 0x0f, 0xff, 0x0f].to_vec(); // OR.L (A0),D0
-    //                                                                        // DC.W 0xff0fff0f
-    //     let mut cpu = crate::instr_test_setup(code, None);
-    //     cpu.register.set_a_reg_long(0, 0x00C00002);
-    //     cpu.register.set_d_reg_long(0, 0x00800080);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(
-    //         STATUS_REGISTER_MASK_CARRY
-    //             | STATUS_REGISTER_MASK_OVERFLOW
-    //             | STATUS_REGISTER_MASK_ZERO
-    //             | STATUS_REGISTER_MASK_NEGATIVE
-    //             | STATUS_REGISTER_MASK_EXTEND,
-    //     );
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly_no_log();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("OR.L"),
-    //             String::from("(A0),D0")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x00000000, cpu.register.get_d_reg_long(0));
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn or_long_address_register_indirect_to_data_register_direct_zero() {
+        // arrange
+        let code = [0x80, 0x90, /* DC */ 0x00, 0x00, 0x00, 0x00].to_vec(); // OR.L (A0),D0
+                                                                           // DC.W 0xff0fff0f
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long_no_log(0, 0x00C00002);
+        cpu.register.set_d_reg_long_no_log(0, 0x00000000);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("OR.L"),
+                String::from("(A0),D0")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00000000, cpu.register.get_d_reg_long_no_log(0));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
-    // #[test]
-    // fn or_byte_data_register_direct_to_address_register_indirect() {
-    //     // arrange
-    //     let code = [0xc1, 0x10, /* DC */ 0x33].to_vec(); // OR.B D0,(A0)
-    //                                                      // DC.B 0x33
-    //     let mut cpu = crate::instr_test_setup(code, None);
-    //     cpu.register.set_a_reg_long(0, 0x00C00002);
-    //     cpu.register.set_d_reg_long(0, 0x000000f1);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(
-    //         STATUS_REGISTER_MASK_CARRY
-    //             | STATUS_REGISTER_MASK_OVERFLOW
-    //             | STATUS_REGISTER_MASK_ZERO
-    //             | STATUS_REGISTER_MASK_NEGATIVE
-    //             | STATUS_REGISTER_MASK_EXTEND,
-    //     );
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly_no_log();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("OR.B"),
-    //             String::from("D0,(A0)")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x31, cpu.memory.get_byte(0x00C00002));
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn or_byte_data_register_direct_to_address_register_indirect() {
+        // arrange
+        let code = [0x81, 0x10, /* DC */ 0x33].to_vec(); // OR.B D0,(A0)
+                                                         // DC.B 0x33
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long_no_log(0, 0x00C00002);
+        cpu.register.set_d_reg_long_no_log(0, 0x00000071);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("OR.B"),
+                String::from("D0,(A0)")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x73, cpu.memory.get_byte_no_log(0x00C00002));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
-    // #[test]
-    // fn or_byte_data_register_direct_to_address_register_indirect_negative() {
-    //     // arrange
-    //     let code = [0xc1, 0x10, /* DC */ 0x81].to_vec(); // OR.B D0,(A0)
-    //                                                      // DC.B 0x81
-    //     let mut cpu = crate::instr_test_setup(code, None);
-    //     cpu.register.set_a_reg_long(0, 0x00C00002);
-    //     cpu.register.set_d_reg_long(0, 0x00000087);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly_no_log();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("OR.B"),
-    //             String::from("D0,(A0)")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x81, cpu.memory.get_byte(0x00C00002));
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn or_byte_data_register_direct_to_address_register_indirect_negative() {
+        // arrange
+        let code = [0x81, 0x10, /* DC */ 0x81].to_vec(); // OR.B D0,(A0)
+                                                         // DC.B 0x81
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long_no_log(0, 0x00C00002);
+        cpu.register.set_d_reg_long_no_log(0, 0x00000084);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("OR.B"),
+                String::from("D0,(A0)")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x85, cpu.memory.get_byte_no_log(0x00C00002));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
-    // #[test]
-    // fn or_byte_data_register_direct_to_address_register_indirect_zero() {
-    //     // arrange
-    //     let code = [0xc1, 0x10, /* DC */ 0xf0].to_vec(); // OR.B D0,(A0)
-    //                                                      // DC.B 0xf0
-    //     let mut cpu = crate::instr_test_setup(code, None);
-    //     cpu.register.set_a_reg_long(0, 0x00C00002);
-    //     cpu.register.set_d_reg_long(0, 0x0000000f);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly_no_log();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("OR.B"),
-    //             String::from("D0,(A0)")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x00, cpu.memory.get_byte(0x00C00002));
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn or_byte_data_register_direct_to_address_register_indirect_zero() {
+        // arrange
+        let code = [0x81, 0x10, /* DC */ 0x00].to_vec(); // OR.B D0,(A0)
+                                                         // DC.B 0xf0
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long_no_log(0, 0x00C00002);
+        cpu.register.set_d_reg_long_no_log(0, 0x00000000);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("OR.B"),
+                String::from("D0,(A0)")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00, cpu.memory.get_byte_no_log(0x00C00002));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
-    // #[test]
-    // fn or_word_data_register_direct_to_address_register_indirect() {
-    //     // arrange
-    //     let code = [0xc1, 0x50, /* DC */ 0x01, 0x0f].to_vec(); // OR.W D0,(A0)
-    //                                                            // DC.W $010F
-    //     let mut cpu = crate::instr_test_setup(code, None);
-    //     cpu.register.set_a_reg_long(0, 0x00C00002);
-    //     cpu.register.set_d_reg_long(0, 0x000087ff);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(
-    //         STATUS_REGISTER_MASK_CARRY
-    //             | STATUS_REGISTER_MASK_OVERFLOW
-    //             | STATUS_REGISTER_MASK_ZERO
-    //             | STATUS_REGISTER_MASK_NEGATIVE
-    //             | STATUS_REGISTER_MASK_EXTEND,
-    //     );
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly_no_log();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("OR.W"),
-    //             String::from("D0,(A0)")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x010F, cpu.memory.get_word(0x00C00002));
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn or_word_data_register_direct_to_address_register_indirect() {
+        // arrange
+        let code = [0x81, 0x50, /* DC */ 0x01, 0x0f].to_vec(); // OR.W D0,(A0)
+                                                               // DC.W $010F
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long_no_log(0, 0x00C00002);
+        cpu.register.set_d_reg_long_no_log(0, 0x000037f4);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("OR.W"),
+                String::from("D0,(A0)")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x37ff, cpu.memory.get_word_no_log(0x00C00002));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
-    // #[test]
-    // fn or_word_data_register_direct_to_address_register_indirect_negative() {
-    //     // arrange
-    //     let code = [0xc1, 0x50, /* DC */ 0xc0, 0xff].to_vec(); // OR.W D0,(A0)
-    //                                                            // DC.W $C0FF
-    //     let mut cpu = crate::instr_test_setup(code, None);
-    //     cpu.register.set_a_reg_long(0, 0x00C00002);
-    //     cpu.register.set_d_reg_long(0, 0x00008fff);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(0x000);
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly_no_log();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("OR.W"),
-    //             String::from("D0,(A0)")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x80ff, cpu.memory.get_word(0x00C00002));
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn or_word_data_register_direct_to_address_register_indirect_negative() {
+        // arrange
+        let code = [0x81, 0x50, /* DC */ 0xc0, 0xff].to_vec(); // OR.W D0,(A0)
+                                                               // DC.W $C0FF
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long_no_log(0, 0x00C00002);
+        cpu.register.set_d_reg_long_no_log(0, 0x00008400);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x000);
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("OR.W"),
+                String::from("D0,(A0)")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0xc4ff, cpu.memory.get_word_no_log(0x00C00002));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
-    // #[test]
-    // fn or_word_data_register_direct_to_address_register_indirect_zero() {
-    //     // arrange
-    //     let code = [0xc1, 0x50, /* DC */ 0xff, 0x0f].to_vec(); // OR.W D0,(A0)
-    //                                                            // DC.W 0xff0f
-    //     let mut cpu = crate::instr_test_setup(code, None);
-    //     cpu.register.set_a_reg_long(0, 0x00C00002);
-    //     cpu.register.set_d_reg_long(0, 0x00000080);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(
-    //         STATUS_REGISTER_MASK_CARRY
-    //             | STATUS_REGISTER_MASK_OVERFLOW
-    //             | STATUS_REGISTER_MASK_ZERO
-    //             | STATUS_REGISTER_MASK_NEGATIVE
-    //             | STATUS_REGISTER_MASK_EXTEND,
-    //     );
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly_no_log();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("OR.W"),
-    //             String::from("D0,(A0)")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x0000, cpu.memory.get_word(0x00C00002));
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn or_word_data_register_direct_to_address_register_indirect_zero() {
+        // arrange
+        let code = [0x81, 0x50, /* DC */ 0x00, 0x00].to_vec(); // OR.W D0,(A0)
+                                                               // DC.W 0xff0f
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long_no_log(0, 0x00C00002);
+        cpu.register.set_d_reg_long_no_log(0, 0x00000000);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("OR.W"),
+                String::from("D0,(A0)")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x0000, cpu.memory.get_word_no_log(0x00C00002));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
-    // #[test]
-    // fn or_long_data_register_direct_to_address_register_indirect() {
-    //     // arrange
-    //     let code = [0xc1, 0x90, /* DC */ 0x01, 0x0f, 0x01, 0x0f].to_vec(); // OR.L D0,(A0)
-    //                                                                        // DC.W $010F010F
-    //     let mut cpu = crate::instr_test_setup(code, None);
-    //     cpu.register.set_a_reg_long(0, 0x00C00002);
-    //     cpu.register.set_d_reg_long(0, 0x87ff87ff);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(
-    //         STATUS_REGISTER_MASK_CARRY
-    //             | STATUS_REGISTER_MASK_OVERFLOW
-    //             | STATUS_REGISTER_MASK_ZERO
-    //             | STATUS_REGISTER_MASK_NEGATIVE
-    //             | STATUS_REGISTER_MASK_EXTEND,
-    //     );
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly_no_log();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("OR.L"),
-    //             String::from("D0,(A0)")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x010F010F, cpu.memory.get_long(0x00C00002));
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn or_long_data_register_direct_to_address_register_indirect() {
+        // arrange
+        let code = [0x81, 0x90, /* DC */ 0x01, 0x0f, 0x01, 0x0f].to_vec(); // OR.L D0,(A0)
+                                                                           // DC.W $010F010F
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long_no_log(0, 0x00C00002);
+        cpu.register.set_d_reg_long_no_log(0, 0x17008700);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("OR.L"),
+                String::from("D0,(A0)")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x170f870f, cpu.memory.get_long_no_log(0x00C00002));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
-    // #[test]
-    // fn or_long_data_register_direct_to_address_register_indirect_negative() {
-    //     // arrange
-    //     let code = [0xc1, 0x90, /* DC */ 0xc0, 0xff, 0xc0, 0xff].to_vec(); // OR.L D0,(A0)
-    //                                                                        // DC.W $C0FFC0FF
-    //     let mut cpu = crate::instr_test_setup(code, None);
-    //     cpu.register.set_a_reg_long(0, 0x00C00002);
-    //     cpu.register.set_d_reg_long(0, 0x8fff8fff);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(0x000);
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly_no_log();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("OR.L"),
-    //             String::from("D0,(A0)")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x80ff80ff, cpu.memory.get_long(0x00C00002));
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn or_long_data_register_direct_to_address_register_indirect_negative() {
+        // arrange
+        let code = [0x81, 0x90, /* DC */ 0xc0, 0xff, 0xc0, 0xff].to_vec(); // OR.L D0,(A0)
+                                                                           // DC.W $C0FFC0FF
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long_no_log(0, 0x00C00002);
+        cpu.register.set_d_reg_long_no_log(0, 0x8fff8fff);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x000);
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("OR.L"),
+                String::from("D0,(A0)")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0xcfffcfff, cpu.memory.get_long_no_log(0x00C00002));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
-    // #[test]
-    // fn or_long_data_register_direct_to_address_register_indirect_zero() {
-    //     // arrange
-    //     let code = [0xc1, 0x90, /* DC */ 0xff, 0x0f, 0xff, 0x0f].to_vec(); // OR.L D0,(A0)
-    //                                                                        // DC.W 0xff0fff0f
-    //     let mut cpu = crate::instr_test_setup(code, None);
-    //     cpu.register.set_a_reg_long(0, 0x00C00002);
-    //     cpu.register.set_d_reg_long(0, 0x00800080);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(
-    //         STATUS_REGISTER_MASK_CARRY
-    //             | STATUS_REGISTER_MASK_OVERFLOW
-    //             | STATUS_REGISTER_MASK_ZERO
-    //             | STATUS_REGISTER_MASK_NEGATIVE
-    //             | STATUS_REGISTER_MASK_EXTEND,
-    //     );
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly_no_log();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("OR.L"),
-    //             String::from("D0,(A0)")
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x00000000, cpu.memory.get_long(0x00C00002));
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn or_long_data_register_direct_to_address_register_indirect_zero() {
+        // arrange
+        let code = [0x81, 0x90, /* DC */ 0x00, 0x00, 0x00, 0x00].to_vec(); // OR.L D0,(A0)
+                                                                           // DC.W 0xff0fff0f
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_a_reg_long_no_log(0, 0x00C00002);
+        cpu.register.set_d_reg_long_no_log(0, 0x00000000);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("OR.L"),
+                String::from("D0,(A0)")
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00000000, cpu.memory.get_long_no_log(0x00C00002));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
 }
