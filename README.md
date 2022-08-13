@@ -105,7 +105,7 @@ NOT|X|X|X|X|X|X|||X
 OR|X|X|X|X|X|X|||X
 ORI|X|X|X|X|X|X|||X
 ORI to CCR (todo)|X|X|X|X|X|X|||X
-ORI to SR 1 (todo)|X|X|X|X|X|X|||X
+ORI to SR 1|X|X|X|X|X|X|||X
 PACK (todo)||||X|X|X|||
 PBcc 1 (todo)||||||||X|
 PDBcc 1 (todo)||||||||X|
