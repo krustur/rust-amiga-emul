@@ -66,14 +66,17 @@ impl Memory for CustomMemory {
             }
             0xDFF096 => {
                 // DMACON
+                step_log.add_log(format!("CUSTOM: Reading DMACON, returns $0000"));
                 0x0000
             }
             0xDFF09A => {
                 // INTENA
+                step_log.add_log(format!("CUSTOM: Reading INTENA, returns $0000"));
                 0x0000
             }
             0xDFF09C => {
                 // INTREQ
+                step_log.add_log(format!("CUSTOM: Reading INTREQ, returns $0000"));
                 0x0000
             }
             // 0xDFF100 => {
@@ -98,14 +101,17 @@ impl Memory for CustomMemory {
         match address {
             0xDFF002 => {
                 // DMACONR
+                step_log.add_log(format!("CUSTOM: Writing DMACONR, nothingness"));
                 ()
             }
             0xDFF01C => {
                 // INTENAR
+                step_log.add_log(format!("CUSTOM: Writing INTENAR, nothingness"));
                 ()
             }
             0xDFF01E => {
                 // INTREQR
+                step_log.add_log(format!("CUSTOM: Writing INTREQR, nothingness"));
                 ()
             }
             0xDFF096 => {
@@ -233,7 +239,7 @@ impl CustomMemory {
 
     pub fn read_dmacon_bits(&self, step_log: &mut StepLog) -> u16 {
         let result = self.dmacon & 0x7fff;
-        step_log.add_log(format!("CUSTOM: Reading DMACON, returns ${:04X}", result));
+        step_log.add_log(format!("CUSTOM: Reading DMACONR, returns ${:04X}", result));
         result
     }
 
@@ -259,7 +265,7 @@ impl CustomMemory {
 
     pub fn read_intena_bits(&self, step_log: &mut StepLog) -> u16 {
         let result = self.intena & 0x7fff;
-        step_log.add_log(format!("CUSTOM: Reading INTENA, returns ${:04X}", result));
+        step_log.add_log(format!("CUSTOM: Reading INTENAR, returns ${:04X}", result));
         result
     }
 
@@ -285,7 +291,7 @@ impl CustomMemory {
 
     pub fn read_intreq_bits(&self, step_log: &mut StepLog) -> u16 {
         let result = self.intreq & 0x7fff;
-        step_log.add_log(format!("CUSTOM: Reading INTREQ, returns ${:04X}", result));
+        step_log.add_log(format!("CUSTOM: Reading INTREQR, returns ${:04X}", result));
         result
     }
 }

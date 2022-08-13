@@ -223,7 +223,7 @@ impl Mem {
         let mut address = start_address;
         while address <= end_address {
             if col_cnt == 0 {
-                print!(" {:010x}", address);
+                print!(" ${:08X}", address);
             }
             print!(" {:02x}", self.get_byte_no_log(address));
             col_cnt = col_cnt + 1;
