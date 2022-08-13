@@ -552,6 +552,7 @@ impl Register {
         step_log: &mut StepLog,
         operation_size: OperationSize,
     ) {
+        // TODO: Maybe have a StepLogEntry::DecrementARegister that logs before and after values
         match reg_index {
             7 => match self.reg_sr.is_sr_supervisor_set_no_log() {
                 true => {
