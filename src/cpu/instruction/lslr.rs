@@ -104,61 +104,40 @@ pub fn step<'a>(
             match operation_size {
                 OperationSize::Byte => {
                     let value = reg.get_d_reg_byte(dest_register, step_log) as u16;
-
-                    // println!("value: {}", value);
-                    // println!("shift_count: {}", shift_count);
                     let (result, overflow) = match lslr_direction {
                         LslrDirection::Left => {
-                            // println!("lslr_direction: left");
                             let result = value.checked_shl(shift_count).unwrap_or(0);
-                            // let result = value << shift_count;
                             let overflow = result & 0x100 != 0;
                             let result = (result & 0xff) as u8;
                             (result, overflow)
                         }
                         LslrDirection::Right => {
-                            // println!("lslr_direction: right");
                             let result = (value << 1).checked_shr(shift_count).unwrap_or(0);
                             let overflow = result & 0x01 != 0;
                             let result = ((result >> 1) & 0xff) as u8;
                             (result, overflow)
                         }
                     };
-                    // println!("result: {}", result);
-                    // println!("overflow: {}", overflow);
                     reg.set_d_reg_byte(step_log, dest_register, result);
-                    let mut status_register = 0x0000;
-                    match result {
-                        0 => status_register |= STATUS_REGISTER_MASK_ZERO,
-                        0x80..=0xff => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
-                        _ => (),
-                    }
 
-                    match overflow {
-                        true => {
-                            status_register |=
-                                STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY
-                        }
-                        false => (),
-                    }
-                    StatusRegisterResult {
-                        status_register,
-                        status_register_mask: get_status_register_mask(shift_count),
-                    }
+                    let (is_zero, is_negative) = match result {
+                        0 => (true, false),
+                        0x80..=0xff => (false, true),
+                        _ => (false, false),
+                    };
+
+                    get_status_register(shift_count, overflow, is_zero, is_negative)
                 }
                 OperationSize::Word => {
                     let value = reg.get_d_reg_word(dest_register, step_log) as u32;
-                    // println!("value: {}", value);
                     let (result, overflow) = match lslr_direction {
                         LslrDirection::Left => {
-                            // println!("lslr_direction: left");
                             let result = value.checked_shl(shift_count).unwrap_or(0);
                             let overflow = result & 0x10000 != 0;
                             let result = (result & 0xffff) as u16;
                             (result, overflow)
                         }
                         LslrDirection::Right => {
-                            // println!("lslr_direction: right");
                             let result = (value << 1).checked_shr(shift_count).unwrap_or(0);
                             let overflow = result & 0x0001 != 0;
                             let result = ((result >> 1) & 0xffff) as u16;
@@ -167,30 +146,17 @@ pub fn step<'a>(
                     };
 
                     reg.set_d_reg_word(step_log, dest_register, result);
-                    let mut status_register = 0x0000;
-                    match result {
-                        0 => status_register |= STATUS_REGISTER_MASK_ZERO,
-                        0x8000..=0xffff => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
-                        _ => (),
-                    }
-                    // println!("shift_count: {}", shift_count);
-                    // println!("result: {}", result);
-                    // println!("overflow: {}", overflow);
-                    match overflow {
-                        true => {
-                            status_register |=
-                                STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY
-                        }
-                        false => (),
-                    }
-                    StatusRegisterResult {
-                        status_register,
-                        status_register_mask: get_status_register_mask(shift_count),
-                    }
+
+                    let (is_zero, is_negative) = match result {
+                        0 => (true, false),
+                        0x8000..=0xffff => (false, true),
+                        _ => (false, false),
+                    };
+
+                    get_status_register(shift_count, overflow, is_zero, is_negative)
                 }
                 OperationSize::Long => {
                     let value = reg.get_d_reg_long(dest_register, step_log) as u64;
-                    // println!("value: {}", value);
                     let (result, overflow) = match lslr_direction {
                         LslrDirection::Left => {
                             // println!("lslr_direction: left");
@@ -209,26 +175,14 @@ pub fn step<'a>(
                     };
 
                     reg.set_d_reg_long(step_log, dest_register, result);
-                    let mut status_register = 0x0000;
-                    match result {
-                        0 => status_register |= STATUS_REGISTER_MASK_ZERO,
-                        0x80000000..=0xffffffff => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
-                        _ => (),
-                    }
-                    // println!("shift_count: {}", shift_count);
-                    // println!("result: {}", result);
-                    // println!("overflow: {}", overflow);
-                    match overflow {
-                        true => {
-                            status_register |=
-                                STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY
-                        }
-                        false => (),
-                    }
-                    StatusRegisterResult {
-                        status_register,
-                        status_register_mask: get_status_register_mask(shift_count),
-                    }
+
+                    let (is_zero, is_negative) = match result {
+                        0 => (true, false),
+                        0x80000000..=0xffffffff => (false, true),
+                        _ => (false, false),
+                    };
+
+                    get_status_register(shift_count, overflow, is_zero, is_negative)
                 }
             }
         }
@@ -242,17 +196,14 @@ pub fn step<'a>(
             )?;
 
             let value = ea_data.get_value_word(pc, reg, mem, step_log, false) as u32;
-            // println!("value: ${:08X}", value);
             let (result, overflow) = match lslr_direction {
                 LslrDirection::Left => {
-                    // println!("lslr_direction: left");
                     let result = value.checked_shl(1).unwrap_or(0);
                     let overflow = result & 0x10000 != 0;
                     let result = (result & 0xffff) as u16;
                     (result, overflow)
                 }
                 LslrDirection::Right => {
-                    // println!("lslr_direction: right");
                     let result = (value << 1).checked_shr(1).unwrap_or(0);
                     let overflow = result & 0x0001 != 0;
                     let result = ((result >> 1) & 0xffff) as u16;
@@ -261,23 +212,14 @@ pub fn step<'a>(
             };
 
             ea_data.set_value_word(pc, reg, mem, step_log, result, true);
-            let mut status_register = 0x0000;
-            match result {
-                0 => status_register |= STATUS_REGISTER_MASK_ZERO,
-                0x8000..=0xffff => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
-                _ => (),
-            }
-            // println!("shift_count: {}", shift_count);
-            // println!("result: {}", result);
-            // println!("overflow: {}", overflow);
-            match overflow {
-                true => status_register |= STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY,
-                false => (),
-            }
-            StatusRegisterResult {
-                status_register,
-                status_register_mask: get_status_register_mask(1),
-            }
+
+            let (is_zero, is_negative) = match result {
+                0 => (true, false),
+                0x8000..=0xffff => (false, true),
+                _ => (false, false),
+            };
+
+            get_status_register(1, overflow, is_zero, is_negative)
         }
     };
 
@@ -289,6 +231,31 @@ pub fn step<'a>(
         .merge_status_register(step_log, status_register_result);
 
     Ok(())
+}
+
+fn get_status_register(shift_count: u32, overflow: bool, is_zero: bool, is_negative: bool) -> StatusRegisterResult {
+    let mut status_register = 0x0000;
+    if is_zero {
+        status_register |= STATUS_REGISTER_MASK_ZERO
+    }
+    if is_negative {
+        status_register |= STATUS_REGISTER_MASK_NEGATIVE
+    }
+
+    match (shift_count, overflow) {
+        (0, true) =>
+        // TODO: No STATUS_REGISTER_MASK_CARRY here!
+            status_register |=
+                STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY,
+
+        (0, false) => (),
+        (_, true) => status_register |= STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY,
+        (_, false) => (),
+    }
+    StatusRegisterResult {
+        status_register,
+        status_register_mask: get_status_register_mask(shift_count),
+    }
 }
 
 fn get_status_register_mask(shift_count: u32) -> u16 {
