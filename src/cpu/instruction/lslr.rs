@@ -1389,6 +1389,43 @@ mod tests {
     }
 
     #[test]
+    fn lsl_register_by_register_byte_large_shift_modulo() {
+        // arrange
+        let code = [0xef, 0x28].to_vec(); // LSL.B D7,D0
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long_no_log(0, 0x00000021);
+        cpu.register.set_d_reg_long_no_log(7, 0x42);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("LSL.B"),
+                String::from("D7,D0"),
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00000084, cpu.register.get_d_reg_long_no_log(0));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
     fn lsl_register_by_register_word() {
         // arrange
         let code = [0xed, 0x69].to_vec(); // LSL.W D6,D1
@@ -1642,6 +1679,43 @@ mod tests {
         assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
         assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
+    fn lsl_register_by_register_word_large_shift_modulo() {
+        // arrange
+        let code = [0xed, 0x69].to_vec(); // LSL.W D6,D1
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long_no_log(1, 0x00000081);
+        cpu.register.set_d_reg_long_no_log(6, 0x44);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("LSL.W"),
+                String::from("D6,D1"),
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00000810, cpu.register.get_d_reg_long_no_log(1));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
     }
@@ -1905,6 +1979,43 @@ mod tests {
     }
 
     #[test]
+    fn lsl_register_by_register_long_large_shift_modulo() {
+        // arrange
+        let code = [0xeb, 0xaa].to_vec(); // LSL.L D5,D2
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long_no_log(2, 0x00000081);
+        cpu.register.set_d_reg_long_no_log(5, 0x7fffffda);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("LSL.L"),
+                String::from("D5,D2"),
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x04000000, cpu.register.get_d_reg_long_no_log(2));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
     fn lsr_register_by_register_byte() {
         // arrange
         let code = [0xee, 0x28].to_vec(); // LSR.B D7,D0
@@ -2123,6 +2234,43 @@ mod tests {
         assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
+    fn lsr_register_by_register_byte_large_shift_modulo() {
+        // arrange
+        let code = [0xee, 0x28].to_vec(); // LSR.B D7,D0
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long_no_log(0, 0x00000081);
+        cpu.register.set_d_reg_long_no_log(7, 65);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("LSR.B"),
+                String::from("D7,D0"),
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00000040, cpu.register.get_d_reg_long_no_log(0));
+        assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
     }
 
     #[test]
@@ -2347,6 +2495,43 @@ mod tests {
     }
 
     #[test]
+    fn lsr_register_by_register_word_large_shift_modulo() {
+        // arrange
+        let code = [0xec, 0x69].to_vec(); // LSR.W D6,D1
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long_no_log(1, 0x00008081);
+        cpu.register.set_d_reg_long_no_log(6, 0xffffffca);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("LSR.W"),
+                String::from("D6,D1"),
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00000020, cpu.register.get_d_reg_long_no_log(1));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
     fn lsr_register_by_register_long() {
         // arrange
         let code = [0xea, 0xaa].to_vec(); // LSR.L D5,D2
@@ -2565,6 +2750,43 @@ mod tests {
         assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
         assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
+    fn lsr_register_by_register_long_large_shift_modulo() {
+        // arrange
+        let code = [0xea, 0xaa].to_vec(); // LSR.L D5,D2
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long_no_log(2, 0x4f018081);
+        cpu.register.set_d_reg_long_no_log(5, 0xffffffd0);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("LSR.L"),
+                String::from("D5,D2"),
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00004f01, cpu.register.get_d_reg_long_no_log(2));
+        assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
     }
 
     // lsl/lsr memory(ea) by 1 / XNZC / word
