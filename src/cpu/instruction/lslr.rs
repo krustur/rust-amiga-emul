@@ -242,15 +242,13 @@ fn get_status_register(shift_count: u32, overflow: bool, is_zero: bool, is_negat
         status_register |= STATUS_REGISTER_MASK_NEGATIVE
     }
 
-    match (shift_count, overflow) {
-        (0, true) =>
-        // TODO: No STATUS_REGISTER_MASK_CARRY here!
+    // NOTE: A shift_count of 0 will by nature never have overflow set, so no
+    //       need to have special handling for that
+    match overflow {
+        true =>
             status_register |=
                 STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY,
-
-        (0, false) => (),
-        (_, true) => status_register |= STATUS_REGISTER_MASK_EXTEND | STATUS_REGISTER_MASK_CARRY,
-        (_, false) => (),
+        false => (),
     }
     StatusRegisterResult {
         status_register,
@@ -1281,7 +1279,7 @@ mod tests {
     }
 
     #[test]
-    fn lsl_register_by_register_byte_shift_with_zero_extended_left_cleared() {
+    fn lsl_register_by_register_byte_shift_with_zero_extended_left_cleared_carry_cleared() {
         // arrange
         let code = [0xef, 0x28].to_vec(); // LSL.B D7,D0
         let mut cpu = crate::instr_test_setup(code, None);
@@ -1317,7 +1315,7 @@ mod tests {
     }
 
     #[test]
-    fn lsl_register_by_register_byte_shift_with_zero_extended_left_set() {
+    fn lsl_register_by_register_byte_shift_with_zero_extended_left_set_carry_cleared() {
         // arrange
         let code = [0xef, 0x28].to_vec(); // LSL.B D7,D0
         let mut cpu = crate::instr_test_setup(code, None);
@@ -1539,7 +1537,7 @@ mod tests {
     }
 
     #[test]
-    fn lsl_register_by_register_word_shift_with_zero_extended_left_cleared() {
+    fn lsl_register_by_register_word_shift_with_zero_extended_left_cleared_carry_cleared() {
         // arrange
         let code = [0xed, 0x69].to_vec(); // LSL.W D6,D1
         let mut cpu = crate::instr_test_setup(code, None);
@@ -1575,7 +1573,7 @@ mod tests {
     }
 
     #[test]
-    fn lsl_register_by_register_word_shift_with_zero_extended_left_set() {
+    fn lsl_register_by_register_word_shift_with_zero_extended_left_set_carry_cleared() {
         // arrange
         let code = [0xed, 0x69].to_vec(); // LSL.W D6,D1
         let mut cpu = crate::instr_test_setup(code, None);
@@ -1797,7 +1795,7 @@ mod tests {
     }
 
     #[test]
-    fn lsl_register_by_register_long_shift_with_zero_extended_left_cleared() {
+    fn lsl_register_by_register_long_shift_with_zero_extended_left_cleared_carry_cleared() {
         // arrange
         let code = [0xeb, 0xaa].to_vec(); // LSL.L D5,D2
         let mut cpu = crate::instr_test_setup(code, None);
@@ -1833,7 +1831,7 @@ mod tests {
     }
 
     #[test]
-    fn lsl_register_by_register_long_shift_with_zero_extended_left_set() {
+    fn lsl_register_by_register_long_shift_with_zero_extended_left_set_carry_cleared() {
         // arrange
         let code = [0xeb, 0xaa].to_vec(); // LSL.L D5,D2
         let mut cpu = crate::instr_test_setup(code, None);
@@ -2018,7 +2016,7 @@ mod tests {
     }
 
     #[test]
-    fn lsr_register_by_register_byte_shift_with_zero_extended_left_cleared() {
+    fn lsr_register_by_register_byte_shift_with_zero_extended_left_cleared_carry_cleared() {
         // arrange
         let code = [0xee, 0x28].to_vec(); // LSR.B D7,D0
         let mut cpu = crate::instr_test_setup(code, None);
@@ -2054,7 +2052,7 @@ mod tests {
     }
 
     #[test]
-    fn lsr_register_by_register_byte_shift_with_zero_extended_left_set() {
+    fn lsr_register_by_register_byte_shift_with_zero_extended_left_set_carry_cleared() {
         // arrange
         let code = [0xee, 0x28].to_vec(); // LSR.B D7,D0
         let mut cpu = crate::instr_test_setup(code, None);
@@ -2239,7 +2237,7 @@ mod tests {
     }
 
     #[test]
-    fn lsr_register_by_register_word_shift_with_zero_extended_left_cleared() {
+    fn lsr_register_by_register_word_shift_with_zero_extended_left_cleared_carry_cleared() {
         // arrange
         let code = [0xec, 0x69].to_vec(); // LSR.W D6,D1
         let mut cpu = crate::instr_test_setup(code, None);
@@ -2275,7 +2273,7 @@ mod tests {
     }
 
     #[test]
-    fn lsr_register_by_register_word_shift_with_zero_extended_left_set() {
+    fn lsr_register_by_register_word_shift_with_zero_extended_left_set_carry_cleared() {
         // arrange
         let code = [0xec, 0x69].to_vec(); // LSR.W D6,D1
         let mut cpu = crate::instr_test_setup(code, None);
@@ -2460,7 +2458,7 @@ mod tests {
     }
 
     #[test]
-    fn lsr_register_by_register_long_shift_with_zero_extended_left_cleared() {
+    fn lsr_register_by_register_long_shift_with_zero_extended_left_cleared_carry_cleared() {
         // arrange
         let code = [0xea, 0xaa].to_vec(); // LSR.L D5,D2
         let mut cpu = crate::instr_test_setup(code, None);
@@ -2496,7 +2494,7 @@ mod tests {
     }
 
     #[test]
-    fn lsr_register_by_register_long_shift_with_zero_extended_left_set() {
+    fn lsr_register_by_register_long_shift_with_zero_extended_left_set_carry_cleared() {
         // arrange
         let code = [0xea, 0xaa].to_vec(); // LSR.L D5,D2
         let mut cpu = crate::instr_test_setup(code, None);
