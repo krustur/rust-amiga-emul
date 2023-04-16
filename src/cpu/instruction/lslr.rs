@@ -1,4 +1,6 @@
-use super::{GetDisassemblyResult, GetDisassemblyResultError, OperationSize, StepError};
+use super::{
+    GetDisassemblyResult, GetDisassemblyResultError, Instruction, OperationSize, StepError,
+};
 use crate::cpu::step_log::StepLog;
 use crate::cpu::{Cpu, StatusRegisterResult};
 use crate::mem::Mem;
@@ -16,6 +18,8 @@ use crate::register::{
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 
+// TODO: Adjust syntax for memory to: LSd <ea>
+
 enum LslrType {
     Register,
     Memory,
@@ -32,6 +36,20 @@ impl LslrDirection {
             LslrDirection::Right => 'R',
             LslrDirection::Left => 'L',
         }
+    }
+}
+
+pub fn match_check_register(instruction: &Instruction, instr_word: u16) -> bool {
+    match crate::cpu::match_check(instruction, instr_word) {
+        true => crate::cpu::match_check_size000110_from_bit_pos_6(instr_word),
+        false => false,
+    }
+}
+
+pub fn match_check_memory(instruction: &Instruction, instr_word: u16) -> bool {
+    match crate::cpu::match_check(instruction, instr_word) {
+        true => crate::cpu::match_check_ea_only_memory_alterable_addressing_modes_pos_0(instr_word),
+        false => false,
     }
 }
 
@@ -410,7 +428,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.B"),
-                String::from("#$06,D0")
+                String::from("#$06,D0"),
             ),
             debug_result
         );
@@ -446,7 +464,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.B"),
-                String::from("#$06,D0")
+                String::from("#$06,D0"),
             ),
             debug_result
         );
@@ -482,7 +500,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.B"),
-                String::from("#$06,D0")
+                String::from("#$06,D0"),
             ),
             debug_result
         );
@@ -518,7 +536,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.B"),
-                String::from("#$01,D7")
+                String::from("#$01,D7"),
             ),
             debug_result
         );
@@ -554,7 +572,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.W"),
-                String::from("#$01,D6")
+                String::from("#$01,D6"),
             ),
             debug_result
         );
@@ -590,7 +608,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.W"),
-                String::from("#$06,D0")
+                String::from("#$06,D0"),
             ),
             debug_result
         );
@@ -626,7 +644,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.W"),
-                String::from("#$06,D0")
+                String::from("#$06,D0"),
             ),
             debug_result
         );
@@ -662,7 +680,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.W"),
-                String::from("#$01,D7")
+                String::from("#$01,D7"),
             ),
             debug_result
         );
@@ -698,7 +716,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.L"),
-                String::from("#$01,D6")
+                String::from("#$01,D6"),
             ),
             debug_result
         );
@@ -734,7 +752,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.L"),
-                String::from("#$06,D0")
+                String::from("#$06,D0"),
             ),
             debug_result
         );
@@ -770,7 +788,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.L"),
-                String::from("#$06,D0")
+                String::from("#$06,D0"),
             ),
             debug_result
         );
@@ -806,7 +824,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.L"),
-                String::from("#$01,D7")
+                String::from("#$01,D7"),
             ),
             debug_result
         );
@@ -842,7 +860,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.B"),
-                String::from("#$02,D2")
+                String::from("#$02,D2"),
             ),
             debug_result
         );
@@ -878,7 +896,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.B"),
-                String::from("#$02,D2")
+                String::from("#$02,D2"),
             ),
             debug_result
         );
@@ -914,7 +932,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.B"),
-                String::from("#$01,D2")
+                String::from("#$01,D2"),
             ),
             debug_result
         );
@@ -950,7 +968,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.W"),
-                String::from("#$01,D3")
+                String::from("#$01,D3"),
             ),
             debug_result
         );
@@ -986,7 +1004,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.W"),
-                String::from("#$08,D3")
+                String::from("#$08,D3"),
             ),
             debug_result
         );
@@ -1022,7 +1040,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.W"),
-                String::from("#$02,D3")
+                String::from("#$02,D3"),
             ),
             debug_result
         );
@@ -1058,7 +1076,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.L"),
-                String::from("#$02,D4")
+                String::from("#$02,D4"),
             ),
             debug_result
         );
@@ -1094,7 +1112,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.L"),
-                String::from("#$08,D4")
+                String::from("#$08,D4"),
             ),
             debug_result
         );
@@ -1130,7 +1148,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.L"),
-                String::from("#$08,D4")
+                String::from("#$08,D4"),
             ),
             debug_result
         );
@@ -1169,7 +1187,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.B"),
-                String::from("D7,D0")
+                String::from("D7,D0"),
             ),
             debug_result
         );
@@ -1206,7 +1224,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.B"),
-                String::from("D7,D0")
+                String::from("D7,D0"),
             ),
             debug_result
         );
@@ -1243,7 +1261,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.B"),
-                String::from("D7,D0")
+                String::from("D7,D0"),
             ),
             debug_result
         );
@@ -1280,7 +1298,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.B"),
-                String::from("D7,D0")
+                String::from("D7,D0"),
             ),
             debug_result
         );
@@ -1316,7 +1334,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.B"),
-                String::from("D7,D0")
+                String::from("D7,D0"),
             ),
             debug_result
         );
@@ -1353,7 +1371,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.B"),
-                String::from("D7,D0")
+                String::from("D7,D0"),
             ),
             debug_result
         );
@@ -1390,7 +1408,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.B"),
-                String::from("D7,D0")
+                String::from("D7,D0"),
             ),
             debug_result
         );
@@ -1427,7 +1445,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.W"),
-                String::from("D6,D1")
+                String::from("D6,D1"),
             ),
             debug_result
         );
@@ -1464,7 +1482,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.W"),
-                String::from("D6,D1")
+                String::from("D6,D1"),
             ),
             debug_result
         );
@@ -1501,7 +1519,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.W"),
-                String::from("D6,D1")
+                String::from("D6,D1"),
             ),
             debug_result
         );
@@ -1538,7 +1556,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.W"),
-                String::from("D6,D1")
+                String::from("D6,D1"),
             ),
             debug_result
         );
@@ -1574,7 +1592,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.W"),
-                String::from("D6,D1")
+                String::from("D6,D1"),
             ),
             debug_result
         );
@@ -1611,7 +1629,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.W"),
-                String::from("D6,D1")
+                String::from("D6,D1"),
             ),
             debug_result
         );
@@ -1648,7 +1666,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.W"),
-                String::from("D6,D1")
+                String::from("D6,D1"),
             ),
             debug_result
         );
@@ -1685,7 +1703,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.L"),
-                String::from("D5,D2")
+                String::from("D5,D2"),
             ),
             debug_result
         );
@@ -1722,7 +1740,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.L"),
-                String::from("D5,D2")
+                String::from("D5,D2"),
             ),
             debug_result
         );
@@ -1759,7 +1777,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.L"),
-                String::from("D5,D2")
+                String::from("D5,D2"),
             ),
             debug_result
         );
@@ -1796,7 +1814,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.L"),
-                String::from("D5,D2")
+                String::from("D5,D2"),
             ),
             debug_result
         );
@@ -1832,7 +1850,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.L"),
-                String::from("D5,D2")
+                String::from("D5,D2"),
             ),
             debug_result
         );
@@ -1869,7 +1887,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.L"),
-                String::from("D5,D2")
+                String::from("D5,D2"),
             ),
             debug_result
         );
@@ -1906,7 +1924,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.L"),
-                String::from("D5,D2")
+                String::from("D5,D2"),
             ),
             debug_result
         );
@@ -1943,7 +1961,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.B"),
-                String::from("D7,D0")
+                String::from("D7,D0"),
             ),
             debug_result
         );
@@ -1980,7 +1998,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.B"),
-                String::from("D7,D0")
+                String::from("D7,D0"),
             ),
             debug_result
         );
@@ -2017,7 +2035,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.B"),
-                String::from("D7,D0")
+                String::from("D7,D0"),
             ),
             debug_result
         );
@@ -2053,7 +2071,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.B"),
-                String::from("D7,D0")
+                String::from("D7,D0"),
             ),
             debug_result
         );
@@ -2090,7 +2108,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.B"),
-                String::from("D7,D0")
+                String::from("D7,D0"),
             ),
             debug_result
         );
@@ -2127,7 +2145,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.B"),
-                String::from("D7,D0")
+                String::from("D7,D0"),
             ),
             debug_result
         );
@@ -2164,7 +2182,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.W"),
-                String::from("D6,D1")
+                String::from("D6,D1"),
             ),
             debug_result
         );
@@ -2201,7 +2219,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.W"),
-                String::from("D6,D1")
+                String::from("D6,D1"),
             ),
             debug_result
         );
@@ -2238,7 +2256,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.W"),
-                String::from("D6,D1")
+                String::from("D6,D1"),
             ),
             debug_result
         );
@@ -2274,7 +2292,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.W"),
-                String::from("D6,D1")
+                String::from("D6,D1"),
             ),
             debug_result
         );
@@ -2311,7 +2329,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.W"),
-                String::from("D6,D1")
+                String::from("D6,D1"),
             ),
             debug_result
         );
@@ -2348,7 +2366,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.W"),
-                String::from("D6,D1")
+                String::from("D6,D1"),
             ),
             debug_result
         );
@@ -2385,7 +2403,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.L"),
-                String::from("D5,D2")
+                String::from("D5,D2"),
             ),
             debug_result
         );
@@ -2422,7 +2440,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.L"),
-                String::from("D5,D2")
+                String::from("D5,D2"),
             ),
             debug_result
         );
@@ -2459,7 +2477,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.L"),
-                String::from("D5,D2")
+                String::from("D5,D2"),
             ),
             debug_result
         );
@@ -2495,7 +2513,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.L"),
-                String::from("D5,D2")
+                String::from("D5,D2"),
             ),
             debug_result
         );
@@ -2532,7 +2550,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.L"),
-                String::from("D5,D2")
+                String::from("D5,D2"),
             ),
             debug_result
         );
@@ -2569,7 +2587,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.L"),
-                String::from("D5,D2")
+                String::from("D5,D2"),
             ),
             debug_result
         );
@@ -2607,7 +2625,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.W"),
-                String::from("#$01,-(A0)")
+                String::from("#$01,-(A0)"),
             ),
             debug_result
         );
@@ -2644,7 +2662,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.W"),
-                String::from("#$01,-(A0)")
+                String::from("#$01,-(A0)"),
             ),
             debug_result
         );
@@ -2681,7 +2699,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.W"),
-                String::from("#$01,-(A0)")
+                String::from("#$01,-(A0)"),
             ),
             debug_result
         );
@@ -2718,7 +2736,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSL.W"),
-                String::from("#$01,-(A0)")
+                String::from("#$01,-(A0)"),
             ),
             debug_result
         );
@@ -2755,7 +2773,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.W"),
-                String::from("#$01,(A6)+")
+                String::from("#$01,(A6)+"),
             ),
             debug_result
         );
@@ -2792,7 +2810,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.W"),
-                String::from("#$01,(A6)+")
+                String::from("#$01,(A6)+"),
             ),
             debug_result
         );
@@ -2829,7 +2847,7 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("LSR.W"),
-                String::from("#$01,(A6)+")
+                String::from("#$01,(A6)+"),
             ),
             debug_result
         );

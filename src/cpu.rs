@@ -413,8 +413,7 @@ impl Cpu {
                 String::from("LSLR"), // register
                 0xf018,
                 0xe008,
-                // TODO: match_check
-                crate::cpu::match_check,
+                instruction::lslr::match_check_register,
                 instruction::lslr::step,
                 instruction::lslr::get_disassembly,
             ),
@@ -422,8 +421,7 @@ impl Cpu {
                 String::from("LSLR"), // memory
                 0xfec0,
                 0xe2c0,
-                // TODO: match_check
-                crate::cpu::match_check,
+                instruction::lslr::match_check_memory,
                 instruction::lslr::step,
                 instruction::lslr::get_disassembly,
             ),
