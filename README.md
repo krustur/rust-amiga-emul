@@ -4,19 +4,26 @@ Just for fun!
 
 There's no ambition to make this a fully functional Amiga emulator.
 
+* Motorola 68000 reference
 <https://www.nxp.com/docs/en/reference-manual/M68000PRM.pdf>
 
+* 68k chips FAQ 
 <http://www.faqs.org/faqs/motorola/68k-chips-faq/>
 
+* Amiga Memory Map
 <https://www.amigacoding.com/index.php/Amiga_memory_map>
 
+* Amiga Memory Map
 <http://oscomp.hu/depot/amiga_memory_map.html>
 
+* Why is the Amiga ROM at a High memory location and RAM in Low memory location
 <https://retrocomputing.stackexchange.com/questions/1158/why-is-the-amiga-rom-at-a-high-memory-location-and-ram-in-low-memory>
 
+* ???
 <http://eab.abime.net/showthread.php?t=35282>
 <http://eab.abime.net/attachment.php?attachmentid=16255&d=1206368942>
-
+             
+* Amiga ROM 1.2 Exec disassembly
 <https://wandel.ca/homepage/execdis/exec_disassembly.txt>
 
 68000 instructions left to do: 28
