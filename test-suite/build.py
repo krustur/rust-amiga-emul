@@ -1,30 +1,10 @@
 import sys
-import site
-# from os import listdir
 import os
-# from os.path import isfile, join
 from enum import Enum
 from typing import NamedTuple
 import re
 
-# class LineType(Enum):
-#     BLANK = 1
-#     # ERROR = 2
-#     TEST_NAME = 10
-#     KEYWORD_ARRANGE_MEM = 100
-#     KEYWORD_ARRANGE_REG = 101
-#     KEYWORD_ARRANGE_CODE = 102
-#     KEYWORD_ASSERT_MEM = 200
-#     KEYWORD_ASSERT_REG = 201
-#     KEYWORD_ASSERT_CODE = 202
-#     ADDRESS_WITH_BYTES = 300
-#     # ADDRESS_WITH_STRING
-#     DATA_REGISTERS = 400
-#     ADDRESS_REGISTERS = 500
-#     STATUS_REGISTER = 600
-#     PROGRAM_COUNTER_REGISTER = 700
-#     CODE = 800
-    
+
 class Keyword(Enum):
     ARRANGE_MEM = 100
     ARRANGE_REG = 101
@@ -32,11 +12,6 @@ class Keyword(Enum):
     ASSERT_MEM = 200
     ASSERT_REG = 201
     ASSERT_CODE = 202
-
-# class Line(NamedTuple):
-#     line_number: int
-#     line_raw: str
-    # line_type: LineType
 
 class BlankLine(NamedTuple):
     line_number: int
@@ -150,13 +125,6 @@ def get_keyword(keyword_str):
     return None
 
 address_line_regex = r"^\$([0-9a-fA-F]{8})(\s+.*)*$"
-# r"^\$([0-9a-fA-F]{8})\s+(.*)$"
-# r"^\$([0-9a-fA-F]{8})\s+(.*)$"
-# "^\$([0-9a-fA-F]{8})\s+(.*)$"
-# "^(\$[0-9a-fA-F]{8})\s+(.*)$"
-# "^(\$[0-9a-fA-F]{8})\s+([0-9a-fA-F]{2}\s*)*$"
-# ^(\$[0-9a-fA-F]{8})\s+([\$\",0-9a-zA-Z ]*)$
-# ^(\$[0-9a-fA-F]{8})\s+(.*)$
 def get_address_line(line_stripped):
     return re.search(address_line_regex, line_stripped)
 
@@ -241,16 +209,11 @@ def parse_line(line_number, line_raw):
             print(f"{line_number:5d}: {line_raw}")
             print(f"Unknown keyword '{keyword_str}' found at line {line_number}")
             sys.exit()
-        # print(f"Found keyword: {keyword}")
         line = KeywordLine(line_number=line_number, line_raw=line_raw, keyword=keyword)
     elif get_address_line(line_stripped):
         address_line = get_address_line(line_stripped)
         address = int(address_line.group(1), 16)
-        # print(f"{line_number} address={address:08x}")
         address_content = address_line.group(2)
-        # print(f"{line_number} Content={address_content}")
-        # print()
-        # if address_content.strip() == "":
         if address_content == None:
             if address != 0x00000000:
                 print(f"{line_number:5d}: {line_raw}")
@@ -262,7 +225,6 @@ def parse_line(line_number, line_raw):
         elif get_bytes(address_content):
             bytes = get_bytes(address_content)
             line = AddressWithBytesLine(line_number=line_number, line_raw=line_raw, address=address, bytes=bytes)
-            # print(f"Bytes: {line}")
         else:
             print(f"{line_number:5d}: {line_raw}")
             print(f"Unable to parse content of address 0x{address:08x}.")
@@ -304,28 +266,11 @@ def parse_line(line_number, line_raw):
         print(f"We code code: {line_stripped[1]}")
         line = BlankLine(line_number=line_number, line_raw=line_raw)
     else:
-        # print(address_line_regex)
-
         print(f"{line_number:5d}: {line_raw}")
         print(f"Syntax Error parsing line {line_number}")
         sys.exit()
-
-        # line = BlankLine(line_number=line_number, line_raw=line_raw)
     
     return line
 
 test_spec_file_paths = get_test_spec_file_paths()
 iterate_test_spec_file_paths(test_spec_file_paths)
-
-# regex = r"^\$([0-9a-fA-F]{8})(\s+.*)*$"
-# a = re.search(regex, "$00a00000")
-# b = re.search(regex, "$00a00000 11 22 33 44 aa bb cc dd")
-# # for b in a:
-# #     print("hej iter")
-# #     print(b)
-# print(a)
-# print(a.group(1))
-# print(a.group(2))
-# print(b)
-# print(b.group(1))
-# print(b.group(2))
