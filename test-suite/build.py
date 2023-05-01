@@ -57,6 +57,11 @@ class PcRegisterLine(NamedTuple):
     line_raw: str
     long: int
 
+class CodeLine(NamedTuple):
+    line_number: int
+    line_raw: str
+    code: str
+
 # Parse command line arguments
 if len(sys.argv) != 4:
     print("Usage:")
@@ -263,8 +268,8 @@ def parse_line(line_number, line_raw):
             sys.exit()
         line = PcRegisterLine(line_number=line_number, line_raw=line_raw, long=longs[0])
     elif line_stripped.startswith('>'):
-        print(f"We code code: {line_stripped[1]}")
-        line = BlankLine(line_number=line_number, line_raw=line_raw)
+        code = line_stripped[1:]
+        line = CodeLine(line_number=line_number, line_raw=line_raw, code=code)
     else:
         print(f"{line_number:5d}: {line_raw}")
         print(f"Syntax Error parsing line {line_number}")
