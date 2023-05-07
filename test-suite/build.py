@@ -347,7 +347,7 @@ class ParseState(Enum):
     ARRANGE_CODE = 4
     ASSERT_MEM = 5
     ASSERT_REG = 6
-    ASSERT_CODE = 6
+    ASSERT_CODE = 7
     ARRANGE_AND_ASSERT_MEM = 10
     DONE = 666
 
@@ -373,7 +373,7 @@ def get_test_spec(parsed_lines: list[ParsedLine]):
                         
                         match (parsed_line.line_type, parse_state):
                             case (ParsedLineType.BLANK, _):
-                                # print(f"State={parse_state} : skipping blank line")
+                                # print(f"State={parse_state} : skipping blank line {parsed_line.line_number}")
                                 pass
                             case (ParsedLineType.TEST_NAME, _):
                                 parse_state = ParseState.DONE
@@ -452,7 +452,7 @@ def get_test_spec(parsed_lines: list[ParsedLine]):
                                     sys.exit()
                                 else:
                                     test_case.arrange_reg_data = parsed_line
-                                if is_arrange_reg_done(test_case):
+                                if test_case.is_arrange_reg_done():
                                     parse_state = ParseState.GLOBAL   
                             case (ParsedLineType.DATA_REGISTERS, ParseState.ASSERT_REG):
                                 if test_case.assert_reg_data != None:
@@ -461,6 +461,8 @@ def get_test_spec(parsed_lines: list[ParsedLine]):
                                     sys.exit()
                                 else:
                                     test_case.assert_reg_data = parsed_line
+                                if test_case.is_assert_reg_done():
+                                    parse_state = ParseState.GLOBAL
                             case (ParsedLineType.DATA_REGISTERS, _):
                                 print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
                                 print(f"Syntax Error parsing. Unexpected data registers found outside of 'arrange_reg' or 'assert_reg'.")
@@ -472,7 +474,7 @@ def get_test_spec(parsed_lines: list[ParsedLine]):
                                     sys.exit()
                                 else:
                                     test_case.arrange_reg_address = parsed_line
-                                if is_arrange_reg_done(test_case):
+                                if test_case.is_arrange_reg_done():
                                     parse_state = ParseState.GLOBAL
                             case (ParsedLineType.ADDRESS_REGISTERS, ParseState.ASSERT_REG):
                                 if test_case.assert_reg_address != None:
@@ -481,7 +483,7 @@ def get_test_spec(parsed_lines: list[ParsedLine]):
                                     sys.exit()
                                 else:
                                     test_case.assert_reg_address = parsed_line
-                                if is_assert_reg_done(test_case):
+                                if test_case.is_assert_reg_done():
                                     parse_state = ParseState.GLOBAL
                             case (ParsedLineType.ADDRESS_REGISTERS, _):
                                 print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
@@ -494,7 +496,7 @@ def get_test_spec(parsed_lines: list[ParsedLine]):
                                     sys.exit()
                                 else:
                                     test_case.arrange_reg_sr = parsed_line
-                                if is_arrange_reg_done(test_case):
+                                if test_case.is_arrange_reg_done():
                                     parse_state = ParseState.GLOBAL        
                             case (ParsedLineType.STATUS_REGISTER, ParseState.ASSERT_REG):
                                 if test_case.assert_reg_sr != None:
@@ -503,7 +505,7 @@ def get_test_spec(parsed_lines: list[ParsedLine]):
                                     sys.exit()
                                 else:
                                     test_case.assert_reg_sr = parsed_line
-                                if is_assert_reg_done(test_case):
+                                if test_case.is_assert_reg_done():
                                     parse_state = ParseState.GLOBAL
                             case (ParsedLineType.STATUS_REGISTER, _):
                                 print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
@@ -516,7 +518,7 @@ def get_test_spec(parsed_lines: list[ParsedLine]):
                                     sys.exit()
                                 else:
                                     test_case.assert_reg_pc = parsed_line
-                                if is_assert_reg_done(test_case):
+                                if test_case.is_assert_reg_done():
                                     parse_state = ParseState.GLOBAL
                             case (ParsedLineType.PROGRAM_COUNTER_REGISTER, _):
                                 print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
@@ -557,12 +559,6 @@ def get_test_spec(parsed_lines: list[ParsedLine]):
                 sys.exit()
         
     print(f"number of lines: {line_count}")
-
-def is_arrange_reg_done(test_case):
-    return test_case.arrange_reg_data != None and test_case.arrange_reg_address != None and test_case.arrange_reg_sr != None
-
-def is_assert_reg_done(test_case):
-    return test_case.assert_reg_data != None and test_case.assert_reg_address != None and test_case.assert_reg_sr != None
 
 test_spec_file_paths = get_test_spec_file_paths()
 test_sets = iterate_test_spec_file_paths(test_spec_file_paths)
