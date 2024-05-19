@@ -1,1 +1,1 @@
-..\bin\win\python-3.10.11-embed-amd64\python.exe build.py tests temp_rust temp_amiga
+..\venv\Scripts\python.exe build.py tests ..\src\cpu\instruction\tests temp_amiga
