@@ -2,12 +2,12 @@ use std::fmt;
 
 use crate::{
     cpu::{
+        Cpu,
         ea::EffectiveAddressingData,
         instruction::{
             ConditionalTest, EffectiveAddressingMode, InstructionError, OperationSize, ScaleFactor,
         },
-        step_log::{StepLog, StepLogEntry},
-        Cpu, StatusRegisterResult,
+        StatusRegisterResult, step_log::{StepLog, StepLogEntry},
     },
     mem::Mem,
 };
@@ -169,8 +169,8 @@ impl ProgramCounter {
         step_log: &mut StepLog,
         get_operation_size_func: T,
     ) -> Result<EffectiveAddressingData, InstructionError>
-    where
-        T: Fn(u16) -> Result<OperationSize, InstructionError>,
+        where
+            T: Fn(u16) -> Result<OperationSize, InstructionError>,
     {
         self.get_effective_addressing_data_from_bit_pos(
             instr_word,
@@ -193,8 +193,8 @@ impl ProgramCounter {
         bit_pos: u8,
         reg_bit_pos: u8,
     ) -> Result<EffectiveAddressingData, InstructionError>
-    where
-        T: Fn(u16) -> Result<OperationSize, InstructionError>,
+        where
+            T: Fn(u16) -> Result<OperationSize, InstructionError>,
     {
         let ea_mode = (instr_word >> bit_pos) & 0x0007;
         let ea_register = Cpu::extract_register_index_from_bit_pos(instr_word, reg_bit_pos)?;
@@ -599,6 +599,29 @@ impl Register {
         self.reg_d[reg_index] = value;
     }
 
+    pub fn set_all_d_reg_long_no_log(&mut self, d0: u32, d1: u32, d2: u32, d3: u32, d4: u32, d5: u32, d6: u32, d7: u32) {
+        self.reg_d[0] = d0;
+        self.reg_d[1] = d1;
+        self.reg_d[2] = d2;
+        self.reg_d[3] = d3;
+        self.reg_d[4] = d4;
+        self.reg_d[5] = d5;
+        self.reg_d[6] = d6;
+        self.reg_d[7] = d7;
+    }
+
+    #[cfg(test)]
+    pub fn assert_all_d_reg_long_no_log(&mut self, d0: u32, d1: u32, d2: u32, d3: u32, d4: u32, d5: u32, d6: u32, d7: u32) {
+        assert_eq!(d0, self.reg_d[0]);
+        assert_eq!(d1, self.reg_d[1]);
+        assert_eq!(d2, self.reg_d[2]);
+        assert_eq!(d3, self.reg_d[3]);
+        assert_eq!(d4, self.reg_d[4]);
+        assert_eq!(d5, self.reg_d[5]);
+        assert_eq!(d6, self.reg_d[6]);
+        assert_eq!(d7, self.reg_d[7]);
+    }
+
     pub fn set_d_reg_word(&mut self, step_log: &mut StepLog, reg_index: usize, value: u16) {
         let value = Cpu::set_word_in_long(value, self.reg_d[reg_index]);
         step_log.add_log_entry(StepLogEntry::WriteRegister {
@@ -652,6 +675,27 @@ impl Register {
         };
     }
 
+    pub fn set_all_a_reg_long_no_log(&mut self, a0: u32, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32, a6: u32) {
+        self.reg_a[0] = a0;
+        self.reg_a[1] = a1;
+        self.reg_a[2] = a2;
+        self.reg_a[3] = a3;
+        self.reg_a[4] = a4;
+        self.reg_a[5] = a5;
+        self.reg_a[6] = a6;
+    }
+
+
+    #[cfg(test)]
+    pub fn assert_all_a_reg_long_no_log(&mut self, a0: u32, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32, a6: u32) {
+        assert_eq!(a0, self.reg_a[0]);
+        assert_eq!(a1, self.reg_a[1]);
+        assert_eq!(a2, self.reg_a[2]);
+        assert_eq!(a3, self.reg_a[3]);
+        assert_eq!(a4, self.reg_a[4]);
+        assert_eq!(a5, self.reg_a[5]);
+        assert_eq!(a6, self.reg_a[6]);
+    }
     pub fn set_a_reg_word(&mut self, step_log: &mut StepLog, reg_index: usize, value: u16) {
         match reg_index {
             7 => match self.reg_sr.is_sr_supervisor_set_no_log() {
@@ -858,12 +902,24 @@ impl StatusRegister {
         self.reg_sr = reg_sr;
     }
 
+    // TODO: What does _abcde() stand for? Maybe rename to get_sr_reg_status_flags_only()?
     pub fn get_sr_reg_flags_abcde(&self) -> u16 {
         self.reg_sr & 0b0000000000011111
     }
 
+    // TODO: What does _abcde() stand for? Maybe rename to set_sr_reg_status_flags_only()?
     pub fn set_sr_reg_flags_abcde(&mut self, value: u16) {
         self.reg_sr = (self.reg_sr & 0b1111111111100000) | value;
+    }
+
+    #[cfg(test)]
+    // TODO: What does _abcde() stand for? Maybe rename to assert_sr_reg_status_flags_only()?
+    pub fn assert_sr_reg_flags_abcde(&self, value: u16) {
+        assert_eq!(value & STATUS_REGISTER_MASK_EXTEND, self.reg_sr & STATUS_REGISTER_MASK_EXTEND, "STATUS_REGISTER_MASK_EXTEND");
+        assert_eq!(value & STATUS_REGISTER_MASK_NEGATIVE, self.reg_sr & STATUS_REGISTER_MASK_NEGATIVE, "STATUS_REGISTER_MASK_NEGATIVE");
+        assert_eq!(value & STATUS_REGISTER_MASK_ZERO, self.reg_sr & STATUS_REGISTER_MASK_ZERO, "STATUS_REGISTER_MASK_ZERO");
+        assert_eq!(value & STATUS_REGISTER_MASK_OVERFLOW, self.reg_sr & STATUS_REGISTER_MASK_OVERFLOW, "STATUS_REGISTER_MASK_OVERFLOW");
+        assert_eq!(value & STATUS_REGISTER_MASK_CARRY, self.reg_sr & STATUS_REGISTER_MASK_CARRY, "STATUS_REGISTER_MASK_CARRY");
     }
 
     pub fn merge_status_register(
@@ -873,7 +929,7 @@ impl StatusRegister {
     ) {
         let new_sr = (self.reg_sr & !status_register_result.status_register_mask)
             | (status_register_result.status_register
-                & status_register_result.status_register_mask);
+            & status_register_result.status_register_mask);
         if new_sr != self.reg_sr {
             step_log.add_log_entry(StepLogEntry::SrChanged {
                 value: new_sr,
@@ -1022,7 +1078,7 @@ impl StatusRegister {
                 (self.reg_sr & STATUS_REGISTER_MASK_NEGATIVE != 0x0000
                     && self.reg_sr & STATUS_REGISTER_MASK_OVERFLOW == 0x0000)
                     || (self.reg_sr & STATUS_REGISTER_MASK_NEGATIVE == 0x0000
-                        && self.reg_sr & STATUS_REGISTER_MASK_OVERFLOW != 0x0000)
+                    && self.reg_sr & STATUS_REGISTER_MASK_OVERFLOW != 0x0000)
             }
             ConditionalTest::MI => self.reg_sr & STATUS_REGISTER_MASK_NEGATIVE != 0x0000,
             ConditionalTest::NE => self.reg_sr & STATUS_REGISTER_MASK_ZERO == 0x0000,
