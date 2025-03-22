@@ -24,10 +24,9 @@ class ParsedLineType(Enum):
     ADDRESS_WITH_BYTES = 5
     DATA_REGISTERS = 6
     ADDRESS_REGISTERS = 7
-    STATUS_REGISTER_FLAGS = 8
-    STATUS_REGISTER = 9
-    PROGRAM_COUNTER_REGISTER = 10
-    SOURCE_CODE = 11
+    STATUS_REGISTER = 8
+    PROGRAM_COUNTER_REGISTER = 9
+    SOURCE_CODE = 10
 
 
 class ParsedLine(object):
@@ -88,11 +87,13 @@ class ParsedLine(object):
             self.line_type = ParsedLineType.ADDRESS_REGISTERS
             self.address_registers = address_registers
         elif status_flags is not None:
-            self.line_type = ParsedLineType.STATUS_REGISTER_FLAGS
+            self.line_type = ParsedLineType.STATUS_REGISTER
             self.status_flags = status_flags
+            self.status_register = self.status_register_from_flags(status_flags)
         elif status_register:
             self.line_type = ParsedLineType.STATUS_REGISTER
             self.status_register = status_register
+            self.status_flags = self.status_flags_from_register(status_register)
         elif program_counter:
             self.line_type = ParsedLineType.PROGRAM_COUNTER_REGISTER
             self.program_counter = program_counter
@@ -105,35 +106,66 @@ class ParsedLine(object):
             traceback.print_stack()
             sys.exit()
 
+    @staticmethod
+    def status_register_from_flags(flags: list[str]):
+        result = 0x0000
+        if "STATUS_REGISTER_MASK_CARRY" in flags:
+            result = result | 0x0001
+        if "STATUS_REGISTER_MASK_OVERFLOW" in flags:
+            result = result | 0x0002
+        if "STATUS_REGISTER_MASK_ZERO" in flags:
+            result = result | 0x0004
+        if "STATUS_REGISTER_MASK_NEGATIVE" in flags:
+            result = result | 0x0008
+        if "STATUS_REGISTER_MASK_EXTEND" in flags:
+            result = result | 0x0010
+        return result
+
+    @staticmethod
+    def status_flags_from_register(register: int):
+        result = []
+        if register & 0x01:
+            result.append("STATUS_REGISTER_MASK_CARRY")
+        if register & 0x02:
+            result.append("STATUS_REGISTER_MASK_OVERFLOW")
+        if register & 0x04:
+            result.append("STATUS_REGISTER_MASK_ZERO")
+        if register & 0x08:
+            result.append("STATUS_REGISTER_MASK_NEGATIVE")
+        if register & 0x10:
+            result.append("STATUS_REGISTER_MASK_EXTEND")
+        return result
+
 
 class TestCase(object):
     test_name: str
     arrange_reg_data: ParsedLine
     arrange_reg_address: ParsedLine
-    arrange_reg_sr_flags: ParsedLine
     arrange_reg_sr: ParsedLine
     arrange_code: ParsedLine
+    arrange_mem: [ParsedLine]
     assert_reg_data: ParsedLine
     assert_reg_address: ParsedLine
     assert_reg_sr_flags: ParsedLine
     assert_reg_sr: ParsedLine
     assert_reg_pc: ParsedLine
     assert_code: ParsedLine
+    assert_mem: [ParsedLine]
 
     def __init__(self, test_name: str):
         self.test_name = test_name
         self.arrange_reg_data = None
         self.arrange_reg_address = None
-        self.arrange_reg_sr_flags = None
         self.arrange_reg_sr = None
         self.arrange_code = None
-
+        self.arrange_mem = []
         self.assert_reg_data = None
         self.assert_reg_address = None
         self.assert_reg_sr_flags = None
         self.assert_reg_sr = None
         self.assert_reg_pc = None
         self.assert_code = None
+        self.assert_mem = []
 
     @staticmethod
     def get_d_reg_string(registers: list[int]):
@@ -151,8 +183,54 @@ class TestCase(object):
         for idx, value in enumerate(registers):
             if idx == 0:
                 result += f"0x{value:08x}"
-            elif idx < 7:
+            else:
                 result += f", 0x{value:08x}"
+        return result
+
+    @staticmethod
+    def get_d_reg_string_amiga(registers: list[int]):
+        result = ""
+        for idx, value in enumerate(registers):
+            if idx == 0:
+                result += f"${value:08x}"
+            else:
+                result += f",${value:08x}"
+        return result
+
+    @staticmethod
+    def get_a_reg_string_amiga(registers: list[int]):
+        result = ""
+        for idx, value in enumerate(registers):
+            if idx == 0:
+                result += f"${value:08x}"
+            else:
+                result += f",${value:08x}"
+        return result
+
+    @staticmethod
+    def get_status_reg_string(register: int):
+        result = ""
+        if register & 0x0010:
+            result += 'E'
+        else:
+            result += '-'
+        if register & 0x0008:
+            result += 'N'
+        else:
+            result += '-'
+        if register & 0x0004:
+            result += 'Z'
+        else:
+            result += '-'
+        if register & 0x0002:
+            result += 'O'
+        else:
+            result += '-'
+        if register & 0x0001:
+            result += 'C'
+        else:
+            result += '-'
+
         return result
 
     def write_rust_test(self, file):
@@ -160,7 +238,7 @@ class TestCase(object):
         file.write(f"#[test]\n")
         file.write(f"fn {self.test_name.lower()}() {{\n")
 
-        # Arrange
+        # Arrange - code
         file.write(f"    // arrange - code\n")
         arrange_code_bytes_hex = format_bytes_as_hex(self.arrange_code.bytes)
         assert_code_comment = get_assert_code_comment(self.assert_code)
@@ -168,6 +246,18 @@ class TestCase(object):
         file.write(f"    let code = [{arrange_code_bytes_hex}].to_vec();\n")
         file.write(f"    let code_memory = RamMemory::from_bytes(0x{self.arrange_code.address:08x}, code);\n")
         file.write(f"\n")
+
+        # Arrange - mem
+        file.write(f"    // arrange - mem\n")
+        if len(self.arrange_mem) == 0:
+            file.write(f"    // -nothing-\n")
+        for arr_mem in self.arrange_mem:
+            arr_mem_bytes_hex = format_bytes_as_hex(arr_mem.bytes)
+            file.write(f"    let arrange_mem_bytes_{arr_mem.address:08x} = [{arr_mem_bytes_hex}].to_vec();\n")
+            file.write(f"    let arrange_mem_{arr_mem.address:08x} = RamMemory::from_bytes(0x{arr_mem.address:08x}, arrange_mem_bytes_{arr_mem.address:08x});\n")
+        file.write(f"\n")
+
+        # Arrange - common
         file.write(f"    // arrange - common\n")
         file.write(f"    let stack = RamMemory::from_range(0x01000000, 0x010003ff);\n")
         file.write(f"    let vectors = RamMemory::from_range(0x00000000, 0x000003ff);\n")
@@ -177,10 +267,14 @@ class TestCase(object):
         file.write(f"    mem_ranges.push(Box::new(stack));\n")
         file.write(f"    mem_ranges.push(Box::new(vectors));\n")
         file.write(f"    mem_ranges.push(Box::new(cia_memory));\n")
+        for arr_mem in self.arrange_mem:
+            file.write(f"    mem_ranges.push(Box::new(arrange_mem_{arr_mem.address:08x}));\n")
         file.write(f"    let overlay_hack = Box::new(RamMemory::from_range(0xffffffff, 0xffffffff));\n")
         file.write(f"    let mem = Mem::new(mem_ranges, overlay_hack);\n")
         file.write(f"    let mut cpu = Cpu::new(mem);\n")
         file.write(f"\n")
+
+        # Arrange - regs
         file.write(f"    // arrange - regs\n")
         file.write(
             f"    cpu.register.set_all_d_reg_long_no_log({self.get_d_reg_string(self.arrange_reg_data.data_registers)});\n")
@@ -189,11 +283,9 @@ class TestCase(object):
         file.write(f"    cpu.register.reg_pc = ProgramCounter::from_address(0x{self.arrange_code.address:08x});\n")
         file.write(f"    cpu.register.set_ssp_reg(0x01000400);\n")
         if self.arrange_reg_sr is not None:
-            file.write(f"    cpu.register.reg_sr.set_value(0x{self.arrange_reg_sr.status_register:04x});\n")
-        elif self.arrange_reg_sr_flags is not None:
             file.write(f"    cpu.register.reg_sr.set_sr_reg_flags_abcde(\n")
-            if len(self.arrange_reg_sr_flags.status_flags) > 0:
-                for idx, stats_flag in enumerate(self.arrange_reg_sr_flags.status_flags):
+            if len(self.arrange_reg_sr.status_flags) > 0:
+                for idx, stats_flag in enumerate(self.arrange_reg_sr.status_flags):
                     if idx == 0:
                         file.write(f"       {stats_flag}\n")
                     else:
@@ -209,7 +301,7 @@ class TestCase(object):
         file.write(f"""    assert_eq!(
         GetDisassemblyResult::from_address_and_address_next(
             0x{self.arrange_code.address:08x},
-            0x{self.assert_reg_pc.program_counter:08x},
+            0x{self.arrange_code.address + len(self.arrange_code.bytes):08x},
             String::from("{self.assert_code.source_code_instruction}"),
             String::from("{self.assert_code.source_code_operands}"),
             ),
@@ -222,19 +314,16 @@ class TestCase(object):
         file.write(f"    cpu.execute_next_instruction();\n")
         file.write(f"\n")
 
-        # Assert
-        file.write(f"    // assert\n")
+        # Assert - regs
+        file.write(f"    // assert - regs\n")
         file.write(
             f"    cpu.register.assert_all_d_reg_long_no_log({self.get_d_reg_string(self.assert_reg_data.data_registers)});\n")
         file.write(
             f"    cpu.register.assert_all_a_reg_long_no_log({self.get_a_reg_string(self.assert_reg_address.address_registers)});\n")
         if self.assert_reg_sr is not None:
-            file.write(
-                f"    cpu.register.reg_sr.assert_sr_reg_flags_abcde(0x{self.assert_reg_sr.status_register:04x});\n")
-        elif self.assert_reg_sr_flags:
             file.write(f"    cpu.register.reg_sr.assert_sr_reg_flags_abcde(\n")
-            if len(self.assert_reg_sr_flags.status_flags) > 0:
-                for idx, stats_flag in enumerate(self.assert_reg_sr_flags.status_flags):
+            if len(self.assert_reg_sr.status_flags) > 0:
+                for idx, stats_flag in enumerate(self.assert_reg_sr.status_flags):
                     if idx == 0:
                         file.write(f"       {stats_flag}\n")
                     else:
@@ -242,8 +331,97 @@ class TestCase(object):
             else:
                 file.write("       0x0000\n")
         file.write(f"    );\n")
+        file.write(f"\n")
+
+        # Assert - mem
+        file.write(f"    // assert - mem\n")
+        if len(self.assert_mem) == 0:
+            file.write(f"    // -nothing-\n")
+        for ass_mem in self.assert_mem:
+             for index, b in enumerate(ass_mem.bytes):
+                 file.write(f"    assert_eq!(0x{b:02x}, cpu.memory.get_byte_no_log(0x{(ass_mem.address + index):08x}));\n")
         file.write(f"}}\n")
 
+    def write_amiga_test(self, file):
+        file.write(";===========================================\n")
+        file.write("\n")
+
+        file.write(f"{self.test_name.lower()}\n")
+        file.write(" dc.l .name\t; $00\n")
+        file.write(" dc.l .arrange_mem\t; $04\n")
+        file.write(" dc.l .arrange_regs\t; $08\n")
+        file.write(" dc.l .arrange_code\t; $0c\n")
+        file.write(" dc.l .assert_mem\t; $10\n")
+        file.write(" dc.l .assert_regs\t; $14\n")
+        file.write(" dc.l .assert_code\t; $18\n")
+        file.write("\n")
+
+        file.write(".name\n")
+        file.write(f" dc.b \"{self.test_name.lower()}\",0\n")
+        file.write(" even\n")
+        file.write("\n")
+
+        file.write(".arrange_mem\n")
+        file.write(" ;length,address,ptr\n")
+        for arr_mem in self.arrange_mem:
+            file.write(f" dc.l ${len(arr_mem.bytes):08x},${arr_mem.address:08x},.arrange_mem_{arr_mem.address:08x}\n")
+
+        file.write(" dc.l $00000000\n")
+        file.write("\n")
+
+        for arr_mem in self.arrange_mem:
+            file.write(f".arrange_mem_{arr_mem.address:08x}\n")
+            file.write(f" dc.b {format_bytes_as_hex_amiga(arr_mem.bytes)}\n")
+            if len(arr_mem.bytes) % 2 == 1:
+                file.write(f" even\n")
+            file.write("\n")
+
+        file.write(".arrange_regs\n")
+        file.write(" ;    D0/A0     D1/A1     D2/A2     D3/A3     D4/A4     D5/A5     D6/A6     D7/A7\n")
+        file.write(
+            f" dc.l {self.get_d_reg_string_amiga(self.arrange_reg_data.data_registers)}\n")
+        file.write(
+            f" dc.l {self.get_a_reg_string_amiga(self.arrange_reg_address.address_registers)}\n")
+        if self.arrange_reg_sr is not None:
+            file.write(f" dc.w ${self.arrange_reg_sr.status_register:04x} ; {self.get_status_reg_string(self.arrange_reg_sr.status_register)}\n")
+        file.write("\n")
+
+        file.write(".arrange_code\n")
+        file.write(" ;length,address\n")
+        file.write(f" dc.l ${(len(self.arrange_code.bytes) // 2):08x},${self.arrange_code.address:08x}\n")
+        file.write(f" dc.b {format_bytes_as_hex_amiga(self.arrange_code.bytes)}\n")
+        file.write("\n")
+
+        file.write(".assert_mem\n")
+        file.write(" ;length,address,ptr\n")
+        for ass_mem in self.assert_mem:
+            file.write(f" dc.l ${len(ass_mem.bytes):08x},${ass_mem.address:08x},.assert_mem_{ass_mem.address:08x}\n")
+        file.write(" dc.l $00000000\n")
+        file.write("\n")
+
+        for ass_mem in self.assert_mem:
+            file.write(f".assert_mem_{ass_mem.address:08x}\n")
+            file.write(f" dc.b {format_bytes_as_hex_amiga(ass_mem.bytes)}\n")
+            if len(ass_mem.bytes) % 2 == 1:
+                file.write(f" even\n")
+            file.write("\n")
+
+        file.write(".assert_regs\n")
+        file.write(" ;    D0/A0     D1/A1     D2/A2     D3/A3     D4/A4     D5/A5     D6/A6     D7/A7\n")
+        file.write(
+            f" dc.l {self.get_d_reg_string_amiga(self.assert_reg_data.data_registers)}\n")
+        file.write(
+            f" dc.l {self.get_a_reg_string_amiga(self.assert_reg_address.address_registers)}\n")
+        if self.assert_reg_sr is not None:
+            file.write(f" dc.w ${self.assert_reg_sr.status_register:04x} ; {self.get_status_reg_string(self.assert_reg_sr.status_register)}\n")
+        file.write("\n")
+
+        file.write(".assert_code\n")
+        if self.assert_code.source_code_operands is not None:
+            file.write(f" {self.assert_code.source_code_instruction} {self.assert_code.source_code_operands}\n")
+        else:
+            file.write(f" {self.assert_code.source_code_instruction}\n")
+        file.write("\n")
 
 class TestSet:
     test_spec_file_path: str
@@ -288,8 +466,28 @@ class TestSet:
         file.close()
 
     def write_amiga_tests(self, path_to_amiga_tests: str):
-        rust_test_file_name = os.path.splitext(os.path.basename(self.test_spec_file_path))[0] + '.s'
-        rust_test_file_path = os.path.join(path_to_amiga_tests, rust_test_file_name)
+        amiga_test_file_name = os.path.splitext(os.path.basename(self.test_spec_file_path))[0] + '.s'
+        amiga_test_file_path = os.path.join(path_to_amiga_tests, amiga_test_file_name)
+
+        # Open Amiga test file for writing
+        file = open(amiga_test_file_path, 'w')
+
+        # Write Amiga test file header
+        file.write("; ----------------------T----------------------------------\n")
+        file.write("\n")
+        file.write("; Path: " + amiga_test_file_path + "\n")
+        file.write("; This file is autogenerated\n")
+        file.write("\n")
+        file.write(" ;rts in case this source is run by mistake\n")
+        file.write(" rts\n")
+        file.write("\n")
+
+        # Write Amiga test file body
+        for test_case in self.test_cases:
+            test_case.write_amiga_test(file)
+
+        # Close Amiga test file
+        file.close()
 
 
 def format_bytes_as_hex(bytes: list[int]):
@@ -300,6 +498,14 @@ def format_bytes_as_hex(bytes: list[int]):
     bytes_hex_str = ', '.join(bytes_hex)
     return bytes_hex_str
 
+def format_bytes_as_hex_amiga(bytes: list[int]):
+    bytes_hex = []
+    for byte in bytes:
+        byte_hex = f"${format(byte, '02X')}"
+        bytes_hex.append(byte_hex)
+    bytes_hex_str = ','.join(bytes_hex)
+    return bytes_hex_str
+
 
 def get_assert_code_comment(parsed_line: ParsedLine):
     if parsed_line.source_code_operands is not None:
@@ -308,35 +514,49 @@ def get_assert_code_comment(parsed_line: ParsedLine):
         return parsed_line.source_code_instruction
 
 
+def ensure_folder_exists(folder_path):
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+        print(f"Folder '{folder_path}' created.")
+
+
 # Parse command line arguments
-if len(sys.argv) != 4:
+if len(sys.argv) != 5:
     print("Usage:")
-    print(f" {sys.argv[0]} [path_to_test_specs] [output_path_to_rust_tests] [output_path_to_amiga_tests]")
+    print(
+        f" {sys.argv[0]} [path_to_test_specs] [output_path_to_rust_tests] [output_path_to_rust_test_mod_file] [output_path_to_amiga_test_suit_file]")
+    print("Example:")
+    print(
+        f" {sys.argv[0]} tests ..\\src\\cpu\\instruction\\gen_tests ..\\src\\cpu\\instruction\\gen_tests.rs D:\\Amiga\\KrustWB3\\Output\\Dev\\github\\rust-amiga-emul-ami-test-runner")
     sys.exit()
 
-path_to_test_specs = sys.argv[1]
-output_path_to_rust_tests = sys.argv[2]
-output_path_to_amiga_tests = sys.argv[3]
+g_path_to_test_specs = sys.argv[1]
+g_output_path_to_rust_tests = sys.argv[2]
+g_output_path_to_rust_test_mod_file = sys.argv[3]
+g_output_path_to_amiga_tests = sys.argv[4]
+
+ensure_folder_exists(g_output_path_to_rust_tests)
+ensure_folder_exists(g_output_path_to_amiga_tests)
 
 
 # Get path to all test spec files
 def get_test_spec_file_paths():
-    test_spec_file_paths = [os.path.join(path_to_test_specs, f) for f in os.listdir(path_to_test_specs) if
-                            os.path.isfile(os.path.join(path_to_test_specs, f))]
+    test_spec_file_paths = [os.path.join(g_path_to_test_specs, f) for f in os.listdir(g_path_to_test_specs) if
+                            os.path.isfile(os.path.join(g_path_to_test_specs, f))]
     return test_spec_file_paths
 
 
 # Iterate all test spec files
 def iterate_test_spec_file_paths(test_spec_file_paths):
+    test_sets = []
     for test_spec_file_path in test_spec_file_paths:
-        test_sets = []
         test_spec_file = open(test_spec_file_path, 'r')
         lines = test_spec_file.readlines()
         parsed_lines = parse_lines(lines)
         test_cases = get_test_cases(parsed_lines)
         test_set = TestSet(test_spec_file_path=test_spec_file_path, test_cases=test_cases)
         test_sets.append(test_set)
-        return test_sets
+    return test_sets
 
 
 def parse_lines(lines) -> list[ParsedLine]:
@@ -661,20 +881,18 @@ def get_test_case(test_name: str, parsed_lines: list[ParsedLine], current_line: 
                 case (ParsedLineType.ADDRESS_WITH_BYTES, _):
                     match parse_state:
                         case ParseState.ARRANGE_MEM:
-                            # TODO: Do it
-                            print("Adding address with bytes as ARRANGE_MEM")
+                            test_case.arrange_mem.append(parsed_line)
                             pass
                         case ParseState.ARRANGE_CODE:
                             test_case.arrange_code = parsed_line
                             parse_state = ParseState.GLOBAL
                             pass
                         case ParseState.ASSERT_MEM:
-                            # TODO: Do it
-                            print("Adding address with bytes as ASSERT_MEM")
+                            test_case.assert_mem.append(parsed_line)
                             pass
                         case ParseState.ARRANGE_AND_ASSERT_MEM:
-                            # TODO: Do it
-                            print("Adding address with bytes as ARRANGE_AND_ASSERT_MEM")
+                            test_case.arrange_mem.append(parsed_line)
+                            test_case.assert_mem.append(parsed_line)
                             pass
                         case _:
                             print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
@@ -684,16 +902,10 @@ def get_test_case(test_name: str, parsed_lines: list[ParsedLine], current_line: 
                 case (ParsedLineType.ADDRESS_NULL_TERMINATION, _):
                     match parse_state:
                         case ParseState.ARRANGE_MEM:
-                            # TODO: Do it
-                            print("Adding address null-termination as ARRANGE_MEM")
                             parse_state = ParseState.GLOBAL
                         case ParseState.ASSERT_MEM:
-                            # TODO: Do it
-                            print("Adding address null-termination as ASSERT_MEM")
                             parse_state = ParseState.GLOBAL
                         case ParseState.ARRANGE_AND_ASSERT_MEM:
-                            # TODO: Do it
-                            print("Adding address null-termination as ARRANGE_AND_ASSERT_MEM")
                             parse_state = ParseState.GLOBAL
                         case _:
                             print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
@@ -750,51 +962,22 @@ def get_test_case(test_name: str, parsed_lines: list[ParsedLine], current_line: 
                     print(
                         f"Syntax Error parsing. Unexpected address registers found outside of 'arrange_reg' or 'assert_reg'.")
                     sys.exit()
-                case (ParsedLineType.STATUS_REGISTER_FLAGS, ParseState.ARRANGE_REG):
-                    if test_case.arrange_reg_sr_flags is not None or test_case.arrange_reg_sr is not None:
-                        print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
-                        print(
-                            f"Syntax Error parsing. Found multiple rows of SR or SR_FLAGS for 'arrange_reg'.")
-                        sys.exit()
-                    else:
-                        test_case.arrange_reg_sr_flags = parsed_line
-                    # if test_case.is_arrange_reg_done():
-                    #     parse_state = ParseState.GLOBAL
                 case (ParsedLineType.STATUS_REGISTER, ParseState.ARRANGE_REG):
-                    if test_case.arrange_reg_sr is not None or test_case.arrange_reg_sr_flags is not None:
+                    if test_case.arrange_reg_sr is not None:
                         print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
                         print(
                             f"Syntax Error parsing. Found multiple rows of SR or SR_FLAGS for 'arrange_reg'.")
                         sys.exit()
                     else:
                         test_case.arrange_reg_sr = parsed_line
-                    # if test_case.is_arrange_reg_done():
-                    #     parse_state = ParseState.GLOBAL
-                case (ParsedLineType.STATUS_REGISTER_FLAGS, ParseState.ASSERT_REG):
-                    if test_case.assert_reg_sr_flags is not None or test_case.assert_reg_sr is not None:
-                        print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
-                        print(
-                            f"Syntax Error parsing. Found multiple rows of SR or SR_FLAGS for 'assert_reg'.")
-                        sys.exit()
-                    else:
-                        test_case.assert_reg_sr_flags = parsed_line
-                    # if test_case.is_assert_reg_done():
-                    #     parse_state = ParseState.GLOBAL
                 case (ParsedLineType.STATUS_REGISTER, ParseState.ASSERT_REG):
-                    if test_case.assert_reg_sr is not None or test_case.assert_reg_sr_flags is not None:
+                    if test_case.assert_reg_sr is not None:
                         print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
                         print(
                             f"Syntax Error parsing. Found multiple rows of SR or SR_FLAGS for 'assert_reg'.")
                         sys.exit()
                     else:
                         test_case.assert_reg_sr = parsed_line
-                    # if test_case.is_assert_reg_done():
-                    #     parse_state = ParseState.GLOBAL
-                case (ParsedLineType.STATUS_REGISTER_FLAGS, _):
-                    print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
-                    print(
-                        f"Syntax Error parsing. Unexpected SR_FLAGS found outside of 'arrange_reg' or 'assert_reg'.")
-                    sys.exit()
                 case (ParsedLineType.STATUS_REGISTER, _):
                     print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
                     print(
@@ -808,8 +991,6 @@ def get_test_case(test_name: str, parsed_lines: list[ParsedLine], current_line: 
                         sys.exit()
                     else:
                         test_case.assert_reg_pc = parsed_line
-                    # if test_case.is_assert_reg_done():
-                    #     parse_state = ParseState.GLOBAL
                 case (ParsedLineType.PROGRAM_COUNTER_REGISTER, _):
                     print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
                     print(
@@ -863,9 +1044,66 @@ def get_test_case(test_name: str, parsed_lines: list[ParsedLine], current_line: 
     return test_case, current_line
 
 
-test_spec_file_paths = get_test_spec_file_paths()
-test_sets = iterate_test_spec_file_paths(test_spec_file_paths)
-for test_set in test_sets:
-    # print(f"test_spec_file_path: {test_set.test_spec_file_path}")
-    test_set.write_rust_tests(output_path_to_rust_tests)
-    test_set.write_amiga_tests(output_path_to_amiga_tests)
+def write_rust_mod_file(output_path_to_rust_test_mod_file: str, test_sets: list[TestSet]):
+    # Open rust test file for writing
+    file = open(output_path_to_rust_test_mod_file, 'w')
+
+    # Write rust test file header
+    file.write("// Path: " + output_path_to_rust_test_mod_file + "\n")
+    file.write("// This file is autogenerated\n")
+    file.write("\n")
+
+    # Write rust test file body
+    for test_set in test_sets:
+        rust_test_file_name = os.path.splitext(os.path.basename(test_set.test_spec_file_path))[0]
+        file.write("pub mod " + rust_test_file_name + ";\n")
+        file.write("\n")
+
+    # Close rust test file
+    file.close()
+
+
+def write_amiga_test_suite_file(output_path_to_amiga_tests: str, test_sets: list[TestSet]):
+    amiga_test_suites_file_path = os.path.join(output_path_to_amiga_tests, "test_suite.s")
+
+    # Open Amiga test file for writing
+    file = open(amiga_test_suites_file_path, 'w')
+
+    # Write Amiga test file header
+    file.write(";---------------T---------T---------------------T----------\\x10")
+    file.write("\n")
+    file.write("; Path: " + amiga_test_suites_file_path + "\n")
+    file.write("; This file is autogenerated\n")
+    file.write("\n")
+    file.write("\t; rts in case this source is run by mistake\n")
+    file.write("\trts\n")
+    file.write("\n")
+
+    # Write Amiga test list
+    file.write("test_suite\n")
+    for test_set in test_sets:
+        if len(test_set.test_cases) > 0:
+            for test_case in test_set.test_cases:
+                file.write(f"\tdc.l\t{test_case.test_name.lower()}\n")
+    file.write("\n")
+    file.write("\tdc.l\t$0\n")
+    file.write("\n")
+
+    # Write Amiga test includes
+    for test_set in test_sets:
+        if len(test_set.test_cases) > 0:
+            rust_test_file_name = os.path.splitext(os.path.basename(test_set.test_spec_file_path))[0]
+            file.write(f"\tinclude\t\"{rust_test_file_name.lower()}.s\"\n")
+
+    # Close Amiga test file
+    file.close()
+
+
+g_test_spec_file_paths = get_test_spec_file_paths()
+g_test_sets = iterate_test_spec_file_paths(g_test_spec_file_paths)
+write_rust_mod_file(g_output_path_to_rust_test_mod_file, g_test_sets)
+write_amiga_test_suite_file(g_output_path_to_amiga_tests, g_test_sets)
+for g_test_set in g_test_sets:
+    if len(g_test_set.test_cases) > 0:
+        g_test_set.write_rust_tests(g_output_path_to_rust_tests)
+        g_test_set.write_amiga_tests(g_output_path_to_amiga_tests)
