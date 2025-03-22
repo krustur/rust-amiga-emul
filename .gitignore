@@ -13,3 +13,6 @@ Cargo.lock
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
 runlog.txt
+/ami-test-runner/build/_amiga
+/ami-test-runner/src/tests
+ami-test-runner/winuae/test-runner.exe
