@@ -675,26 +675,44 @@ impl Register {
         };
     }
 
-    pub fn set_all_a_reg_long_no_log(&mut self, a0: u32, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32, a6: u32) {
-        self.reg_a[0] = a0;
-        self.reg_a[1] = a1;
-        self.reg_a[2] = a2;
-        self.reg_a[3] = a3;
-        self.reg_a[4] = a4;
-        self.reg_a[5] = a5;
-        self.reg_a[6] = a6;
+    pub fn set_all_a_reg_long_no_log(&mut self, a0: u32, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32, a6: u32, a7: u32) {
+        self.set_a_reg_long_no_log(0, a0);
+        self.set_a_reg_long_no_log(1, a1);
+        self.set_a_reg_long_no_log(2, a2);
+        self.set_a_reg_long_no_log(3, a3);
+        self.set_a_reg_long_no_log(4, a4);
+        self.set_a_reg_long_no_log(5, a5);
+        self.set_a_reg_long_no_log(6, a6);
+        self.set_a_reg_long_no_log(7, a7);
+        // self.reg_a[0] = a0;
+        // self.reg_a[1] = a1;
+        // self.reg_a[2] = a2;
+        // self.reg_a[3] = a3;
+        // self.reg_a[4] = a4;
+        // self.reg_a[5] = a5;
+        // self.reg_a[6] = a6;
+        // self.reg_a[7] = a7;
     }
 
 
     #[cfg(test)]
-    pub fn assert_all_a_reg_long_no_log(&mut self, a0: u32, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32, a6: u32) {
-        assert_eq!(a0, self.reg_a[0]);
-        assert_eq!(a1, self.reg_a[1]);
-        assert_eq!(a2, self.reg_a[2]);
-        assert_eq!(a3, self.reg_a[3]);
-        assert_eq!(a4, self.reg_a[4]);
-        assert_eq!(a5, self.reg_a[5]);
-        assert_eq!(a6, self.reg_a[6]);
+    pub fn assert_all_a_reg_long_no_log(&mut self, a0: u32, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32, a6: u32, a7: u32) {
+        assert_eq!(a0, self.get_a_reg_long_no_log(0));
+        assert_eq!(a1, self.get_a_reg_long_no_log(1));
+        assert_eq!(a2, self.get_a_reg_long_no_log(2));
+        assert_eq!(a3, self.get_a_reg_long_no_log(3));
+        assert_eq!(a4, self.get_a_reg_long_no_log(4));
+        assert_eq!(a5, self.get_a_reg_long_no_log(5));
+        assert_eq!(a6, self.get_a_reg_long_no_log(6));
+        // assert_eq!(a7, self.get_a_reg_long_no_log(7));
+        // assert_eq!(a0, self.reg_a[0]);
+        // assert_eq!(a1, self.reg_a[1]);
+        // assert_eq!(a2, self.reg_a[2]);
+        // assert_eq!(a3, self.reg_a[3]);
+        // assert_eq!(a4, self.reg_a[4]);
+        // assert_eq!(a5, self.reg_a[5]);
+        // assert_eq!(a6, self.reg_a[6]);
+        // assert_eq!(a7, self.reg_a[7]);
     }
     pub fn set_a_reg_word(&mut self, step_log: &mut StepLog, reg_index: usize, value: u16) {
         match reg_index {

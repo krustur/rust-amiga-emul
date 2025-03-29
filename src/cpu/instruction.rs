@@ -57,7 +57,7 @@ pub mod subi;
 pub mod subq;
 pub mod subx;
 pub mod swap;
-pub mod tests;
+pub mod gen_tests;
 pub mod tst;
 pub mod unlk;
 

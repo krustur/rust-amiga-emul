@@ -143,3 +143,261 @@ fn addi_byte_immediate_data_to_absolute_short() {
     // assert - mem
     assert_eq!(0x84, cpu.memory.get_byte_no_log(0x00004000));
 }
+
+#[test]
+fn addi_word_immediate_data_to_data_register_direct() {
+    // arrange - code
+    // ADDI.W #$1234,D7
+    let code = [0x06, 0x47, 0x12, 0x34].to_vec();
+    let code_memory = RamMemory::from_bytes(0x00040000, code);
+
+    // arrange - mem
+    // -nothing-
+
+    // arrange - common
+    let stack = RamMemory::from_range(0x01000000, 0x010003ff);
+    let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
+    let cia_memory = CiaMemory::new();
+    let mut mem_ranges: Vec<Box<dyn Memory>> = Vec::new();
+    mem_ranges.push(Box::new(code_memory));
+    mem_ranges.push(Box::new(stack));
+    mem_ranges.push(Box::new(vectors));
+    mem_ranges.push(Box::new(cia_memory));
+    let overlay_hack = Box::new(RamMemory::from_range(0xffffffff, 0xffffffff));
+    let mem = Mem::new(mem_ranges, overlay_hack);
+    let mut cpu = Cpu::new(mem);
+
+    // arrange - regs
+    cpu.register.set_all_d_reg_long_no_log(0x000000d0, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00004321);
+    cpu.register.set_all_a_reg_long_no_log(0x000000a0, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
+    cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
+    cpu.register.set_ssp_reg(0x01000400);
+    cpu.register.reg_sr.set_sr_reg_flags_abcde(
+       STATUS_REGISTER_MASK_EXTEND
+       | STATUS_REGISTER_MASK_NEGATIVE
+       | STATUS_REGISTER_MASK_ZERO
+       | STATUS_REGISTER_MASK_OVERFLOW
+       | STATUS_REGISTER_MASK_CARRY
+    );
+
+    // act/assert - disassembly
+    let get_disassembly_result = cpu.get_next_disassembly_no_log();
+    assert_eq!(
+        GetDisassemblyResult::from_address_and_address_next(
+            0x00040000,
+            0x00040004,
+            String::from("ADDI.W"),
+            String::from("#$1234,D7"),
+            ),
+            get_disassembly_result
+        );
+
+    // act
+    cpu.execute_next_instruction();
+
+    // assert - regs
+    cpu.register.assert_all_d_reg_long_no_log(0x000000d0, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00005555);
+    cpu.register.assert_all_a_reg_long_no_log(0x000000a0, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
+    cpu.register.reg_sr.assert_sr_reg_flags_abcde(
+       0x0000
+    );
+
+    // assert - mem
+    // -nothing-
+}
+
+#[test]
+fn addi_word_immediate_data_to_absolute_long() {
+    // arrange - code
+    // ADDI.W #$3878,($00040000).L
+    let code = [0x06, 0x79, 0x38, 0x78, 0x00, 0x04, 0x00, 0x00].to_vec();
+    let code_memory = RamMemory::from_bytes(0x00030000, code);
+
+    // arrange - mem
+    let arrange_mem_bytes_00040000 = [0x3C, 0x09].to_vec();
+    let arrange_mem_00040000 = RamMemory::from_bytes(0x00040000, arrange_mem_bytes_00040000);
+
+    // arrange - common
+    let stack = RamMemory::from_range(0x01000000, 0x010003ff);
+    let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
+    let cia_memory = CiaMemory::new();
+    let mut mem_ranges: Vec<Box<dyn Memory>> = Vec::new();
+    mem_ranges.push(Box::new(code_memory));
+    mem_ranges.push(Box::new(stack));
+    mem_ranges.push(Box::new(vectors));
+    mem_ranges.push(Box::new(cia_memory));
+    mem_ranges.push(Box::new(arrange_mem_00040000));
+    let overlay_hack = Box::new(RamMemory::from_range(0xffffffff, 0xffffffff));
+    let mem = Mem::new(mem_ranges, overlay_hack);
+    let mut cpu = Cpu::new(mem);
+
+    // arrange - regs
+    cpu.register.set_all_d_reg_long_no_log(0x000000d0, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0xdddd5555);
+    cpu.register.set_all_a_reg_long_no_log(0x000000a0, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
+    cpu.register.reg_pc = ProgramCounter::from_address(0x00030000);
+    cpu.register.set_ssp_reg(0x01000400);
+    cpu.register.reg_sr.set_sr_reg_flags_abcde(
+       STATUS_REGISTER_MASK_EXTEND
+       | STATUS_REGISTER_MASK_NEGATIVE
+       | STATUS_REGISTER_MASK_ZERO
+       | STATUS_REGISTER_MASK_OVERFLOW
+       | STATUS_REGISTER_MASK_CARRY
+    );
+
+    // act/assert - disassembly
+    let get_disassembly_result = cpu.get_next_disassembly_no_log();
+    assert_eq!(
+        GetDisassemblyResult::from_address_and_address_next(
+            0x00030000,
+            0x00030008,
+            String::from("ADDI.W"),
+            String::from("#$3878,($00040000).L"),
+            ),
+            get_disassembly_result
+        );
+
+    // act
+    cpu.execute_next_instruction();
+
+    // assert - regs
+    cpu.register.assert_all_d_reg_long_no_log(0x000000d0, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0xdddd5555);
+    cpu.register.assert_all_a_reg_long_no_log(0x000000a0, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
+    cpu.register.reg_sr.assert_sr_reg_flags_abcde(
+       0x0000
+    );
+
+    // assert - mem
+    assert_eq!(0x74, cpu.memory.get_byte_no_log(0x00040000));
+    assert_eq!(0x81, cpu.memory.get_byte_no_log(0x00040001));
+}
+
+#[test]
+fn addi_long_immediate_data_to_data_register_direct() {
+    // arrange - code
+    // ADDI.L #$76857685,D0
+    let code = [0x06, 0x80, 0x76, 0x85, 0x76, 0x85].to_vec();
+    let code_memory = RamMemory::from_bytes(0x00030000, code);
+
+    // arrange - mem
+    // -nothing-
+
+    // arrange - common
+    let stack = RamMemory::from_range(0x01000000, 0x010003ff);
+    let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
+    let cia_memory = CiaMemory::new();
+    let mut mem_ranges: Vec<Box<dyn Memory>> = Vec::new();
+    mem_ranges.push(Box::new(code_memory));
+    mem_ranges.push(Box::new(stack));
+    mem_ranges.push(Box::new(vectors));
+    mem_ranges.push(Box::new(cia_memory));
+    let overlay_hack = Box::new(RamMemory::from_range(0xffffffff, 0xffffffff));
+    let mem = Mem::new(mem_ranges, overlay_hack);
+    let mut cpu = Cpu::new(mem);
+
+    // arrange - regs
+    cpu.register.set_all_d_reg_long_no_log(0x10101010, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0xdddd5555);
+    cpu.register.set_all_a_reg_long_no_log(0x000000a0, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
+    cpu.register.reg_pc = ProgramCounter::from_address(0x00030000);
+    cpu.register.set_ssp_reg(0x01000400);
+    cpu.register.reg_sr.set_sr_reg_flags_abcde(
+       STATUS_REGISTER_MASK_EXTEND
+       | STATUS_REGISTER_MASK_NEGATIVE
+       | STATUS_REGISTER_MASK_ZERO
+       | STATUS_REGISTER_MASK_OVERFLOW
+       | STATUS_REGISTER_MASK_CARRY
+    );
+
+    // act/assert - disassembly
+    let get_disassembly_result = cpu.get_next_disassembly_no_log();
+    assert_eq!(
+        GetDisassemblyResult::from_address_and_address_next(
+            0x00030000,
+            0x00030006,
+            String::from("ADDI.L"),
+            String::from("#$76857685,D0"),
+            ),
+            get_disassembly_result
+        );
+
+    // act
+    cpu.execute_next_instruction();
+
+    // assert - regs
+    cpu.register.assert_all_d_reg_long_no_log(0x86958695, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0xdddd5555);
+    cpu.register.assert_all_a_reg_long_no_log(0x000000a0, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
+    cpu.register.reg_sr.assert_sr_reg_flags_abcde(
+       STATUS_REGISTER_MASK_NEGATIVE
+       | STATUS_REGISTER_MASK_OVERFLOW
+    );
+
+    // assert - mem
+    // -nothing-
+}
+
+#[test]
+fn addi_long_immediate_data_to_absolute_long() {
+    // arrange - code
+    // ADDI.L #$38784545,($00040000).L
+    let code = [0x06, 0xB9, 0x38, 0x78, 0x45, 0x45, 0x00, 0x04, 0x00, 0x00].to_vec();
+    let code_memory = RamMemory::from_bytes(0x00030000, code);
+
+    // arrange - mem
+    let arrange_mem_bytes_00040000 = [0xEC, 0x09, 0x00, 0x01].to_vec();
+    let arrange_mem_00040000 = RamMemory::from_bytes(0x00040000, arrange_mem_bytes_00040000);
+
+    // arrange - common
+    let stack = RamMemory::from_range(0x01000000, 0x010003ff);
+    let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
+    let cia_memory = CiaMemory::new();
+    let mut mem_ranges: Vec<Box<dyn Memory>> = Vec::new();
+    mem_ranges.push(Box::new(code_memory));
+    mem_ranges.push(Box::new(stack));
+    mem_ranges.push(Box::new(vectors));
+    mem_ranges.push(Box::new(cia_memory));
+    mem_ranges.push(Box::new(arrange_mem_00040000));
+    let overlay_hack = Box::new(RamMemory::from_range(0xffffffff, 0xffffffff));
+    let mem = Mem::new(mem_ranges, overlay_hack);
+    let mut cpu = Cpu::new(mem);
+
+    // arrange - regs
+    cpu.register.set_all_d_reg_long_no_log(0x86958695, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0xdddd5555);
+    cpu.register.set_all_a_reg_long_no_log(0x000000a0, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
+    cpu.register.reg_pc = ProgramCounter::from_address(0x00030000);
+    cpu.register.set_ssp_reg(0x01000400);
+    cpu.register.reg_sr.set_sr_reg_flags_abcde(
+       STATUS_REGISTER_MASK_EXTEND
+       | STATUS_REGISTER_MASK_NEGATIVE
+       | STATUS_REGISTER_MASK_ZERO
+       | STATUS_REGISTER_MASK_OVERFLOW
+       | STATUS_REGISTER_MASK_CARRY
+    );
+
+    // act/assert - disassembly
+    let get_disassembly_result = cpu.get_next_disassembly_no_log();
+    assert_eq!(
+        GetDisassemblyResult::from_address_and_address_next(
+            0x00030000,
+            0x0003000a,
+            String::from("ADDI.L"),
+            String::from("#$38784545,($00040000).L"),
+            ),
+            get_disassembly_result
+        );
+
+    // act
+    cpu.execute_next_instruction();
+
+    // assert - regs
+    cpu.register.assert_all_d_reg_long_no_log(0x86958695, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0xdddd5555);
+    cpu.register.assert_all_a_reg_long_no_log(0x000000a0, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
+    cpu.register.reg_sr.assert_sr_reg_flags_abcde(
+       STATUS_REGISTER_MASK_EXTEND
+       | STATUS_REGISTER_MASK_CARRY
+    );
+
+    // assert - mem
+    assert_eq!(0x24, cpu.memory.get_byte_no_log(0x00040000));
+    assert_eq!(0x81, cpu.memory.get_byte_no_log(0x00040001));
+    assert_eq!(0x45, cpu.memory.get_byte_no_log(0x00040002));
+    assert_eq!(0x46, cpu.memory.get_byte_no_log(0x00040003));
+}

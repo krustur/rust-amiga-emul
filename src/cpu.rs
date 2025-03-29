@@ -1785,10 +1785,10 @@ impl Cpu {
             } => {
                 // (d16,An)
                 let format = format!(
-                    "(${:04X},A{}) [{}]",
+                    "(${:04X},A{})",
                     displacement,
                     register,
-                    Cpu::get_signed_long_from_long(Cpu::sign_extend_word(displacement))
+                    // Cpu::get_signed_long_from_long(Cpu::sign_extend_word(displacement))
                 );
                 EffectiveAddressDebug { format: format }
             }
@@ -1815,14 +1815,14 @@ impl Cpu {
                 let displacement = Cpu::get_signed_byte_from_byte(displacement);
 
                 let format = format!(
-                    "(${:02X},A{},{}{}.{}{}) [{}]",
+                    "(${:02X},A{},{}{}.{}{})",
                     displacement,
                     ea_register,
                     register_type,
                     register,
                     index_size,
                     scale_factor,
-                    displacement
+                    // displacement
                 );
                 EffectiveAddressDebug { format: format }
             }
@@ -1831,7 +1831,7 @@ impl Cpu {
                 displacement,
             } => {
                 // (d16,PC)
-                let format = format!("(${:04X},PC) [${:08X}]", displacement, ea_address);
+                let format = format!("(${:04X},PC)", displacement);
 
                 EffectiveAddressDebug { format }
             }
@@ -1842,7 +1842,7 @@ impl Cpu {
                 // (xxx).W
                 let format = match displacement > 0x8000 {
                     false => format!("(${:04X}).W", displacement),
-                    true => format!("(${:04X}).W [${:08X}]", displacement, ea_address),
+                    true => format!("(${:04X}).W", displacement),
                 };
                 EffectiveAddressDebug { format: format }
             }
@@ -1873,13 +1873,12 @@ impl Cpu {
                 };
 
                 let format = format!(
-                    "(${:02X},PC,{}{}.{}{}) [${:08X}]",
+                    "(${:02X},PC,{}{}.{}{})",
                     displacement,
                     register_type_format,
                     register,
                     index_size_format,
-                    scale_factor,
-                    ea_address
+                    scale_factor
                 );
 
                 EffectiveAddressDebug { format: format }

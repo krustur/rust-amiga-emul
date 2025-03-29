@@ -14,5 +14,5 @@ Cargo.lock
 *.pdb
 runlog.txt
 /ami-test-runner/build/_amiga
-/ami-test-runner/src/tests
+# /ami-test-runner/src/tests
 ami-test-runner/winuae/test-runner.exe
