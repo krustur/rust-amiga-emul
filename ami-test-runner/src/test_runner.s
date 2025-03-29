@@ -29,7 +29,10 @@ intena	equ $09a
 true	equ $00	; can use beq for if true
 false	equ $01	; can use bne for if not true
 
-jmp_instr		equ $4ef9
+move_w_sr_absadr_l_instr	equ	$40f9	; move.w sr,($0).l
+move_l_a7_to_absadr_l_instr	equ	$23cf	; move.l a7,($0).l
+lea_l_0_pc_to_a7_instr	equ	$4ffafffe	; lea.l 0(pc),a7
+jmp_absadr_l_instr	equ $4ef9	; jmp ($0).l
 
 test_offs_name		equ	$00
 test_offs_arrange_mem	equ	$04
@@ -347,14 +350,43 @@ run_test
 
 	move.l	a1,.test_jmp_address
 	
+	; code_copy can be used to view disassembly in asm-one
 	lea	code_copy,a2
 	subq	#1,d0
 .copy_test_code_loop
 	move.w	(a0),(a2)+
 	move.w	(a0)+,(a1)+
 	dbf	d0,.copy_test_code_loop	
-	move.w	#jmp_instr,(a1)+
-	move.w	#jmp_instr,(a2)+
+
+	; now we generate some post-test-code code to collect sr and pc
+	; and jmp back to the test runner code
+
+	; move.w    sr,collected_sr
+	move.w	#move_w_sr_absadr_l_instr,(a1)+
+	move.w	#move_w_sr_absadr_l_instr,(a2)+
+	move.l	#collected_sr,(a1)+
+	move.l	#collected_sr,(a2)+
+
+	; move.l a7,collected_regs+$3c
+	move.w	#move_l_a7_to_absadr_l_instr,(a1)+
+	move.w	#move_l_a7_to_absadr_l_instr,(a2)+
+	move.l #collected_regs+$3c,(a1)+
+	move.l #collected_regs+$3c,(a2)+
+
+	; lea 0(pc),a7
+	; 2 * word+long instructions above that should be subtracted from collected_pc later
+	move.l #lea_l_0_pc_to_a7_instr,(a1)+
+	move.l #lea_l_0_pc_to_a7_instr,(a2)+
+
+	; move.l a7,collected_pc
+	move.w	#move_l_a7_to_absadr_l_instr,(a1)+
+	move.w	#move_l_a7_to_absadr_l_instr,(a2)+
+	move.l #collected_pc,(a1)+
+	move.l #collected_pc,(a2)+
+
+	; jmp .return_here_after_test
+	move.w	#jmp_absadr_l_instr,(a1)+
+	move.w	#jmp_absadr_l_instr,(a2)+
 	move.l	#.return_here_after_test,(a1)
 	move.l	#.return_here_after_test,(a2)
 
@@ -389,7 +421,7 @@ run_test
 	
 	; this is a jmp (xxx).l instruction to the
 	; test code
-	dc.w	jmp_instr
+	dc.w	jmp_absadr_l_instr
 .test_jmp_address
 	dc.l	$12345678
 
@@ -398,9 +430,9 @@ run_test
 .return_here_after_test
 
 	; Act: Collect regs
-
-	move.w	sr,collected_sr
+	
 	and.w	#$001f,collected_sr
+	sub.l	#12,collected_pc	; adjust collected_pc as stated above ...
 	move.l	d0,collected_regs+$00
 	move.l	d1,collected_regs+$04
 	move.l	d2,collected_regs+$08
@@ -416,7 +448,7 @@ run_test
 	move.l	a4,collected_regs+$30
 	move.l	a5,collected_regs+$34
 	move.l	a6,collected_regs+$38
-	move.l	a7,collected_regs+$3c
+	; move.l	a7,collected_regs+$3c
 
 	; Act: Collect mem
 
@@ -550,7 +582,7 @@ run_test
 	bne.w	.fail
 	move.l	collected_regs+$28,d0	; A2
 	cmp.l	$28(a0),d0
-	bne.s	.fail
+	bne.w	.fail
 	move.l	collected_regs+$2c,d0	; A3
 	cmp.l	$2c(a0),d0
 	bne.s	.fail
@@ -566,8 +598,11 @@ run_test
 	move.l	collected_regs+$3c,d0	; A7
 	cmp.l	$3c(a0),d0
 	bne.s	.fail
-	move.w	collected_sr,d0	; SR
+	move.w	collected_pc,d0	; PC
 	cmp.w	$40(a0),d0
+	bne.s	.fail
+	move.w	collected_sr,d0	; SR
+	cmp.w	$44(a0),d0
 	bne.s	.fail
 
 
@@ -715,7 +750,7 @@ run_test
 	move.l	collected_regs+$24,d0	; A1
 	move.l	$24(a4),d1
 	move.w	#"A1",d2
-	bsr.s	.fail_reg_details
+	bsr.w	.fail_reg_details
 	move.l	collected_regs+$28,d0	; A2
 	move.l	$28(a4),d1
 	move.w	#"A2",d2
@@ -740,10 +775,14 @@ run_test
 	move.l	$3c(a4),d1
 	move.w	#"A7",d2
 	bsr.s	.fail_reg_details
-	moveq	#0,d0	; SR
+	move.l	collected_pc,d0	; PC
+	move.l	$40(a4),d1
+	move.w	#"PC",d2
+	bsr.s	.fail_reg_details
+	moveq	#0,d0	; SR - is word, so clear upper word of d0 and d1
 	moveq	#0,d1
 	move.w	collected_sr,d0
-	move.w	$40(a4),d1
+	move.w	$44(a4),d1
 	move.w	#"SR",d2
 	bsr.s	.fail_reg_details
 
@@ -791,6 +830,7 @@ test_count_fail	dc.l	$00000000
 
 arrange_sr	dc.w	$0000
 collected_sr	dc.w	$0000
+collected_pc	dc.l	$00000000
 collected_regs	blk.l	16,$00000000
 collected_mem	blk.b	2048,$00
 
@@ -799,7 +839,6 @@ code_copy	blk.b	512,$ff
 mem_backup	blk.b	2048,$ff
 mem_copy	blk.b	2048,$ff
 sp_backup	dc.l	$00000000
-
 
 ; Logger functions
 
