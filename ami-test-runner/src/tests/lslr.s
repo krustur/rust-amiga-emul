@@ -8,50 +8,6 @@
 
 ;===========================================
 
-this_test_is_for_testing_purposes_only
- dc.l .name	; $00
- dc.l .arrange_mem	; $04
- dc.l .arrange_regs	; $08
- dc.l .arrange_code	; $0c
- dc.l .assert_mem	; $10
- dc.l .assert_regs	; $14
- dc.l .assert_code	; $18
-
-.name
- dc.b "this_test_is_for_testing_purposes_only",0
- even
-
-.arrange_mem
- ;length,address,ptr
- dc.l $00000000
-
-.arrange_regs
- ;    D0/A0     D1/A1     D2/A2     D3/A3     D4/A4     D5/A5     D6/A6     D7/A7
- dc.l $00000001,$000000d1,$000000d2,$000000d3,$000000d4,$000000d5,$000000d6,$000000d7
- dc.l $000000a0,$000000a1,$000000a2,$000000a3,$000000a4,$000000a5,$000000a6,$000000a7
- dc.w $001f ; ENZOC
-
-.arrange_code
- ;length,address
- dc.l $00000001,$00040000
- dc.b $ED,$08
-
-.assert_mem
- ;length,address,ptr
- dc.l $00000000
-
-.assert_regs
- ;    D0/A0     D1/A1     D2/A2     D3/A3     D4/A4     D5/A5     D6/A6     D7/A7
- dc.l $00000040,$000000d1,$000000d2,$000000d3,$000000d4,$000000d5,$000000d6,$000000d7
- dc.l $000000a0,$000000a1,$000000a2,$000000a3,$000000a4,$000000a5,$000000a6,$000000a7
- dc.l $00040002 ; PC
- dc.w $0000 ; SR=-----
-
-.assert_code
- LSL.B #$06,D0
-
-;===========================================
-
 lsl_b_register_by_immediate
  dc.l .name	; $00
  dc.l .arrange_mem	; $04

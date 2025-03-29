@@ -5,6 +5,8 @@ pub mod add;
 
 pub mod addi;
 
+pub mod addq;
+
 pub mod jmp;
 
 pub mod lslr;

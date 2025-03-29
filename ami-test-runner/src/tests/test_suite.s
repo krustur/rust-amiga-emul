@@ -24,7 +24,15 @@ test_suite
 	dc.l	addi_word_immediate_data_to_absolute_long
 	dc.l	addi_long_immediate_data_to_data_register_direct
 	dc.l	addi_long_immediate_data_to_absolute_long
-	dc.l	this_test_is_for_testing_purposes_only
+	dc.l	addq_data_to_data_register_direct_byte
+	dc.l	addq_data_to_data_register_direct_byte_overflow
+	dc.l	addq_data_to_data_register_direct_word
+	dc.l	addq_data_to_data_register_direct_word_carry
+	dc.l	addq_data_to_data_register_direct_word_negative
+	dc.l	addq_data_to_data_register_direct_long
+	dc.l	addq_data_to_data_register_direct_long_zero
+	dc.l	addq_data_to_address_register_direct_word
+	dc.l	addq_data_to_address_register_direct_long
 	dc.l	lsl_b_register_by_immediate
 	dc.l	lsl_register_by_immediate_byte_negative
 	dc.l	lsl_register_by_immediate_byte_zero
@@ -35,4 +43,5 @@ test_suite
 
 	include	"add.s"
 	include	"addi.s"
+	include	"addq.s"
 	include	"lslr.s"

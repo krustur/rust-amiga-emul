@@ -18,68 +18,6 @@ use crate::register::STATUS_REGISTER_MASK_ZERO;
 
 
 #[test]
-fn this_test_is_for_testing_purposes_only() {
-    // arrange - code
-    // LSL.B #$06,D0
-    let code = [0xED, 0x08].to_vec();
-    let code_memory = RamMemory::from_bytes(0x00040000, code);
-
-    // arrange - mem
-    // -nothing-
-
-    // arrange - common
-    let stack = RamMemory::from_range(0x01000000, 0x010003ff);
-    let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
-    let cia_memory = CiaMemory::new();
-    let mut mem_ranges: Vec<Box<dyn Memory>> = Vec::new();
-    mem_ranges.push(Box::new(code_memory));
-    mem_ranges.push(Box::new(stack));
-    mem_ranges.push(Box::new(vectors));
-    mem_ranges.push(Box::new(cia_memory));
-    let overlay_hack = Box::new(RamMemory::from_range(0xffffffff, 0xffffffff));
-    let mem = Mem::new(mem_ranges, overlay_hack);
-    let mut cpu = Cpu::new(mem);
-
-    // arrange - regs
-    cpu.register.set_all_d_reg_long_no_log(0x00000001, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x000000d7);
-    cpu.register.set_all_a_reg_long_no_log(0x000000a0, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
-    cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
-    cpu.register.set_ssp_reg(0x01000400);
-    cpu.register.reg_sr.set_sr_reg_flags_abcde(
-       STATUS_REGISTER_MASK_EXTEND
-       | STATUS_REGISTER_MASK_NEGATIVE
-       | STATUS_REGISTER_MASK_ZERO
-       | STATUS_REGISTER_MASK_OVERFLOW
-       | STATUS_REGISTER_MASK_CARRY
-    );
-
-    // act/assert - disassembly
-    let get_disassembly_result = cpu.get_next_disassembly_no_log();
-    assert_eq!(
-        GetDisassemblyResult::from_address_and_address_next(
-            0x00040000,
-            0x00040002,
-            String::from("LSL.B"),
-            String::from("#$06,D0"),
-            ),
-            get_disassembly_result
-        );
-
-    // act
-    cpu.execute_next_instruction();
-
-    // assert - regs
-    cpu.register.assert_all_d_reg_long_no_log(0x00000040, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x000000d7);
-    cpu.register.assert_all_a_reg_long_no_log(0x000000a0, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
-    cpu.register.reg_sr.assert_sr_reg_flags_abcde(
-       0x0000
-    );
-
-    // assert - mem
-    // -nothing-
-}
-
-#[test]
 fn lsl_b_register_by_immediate() {
     // arrange - code
     // LSL.B #$06,D0

@@ -598,8 +598,8 @@ run_test
 	move.l	collected_regs+$3c,d0	; A7
 	cmp.l	$3c(a0),d0
 	bne.s	.fail
-	move.w	collected_pc,d0	; PC
-	cmp.w	$40(a0),d0
+	move.l	collected_pc,d0	; PC
+	cmp.l	$40(a0),d0
 	bne.s	.fail
 	move.w	collected_sr,d0	; SR
 	cmp.w	$44(a0),d0

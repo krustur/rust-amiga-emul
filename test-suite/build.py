@@ -296,12 +296,21 @@ class TestCase(object):
         file.write(f"\n")
 
         # Act/Assert - Disassembly
+
+        if self.assert_reg_pc is not None:
+            assert_pc = self.assert_reg_pc.program_counter;
+
+            # file.write(f" dc.l ${self.assert_reg_pc.program_counter:08x} ; PC\n")
+        else:
+            assert_pc = self.arrange_code.address + len(self.arrange_code.bytes);
+            # file.write(f" dc.l ${self.arrange_code.address + len(self.arrange_code.bytes):08x} ; PC\n")
+
         file.write(f"    // act/assert - disassembly\n")
         file.write(f"    let get_disassembly_result = cpu.get_next_disassembly_no_log();\n")
         file.write(f"""    assert_eq!(
         GetDisassemblyResult::from_address_and_address_next(
             0x{self.arrange_code.address:08x},
-            0x{self.arrange_code.address + len(self.arrange_code.bytes):08x},
+            0x{assert_pc:08x},
             String::from("{self.assert_code.source_code_instruction}"),
             String::from("{self.assert_code.source_code_operands}"),
             ),
@@ -413,7 +422,11 @@ class TestCase(object):
         file.write(
             f" dc.l {self.get_a_reg_string_amiga(self.assert_reg_address.address_registers)}\n")
         # if self.assert_reg_sr is not None:
-        file.write(f" dc.l ${self.arrange_code.address + len(self.arrange_code.bytes):08x} ; PC\n")
+        if self.assert_reg_pc is not None:
+            file.write(f" dc.l ${self.assert_reg_pc.program_counter:08x} ; PC\n")
+        else:
+            file.write(f" dc.l ${self.arrange_code.address + len(self.arrange_code.bytes):08x} ; PC\n")
+
         file.write(f" dc.w ${self.assert_reg_sr.status_register:04x} ; SR={self.get_status_reg_string(self.assert_reg_sr.status_register)}\n")
         # file.write(f" dc.l ${self.assert_reg_pc:08x}\n")
         file.write("\n")
