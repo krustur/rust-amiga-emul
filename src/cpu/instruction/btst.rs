@@ -448,7 +448,7 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("BTST.B"),
-                String::from("#$07,($000A,A1) [10]")
+                String::from("#$07,($000A,A1)")
             ),
             debug_result
         );
@@ -477,7 +477,7 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("BTST.B"),
-                String::from("#$07,($000A,A1) [10]")
+                String::from("#$07,($000A,A1)")
             ),
             debug_result
         );

@@ -282,17 +282,17 @@ class TestCase(object):
             f"    cpu.register.set_all_a_reg_long_no_log({self.get_a_reg_string(self.arrange_reg_address.address_registers)});\n")
         file.write(f"    cpu.register.reg_pc = ProgramCounter::from_address(0x{self.arrange_code.address:08x});\n")
         file.write(f"    cpu.register.set_ssp_reg(0x01000400);\n")
-        if self.arrange_reg_sr is not None:
-            file.write(f"    cpu.register.reg_sr.set_sr_reg_flags_abcde(\n")
-            if len(self.arrange_reg_sr.status_flags) > 0:
-                for idx, stats_flag in enumerate(self.arrange_reg_sr.status_flags):
-                    if idx == 0:
-                        file.write(f"       {stats_flag}\n")
-                    else:
-                        file.write(f"       | {stats_flag}\n")
-            else:
-                file.write("       0x0000\n")
-            file.write(f"    );\n")
+        # if self.arrange_reg_sr is not None:
+        file.write(f"    cpu.register.reg_sr.set_sr_reg_flags_abcde(\n")
+        if len(self.arrange_reg_sr.status_flags) > 0:
+            for idx, stats_flag in enumerate(self.arrange_reg_sr.status_flags):
+                if idx == 0:
+                    file.write(f"       {stats_flag}\n")
+                else:
+                    file.write(f"       | {stats_flag}\n")
+        else:
+            file.write("       0x0000\n")
+        file.write(f"    );\n")
         file.write(f"\n")
 
         # Act/Assert - Disassembly
@@ -320,16 +320,16 @@ class TestCase(object):
             f"    cpu.register.assert_all_d_reg_long_no_log({self.get_d_reg_string(self.assert_reg_data.data_registers)});\n")
         file.write(
             f"    cpu.register.assert_all_a_reg_long_no_log({self.get_a_reg_string(self.assert_reg_address.address_registers)});\n")
-        if self.assert_reg_sr is not None:
-            file.write(f"    cpu.register.reg_sr.assert_sr_reg_flags_abcde(\n")
-            if len(self.assert_reg_sr.status_flags) > 0:
-                for idx, stats_flag in enumerate(self.assert_reg_sr.status_flags):
-                    if idx == 0:
-                        file.write(f"       {stats_flag}\n")
-                    else:
-                        file.write(f"       | {stats_flag}\n")
-            else:
-                file.write("       0x0000\n")
+        # if self.assert_reg_sr is not None:
+        file.write(f"    cpu.register.reg_sr.assert_sr_reg_flags_abcde(\n")
+        if len(self.assert_reg_sr.status_flags) > 0:
+            for idx, stats_flag in enumerate(self.assert_reg_sr.status_flags):
+                if idx == 0:
+                    file.write(f"       {stats_flag}\n")
+                else:
+                    file.write(f"       | {stats_flag}\n")
+        else:
+            file.write("       0x0000\n")
         file.write(f"    );\n")
         file.write(f"\n")
 
@@ -382,8 +382,8 @@ class TestCase(object):
             f" dc.l {self.get_d_reg_string_amiga(self.arrange_reg_data.data_registers)}\n")
         file.write(
             f" dc.l {self.get_a_reg_string_amiga(self.arrange_reg_address.address_registers)}\n")
-        if self.arrange_reg_sr is not None:
-            file.write(f" dc.w ${self.arrange_reg_sr.status_register:04x} ; {self.get_status_reg_string(self.arrange_reg_sr.status_register)}\n")
+        # if self.arrange_reg_sr is not None:
+        file.write(f" dc.w ${self.arrange_reg_sr.status_register:04x} ; {self.get_status_reg_string(self.arrange_reg_sr.status_register)}\n")
         file.write("\n")
 
         file.write(".arrange_code\n")
@@ -412,11 +412,14 @@ class TestCase(object):
             f" dc.l {self.get_d_reg_string_amiga(self.assert_reg_data.data_registers)}\n")
         file.write(
             f" dc.l {self.get_a_reg_string_amiga(self.assert_reg_address.address_registers)}\n")
-        if self.assert_reg_sr is not None:
-            file.write(f" dc.w ${self.assert_reg_sr.status_register:04x} ; {self.get_status_reg_string(self.assert_reg_sr.status_register)}\n")
+        # if self.assert_reg_sr is not None:
+        file.write(f" dc.l ${self.arrange_code.address + len(self.arrange_code.bytes):08x} ; PC\n")
+        file.write(f" dc.w ${self.assert_reg_sr.status_register:04x} ; SR={self.get_status_reg_string(self.assert_reg_sr.status_register)}\n")
+        # file.write(f" dc.l ${self.assert_reg_pc:08x}\n")
         file.write("\n")
 
         file.write(".assert_code\n")
+        # file.write(" even\n")
         if self.assert_code.source_code_operands is not None:
             file.write(f" {self.assert_code.source_code_instruction} {self.assert_code.source_code_operands}\n")
         else:

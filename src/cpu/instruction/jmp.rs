@@ -114,7 +114,7 @@ mod tests {
         // arrange
         let code = [0x4e, 0xd4].to_vec(); // JMP (A4)
         let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.set_a_reg_long_no_log(4, 0x11222211);
+        cpu.register.set_a_reg_long_no_log(4, 0x11222210);
         cpu.register.reg_sr.set_sr_reg_flags_abcde(
             STATUS_REGISTER_MASK_CARRY
                 | STATUS_REGISTER_MASK_EXTEND
@@ -136,7 +136,7 @@ mod tests {
         // act
         cpu.execute_next_instruction();
         // assert
-        assert_eq!(0x11222211, cpu.register.reg_pc.get_address());
+        assert_eq!(0x11222210, cpu.register.reg_pc.get_address());
         assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
         assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
         assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());

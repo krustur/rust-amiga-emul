@@ -118,7 +118,7 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("CLR.B"),
-                String::from("($000A,A3) [10]")
+                String::from("($000A,A3)")
             ),
             debug_result
         );
@@ -149,7 +149,7 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("CLR.W"),
-                String::from("($000A,A3) [10]")
+                String::from("($000A,A3)")
             ),
             debug_result
         );
@@ -180,7 +180,7 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("CLR.L"),
-                String::from("($000A,A3) [10]")
+                String::from("($000A,A3)")
             ),
             debug_result
         );

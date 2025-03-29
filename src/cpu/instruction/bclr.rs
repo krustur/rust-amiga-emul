@@ -479,7 +479,7 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("BCLR.B"),
-                String::from("#$01,($000E,A1) [14]")
+                String::from("#$01,($000E,A1)")
             ),
             debug_result
         );
@@ -509,7 +509,7 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("BCLR.B"),
-                String::from("#$01,($000E,A1) [14]")
+                String::from("#$01,($000E,A1)")
             ),
             debug_result
         );

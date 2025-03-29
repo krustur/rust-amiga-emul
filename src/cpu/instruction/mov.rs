@@ -393,7 +393,7 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("MOVE.L"),
-                String::from("($7FF0,A3) [32752],-(A4)")
+                String::from("($7FF0,A3),-(A4)")
             ),
             debug_result
         );
@@ -443,7 +443,7 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("MOVE.L"),
-                String::from("($80,A4,D0.L*8) [-128],($8010,A5) [-32752]")
+                String::from("($80,A4,D0.L*8),($8010,A5)")
             ),
             debug_result
         );
@@ -479,7 +479,7 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("MOVE.B"),
-                String::from("($9000).W [$FFFF9000],($7C,A6,D7.W) [124]")
+                String::from("($9000).W,($7C,A6,D7.W)")
             ),
             debug_result
         );
@@ -517,7 +517,7 @@ mod tests {
                 0xC00000,
                 0xC00008,
                 String::from("MOVE.B"),
-                String::from("($00C00008).L,($9000).W [$FFFF9000]")
+                String::from("($00C00008).L,($9000).W")
             ),
             debug_result
         );
@@ -558,7 +558,7 @@ mod tests {
                 0xD00000,
                 0xD00008,
                 String::from("MOVE.W"),
-                String::from("($8000,PC) [$00CF8002],($00D00008).L")
+                String::from("($8000,PC),($00D00008).L")
             ),
             debug_result
         );
@@ -594,7 +594,7 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("MOVE.L"),
-                String::from("($80,PC,D5.L*4) [$50BFFF82],D7")
+                String::from("($80,PC,D5.L*4),D7")
             ),
             debug_result
         );

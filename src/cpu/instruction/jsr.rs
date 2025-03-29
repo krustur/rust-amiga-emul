@@ -115,7 +115,7 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("JSR"),
-                String::from("($FD84,A6) [-636]")
+                String::from("($FD84,A6)")
             ),
             debug_result
         );

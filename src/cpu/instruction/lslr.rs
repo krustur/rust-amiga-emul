@@ -373,149 +373,149 @@ mod tests {
     // lsl/lsr register by immediate / XNZC / byte/word/long
 
     #[test]
-    // fn lsl_register_by_immediate_byte() {
-    //     // arrange
-    //     let code = [0xed, 0x08].to_vec(); // LSL.B #6,D0
-    //     let mut cpu = crate::instr_test_setup(code, None);
-    //     cpu.register.set_d_reg_long_no_log(0, 0x00000001);
-    //     // cpu.register.reg_sr.set_value(0x0000);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(
-    //         STATUS_REGISTER_MASK_CARRY
-    //             | STATUS_REGISTER_MASK_OVERFLOW
-    //             | STATUS_REGISTER_MASK_ZERO
-    //             | STATUS_REGISTER_MASK_NEGATIVE
-    //             | STATUS_REGISTER_MASK_EXTEND,
-    //     );
-    //
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly_no_log();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("LSL.B"),
-    //             String::from("#$06,D0"),
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x00000040, cpu.register.get_d_reg_long_no_log(0));
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    fn lsl_register_by_immediate_byte() {
+        // arrange
+        let code = [0xed, 0x08].to_vec(); // LSL.B #6,D0
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long_no_log(0, 0x00000001);
+        // cpu.register.reg_sr.set_value(0x0000);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
 
-    // #[test]
-    // fn lsl_register_by_immediate_byte_negative() {
-    //     // arrange
-    //     let code = [0xed, 0x08].to_vec(); // LSL.B #6,D0
-    //     let mut cpu = crate::instr_test_setup(code, None);
-    //     cpu.register.set_d_reg_long_no_log(0, 0x00000003);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(
-    //         STATUS_REGISTER_MASK_CARRY
-    //             | STATUS_REGISTER_MASK_OVERFLOW
-    //             | STATUS_REGISTER_MASK_ZERO
-    //             | STATUS_REGISTER_MASK_NEGATIVE
-    //             | STATUS_REGISTER_MASK_EXTEND,
-    //     );
-    //
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly_no_log();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("LSL.B"),
-    //             String::from("#$06,D0"),
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x000000c0, cpu.register.get_d_reg_long_no_log(0));
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("LSL.B"),
+                String::from("#$06,D0"),
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00000040, cpu.register.get_d_reg_long_no_log(0));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
-    // #[test]
-    // fn lsl_register_by_immediate_byte_zero() {
-    //     // arrange
-    //     let code = [0xed, 0x08].to_vec(); // LSL.B #6,D0
-    //     let mut cpu = crate::instr_test_setup(code, None);
-    //     cpu.register.set_d_reg_long_no_log(0, 0x00000008);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(
-    //         STATUS_REGISTER_MASK_CARRY
-    //             | STATUS_REGISTER_MASK_OVERFLOW
-    //             | STATUS_REGISTER_MASK_ZERO
-    //             | STATUS_REGISTER_MASK_NEGATIVE
-    //             | STATUS_REGISTER_MASK_EXTEND,
-    //     );
-    //
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly_no_log();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("LSL.B"),
-    //             String::from("#$06,D0"),
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x00000000, cpu.register.get_d_reg_long_no_log(0));
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+    #[test]
+    fn lsl_register_by_immediate_byte_negative() {
+        // arrange
+        let code = [0xed, 0x08].to_vec(); // LSL.B #6,D0
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long_no_log(0, 0x00000003);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
 
-    // #[test]
-    // fn lsl_register_by_immediate_byte_extend_carry() {
-    //     // arrange
-    //     let code = [0xe3, 0x0f].to_vec(); // LSL.B #1,D7
-    //     let mut cpu = crate::instr_test_setup(code, None);
-    //     cpu.register.set_d_reg_long_no_log(7, 0x00000081);
-    //     cpu.register.reg_sr.set_sr_reg_flags_abcde(
-    //         STATUS_REGISTER_MASK_CARRY
-    //             | STATUS_REGISTER_MASK_OVERFLOW
-    //             | STATUS_REGISTER_MASK_ZERO
-    //             | STATUS_REGISTER_MASK_NEGATIVE
-    //             | STATUS_REGISTER_MASK_EXTEND,
-    //     );
-    //
-    //     // act assert - debug
-    //     let debug_result = cpu.get_next_disassembly_no_log();
-    //     assert_eq!(
-    //         GetDisassemblyResult::from_address_and_address_next(
-    //             0xC00000,
-    //             0xC00002,
-    //             String::from("LSL.B"),
-    //             String::from("#$01,D7"),
-    //         ),
-    //         debug_result
-    //     );
-    //     // act
-    //     cpu.execute_next_instruction();
-    //     // assert
-    //     assert_eq!(0x00000002, cpu.register.get_d_reg_long_no_log(7));
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
-    //     assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
-    //     assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
-    // }
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("LSL.B"),
+                String::from("#$06,D0"),
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x000000c0, cpu.register.get_d_reg_long_no_log(0));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
+    fn lsl_register_by_immediate_byte_zero() {
+        // arrange
+        let code = [0xed, 0x08].to_vec(); // LSL.B #6,D0
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long_no_log(0, 0x00000008);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("LSL.B"),
+                String::from("#$06,D0"),
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00000000, cpu.register.get_d_reg_long_no_log(0));
+        assert_eq!(false, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_extend_set());
+    }
+
+    #[test]
+    fn lsl_register_by_immediate_byte_extend_carry() {
+        // arrange
+        let code = [0xe3, 0x0f].to_vec(); // LSL.B #1,D7
+        let mut cpu = crate::instr_test_setup(code, None);
+        cpu.register.set_d_reg_long_no_log(7, 0x00000081);
+        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+            STATUS_REGISTER_MASK_CARRY
+                | STATUS_REGISTER_MASK_OVERFLOW
+                | STATUS_REGISTER_MASK_ZERO
+                | STATUS_REGISTER_MASK_NEGATIVE
+                | STATUS_REGISTER_MASK_EXTEND,
+        );
+
+        // act assert - debug
+        let debug_result = cpu.get_next_disassembly_no_log();
+        assert_eq!(
+            GetDisassemblyResult::from_address_and_address_next(
+                0xC00000,
+                0xC00002,
+                String::from("LSL.B"),
+                String::from("#$01,D7"),
+            ),
+            debug_result
+        );
+        // act
+        cpu.execute_next_instruction();
+        // assert
+        assert_eq!(0x00000002, cpu.register.get_d_reg_long_no_log(7));
+        assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(false, cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+    }
 
     #[test]
     fn lsl_register_by_immediate_word() {

@@ -224,7 +224,6 @@ pub fn get_disassembly<'a>(
         _ => panic!("Unhandled ea_opmode: {}", opmode),
     }
 }
-
 #[cfg(test)]
 mod tests {
     use crate::{
@@ -460,7 +459,7 @@ mod tests {
     #[test]
     fn data_register_direct_to_data_register_direct_long() {
         // arrange
-        let code = [0xde, 0x80].to_vec(); // ADD.W D0,D7
+        let code = [0xde, 0x80].to_vec(); // ADD.L D0,D7
         let mut cpu = crate::instr_test_setup(code, None);
         cpu.register.set_d_reg_long_no_log(0, 0x23451234);
         cpu.register.set_d_reg_long_no_log(7, 0x54324321);

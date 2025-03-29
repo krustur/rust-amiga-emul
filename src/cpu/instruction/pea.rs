@@ -97,7 +97,7 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("PEA"),
-                String::from("($0018,PC) [$00C0001A]")
+                String::from("($0018,PC)")
             ),
             debug_result
         );
