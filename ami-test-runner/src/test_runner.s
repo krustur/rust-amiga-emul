@@ -610,10 +610,12 @@ run_test
 	
 	add.l	#1,test_count_ok
 
-	bsr	log_str_ok
-	move.l	(a5),a0
-	bsr	log_strz
-	bsr	log_str_eol
+    ; This code logs "  ok ...."
+
+	; bsr	log_str_ok
+	; move.l	(a5),a0
+	; bsr	log_strz
+	; bsr	log_str_eol
 
 	rte
 
