@@ -13,6 +13,8 @@ use crate::{
 // step cc: DONE
 // get_disassembly: DONE
 
+// TODO: bug fix, use X instead of C !!!
+
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
 

@@ -659,7 +659,7 @@ def get_pc_register_line(line_stripped):
 bytes_regex = "([0-9a-fA-F]{2})"
 words_regex = "([0-9a-fA-F]{4})"
 longs_regex = "([0-9a-fA-F]{8})"
-status_flags_regex = "\\s+[-E][-N][-Z][-O][-C]$"
+status_flags_regex = "\\s+[-X][-N][-Z][-V][-C]$"
 
 
 def get_bytes(line_stripped):
@@ -710,14 +710,15 @@ def get_status_flags(line_stripped):
         return None
     real_status_flags = []
     for status_flag in status_flags.group(0):
+        # XNZVC
         match status_flag:
-            case 'E':
+            case 'X':
                 real_status_flags.append("STATUS_REGISTER_MASK_EXTEND")
             case 'N':
                 real_status_flags.append("STATUS_REGISTER_MASK_NEGATIVE")
             case 'Z':
                 real_status_flags.append("STATUS_REGISTER_MASK_ZERO")
-            case 'O':
+            case 'V':
                 real_status_flags.append("STATUS_REGISTER_MASK_OVERFLOW")
             case 'C':
                 real_status_flags.append("STATUS_REGISTER_MASK_CARRY")
@@ -787,12 +788,12 @@ def parse_line(line_number, line_raw) -> ParsedLine:
             print(f"{line_number:5d}: {line_raw}")
             print(f"Unable to parse content of status flags.")
             print(
-                f" Expected 5 chars signalling SR flags in correct order, or dash for zero SR flag. Order is ENZOC.")
+                f" Expected 5 chars signalling SR flags in correct order, or dash for zero SR flag. Order is XNZVC.")
         line = ParsedLine(line_number=line_number, line_raw=line_raw, status_flags=status_flags)
     elif get_status_register_line(line_stripped):
         words = get_words(line_stripped)
         if len(words) != 1:
-            print(f"{line_number:5d}: {line_raw}")
+            print(f"{line_number:5d}: \"{line_raw}\"")
             print(f"Unable to parse content of status register.")
             print(
                 f" Expected 1 16-bit integer hexadecimal value (without $ or 0x prefixes). Found {len(words)} integers: {words}")
@@ -1078,7 +1079,7 @@ def write_rust_mod_file(output_path_to_rust_test_mod_file: str, test_sets: list[
     for test_set in test_sets:
         rust_test_file_name = os.path.splitext(os.path.basename(test_set.test_spec_file_path))[0]
         file.write("pub mod " + rust_test_file_name + ";\n")
-        file.write("\n")
+    file.write("\n")
 
     # Close rust test file
     file.close()

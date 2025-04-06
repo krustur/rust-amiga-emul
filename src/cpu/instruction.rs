@@ -14,6 +14,7 @@ pub mod addx;
 pub mod and;
 pub mod andi;
 pub mod andi_to_sr;
+pub mod aslr;
 pub mod bcc;
 pub mod bclr;
 pub mod bra;

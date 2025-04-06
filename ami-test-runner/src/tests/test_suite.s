@@ -60,6 +60,73 @@ test_suite
 	dc.l	address_register_word_with_extend_set
 	dc.l	address_register_long_with_extend_clear
 	dc.l	address_register_long_with_extend_set
+	dc.l	asl_b_register_by_immediate_cx_set
+	dc.l	asl_b_register_by_immediate_cx_clear
+	dc.l	asl_b_register_by_immediate_n_set
+	dc.l	asl_b_register_by_immediate_n_clear
+	dc.l	asl_b_register_by_immediate_z_set
+	dc.l	asl_b_register_by_immediate_z_clear
+	dc.l	asl_b_register_by_immediate_v_set
+	dc.l	asl_b_register_by_immediate_v_clear
+	dc.l	asr_b_register_by_immediate_cx_set
+	dc.l	asr_b_register_by_immediate_cx_clear
+	dc.l	asr_b_register_by_immediate_n_set
+	dc.l	asr_b_register_by_immediate_n_clear
+	dc.l	asr_b_register_by_immediate_z_set
+	dc.l	asr_b_register_by_immediate_z_clear
+	dc.l	asr_b_register_by_immediate_v_clear
+	dc.l	asl_w_register_by_immediate_cx_set
+	dc.l	asl_w_register_by_immediate_cx_clear
+	dc.l	asl_w_register_by_immediate_n_set
+	dc.l	asl_w_register_by_immediate_n_clear
+	dc.l	asl_w_register_by_immediate_z_set
+	dc.l	asl_w_register_by_immediate_z_clear
+	dc.l	asl_w_register_by_immediate_v_set
+	dc.l	asl_w_register_by_immediate_v_clear
+	dc.l	asr_w_register_by_immediate_cx_set
+	dc.l	asr_w_register_by_immediate_cx_clear
+	dc.l	asr_w_register_by_immediate_n_set
+	dc.l	asr_w_register_by_immediate_n_clear
+	dc.l	asr_w_register_by_immediate_z_set
+	dc.l	asr_w_register_by_immediate_z_clear
+	dc.l	asr_w_register_by_immediate_v_clear
+	dc.l	asl_l_register_by_immediate_cx_set
+	dc.l	asl_l_register_by_immediate_cx_clear
+	dc.l	asl_l_register_by_immediate_n_set
+	dc.l	asl_l_register_by_immediate_n_clear
+	dc.l	asl_l_register_by_immediate_z_set
+	dc.l	asl_l_register_by_immediate_z_clear
+	dc.l	asl_l_register_by_immediate_v_set
+	dc.l	asl_l_register_by_immediate_v_clear
+	dc.l	asr_l_register_by_immediate_cx_set
+	dc.l	asr_l_register_by_immediate_cx_clear
+	dc.l	asr_l_register_by_immediate_n_set
+	dc.l	asr_l_register_by_immediate_n_clear
+	dc.l	asr_l_register_by_immediate_z_set
+	dc.l	asr_l_register_by_immediate_z_clear
+	dc.l	asr_l_register_by_immediate_v_clear
+	dc.l	asl_b_register_by_register_cx_shift_0_c_clear_x_unaffected_still_set
+	dc.l	asl_b_register_by_register_cx_shift_0_c_clear_x_unaffected_still_clear
+	dc.l	asr_b_register_by_register_cx_shift_0_c_clear_x_unaffected_still_set
+	dc.l	asr_b_register_by_register_cx_shift_0_c_clear_x_unaffected_still_clear
+	dc.l	asl_w_register_by_register_cx_shift_0_c_clear_x_unaffected_still_set
+	dc.l	asl_w_register_by_register_cx_shift_0_c_clear_x_unaffected_still_clear
+	dc.l	asr_w_register_by_register_cx_shift_0_c_clear_x_unaffected_still_set
+	dc.l	asr_w_register_by_register_cx_shift_0_c_clear_x_unaffected_still_clear
+	dc.l	asl_l_register_by_register_cx_shift_0_c_clear_x_unaffected_still_set
+	dc.l	asl_l_register_by_register_cx_shift_0_c_clear_x_unaffected_still_clear
+	dc.l	asr_l_register_by_register_cx_shift_0_c_clear_x_unaffected_still_set
+	dc.l	asr_l_register_by_register_cx_shift_0_c_clear_x_unaffected_still_clear
+	dc.l	asl_b_register_by_register_big_shift
+	dc.l	asr_b_register_by_register_big_shift
+	dc.l	asl_w_register_by_register_big_shift
+	dc.l	asr_w_register_by_register_big_shift
+	dc.l	asl_l_register_by_register_big_shift
+	dc.l	asr_l_register_by_register_big_shift
+	dc.l	asl_w_memory_by_1_areg_indirect_with_predecrement
+	dc.l	asl_w_memory_by_1_areg_indirect_with_displacement
+	dc.l	asr_w_memory_by_1_areg_indirect_with_postincrement
+	dc.l	asr_w_memory_by_1_areg_indirect
 	dc.l	lsl_b_register_by_immediate
 	dc.l	lsl_register_by_immediate_byte_negative
 	dc.l	lsl_register_by_immediate_byte_zero
@@ -72,4 +139,5 @@ test_suite
 	include	"addi.s"
 	include	"addq.s"
 	include	"addx.s"
+	include	"aslr.s"
 	include	"lslr.s"
