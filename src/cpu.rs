@@ -1920,14 +1920,18 @@ impl Cpu {
         pc.set_long(vector_address);
     }
 
-    pub fn execute_next_instruction(self: &mut Cpu) {
+    pub fn execute_next_instruction(self: &mut Cpu, mem: &mut Mem) {
         let mut step_log = StepLog::new();
-        self.execute_next_instruction_step_log(&mut step_log)
+        self.execute_next_instruction_step_log(mem, &mut step_log)
     }
 
-    pub fn execute_next_instruction_step_log(self: &mut Cpu, step_log: &mut StepLog) {
+    pub fn execute_next_instruction_step_log(
+        self: &mut Cpu,
+        mem: &mut Mem,
+        step_log: &mut StepLog,
+    ) {
         let mut pc = self.register.reg_pc.clone();
-        let instr_word = pc.fetch_next_word(&self.memory);
+        let instr_word = pc.fetch_next_word(mem);
 
         let instruction_pos = self
             .instructions
@@ -1945,22 +1949,17 @@ impl Cpu {
             }
             Some(instruction_pos) => {
                 let instruction = &self.instructions[instruction_pos];
-                let step_result = (instruction.step)(
-                    instr_word,
-                    &mut pc,
-                    &mut self.register,
-                    &mut self.memory,
-                    step_log,
-                );
+                let step_result =
+                    (instruction.step)(instr_word, &mut pc, &mut self.register, mem, step_log);
                 match step_result {
                     Ok(step_result) => self.register.reg_pc = pc.get_step_next_pc(),
                     Err(step_error) => match step_error {
                         StepError::IllegalInstruction => {
-                            self.exception(&mut pc, step_log, 4);
+                            self.exception(&mut pc, mem, step_log, 4);
                             self.register.reg_pc = pc.get_step_next_pc();
                         }
                         StepError::PriviliegeViolation => {
-                            self.exception(&mut pc, step_log, 8);
+                            self.exception(&mut pc, mem, step_log, 8);
                             self.register.reg_pc = pc.get_step_next_pc();
                         }
                         _ => {
@@ -1981,22 +1980,27 @@ impl Cpu {
         };
     }
 
-    pub fn get_next_disassembly_no_log(self: &mut Cpu) -> GetDisassemblyResult {
-        self.get_next_disassembly(&mut StepLog::new())
+    pub fn get_next_disassembly_no_log(self: &mut Cpu, mem: &mut Mem) -> GetDisassemblyResult {
+        self.get_next_disassembly(mem, &mut StepLog::new())
     }
 
-    pub fn get_next_disassembly(self: &mut Cpu, step_log: &mut StepLog) -> GetDisassemblyResult {
+    pub fn get_next_disassembly(
+        self: &mut Cpu,
+        mem: &mut Mem,
+        step_log: &mut StepLog,
+    ) -> GetDisassemblyResult {
         let get_disassembly_result =
-            self.get_disassembly(&mut self.register.reg_pc.clone(), step_log);
+            self.get_disassembly(&mut self.register.reg_pc.clone(), mem, step_log);
         get_disassembly_result
     }
 
     pub fn get_disassembly(
         self: &mut Cpu,
         pc: &mut ProgramCounter,
+        mem: &mut Mem,
         step_log: &mut StepLog,
     ) -> GetDisassemblyResult {
-        let instr_word = pc.fetch_next_word(&self.memory);
+        let instr_word = pc.fetch_next_word(mem);
 
         let instruction_pos = self
             .instructions
@@ -2011,7 +2015,7 @@ impl Cpu {
                     instr_word,
                     pc,
                     &mut self.register,
-                    &mut self.memory,
+                    mem,
                     step_log,
                 );
 
@@ -2036,7 +2040,8 @@ impl Cpu {
     }
 
     pub fn print_disassembly(
-        self: &mut Cpu,
+        self: &Cpu,
+        mem: &Mem,
         disassembly_result: &GetDisassemblyResult,
         line_feed: bool,
     ) {
@@ -2049,7 +2054,7 @@ impl Cpu {
         print!("${:08X} ", instr_address);
         for i in (instr_address..instr_address + 8).step_by(2) {
             if i < next_instr_address {
-                let op_mem = self.memory.get_word_no_log(i);
+                let op_mem = mem.get_word_no_log(i);
                 print!("{:04X} ", op_mem);
             } else {
                 print!("     ");
@@ -2886,9 +2891,9 @@ mod tests {
     fn declare_word_when_get_disassembly_for_unknown_instruction_word() {
         // arrange
         let code = [0x49, 0x54].to_vec(); // DC.W $4954
-        let mut cpu = crate::instr_test_setup(code, None);
+        let mut mm = crate::tests::instr_test_setup(code, None);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly_no_log();
+        let debug_result = mm.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
