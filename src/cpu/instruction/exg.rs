@@ -120,10 +120,10 @@ mod tests {
     fn exg_address_registers() {
         // arrange
         let code = [0xcb, 0x4e].to_vec(); // EXG A5,A6
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.set_a_reg_long_no_log(5, 0xa5123456);
-        cpu.register.set_a_reg_long_no_log(6, 0xa6789abc);
-        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+        let mut mm = crate::tests::instr_test_setup(code, None);
+        mm.cpu.register.set_a_reg_long_no_log(5, 0xa5123456);
+        mm.cpu.register.set_a_reg_long_no_log(6, 0xa6789abc);
+        mm.cpu.register.reg_sr.set_sr_reg_flags_abcde(
             STATUS_REGISTER_MASK_ZERO
                 | STATUS_REGISTER_MASK_NEGATIVE
                 | STATUS_REGISTER_MASK_EXTEND
@@ -131,7 +131,7 @@ mod tests {
                 | STATUS_REGISTER_MASK_CARRY,
         );
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly_no_log();
+        let debug_result = mm.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -142,25 +142,25 @@ mod tests {
             debug_result
         );
         // act
-        cpu.execute_next_instruction();
+        mm.step();
         // assert
-        assert_eq!(0xa6789abc, cpu.register.get_a_reg_long_no_log(5));
-        assert_eq!(0xa5123456, cpu.register.get_a_reg_long_no_log(6));
-        assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
-        assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
-        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
-        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
-        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+        assert_eq!(0xa6789abc, mm.cpu.register.get_a_reg_long_no_log(5));
+        assert_eq!(0xa5123456, mm.cpu.register.get_a_reg_long_no_log(6));
+        assert_eq!(true, mm.cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(true, mm.cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, mm.cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(true, mm.cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, mm.cpu.register.reg_sr.is_sr_extend_set());
     }
 
     #[test]
     fn exg_data_registers() {
         // arrange
         let code = [0xc1, 0x47].to_vec(); // EXG D0,D7
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.set_d_reg_long_no_log(0, 0xd0123456);
-        cpu.register.set_d_reg_long_no_log(7, 0xd7789abc);
-        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+        let mut mm = crate::tests::instr_test_setup(code, None);
+        mm.cpu.register.set_d_reg_long_no_log(0, 0xd0123456);
+        mm.cpu.register.set_d_reg_long_no_log(7, 0xd7789abc);
+        mm.cpu.register.reg_sr.set_sr_reg_flags_abcde(
             STATUS_REGISTER_MASK_ZERO
                 | STATUS_REGISTER_MASK_NEGATIVE
                 | STATUS_REGISTER_MASK_EXTEND
@@ -168,7 +168,7 @@ mod tests {
                 | STATUS_REGISTER_MASK_CARRY,
         );
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly_no_log();
+        let debug_result = mm.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -179,25 +179,25 @@ mod tests {
             debug_result
         );
         // act
-        cpu.execute_next_instruction();
+        mm.step();
         // assert
-        assert_eq!(0xd7789abc, cpu.register.get_d_reg_long_no_log(0));
-        assert_eq!(0xd0123456, cpu.register.get_d_reg_long_no_log(7));
-        assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
-        assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
-        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
-        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
-        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+        assert_eq!(0xd7789abc, mm.cpu.register.get_d_reg_long_no_log(0));
+        assert_eq!(0xd0123456, mm.cpu.register.get_d_reg_long_no_log(7));
+        assert_eq!(true, mm.cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(true, mm.cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, mm.cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(true, mm.cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, mm.cpu.register.reg_sr.is_sr_extend_set());
     }
 
     #[test]
     fn exg_data_and_address_registers() {
         // arrange
         let code = [0xc7, 0x8e].to_vec(); // EXG D3,A6
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.set_d_reg_long_no_log(3, 0xd3123456);
-        cpu.register.set_a_reg_long_no_log(6, 0xa6789abc);
-        cpu.register.reg_sr.set_sr_reg_flags_abcde(
+        let mut mm = crate::tests::instr_test_setup(code, None);
+        mm.cpu.register.set_d_reg_long_no_log(3, 0xd3123456);
+        mm.cpu.register.set_a_reg_long_no_log(6, 0xa6789abc);
+        mm.cpu.register.reg_sr.set_sr_reg_flags_abcde(
             STATUS_REGISTER_MASK_ZERO
                 | STATUS_REGISTER_MASK_NEGATIVE
                 | STATUS_REGISTER_MASK_EXTEND
@@ -205,7 +205,7 @@ mod tests {
                 | STATUS_REGISTER_MASK_CARRY,
         );
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly_no_log();
+        let debug_result = mm.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -216,14 +216,14 @@ mod tests {
             debug_result
         );
         // act
-        cpu.execute_next_instruction();
+        mm.step();
         // assert
-        assert_eq!(0xa6789abc, cpu.register.get_d_reg_long_no_log(3));
-        assert_eq!(0xd3123456, cpu.register.get_a_reg_long_no_log(6));
-        assert_eq!(true, cpu.register.reg_sr.is_sr_carry_set());
-        assert_eq!(true, cpu.register.reg_sr.is_sr_overflow_set());
-        assert_eq!(true, cpu.register.reg_sr.is_sr_zero_set());
-        assert_eq!(true, cpu.register.reg_sr.is_sr_negative_set());
-        assert_eq!(true, cpu.register.reg_sr.is_sr_extend_set());
+        assert_eq!(0xa6789abc, mm.cpu.register.get_d_reg_long_no_log(3));
+        assert_eq!(0xd3123456, mm.cpu.register.get_a_reg_long_no_log(6));
+        assert_eq!(true, mm.cpu.register.reg_sr.is_sr_carry_set());
+        assert_eq!(true, mm.cpu.register.reg_sr.is_sr_overflow_set());
+        assert_eq!(true, mm.cpu.register.reg_sr.is_sr_zero_set());
+        assert_eq!(true, mm.cpu.register.reg_sr.is_sr_negative_set());
+        assert_eq!(true, mm.cpu.register.reg_sr.is_sr_extend_set());
     }
 }

@@ -96,11 +96,11 @@ mod tests {
     fn step_bsr_byte() {
         // arrange
         let code = [0x61, 0x02].to_vec(); // BSR.B $02
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
+        let mut mm = crate::tests::instr_test_setup(code, None);
+        mm.cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
 
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly_no_log();
+        let debug_result = mm.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -111,24 +111,24 @@ mod tests {
             debug_result
         );
         // act
-        cpu.execute_next_instruction();
+        mm.step();
         // assert
-        assert_eq!(0xC00004, cpu.register.reg_pc.get_address());
-        assert_eq!(0x10003fc, cpu.register.get_a_reg_long_no_log(7));
-        assert_eq!(0xC00002, cpu.memory.get_long_no_log(0x10003fc));
+        assert_eq!(0xC00004, mm.cpu.register.reg_pc.get_address());
+        assert_eq!(0x10003fc, mm.cpu.register.get_a_reg_long_no_log(7));
+        assert_eq!(0xC00002, mm.mem.get_long_no_log(0x10003fc));
     }
 
     #[test]
     fn step_bsr_byte_negative() {
         // arrange
         let code = [0x61, 0xfc].to_vec(); // BSR.B $FC
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
+        let mut mm = crate::tests::instr_test_setup(code, None);
+        mm.cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
 
-        println!("sp: ${:08X}", cpu.register.get_a_reg_long_no_log(7));
+        println!("sp: ${:08X}", mm.cpu.register.get_a_reg_long_no_log(7));
 
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly_no_log();
+        let debug_result = mm.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -139,11 +139,11 @@ mod tests {
             debug_result
         );
         // act
-        cpu.execute_next_instruction();
+        mm.step();
         // assert
-        assert_eq!(0xBFFFFE, cpu.register.reg_pc.get_address());
-        assert_eq!(0x10003fc, cpu.register.get_a_reg_long_no_log(7));
-        assert_eq!(0xC00002, cpu.memory.get_long_no_log(0x10003fc));
+        assert_eq!(0xBFFFFE, mm.cpu.register.reg_pc.get_address());
+        assert_eq!(0x10003fc, mm.cpu.register.get_a_reg_long_no_log(7));
+        assert_eq!(0xC00002, mm.mem.get_long_no_log(0x10003fc));
     }
 
     // word
@@ -152,13 +152,13 @@ mod tests {
     fn step_bsr_word() {
         // arrange
         let code = [0x61, 0x00, 0x00, 0x04].to_vec(); // BSR.W $0004
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
+        let mut mm = crate::tests::instr_test_setup(code, None);
+        mm.cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
 
-        println!("sp: ${:08X}", cpu.register.get_a_reg_long_no_log(7));
+        println!("sp: ${:08X}", mm.cpu.register.get_a_reg_long_no_log(7));
 
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly_no_log();
+        let debug_result = mm.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -169,24 +169,24 @@ mod tests {
             debug_result
         );
         // act
-        cpu.execute_next_instruction();
+        mm.step();
         // assert
-        assert_eq!(0xC00006, cpu.register.reg_pc.get_address());
-        assert_eq!(0x10003fc, cpu.register.get_a_reg_long_no_log(7));
-        assert_eq!(0xC00004, cpu.memory.get_long_no_log(0x10003fc));
+        assert_eq!(0xC00006, mm.cpu.register.reg_pc.get_address());
+        assert_eq!(0x10003fc, mm.cpu.register.get_a_reg_long_no_log(7));
+        assert_eq!(0xC00004, mm.mem.get_long_no_log(0x10003fc));
     }
 
     #[test]
     fn step_bsr_word_negative() {
         // arrange
         let code = [0x61, 0x00, 0xff, 0xfc].to_vec(); // BSR.W $FFFC
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
+        let mut mm = crate::tests::instr_test_setup(code, None);
+        mm.cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
 
-        println!("sp: ${:08X}", cpu.register.get_a_reg_long_no_log(7));
+        println!("sp: ${:08X}", mm.cpu.register.get_a_reg_long_no_log(7));
 
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly_no_log();
+        let debug_result = mm.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -197,11 +197,11 @@ mod tests {
             debug_result
         );
         // act
-        cpu.execute_next_instruction();
+        mm.step();
         // assert
-        assert_eq!(0xBFFFFE, cpu.register.reg_pc.get_address());
-        assert_eq!(0x10003fc, cpu.register.get_a_reg_long_no_log(7));
-        assert_eq!(0xC00004, cpu.memory.get_long_no_log(0x10003fc));
+        assert_eq!(0xBFFFFE, mm.cpu.register.reg_pc.get_address());
+        assert_eq!(0x10003fc, mm.cpu.register.get_a_reg_long_no_log(7));
+        assert_eq!(0xC00004, mm.mem.get_long_no_log(0x10003fc));
     }
 
     // long
@@ -210,13 +210,13 @@ mod tests {
     fn step_bsr_long() {
         // arrange
         let code = [0x61, 0xff, 0x00, 0x00, 0x00, 0x06].to_vec(); // BSR.L $00000006
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
+        let mut mm = crate::tests::instr_test_setup(code, None);
+        mm.cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
 
-        println!("sp: ${:08X}", cpu.register.get_a_reg_long_no_log(7));
+        println!("sp: ${:08X}", mm.cpu.register.get_a_reg_long_no_log(7));
 
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly_no_log();
+        let debug_result = mm.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -227,24 +227,24 @@ mod tests {
             debug_result
         );
         // act
-        cpu.execute_next_instruction();
+        mm.step();
         // assert
-        assert_eq!(0xC00008, cpu.register.reg_pc.get_address());
-        assert_eq!(0x10003fc, cpu.register.get_a_reg_long_no_log(7));
-        assert_eq!(0xC00006, cpu.memory.get_long_no_log(0x10003fc));
+        assert_eq!(0xC00008, mm.cpu.register.reg_pc.get_address());
+        assert_eq!(0x10003fc, mm.cpu.register.get_a_reg_long_no_log(7));
+        assert_eq!(0xC00006, mm.mem.get_long_no_log(0x10003fc));
     }
 
     #[test]
     fn step_bsr_long_negative() {
         // arrange
         let code = [0x61, 0xff, 0xff, 0xff, 0xff, 0xfc].to_vec(); // BSR.L $FFFFFFFC
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
+        let mut mm = crate::tests::instr_test_setup(code, None);
+        mm.cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
 
-        println!("sp: ${:08X}", cpu.register.get_a_reg_long_no_log(7));
+        println!("sp: ${:08X}", mm.cpu.register.get_a_reg_long_no_log(7));
 
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly_no_log();
+        let debug_result = mm.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -255,10 +255,10 @@ mod tests {
             debug_result
         );
         // act
-        cpu.execute_next_instruction();
+        mm.step();
         // assert
-        assert_eq!(0xBFFFFE, cpu.register.reg_pc.get_address());
-        assert_eq!(0x10003fc, cpu.register.get_a_reg_long_no_log(7));
-        assert_eq!(0xC00006, cpu.memory.get_long_no_log(0x10003fc));
+        assert_eq!(0xBFFFFE, mm.cpu.register.reg_pc.get_address());
+        assert_eq!(0x10003fc, mm.cpu.register.get_a_reg_long_no_log(7));
+        assert_eq!(0xC00006, mm.mem.get_long_no_log(0x10003fc));
     }
 }

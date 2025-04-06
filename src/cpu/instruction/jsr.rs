@@ -77,12 +77,12 @@ mod tests {
     fn jsr_address_register_indirect() {
         // arrange
         let code = [0x4e, 0x90].to_vec(); // JSR (A0)
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.set_a_reg_long_no_log(0, 0x00c0c0f0);
-        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
+        let mut mm = crate::tests::instr_test_setup(code, None);
+        mm.cpu.register.set_a_reg_long_no_log(0, 0x00c0c0f0);
+        mm.cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
 
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly_no_log();
+        let debug_result = mm.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -93,23 +93,23 @@ mod tests {
             debug_result
         );
         // act
-        cpu.execute_next_instruction();
+        mm.step();
         // assert
-        assert_eq!(0x00c0c0f0, cpu.register.reg_pc.get_address());
-        assert_eq!(0x10003fc, cpu.register.get_a_reg_long_no_log(7));
-        assert_eq!(0xC00002, cpu.memory.get_long_no_log(0x10003fc));
+        assert_eq!(0x00c0c0f0, mm.cpu.register.reg_pc.get_address());
+        assert_eq!(0x10003fc, mm.cpu.register.get_a_reg_long_no_log(7));
+        assert_eq!(0xC00002, mm.mem.get_long_no_log(0x10003fc));
     }
 
     #[test]
     fn jsr_address_register_indirect_witrh() {
         // arrange
         let code = [0x4e, 0xae, 0xfd, 0x84].to_vec(); // JSR -636(A6)
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.set_a_reg_long_no_log(6, 0x00c0c0f0);
-        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
+        let mut mm = crate::tests::instr_test_setup(code, None);
+        mm.cpu.register.set_a_reg_long_no_log(6, 0x00c0c0f0);
+        mm.cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
 
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly_no_log();
+        let debug_result = mm.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -120,10 +120,10 @@ mod tests {
             debug_result
         );
         // act
-        cpu.execute_next_instruction();
+        mm.step();
         // assert
-        assert_eq!(0x00C0BE74, cpu.register.reg_pc.get_address());
-        assert_eq!(0x10003fc, cpu.register.get_a_reg_long_no_log(7));
-        assert_eq!(0xC00004, cpu.memory.get_long_no_log(0x10003fc));
+        assert_eq!(0x00C0BE74, mm.cpu.register.reg_pc.get_address());
+        assert_eq!(0x10003fc, mm.cpu.register.get_a_reg_long_no_log(7));
+        assert_eq!(0xC00004, mm.mem.get_long_no_log(0x10003fc));
     }
 }

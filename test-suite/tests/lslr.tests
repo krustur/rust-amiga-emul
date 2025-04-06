@@ -1,4 +1,5 @@
 ; LSLR tests
+; TODO: Make PAR with Rust manual tests
 
 :LSL_B_REGISTER_BY_IMMEDIATE
 

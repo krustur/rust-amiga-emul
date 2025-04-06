@@ -89,13 +89,13 @@ mod tests {
     fn dbcc_cc_when_carry_set_and_reg_greater_than_zero_decrease_reg_and_branch() {
         // arrange
         let code = [0x54, 0xc8, 0x00, 0x04].to_vec(); // DBCC D0,$0004
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.set_d_reg_long_no_log(0, 0xffff0001);
-        cpu.register
+        let mut mm = crate::tests::instr_test_setup(code, None);
+        mm.cpu.register.set_d_reg_long_no_log(0, 0xffff0001);
+        mm.cpu.register
             .reg_sr
             .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_CARRY);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly_no_log();
+        let debug_result = mm.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -106,23 +106,23 @@ mod tests {
             debug_result
         );
         // act
-        cpu.execute_next_instruction();
+        mm.step();
         // assert
-        assert_eq!(0xffff0000, cpu.register.get_d_reg_long_no_log(0));
-        assert_eq!(0xC00006, cpu.register.reg_pc.get_address());
+        assert_eq!(0xffff0000, mm.cpu.register.get_d_reg_long_no_log(0));
+        assert_eq!(0xC00006, mm.cpu.register.reg_pc.get_address());
     }
 
     #[test]
     fn dbcc_cc_when_carry_set_and_reg_equal_to_zero_decrease_reg_and_no_branch() {
         // arrange
         let code = [0x54, 0xc9, 0x00, 0x04].to_vec(); // DBCC D1,$0004
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.set_d_reg_long_no_log(1, 0x11110000);
-        cpu.register
+        let mut mm = crate::tests::instr_test_setup(code, None);
+        mm.cpu.register.set_d_reg_long_no_log(1, 0x11110000);
+        mm.cpu.register
             .reg_sr
             .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_CARRY);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly_no_log();
+        let debug_result = mm.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -133,22 +133,22 @@ mod tests {
             debug_result
         );
         // act
-        cpu.execute_next_instruction();
+        mm.step();
         // assert
-        assert_eq!(0x1111ffff, cpu.register.get_d_reg_long_no_log(1));
-        assert_eq!(0xc00004, cpu.register.reg_pc.get_address());
+        assert_eq!(0x1111ffff, mm.cpu.register.get_d_reg_long_no_log(1));
+        assert_eq!(0xc00004, mm.cpu.register.reg_pc.get_address());
     }
 
     #[test]
     fn dbcc_cc_when_carry_clear_do_nothing() {
         // arrange
         let code = [0x54, 0xca, 0x00, 0x04].to_vec(); // DBCC D2,$0004
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.set_d_reg_long_no_log(2, 0xffff0001);
-        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
+        let mut mm = crate::tests::instr_test_setup(code, None);
+        mm.cpu.register.set_d_reg_long_no_log(2, 0xffff0001);
+        mm.cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
 
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly_no_log();
+        let debug_result = mm.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -159,9 +159,9 @@ mod tests {
             debug_result
         );
         // act
-        cpu.execute_next_instruction();
+        mm.step();
         // assert
-        assert_eq!(0xffff0001, cpu.register.get_d_reg_long_no_log(2));
-        assert_eq!(0xC00004, cpu.register.reg_pc.get_address());
+        assert_eq!(0xffff0001, mm.cpu.register.get_d_reg_long_no_log(2));
+        assert_eq!(0xC00004, mm.cpu.register.reg_pc.get_address());
     }
 }

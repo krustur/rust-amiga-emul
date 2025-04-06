@@ -34,7 +34,6 @@ impl StatusRegisterResult {
 
 pub struct Cpu {
     pub register: Register,
-    pub memory: Mem,
     instructions: Vec<Instruction>,
 }
 
@@ -187,10 +186,7 @@ pub fn match_check_ea_only_control_or_postincrement_addressing_modes_pos_0(
 }
 
 impl Cpu {
-    pub fn new(mem: Mem) -> Cpu {
-        let reg_ssp = mem.get_long_no_log(0x0);
-        let pc_address = mem.get_long_no_log(0x4);
-        let reg_pc = ProgramCounter::from_address(pc_address);
+    pub fn new(mem: &Mem) -> Cpu {
         let instructions = vec![
             Instruction::new(
                 String::from("ADD"),
@@ -652,13 +648,15 @@ impl Cpu {
                 instruction::unlk::get_disassembly,
             ),
         ];
+        let reg_ssp = mem.get_long_no_log(0x0);
+        let pc_address = mem.get_long_no_log(0x4);
+        let reg_pc = ProgramCounter::from_address(pc_address);
         let mut register = Register::new();
         register.set_ssp_reg(reg_ssp);
         register.reg_pc = reg_pc;
         let cpu = Cpu {
-            register: register,
-            memory: mem,
-            instructions: instructions,
+            register,
+            instructions,
         };
         cpu
     }
@@ -1042,6 +1040,10 @@ impl Cpu {
                 status_register_mask,
             },
         }
+    }
+
+    pub fn join_words_to_long(hi: u16, low: u16) -> u32 {
+        ((hi as u32) << 16) | (low as u32)
     }
 
     pub fn add_longs(source: u32, dest: u32) -> ResultWithStatusRegister<u32> {
@@ -1745,14 +1747,14 @@ impl Cpu {
             } => {
                 // Dn
                 let format = format!("D{}", register);
-                EffectiveAddressDebug { format: format }
+                EffectiveAddressDebug { format }
             }
             EffectiveAddressingMode::ARegDirect {
                 ea_register: register,
             } => {
                 // An
                 let format = format!("A{}", register);
-                EffectiveAddressDebug { format: format }
+                EffectiveAddressDebug { format }
             }
             EffectiveAddressingMode::ARegIndirect {
                 ea_register: register,
@@ -1760,7 +1762,7 @@ impl Cpu {
             } => {
                 // (An)
                 let format = format!("(A{})", register);
-                EffectiveAddressDebug { format: format }
+                EffectiveAddressDebug { format }
             }
             EffectiveAddressingMode::ARegIndirectWithPostIncrement {
                 operation_size,
@@ -1768,7 +1770,7 @@ impl Cpu {
             } => {
                 // (An)+
                 let format = format!("(A{})+", ea_register);
-                EffectiveAddressDebug { format: format }
+                EffectiveAddressDebug { format }
             }
             EffectiveAddressingMode::ARegIndirectWithPreDecrement {
                 operation_size,
@@ -1776,7 +1778,7 @@ impl Cpu {
             } => {
                 // (-An)
                 let format = format!("-(A{})", ea_register);
-                EffectiveAddressDebug { format: format }
+                EffectiveAddressDebug { format }
             }
             EffectiveAddressingMode::ARegIndirectWithDisplacement {
                 ea_register: register,
@@ -1790,7 +1792,7 @@ impl Cpu {
                     register,
                     // Cpu::get_signed_long_from_long(Cpu::sign_extend_word(displacement))
                 );
-                EffectiveAddressDebug { format: format }
+                EffectiveAddressDebug { format }
             }
             EffectiveAddressingMode::ARegIndirectWithIndexOrMemoryIndirect {
                 ea_register,
@@ -1824,7 +1826,7 @@ impl Cpu {
                     scale_factor,
                     // displacement
                 );
-                EffectiveAddressDebug { format: format }
+                EffectiveAddressDebug { format }
             }
             EffectiveAddressingMode::PcIndirectWithDisplacement {
                 ea_address,
@@ -1844,7 +1846,7 @@ impl Cpu {
                     false => format!("(${:04X}).W", displacement),
                     true => format!("(${:04X}).W", displacement),
                 };
-                EffectiveAddressDebug { format: format }
+                EffectiveAddressDebug { format }
             }
             EffectiveAddressingMode::AbsolutLongAddressing { ea_address } => {
                 // (xxx).L
@@ -1874,14 +1876,10 @@ impl Cpu {
 
                 let format = format!(
                     "(${:02X},PC,{}{}.{}{})",
-                    displacement,
-                    register_type_format,
-                    register,
-                    index_size_format,
-                    scale_factor
+                    displacement, register_type_format, register, index_size_format, scale_factor
                 );
 
-                EffectiveAddressDebug { format: format }
+                EffectiveAddressDebug { format }
             }
             EffectiveAddressingMode::ImmediateDataByte { data } => {
                 // #<xxx>
@@ -1898,7 +1896,13 @@ impl Cpu {
         }
     }
 
-    pub fn exception(&mut self, pc: &mut ProgramCounter, step_log: &mut StepLog, vector: u32) {
+    pub fn exception(
+        &mut self,
+        pc: &mut ProgramCounter,
+        mem: &mut Mem,
+        step_log: &mut StepLog,
+        vector: u32,
+    ) {
         // TODO: This could probably be a StepLogEntry
         println!("Exception occured!");
         println!("vector: {} [${:02X}]", vector, vector);
@@ -1906,13 +1910,12 @@ impl Cpu {
         self.register.reg_sr.set_supervisor();
         // TODO: T bit clear
         // TODO: Do we push PC or PC+2?
-        self.register.stack_push_pc(&mut self.memory, step_log);
-        self.register
-            .stack_push_word(&mut self.memory, step_log, sr_to_push);
+        self.register.stack_push_pc(mem, step_log);
+        self.register.stack_push_word(mem, step_log, sr_to_push);
 
         let vector_offset = (vector) * 4;
         println!("vector_offset: ${:08X}", vector_offset);
-        let vector_address = self.memory.get_long(step_log, vector_offset);
+        let vector_address = mem.get_long(step_log, vector_offset);
         println!("vector_address: ${:08X}", vector_address);
         pc.set_long(vector_address);
     }

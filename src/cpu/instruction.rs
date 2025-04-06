@@ -65,6 +65,7 @@ pub struct InstructionError {
     pub details: String,
 }
 
+#[allow(non_camel_case_types)]
 pub enum StepError {
     AccessFault,
     AddressError,
@@ -155,7 +156,7 @@ impl GetDisassemblyResult {
     }
 }
 
-#[derive(Copy, Clone, Debug, std::cmp::PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum EffectiveAddressingMode {
     DRegDirect {
         //                                   0b000       Dn
@@ -246,7 +247,7 @@ pub enum EffectiveAddressingMode {
     },
 }
 
-impl fmt::Display for EffectiveAddressingMode {
+impl Display for EffectiveAddressingMode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             EffectiveAddressingMode::DRegDirect { ea_register } => {
@@ -407,7 +408,7 @@ impl OperationSize {
     }
 }
 
-impl fmt::Display for OperationSize {
+impl Display for OperationSize {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             OperationSize::Byte => {
@@ -442,7 +443,7 @@ impl ScaleFactor {
     }
 }
 
-impl fmt::Display for ScaleFactor {
+impl Display for ScaleFactor {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             ScaleFactor::One => {
@@ -498,7 +499,7 @@ pub enum ConditionalTest {
     LE = 0b1111,
 }
 
-impl fmt::Display for ConditionalTest {
+impl Display for ConditionalTest {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             ConditionalTest::T => {

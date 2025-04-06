@@ -1,4 +1,5 @@
 ; ADDI tests
+; On PAR with Rust manual tests
 
 :ADDI_BYTE_IMMEDIATE_DATA_TO_DATA_REGISTER_DIRECT
 

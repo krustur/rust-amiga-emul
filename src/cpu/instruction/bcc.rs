@@ -127,11 +127,11 @@ mod tests {
     fn step_bcc_byte_when_carry_clear() {
         // arrange
         let code = [0x64, 0x06].to_vec(); // BCC.B $06
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
+        let mut mm = crate::tests::instr_test_setup(code, None);
+        mm.cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000); //STATUS_REGISTER_MASK_CARRY;
 
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly_no_log();
+        let debug_result = mm.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -142,21 +142,21 @@ mod tests {
             debug_result
         );
         // act
-        cpu.execute_next_instruction();
+        mm.step();
         // assert
-        assert_eq!(0xC00008, cpu.register.reg_pc.get_address());
+        assert_eq!(0xC00008, mm.cpu.register.reg_pc.get_address());
     }
 
     #[test]
     fn step_bcc_byte_when_carry_set() {
         // arrange
         let code = [0x64, 0x06].to_vec(); // BCC.B $06
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register
+        let mut mm = crate::tests::instr_test_setup(code, None);
+        mm.cpu.register
             .reg_sr
             .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_CARRY);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly_no_log();
+        let debug_result = mm.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -167,21 +167,21 @@ mod tests {
             debug_result
         );
         // act
-        cpu.execute_next_instruction();
+        mm.step();
         // assert
-        assert_eq!(0xC00002, cpu.register.reg_pc.get_address());
+        assert_eq!(0xC00002, mm.cpu.register.reg_pc.get_address());
     }
 
     #[test]
     fn step_beq_byte_when_zero_set_negative() {
         // arrange
         let code = [0x67, 0xfa].to_vec(); // BEQ.B $FA
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register
+        let mut mm = crate::tests::instr_test_setup(code, None);
+        mm.cpu.register
             .reg_sr
             .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_ZERO);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly_no_log();
+        let debug_result = mm.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -192,9 +192,9 @@ mod tests {
             debug_result
         );
         // act
-        cpu.execute_next_instruction();
+        mm.step();
         // assert
-        assert_eq!(0x00BFFFFC, cpu.register.reg_pc.get_address());
+        assert_eq!(0x00BFFFFC, mm.cpu.register.reg_pc.get_address());
     }
 
     // word
@@ -203,12 +203,12 @@ mod tests {
     fn step_beq_word_when_zero_set_negative() {
         // arrange
         let code = [0x67, 0x00, 0xff, 0xfa].to_vec(); // BEQ.W $FFFA
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register
+        let mut mm = crate::tests::instr_test_setup(code, None);
+        mm.cpu.register
             .reg_sr
             .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_ZERO);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly_no_log();
+        let debug_result = mm.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -219,21 +219,21 @@ mod tests {
             debug_result
         );
         // act
-        cpu.execute_next_instruction();
+        mm.step();
         // assert
-        assert_eq!(0x00BFFFFC, cpu.register.reg_pc.get_address());
+        assert_eq!(0x00BFFFFC, mm.cpu.register.reg_pc.get_address());
     }
 
     #[test]
     fn step_beq_word_when_zero_set() {
         // arrange
         let code = [0x67, 0x00, 0x00, 0x60].to_vec(); // BEQ.W $0060
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register
+        let mut mm = crate::tests::instr_test_setup(code, None);
+        mm.cpu.register
             .reg_sr
             .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_ZERO);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly_no_log();
+        let debug_result = mm.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -244,19 +244,19 @@ mod tests {
             debug_result
         );
         // act
-        cpu.execute_next_instruction();
+        mm.step();
         // assert
-        assert_eq!(0xC00062, cpu.register.reg_pc.get_address());
+        assert_eq!(0xC00062, mm.cpu.register.reg_pc.get_address());
     }
 
     #[test]
     fn step_beq_word_when_zero_clear_negative() {
         // arrange
         let code = [0x67, 0x00, 0xff, 0xfa].to_vec(); // BEQ.W $FFFA
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
+        let mut mm = crate::tests::instr_test_setup(code, None);
+        mm.cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly_no_log();
+        let debug_result = mm.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -267,9 +267,9 @@ mod tests {
             debug_result
         );
         // act
-        cpu.execute_next_instruction();
+        mm.step();
         // assert
-        assert_eq!(0x00C00004, cpu.register.reg_pc.get_address());
+        assert_eq!(0x00C00004, mm.cpu.register.reg_pc.get_address());
     }
 
     // long
@@ -278,12 +278,12 @@ mod tests {
     fn step_bgt_long_when_true_negative() {
         // arrange
         let code = [0x6e, 0xff, 0xff, 0xff, 0xff, 0xfa].to_vec(); // BGT.L $FFFFFFFA
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register
+        let mut mm = crate::tests::instr_test_setup(code, None);
+        mm.cpu.register
             .reg_sr
             .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_NEGATIVE | STATUS_REGISTER_MASK_OVERFLOW);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly_no_log();
+        let debug_result = mm.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -294,19 +294,19 @@ mod tests {
             debug_result
         );
         // act
-        cpu.execute_next_instruction();
+        mm.step();
         // assert
-        assert_eq!(0x00BFFFFC, cpu.register.reg_pc.get_address());
+        assert_eq!(0x00BFFFFC, mm.cpu.register.reg_pc.get_address());
     }
 
     #[test]
     fn step_bgt_long_when_true() {
         // arrange
         let code = [0x6e, 0xff, 0x00, 0x00, 0x80, 0x00].to_vec(); // BGT.L $00008000
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
+        let mut mm = crate::tests::instr_test_setup(code, None);
+        mm.cpu.register.reg_sr.set_sr_reg_flags_abcde(0x0000);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly_no_log();
+        let debug_result = mm.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -317,21 +317,21 @@ mod tests {
             debug_result
         );
         // act
-        cpu.execute_next_instruction();
+        mm.step();
         // assert
-        assert_eq!(0xC08002, cpu.register.reg_pc.get_address());
+        assert_eq!(0xC08002, mm.cpu.register.reg_pc.get_address());
     }
 
     #[test]
     fn step_bgt_long_when_false() {
         // arrange
         let code = [0x6e, 0xff, 0x00, 0x00, 0x80, 0x00].to_vec(); // BGT.L $00008000
-        let mut cpu = crate::instr_test_setup(code, None);
-        cpu.register
+        let mut mm = crate::tests::instr_test_setup(code, None);
+        mm.cpu.register
             .reg_sr
             .set_sr_reg_flags_abcde(STATUS_REGISTER_MASK_ZERO);
         // act assert - debug
-        let debug_result = cpu.get_next_disassembly_no_log();
+        let debug_result = mm.get_next_disassembly_no_log();
         assert_eq!(
             GetDisassemblyResult::from_address_and_address_next(
                 0xC00000,
@@ -342,8 +342,8 @@ mod tests {
             debug_result
         );
         // act
-        cpu.execute_next_instruction();
+        mm.step();
         // assert
-        assert_eq!(0xC00006, cpu.register.reg_pc.get_address());
+        assert_eq!(0xC00006, mm.cpu.register.reg_pc.get_address());
     }
 }

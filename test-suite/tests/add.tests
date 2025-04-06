@@ -1,4 +1,5 @@
 ; ADD tests
+; On PAR with Rust manual tests
 
 :ADDRESS_REGISTER_INDIRECT_TO_DATA_REGISTER_DIRECT_BYTE
 

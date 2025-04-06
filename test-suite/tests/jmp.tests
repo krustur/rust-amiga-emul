@@ -1,4 +1,5 @@
 ; JMP tests
+; TODO: Make PAR with Rust manual tests
 
 ;:JMP_ADDRESS_REGISTER_INDIRECT
 ;

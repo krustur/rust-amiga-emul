@@ -33,6 +33,33 @@ test_suite
 	dc.l	addq_data_to_data_register_direct_long_zero
 	dc.l	addq_data_to_address_register_direct_word
 	dc.l	addq_data_to_address_register_direct_long
+	dc.l	data_register_byte_with_extend_clear
+	dc.l	data_register_byte_with_extend_set
+	dc.l	data_register_byte_with_extend_set_set_carry_extend
+	dc.l	data_register_byte_with_extend_set_set_carry_extend_leave_zero_cleared_test_both_carry
+	dc.l	data_register_byte_with_extend_set_set_carry_extend_leave_zero_set_test_both_carry
+	dc.l	data_register_byte_with_extend_set_set_overflow_negative
+	dc.l	data_register_byte_with_extend_set_set_overflow_negative_test_both_overflow
+	dc.l	data_register_word_with_extend_clear
+	dc.l	data_register_word_with_extend_set
+	dc.l	data_register_word_with_extend_set_set_carry_extend
+	dc.l	data_register_word_with_extend_set_set_carry_extend_leave_zero_cleared_test_both_carry
+	dc.l	data_register_word_with_extend_set_set_carry_extend_leave_zero_set_test_both_carry
+	dc.l	data_register_word_with_extend_set_set_overflow_negative
+	dc.l	data_register_word_with_extend_set_set_overflow_negative_zero_test_both_overflow
+	dc.l	data_register_long_with_extend_clear
+	dc.l	data_register_long_with_extend_set
+	dc.l	data_register_long_with_extend_set_set_carry_extend
+	dc.l	data_register_long_with_extend_set_set_carry_extend_leave_zero_cleared_test_both_carry
+	dc.l	data_register_long_with_extend_set_set_carry_extend_leave_zero_cleared_set_both_carry
+	dc.l	data_register_long_with_extend_set_set_overflow_negative
+	dc.l	data_register_long_with_extend_set_set_overflow_negative_zero_test_both_overflow
+	dc.l	address_register_byte_with_extend_clear
+	dc.l	address_register_byte_with_extend_set
+	dc.l	address_register_word_with_extend_clear
+	dc.l	address_register_word_with_extend_set
+	dc.l	address_register_long_with_extend_clear
+	dc.l	address_register_long_with_extend_set
 	dc.l	lsl_b_register_by_immediate
 	dc.l	lsl_register_by_immediate_byte_negative
 	dc.l	lsl_register_by_immediate_byte_zero
@@ -44,4 +71,5 @@ test_suite
 	include	"add.s"
 	include	"addi.s"
 	include	"addq.s"
+	include	"addx.s"
 	include	"lslr.s"

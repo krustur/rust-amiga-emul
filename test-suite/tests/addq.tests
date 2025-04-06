@@ -1,4 +1,5 @@
 ; ADDQ tests
+; On PAR with Rust manual tests
 
 :ADDQ_DATA_TO_DATA_REGISTER_DIRECT_BYTE
 

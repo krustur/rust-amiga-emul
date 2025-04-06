@@ -3,6 +3,8 @@
 
 #![allow(unused_imports)]
 
+use std::cell::RefCell;
+use std::rc::Rc;
 use crate::register::ProgramCounter;
 use crate::mem::rammemory::RamMemory;
 use crate::cpu::instruction::GetDisassemblyResult;
@@ -10,6 +12,7 @@ use crate::mem::memory::Memory;
 use crate::mem::ciamemory::CiaMemory;
 use crate::cpu::Cpu;
 use crate::mem::Mem;
+use crate::modermodem::Modermodem;
 use crate::register::STATUS_REGISTER_MASK_CARRY;
 use crate::register::STATUS_REGISTER_MASK_EXTEND;
 use crate::register::STATUS_REGISTER_MASK_NEGATIVE;
@@ -29,25 +32,21 @@ fn address_register_indirect_to_data_register_direct_byte() {
     let arrange_mem_00050002 = RamMemory::from_bytes(0x00050002, arrange_mem_bytes_00050002);
 
     // arrange - common
-    let stack = RamMemory::from_range(0x01000000, 0x010003ff);
+    let mut mem = Mem::new();
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
-    let mut mem_ranges: Vec<Box<dyn Memory>> = Vec::new();
-    mem_ranges.push(Box::new(code_memory));
-    mem_ranges.push(Box::new(stack));
-    mem_ranges.push(Box::new(vectors));
-    mem_ranges.push(Box::new(cia_memory));
-    mem_ranges.push(Box::new(arrange_mem_00050002));
-    let overlay_hack = Box::new(RamMemory::from_range(0xffffffff, 0xffffffff));
-    let mem = Mem::new(mem_ranges, overlay_hack);
-    let mut cpu = Cpu::new(mem);
+    mem.add_range(Rc::new(RefCell::new(code_memory)));
+    mem.add_range(Rc::new(RefCell::new(vectors)));
+    mem.add_range(Rc::new(RefCell::new(cia_memory)));
+    mem.add_range(Rc::new(RefCell::new(arrange_mem_00050002)));
+    let cpu = Cpu::new(&mem);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None);
 
     // arrange - regs
-    cpu.register.set_all_d_reg_long_no_log(0x00000001, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000d7d7);
-    cpu.register.set_all_a_reg_long_no_log(0x00050002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
-    cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
-    cpu.register.set_ssp_reg(0x01000400);
-    cpu.register.reg_sr.set_sr_reg_flags_abcde(
+    modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000001, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000d7d7);
+    modermodem.cpu.register.set_all_a_reg_long_no_log(0x00050002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
+    modermodem.cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
+    modermodem.cpu.register.reg_sr.set_sr_reg_flags_abcde(
        STATUS_REGISTER_MASK_EXTEND
        | STATUS_REGISTER_MASK_NEGATIVE
        | STATUS_REGISTER_MASK_ZERO
@@ -56,7 +55,7 @@ fn address_register_indirect_to_data_register_direct_byte() {
     );
 
     // act/assert - disassembly
-    let get_disassembly_result = cpu.get_next_disassembly_no_log();
+    let get_disassembly_result = modermodem.get_next_disassembly_no_log();
     assert_eq!(
         GetDisassemblyResult::from_address_and_address_next(
             0x00040000,
@@ -68,17 +67,17 @@ fn address_register_indirect_to_data_register_direct_byte() {
         );
 
     // act
-    cpu.execute_next_instruction();
+    modermodem.step();
 
     // assert - regs
-    cpu.register.assert_all_d_reg_long_no_log(0x00000002, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000d7d7);
-    cpu.register.assert_all_a_reg_long_no_log(0x00050002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
-    cpu.register.reg_sr.assert_sr_reg_flags_abcde(
+    modermodem.cpu.register.assert_all_d_reg_long_no_log(0x00000002, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000d7d7);
+    modermodem.cpu.register.assert_all_a_reg_long_no_log(0x00050002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
+    modermodem.cpu.register.reg_sr.assert_sr_reg_flags_abcde(
        0x0000
     );
 
     // assert - mem
-    assert_eq!(0x01, cpu.memory.get_byte_no_log(0x00050002));
+    assert_eq!(0x01, modermodem.mem.get_byte_no_log(0x00050002));
 }
 
 #[test]
@@ -93,25 +92,21 @@ fn address_register_indirect_to_data_register_direct_byte_overflow() {
     let arrange_mem_00050002 = RamMemory::from_bytes(0x00050002, arrange_mem_bytes_00050002);
 
     // arrange - common
-    let stack = RamMemory::from_range(0x01000000, 0x010003ff);
+    let mut mem = Mem::new();
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
-    let mut mem_ranges: Vec<Box<dyn Memory>> = Vec::new();
-    mem_ranges.push(Box::new(code_memory));
-    mem_ranges.push(Box::new(stack));
-    mem_ranges.push(Box::new(vectors));
-    mem_ranges.push(Box::new(cia_memory));
-    mem_ranges.push(Box::new(arrange_mem_00050002));
-    let overlay_hack = Box::new(RamMemory::from_range(0xffffffff, 0xffffffff));
-    let mem = Mem::new(mem_ranges, overlay_hack);
-    let mut cpu = Cpu::new(mem);
+    mem.add_range(Rc::new(RefCell::new(code_memory)));
+    mem.add_range(Rc::new(RefCell::new(vectors)));
+    mem.add_range(Rc::new(RefCell::new(cia_memory)));
+    mem.add_range(Rc::new(RefCell::new(arrange_mem_00050002)));
+    let cpu = Cpu::new(&mem);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None);
 
     // arrange - regs
-    cpu.register.set_all_d_reg_long_no_log(0x0000007f, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000d7d7);
-    cpu.register.set_all_a_reg_long_no_log(0x00050002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
-    cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
-    cpu.register.set_ssp_reg(0x01000400);
-    cpu.register.reg_sr.set_sr_reg_flags_abcde(
+    modermodem.cpu.register.set_all_d_reg_long_no_log(0x0000007f, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000d7d7);
+    modermodem.cpu.register.set_all_a_reg_long_no_log(0x00050002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
+    modermodem.cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
+    modermodem.cpu.register.reg_sr.set_sr_reg_flags_abcde(
        STATUS_REGISTER_MASK_EXTEND
        | STATUS_REGISTER_MASK_NEGATIVE
        | STATUS_REGISTER_MASK_ZERO
@@ -120,7 +115,7 @@ fn address_register_indirect_to_data_register_direct_byte_overflow() {
     );
 
     // act/assert - disassembly
-    let get_disassembly_result = cpu.get_next_disassembly_no_log();
+    let get_disassembly_result = modermodem.get_next_disassembly_no_log();
     assert_eq!(
         GetDisassemblyResult::from_address_and_address_next(
             0x00040000,
@@ -132,18 +127,18 @@ fn address_register_indirect_to_data_register_direct_byte_overflow() {
         );
 
     // act
-    cpu.execute_next_instruction();
+    modermodem.step();
 
     // assert - regs
-    cpu.register.assert_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000d7d7);
-    cpu.register.assert_all_a_reg_long_no_log(0x00050002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
-    cpu.register.reg_sr.assert_sr_reg_flags_abcde(
+    modermodem.cpu.register.assert_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000d7d7);
+    modermodem.cpu.register.assert_all_a_reg_long_no_log(0x00050002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
+    modermodem.cpu.register.reg_sr.assert_sr_reg_flags_abcde(
        STATUS_REGISTER_MASK_NEGATIVE
        | STATUS_REGISTER_MASK_OVERFLOW
     );
 
     // assert - mem
-    assert_eq!(0x01, cpu.memory.get_byte_no_log(0x00050002));
+    assert_eq!(0x01, modermodem.mem.get_byte_no_log(0x00050002));
 }
 
 #[test]
@@ -158,25 +153,21 @@ fn address_register_indirect_to_data_register_direct_byte_carry() {
     let arrange_mem_00050002 = RamMemory::from_bytes(0x00050002, arrange_mem_bytes_00050002);
 
     // arrange - common
-    let stack = RamMemory::from_range(0x01000000, 0x010003ff);
+    let mut mem = Mem::new();
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
-    let mut mem_ranges: Vec<Box<dyn Memory>> = Vec::new();
-    mem_ranges.push(Box::new(code_memory));
-    mem_ranges.push(Box::new(stack));
-    mem_ranges.push(Box::new(vectors));
-    mem_ranges.push(Box::new(cia_memory));
-    mem_ranges.push(Box::new(arrange_mem_00050002));
-    let overlay_hack = Box::new(RamMemory::from_range(0xffffffff, 0xffffffff));
-    let mem = Mem::new(mem_ranges, overlay_hack);
-    let mut cpu = Cpu::new(mem);
+    mem.add_range(Rc::new(RefCell::new(code_memory)));
+    mem.add_range(Rc::new(RefCell::new(vectors)));
+    mem.add_range(Rc::new(RefCell::new(cia_memory)));
+    mem.add_range(Rc::new(RefCell::new(arrange_mem_00050002)));
+    let cpu = Cpu::new(&mem);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None);
 
     // arrange - regs
-    cpu.register.set_all_d_reg_long_no_log(0x000000ff, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000d7d7);
-    cpu.register.set_all_a_reg_long_no_log(0x00050002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
-    cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
-    cpu.register.set_ssp_reg(0x01000400);
-    cpu.register.reg_sr.set_sr_reg_flags_abcde(
+    modermodem.cpu.register.set_all_d_reg_long_no_log(0x000000ff, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000d7d7);
+    modermodem.cpu.register.set_all_a_reg_long_no_log(0x00050002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
+    modermodem.cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
+    modermodem.cpu.register.reg_sr.set_sr_reg_flags_abcde(
        STATUS_REGISTER_MASK_EXTEND
        | STATUS_REGISTER_MASK_NEGATIVE
        | STATUS_REGISTER_MASK_ZERO
@@ -185,7 +176,7 @@ fn address_register_indirect_to_data_register_direct_byte_carry() {
     );
 
     // act/assert - disassembly
-    let get_disassembly_result = cpu.get_next_disassembly_no_log();
+    let get_disassembly_result = modermodem.get_next_disassembly_no_log();
     assert_eq!(
         GetDisassemblyResult::from_address_and_address_next(
             0x00040000,
@@ -197,19 +188,19 @@ fn address_register_indirect_to_data_register_direct_byte_carry() {
         );
 
     // act
-    cpu.execute_next_instruction();
+    modermodem.step();
 
     // assert - regs
-    cpu.register.assert_all_d_reg_long_no_log(0x00000000, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000d7d7);
-    cpu.register.assert_all_a_reg_long_no_log(0x00050002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
-    cpu.register.reg_sr.assert_sr_reg_flags_abcde(
+    modermodem.cpu.register.assert_all_d_reg_long_no_log(0x00000000, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000d7d7);
+    modermodem.cpu.register.assert_all_a_reg_long_no_log(0x00050002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
+    modermodem.cpu.register.reg_sr.assert_sr_reg_flags_abcde(
        STATUS_REGISTER_MASK_EXTEND
        | STATUS_REGISTER_MASK_ZERO
        | STATUS_REGISTER_MASK_CARRY
     );
 
     // assert - mem
-    assert_eq!(0x01, cpu.memory.get_byte_no_log(0x00050002));
+    assert_eq!(0x01, modermodem.mem.get_byte_no_log(0x00050002));
 }
 
 #[test]
@@ -224,25 +215,21 @@ fn address_register_indirect_to_data_register_direct_word() {
     let arrange_mem_00060002 = RamMemory::from_bytes(0x00060002, arrange_mem_bytes_00060002);
 
     // arrange - common
-    let stack = RamMemory::from_range(0x01000000, 0x010003ff);
+    let mut mem = Mem::new();
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
-    let mut mem_ranges: Vec<Box<dyn Memory>> = Vec::new();
-    mem_ranges.push(Box::new(code_memory));
-    mem_ranges.push(Box::new(stack));
-    mem_ranges.push(Box::new(vectors));
-    mem_ranges.push(Box::new(cia_memory));
-    mem_ranges.push(Box::new(arrange_mem_00060002));
-    let overlay_hack = Box::new(RamMemory::from_range(0xffffffff, 0xffffffff));
-    let mem = Mem::new(mem_ranges, overlay_hack);
-    let mut cpu = Cpu::new(mem);
+    mem.add_range(Rc::new(RefCell::new(code_memory)));
+    mem.add_range(Rc::new(RefCell::new(vectors)));
+    mem.add_range(Rc::new(RefCell::new(cia_memory)));
+    mem.add_range(Rc::new(RefCell::new(arrange_mem_00060002)));
+    let cpu = Cpu::new(&mem);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None);
 
     // arrange - regs
-    cpu.register.set_all_d_reg_long_no_log(0x00000001, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000d7d7);
-    cpu.register.set_all_a_reg_long_no_log(0x00060002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
-    cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
-    cpu.register.set_ssp_reg(0x01000400);
-    cpu.register.reg_sr.set_sr_reg_flags_abcde(
+    modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000001, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000d7d7);
+    modermodem.cpu.register.set_all_a_reg_long_no_log(0x00060002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
+    modermodem.cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
+    modermodem.cpu.register.reg_sr.set_sr_reg_flags_abcde(
        STATUS_REGISTER_MASK_EXTEND
        | STATUS_REGISTER_MASK_NEGATIVE
        | STATUS_REGISTER_MASK_ZERO
@@ -251,7 +238,7 @@ fn address_register_indirect_to_data_register_direct_word() {
     );
 
     // act/assert - disassembly
-    let get_disassembly_result = cpu.get_next_disassembly_no_log();
+    let get_disassembly_result = modermodem.get_next_disassembly_no_log();
     assert_eq!(
         GetDisassemblyResult::from_address_and_address_next(
             0x00040000,
@@ -263,18 +250,18 @@ fn address_register_indirect_to_data_register_direct_word() {
         );
 
     // act
-    cpu.execute_next_instruction();
+    modermodem.step();
 
     // assert - regs
-    cpu.register.assert_all_d_reg_long_no_log(0x00000002, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000d7d7);
-    cpu.register.assert_all_a_reg_long_no_log(0x00060002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
-    cpu.register.reg_sr.assert_sr_reg_flags_abcde(
+    modermodem.cpu.register.assert_all_d_reg_long_no_log(0x00000002, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000d7d7);
+    modermodem.cpu.register.assert_all_a_reg_long_no_log(0x00060002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
+    modermodem.cpu.register.reg_sr.assert_sr_reg_flags_abcde(
        0x0000
     );
 
     // assert - mem
-    assert_eq!(0x00, cpu.memory.get_byte_no_log(0x00060002));
-    assert_eq!(0x01, cpu.memory.get_byte_no_log(0x00060003));
+    assert_eq!(0x00, modermodem.mem.get_byte_no_log(0x00060002));
+    assert_eq!(0x01, modermodem.mem.get_byte_no_log(0x00060003));
 }
 
 #[test]
@@ -289,25 +276,21 @@ fn address_register_indirect_to_data_register_direct_word_overflow() {
     let arrange_mem_00060002 = RamMemory::from_bytes(0x00060002, arrange_mem_bytes_00060002);
 
     // arrange - common
-    let stack = RamMemory::from_range(0x01000000, 0x010003ff);
+    let mut mem = Mem::new();
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
-    let mut mem_ranges: Vec<Box<dyn Memory>> = Vec::new();
-    mem_ranges.push(Box::new(code_memory));
-    mem_ranges.push(Box::new(stack));
-    mem_ranges.push(Box::new(vectors));
-    mem_ranges.push(Box::new(cia_memory));
-    mem_ranges.push(Box::new(arrange_mem_00060002));
-    let overlay_hack = Box::new(RamMemory::from_range(0xffffffff, 0xffffffff));
-    let mem = Mem::new(mem_ranges, overlay_hack);
-    let mut cpu = Cpu::new(mem);
+    mem.add_range(Rc::new(RefCell::new(code_memory)));
+    mem.add_range(Rc::new(RefCell::new(vectors)));
+    mem.add_range(Rc::new(RefCell::new(cia_memory)));
+    mem.add_range(Rc::new(RefCell::new(arrange_mem_00060002)));
+    let cpu = Cpu::new(&mem);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None);
 
     // arrange - regs
-    cpu.register.set_all_d_reg_long_no_log(0x00007fff, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000d7d7);
-    cpu.register.set_all_a_reg_long_no_log(0x00060002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
-    cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
-    cpu.register.set_ssp_reg(0x01000400);
-    cpu.register.reg_sr.set_sr_reg_flags_abcde(
+    modermodem.cpu.register.set_all_d_reg_long_no_log(0x00007fff, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000d7d7);
+    modermodem.cpu.register.set_all_a_reg_long_no_log(0x00060002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
+    modermodem.cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
+    modermodem.cpu.register.reg_sr.set_sr_reg_flags_abcde(
        STATUS_REGISTER_MASK_EXTEND
        | STATUS_REGISTER_MASK_NEGATIVE
        | STATUS_REGISTER_MASK_ZERO
@@ -316,7 +299,7 @@ fn address_register_indirect_to_data_register_direct_word_overflow() {
     );
 
     // act/assert - disassembly
-    let get_disassembly_result = cpu.get_next_disassembly_no_log();
+    let get_disassembly_result = modermodem.get_next_disassembly_no_log();
     assert_eq!(
         GetDisassemblyResult::from_address_and_address_next(
             0x00040000,
@@ -328,19 +311,19 @@ fn address_register_indirect_to_data_register_direct_word_overflow() {
         );
 
     // act
-    cpu.execute_next_instruction();
+    modermodem.step();
 
     // assert - regs
-    cpu.register.assert_all_d_reg_long_no_log(0x00008000, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000d7d7);
-    cpu.register.assert_all_a_reg_long_no_log(0x00060002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
-    cpu.register.reg_sr.assert_sr_reg_flags_abcde(
+    modermodem.cpu.register.assert_all_d_reg_long_no_log(0x00008000, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000d7d7);
+    modermodem.cpu.register.assert_all_a_reg_long_no_log(0x00060002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
+    modermodem.cpu.register.reg_sr.assert_sr_reg_flags_abcde(
        STATUS_REGISTER_MASK_NEGATIVE
        | STATUS_REGISTER_MASK_OVERFLOW
     );
 
     // assert - mem
-    assert_eq!(0x00, cpu.memory.get_byte_no_log(0x00060002));
-    assert_eq!(0x01, cpu.memory.get_byte_no_log(0x00060003));
+    assert_eq!(0x00, modermodem.mem.get_byte_no_log(0x00060002));
+    assert_eq!(0x01, modermodem.mem.get_byte_no_log(0x00060003));
 }
 
 #[test]
@@ -355,25 +338,21 @@ fn address_register_indirect_to_data_register_direct_word_carry() {
     let arrange_mem_00060002 = RamMemory::from_bytes(0x00060002, arrange_mem_bytes_00060002);
 
     // arrange - common
-    let stack = RamMemory::from_range(0x01000000, 0x010003ff);
+    let mut mem = Mem::new();
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
-    let mut mem_ranges: Vec<Box<dyn Memory>> = Vec::new();
-    mem_ranges.push(Box::new(code_memory));
-    mem_ranges.push(Box::new(stack));
-    mem_ranges.push(Box::new(vectors));
-    mem_ranges.push(Box::new(cia_memory));
-    mem_ranges.push(Box::new(arrange_mem_00060002));
-    let overlay_hack = Box::new(RamMemory::from_range(0xffffffff, 0xffffffff));
-    let mem = Mem::new(mem_ranges, overlay_hack);
-    let mut cpu = Cpu::new(mem);
+    mem.add_range(Rc::new(RefCell::new(code_memory)));
+    mem.add_range(Rc::new(RefCell::new(vectors)));
+    mem.add_range(Rc::new(RefCell::new(cia_memory)));
+    mem.add_range(Rc::new(RefCell::new(arrange_mem_00060002)));
+    let cpu = Cpu::new(&mem);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None);
 
     // arrange - regs
-    cpu.register.set_all_d_reg_long_no_log(0x0000ffff, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000d7d7);
-    cpu.register.set_all_a_reg_long_no_log(0x00060002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
-    cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
-    cpu.register.set_ssp_reg(0x01000400);
-    cpu.register.reg_sr.set_sr_reg_flags_abcde(
+    modermodem.cpu.register.set_all_d_reg_long_no_log(0x0000ffff, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000d7d7);
+    modermodem.cpu.register.set_all_a_reg_long_no_log(0x00060002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
+    modermodem.cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
+    modermodem.cpu.register.reg_sr.set_sr_reg_flags_abcde(
        STATUS_REGISTER_MASK_EXTEND
        | STATUS_REGISTER_MASK_NEGATIVE
        | STATUS_REGISTER_MASK_ZERO
@@ -382,7 +361,7 @@ fn address_register_indirect_to_data_register_direct_word_carry() {
     );
 
     // act/assert - disassembly
-    let get_disassembly_result = cpu.get_next_disassembly_no_log();
+    let get_disassembly_result = modermodem.get_next_disassembly_no_log();
     assert_eq!(
         GetDisassemblyResult::from_address_and_address_next(
             0x00040000,
@@ -394,20 +373,20 @@ fn address_register_indirect_to_data_register_direct_word_carry() {
         );
 
     // act
-    cpu.execute_next_instruction();
+    modermodem.step();
 
     // assert - regs
-    cpu.register.assert_all_d_reg_long_no_log(0x00000000, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000d7d7);
-    cpu.register.assert_all_a_reg_long_no_log(0x00060002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
-    cpu.register.reg_sr.assert_sr_reg_flags_abcde(
+    modermodem.cpu.register.assert_all_d_reg_long_no_log(0x00000000, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000d7d7);
+    modermodem.cpu.register.assert_all_a_reg_long_no_log(0x00060002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
+    modermodem.cpu.register.reg_sr.assert_sr_reg_flags_abcde(
        STATUS_REGISTER_MASK_EXTEND
        | STATUS_REGISTER_MASK_ZERO
        | STATUS_REGISTER_MASK_CARRY
     );
 
     // assert - mem
-    assert_eq!(0x00, cpu.memory.get_byte_no_log(0x00060002));
-    assert_eq!(0x01, cpu.memory.get_byte_no_log(0x00060003));
+    assert_eq!(0x00, modermodem.mem.get_byte_no_log(0x00060002));
+    assert_eq!(0x01, modermodem.mem.get_byte_no_log(0x00060003));
 }
 
 #[test]
@@ -421,24 +400,20 @@ fn data_register_direct_to_data_register_direct_long() {
     // -nothing-
 
     // arrange - common
-    let stack = RamMemory::from_range(0x01000000, 0x010003ff);
+    let mut mem = Mem::new();
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
-    let mut mem_ranges: Vec<Box<dyn Memory>> = Vec::new();
-    mem_ranges.push(Box::new(code_memory));
-    mem_ranges.push(Box::new(stack));
-    mem_ranges.push(Box::new(vectors));
-    mem_ranges.push(Box::new(cia_memory));
-    let overlay_hack = Box::new(RamMemory::from_range(0xffffffff, 0xffffffff));
-    let mem = Mem::new(mem_ranges, overlay_hack);
-    let mut cpu = Cpu::new(mem);
+    mem.add_range(Rc::new(RefCell::new(code_memory)));
+    mem.add_range(Rc::new(RefCell::new(vectors)));
+    mem.add_range(Rc::new(RefCell::new(cia_memory)));
+    let cpu = Cpu::new(&mem);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None);
 
     // arrange - regs
-    cpu.register.set_all_d_reg_long_no_log(0x23451234, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x54324321);
-    cpu.register.set_all_a_reg_long_no_log(0x00060002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
-    cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
-    cpu.register.set_ssp_reg(0x01000400);
-    cpu.register.reg_sr.set_sr_reg_flags_abcde(
+    modermodem.cpu.register.set_all_d_reg_long_no_log(0x23451234, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x54324321);
+    modermodem.cpu.register.set_all_a_reg_long_no_log(0x00060002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
+    modermodem.cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
+    modermodem.cpu.register.reg_sr.set_sr_reg_flags_abcde(
        STATUS_REGISTER_MASK_EXTEND
        | STATUS_REGISTER_MASK_NEGATIVE
        | STATUS_REGISTER_MASK_ZERO
@@ -447,7 +422,7 @@ fn data_register_direct_to_data_register_direct_long() {
     );
 
     // act/assert - disassembly
-    let get_disassembly_result = cpu.get_next_disassembly_no_log();
+    let get_disassembly_result = modermodem.get_next_disassembly_no_log();
     assert_eq!(
         GetDisassemblyResult::from_address_and_address_next(
             0x00040000,
@@ -459,12 +434,12 @@ fn data_register_direct_to_data_register_direct_long() {
         );
 
     // act
-    cpu.execute_next_instruction();
+    modermodem.step();
 
     // assert - regs
-    cpu.register.assert_all_d_reg_long_no_log(0x23451234, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x77775555);
-    cpu.register.assert_all_a_reg_long_no_log(0x00060002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
-    cpu.register.reg_sr.assert_sr_reg_flags_abcde(
+    modermodem.cpu.register.assert_all_d_reg_long_no_log(0x23451234, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x77775555);
+    modermodem.cpu.register.assert_all_a_reg_long_no_log(0x00060002, 0x000000a1, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
+    modermodem.cpu.register.reg_sr.assert_sr_reg_flags_abcde(
        0x0000
     );
 
@@ -484,25 +459,21 @@ fn data_register_direct_to_address_register_indirect_long() {
     let arrange_mem_00060002 = RamMemory::from_bytes(0x00060002, arrange_mem_bytes_00060002);
 
     // arrange - common
-    let stack = RamMemory::from_range(0x01000000, 0x010003ff);
+    let mut mem = Mem::new();
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
-    let mut mem_ranges: Vec<Box<dyn Memory>> = Vec::new();
-    mem_ranges.push(Box::new(code_memory));
-    mem_ranges.push(Box::new(stack));
-    mem_ranges.push(Box::new(vectors));
-    mem_ranges.push(Box::new(cia_memory));
-    mem_ranges.push(Box::new(arrange_mem_00060002));
-    let overlay_hack = Box::new(RamMemory::from_range(0xffffffff, 0xffffffff));
-    let mem = Mem::new(mem_ranges, overlay_hack);
-    let mut cpu = Cpu::new(mem);
+    mem.add_range(Rc::new(RefCell::new(code_memory)));
+    mem.add_range(Rc::new(RefCell::new(vectors)));
+    mem.add_range(Rc::new(RefCell::new(cia_memory)));
+    mem.add_range(Rc::new(RefCell::new(arrange_mem_00060002)));
+    let cpu = Cpu::new(&mem);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None);
 
     // arrange - regs
-    cpu.register.set_all_d_reg_long_no_log(0x23451234, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x12345678);
-    cpu.register.set_all_a_reg_long_no_log(0x00060002, 0x00060002, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
-    cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
-    cpu.register.set_ssp_reg(0x01000400);
-    cpu.register.reg_sr.set_sr_reg_flags_abcde(
+    modermodem.cpu.register.set_all_d_reg_long_no_log(0x23451234, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x12345678);
+    modermodem.cpu.register.set_all_a_reg_long_no_log(0x00060002, 0x00060002, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
+    modermodem.cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
+    modermodem.cpu.register.reg_sr.set_sr_reg_flags_abcde(
        STATUS_REGISTER_MASK_EXTEND
        | STATUS_REGISTER_MASK_NEGATIVE
        | STATUS_REGISTER_MASK_ZERO
@@ -511,7 +482,7 @@ fn data_register_direct_to_address_register_indirect_long() {
     );
 
     // act/assert - disassembly
-    let get_disassembly_result = cpu.get_next_disassembly_no_log();
+    let get_disassembly_result = modermodem.get_next_disassembly_no_log();
     assert_eq!(
         GetDisassemblyResult::from_address_and_address_next(
             0x00040000,
@@ -523,20 +494,20 @@ fn data_register_direct_to_address_register_indirect_long() {
         );
 
     // act
-    cpu.execute_next_instruction();
+    modermodem.step();
 
     // assert - regs
-    cpu.register.assert_all_d_reg_long_no_log(0x23451234, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x12345678);
-    cpu.register.assert_all_a_reg_long_no_log(0x00060002, 0x00060006, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
-    cpu.register.reg_sr.assert_sr_reg_flags_abcde(
+    modermodem.cpu.register.assert_all_d_reg_long_no_log(0x23451234, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x12345678);
+    modermodem.cpu.register.assert_all_a_reg_long_no_log(0x00060002, 0x00060006, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x000000a6, 0x000000a7);
+    modermodem.cpu.register.reg_sr.assert_sr_reg_flags_abcde(
        0x0000
     );
 
     // assert - mem
-    assert_eq!(0x23, cpu.memory.get_byte_no_log(0x00060002));
-    assert_eq!(0x56, cpu.memory.get_byte_no_log(0x00060003));
-    assert_eq!(0x89, cpu.memory.get_byte_no_log(0x00060004));
-    assert_eq!(0xbc, cpu.memory.get_byte_no_log(0x00060005));
+    assert_eq!(0x23, modermodem.mem.get_byte_no_log(0x00060002));
+    assert_eq!(0x56, modermodem.mem.get_byte_no_log(0x00060003));
+    assert_eq!(0x89, modermodem.mem.get_byte_no_log(0x00060004));
+    assert_eq!(0xbc, modermodem.mem.get_byte_no_log(0x00060005));
 }
 
 #[test]
@@ -551,25 +522,21 @@ fn data_register_direct_to_address_register_indirect_word() {
     let arrange_mem_00060002 = RamMemory::from_bytes(0x00060002, arrange_mem_bytes_00060002);
 
     // arrange - common
-    let stack = RamMemory::from_range(0x01000000, 0x010003ff);
+    let mut mem = Mem::new();
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
-    let mut mem_ranges: Vec<Box<dyn Memory>> = Vec::new();
-    mem_ranges.push(Box::new(code_memory));
-    mem_ranges.push(Box::new(stack));
-    mem_ranges.push(Box::new(vectors));
-    mem_ranges.push(Box::new(cia_memory));
-    mem_ranges.push(Box::new(arrange_mem_00060002));
-    let overlay_hack = Box::new(RamMemory::from_range(0xffffffff, 0xffffffff));
-    let mem = Mem::new(mem_ranges, overlay_hack);
-    let mut cpu = Cpu::new(mem);
+    mem.add_range(Rc::new(RefCell::new(code_memory)));
+    mem.add_range(Rc::new(RefCell::new(vectors)));
+    mem.add_range(Rc::new(RefCell::new(cia_memory)));
+    mem.add_range(Rc::new(RefCell::new(arrange_mem_00060002)));
+    let cpu = Cpu::new(&mem);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None);
 
     // arrange - regs
-    cpu.register.set_all_d_reg_long_no_log(0x23451234, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x00002468, 0x12345678);
-    cpu.register.set_all_a_reg_long_no_log(0x00060002, 0x00060006, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x00060002, 0x000000a7);
-    cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
-    cpu.register.set_ssp_reg(0x01000400);
-    cpu.register.reg_sr.set_sr_reg_flags_abcde(
+    modermodem.cpu.register.set_all_d_reg_long_no_log(0x23451234, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x00002468, 0x12345678);
+    modermodem.cpu.register.set_all_a_reg_long_no_log(0x00060002, 0x00060006, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x00060002, 0x000000a7);
+    modermodem.cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
+    modermodem.cpu.register.reg_sr.set_sr_reg_flags_abcde(
        STATUS_REGISTER_MASK_EXTEND
        | STATUS_REGISTER_MASK_NEGATIVE
        | STATUS_REGISTER_MASK_ZERO
@@ -578,7 +545,7 @@ fn data_register_direct_to_address_register_indirect_word() {
     );
 
     // act/assert - disassembly
-    let get_disassembly_result = cpu.get_next_disassembly_no_log();
+    let get_disassembly_result = modermodem.get_next_disassembly_no_log();
     assert_eq!(
         GetDisassemblyResult::from_address_and_address_next(
             0x00040000,
@@ -590,18 +557,18 @@ fn data_register_direct_to_address_register_indirect_word() {
         );
 
     // act
-    cpu.execute_next_instruction();
+    modermodem.step();
 
     // assert - regs
-    cpu.register.assert_all_d_reg_long_no_log(0x23451234, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x00002468, 0x12345678);
-    cpu.register.assert_all_a_reg_long_no_log(0x00060002, 0x00060006, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x00060004, 0x000000a7);
-    cpu.register.reg_sr.assert_sr_reg_flags_abcde(
+    modermodem.cpu.register.assert_all_d_reg_long_no_log(0x23451234, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x00002468, 0x12345678);
+    modermodem.cpu.register.assert_all_a_reg_long_no_log(0x00060002, 0x00060006, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0x00060004, 0x000000a7);
+    modermodem.cpu.register.reg_sr.assert_sr_reg_flags_abcde(
        0x0000
     );
 
     // assert - mem
-    assert_eq!(0x35, cpu.memory.get_byte_no_log(0x00060002));
-    assert_eq!(0xac, cpu.memory.get_byte_no_log(0x00060003));
+    assert_eq!(0x35, modermodem.mem.get_byte_no_log(0x00060002));
+    assert_eq!(0xac, modermodem.mem.get_byte_no_log(0x00060003));
 }
 
 #[test]
@@ -616,25 +583,21 @@ fn data_register_direct_to_address_register_indirect_byte() {
     let arrange_mem_00060002 = RamMemory::from_bytes(0x00060002, arrange_mem_bytes_00060002);
 
     // arrange - common
-    let stack = RamMemory::from_range(0x01000000, 0x010003ff);
+    let mut mem = Mem::new();
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
-    let mut mem_ranges: Vec<Box<dyn Memory>> = Vec::new();
-    mem_ranges.push(Box::new(code_memory));
-    mem_ranges.push(Box::new(stack));
-    mem_ranges.push(Box::new(vectors));
-    mem_ranges.push(Box::new(cia_memory));
-    mem_ranges.push(Box::new(arrange_mem_00060002));
-    let overlay_hack = Box::new(RamMemory::from_range(0xffffffff, 0xffffffff));
-    let mem = Mem::new(mem_ranges, overlay_hack);
-    let mut cpu = Cpu::new(mem);
+    mem.add_range(Rc::new(RefCell::new(code_memory)));
+    mem.add_range(Rc::new(RefCell::new(vectors)));
+    mem.add_range(Rc::new(RefCell::new(cia_memory)));
+    mem.add_range(Rc::new(RefCell::new(arrange_mem_00060002)));
+    let cpu = Cpu::new(&mem);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None);
 
     // arrange - regs
-    cpu.register.set_all_d_reg_long_no_log(0x23451234, 0x000000d1, 0x00000046, 0x000000d3, 0x000000d4, 0x000000d5, 0x00002468, 0x12345678);
-    cpu.register.set_all_a_reg_long_no_log(0x00060003, 0x00060006, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0xa6a6a6a6, 0x000000a7);
-    cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
-    cpu.register.set_ssp_reg(0x01000400);
-    cpu.register.reg_sr.set_sr_reg_flags_abcde(
+    modermodem.cpu.register.set_all_d_reg_long_no_log(0x23451234, 0x000000d1, 0x00000046, 0x000000d3, 0x000000d4, 0x000000d5, 0x00002468, 0x12345678);
+    modermodem.cpu.register.set_all_a_reg_long_no_log(0x00060003, 0x00060006, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0xa6a6a6a6, 0x000000a7);
+    modermodem.cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
+    modermodem.cpu.register.reg_sr.set_sr_reg_flags_abcde(
        STATUS_REGISTER_MASK_EXTEND
        | STATUS_REGISTER_MASK_NEGATIVE
        | STATUS_REGISTER_MASK_ZERO
@@ -643,7 +606,7 @@ fn data_register_direct_to_address_register_indirect_byte() {
     );
 
     // act/assert - disassembly
-    let get_disassembly_result = cpu.get_next_disassembly_no_log();
+    let get_disassembly_result = modermodem.get_next_disassembly_no_log();
     assert_eq!(
         GetDisassemblyResult::from_address_and_address_next(
             0x00040000,
@@ -655,18 +618,18 @@ fn data_register_direct_to_address_register_indirect_byte() {
         );
 
     // act
-    cpu.execute_next_instruction();
+    modermodem.step();
 
     // assert - regs
-    cpu.register.assert_all_d_reg_long_no_log(0x23451234, 0x000000d1, 0x00000046, 0x000000d3, 0x000000d4, 0x000000d5, 0x00002468, 0x12345678);
-    cpu.register.assert_all_a_reg_long_no_log(0x00060002, 0x00060006, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0xa6a6a6a6, 0x000000a7);
-    cpu.register.reg_sr.assert_sr_reg_flags_abcde(
+    modermodem.cpu.register.assert_all_d_reg_long_no_log(0x23451234, 0x000000d1, 0x00000046, 0x000000d3, 0x000000d4, 0x000000d5, 0x00002468, 0x12345678);
+    modermodem.cpu.register.assert_all_a_reg_long_no_log(0x00060002, 0x00060006, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0xa6a6a6a6, 0x000000a7);
+    modermodem.cpu.register.reg_sr.assert_sr_reg_flags_abcde(
        STATUS_REGISTER_MASK_NEGATIVE
        | STATUS_REGISTER_MASK_OVERFLOW
     );
 
     // assert - mem
-    assert_eq!(0x8a, cpu.memory.get_byte_no_log(0x00060002));
+    assert_eq!(0x8a, modermodem.mem.get_byte_no_log(0x00060002));
 }
 
 #[test]
@@ -680,29 +643,25 @@ fn immediate_data_to_address_register_direct_word() {
     // -nothing-
 
     // arrange - common
-    let stack = RamMemory::from_range(0x01000000, 0x010003ff);
+    let mut mem = Mem::new();
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
-    let mut mem_ranges: Vec<Box<dyn Memory>> = Vec::new();
-    mem_ranges.push(Box::new(code_memory));
-    mem_ranges.push(Box::new(stack));
-    mem_ranges.push(Box::new(vectors));
-    mem_ranges.push(Box::new(cia_memory));
-    let overlay_hack = Box::new(RamMemory::from_range(0xffffffff, 0xffffffff));
-    let mem = Mem::new(mem_ranges, overlay_hack);
-    let mut cpu = Cpu::new(mem);
+    mem.add_range(Rc::new(RefCell::new(code_memory)));
+    mem.add_range(Rc::new(RefCell::new(vectors)));
+    mem.add_range(Rc::new(RefCell::new(cia_memory)));
+    let cpu = Cpu::new(&mem);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None);
 
     // arrange - regs
-    cpu.register.set_all_d_reg_long_no_log(0x23451234, 0x000000d1, 0x00000046, 0x000000d3, 0x000000d4, 0x000000d5, 0x00002468, 0x12345678);
-    cpu.register.set_all_a_reg_long_no_log(0xffffff00, 0x00060006, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0xa6a6a6a6, 0x000000a7);
-    cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
-    cpu.register.set_ssp_reg(0x01000400);
-    cpu.register.reg_sr.set_sr_reg_flags_abcde(
+    modermodem.cpu.register.set_all_d_reg_long_no_log(0x23451234, 0x000000d1, 0x00000046, 0x000000d3, 0x000000d4, 0x000000d5, 0x00002468, 0x12345678);
+    modermodem.cpu.register.set_all_a_reg_long_no_log(0xffffff00, 0x00060006, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0xa6a6a6a6, 0x000000a7);
+    modermodem.cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
+    modermodem.cpu.register.reg_sr.set_sr_reg_flags_abcde(
        0x0000
     );
 
     // act/assert - disassembly
-    let get_disassembly_result = cpu.get_next_disassembly_no_log();
+    let get_disassembly_result = modermodem.get_next_disassembly_no_log();
     assert_eq!(
         GetDisassemblyResult::from_address_and_address_next(
             0x00040000,
@@ -714,12 +673,12 @@ fn immediate_data_to_address_register_direct_word() {
         );
 
     // act
-    cpu.execute_next_instruction();
+    modermodem.step();
 
     // assert - regs
-    cpu.register.assert_all_d_reg_long_no_log(0x23451234, 0x000000d1, 0x00000046, 0x000000d3, 0x000000d4, 0x000000d5, 0x00002468, 0x12345678);
-    cpu.register.assert_all_a_reg_long_no_log(0x00004311, 0x00060006, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0xa6a6a6a6, 0x000000a7);
-    cpu.register.reg_sr.assert_sr_reg_flags_abcde(
+    modermodem.cpu.register.assert_all_d_reg_long_no_log(0x23451234, 0x000000d1, 0x00000046, 0x000000d3, 0x000000d4, 0x000000d5, 0x00002468, 0x12345678);
+    modermodem.cpu.register.assert_all_a_reg_long_no_log(0x00004311, 0x00060006, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0xa6a6a6a6, 0x000000a7);
+    modermodem.cpu.register.reg_sr.assert_sr_reg_flags_abcde(
        0x0000
     );
 
@@ -738,29 +697,25 @@ fn immediate_data_to_address_register_direct_long() {
     // -nothing-
 
     // arrange - common
-    let stack = RamMemory::from_range(0x01000000, 0x010003ff);
+    let mut mem = Mem::new();
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
-    let mut mem_ranges: Vec<Box<dyn Memory>> = Vec::new();
-    mem_ranges.push(Box::new(code_memory));
-    mem_ranges.push(Box::new(stack));
-    mem_ranges.push(Box::new(vectors));
-    mem_ranges.push(Box::new(cia_memory));
-    let overlay_hack = Box::new(RamMemory::from_range(0xffffffff, 0xffffffff));
-    let mem = Mem::new(mem_ranges, overlay_hack);
-    let mut cpu = Cpu::new(mem);
+    mem.add_range(Rc::new(RefCell::new(code_memory)));
+    mem.add_range(Rc::new(RefCell::new(vectors)));
+    mem.add_range(Rc::new(RefCell::new(cia_memory)));
+    let cpu = Cpu::new(&mem);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None);
 
     // arrange - regs
-    cpu.register.set_all_d_reg_long_no_log(0x23451234, 0x000000d1, 0x00000046, 0x000000d3, 0x000000d4, 0x000000d5, 0x00002468, 0x12345678);
-    cpu.register.set_all_a_reg_long_no_log(0xa0a0a0a0, 0x00060006, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0xa6a6a6a6, 0x22220000);
-    cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
-    cpu.register.set_ssp_reg(0x01000400);
-    cpu.register.reg_sr.set_sr_reg_flags_abcde(
+    modermodem.cpu.register.set_all_d_reg_long_no_log(0x23451234, 0x000000d1, 0x00000046, 0x000000d3, 0x000000d4, 0x000000d5, 0x00002468, 0x12345678);
+    modermodem.cpu.register.set_all_a_reg_long_no_log(0xa0a0a0a0, 0x00060006, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0xa6a6a6a6, 0x22220000);
+    modermodem.cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
+    modermodem.cpu.register.reg_sr.set_sr_reg_flags_abcde(
        0x0000
     );
 
     // act/assert - disassembly
-    let get_disassembly_result = cpu.get_next_disassembly_no_log();
+    let get_disassembly_result = modermodem.get_next_disassembly_no_log();
     assert_eq!(
         GetDisassemblyResult::from_address_and_address_next(
             0x00040000,
@@ -772,12 +727,12 @@ fn immediate_data_to_address_register_direct_long() {
         );
 
     // act
-    cpu.execute_next_instruction();
+    modermodem.step();
 
     // assert - regs
-    cpu.register.assert_all_d_reg_long_no_log(0x23451234, 0x000000d1, 0x00000046, 0x000000d3, 0x000000d4, 0x000000d5, 0x00002468, 0x12345678);
-    cpu.register.assert_all_a_reg_long_no_log(0xa0a0a0a0, 0x00060006, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0xa6a6a6a6, 0xaaaa8888);
-    cpu.register.reg_sr.assert_sr_reg_flags_abcde(
+    modermodem.cpu.register.assert_all_d_reg_long_no_log(0x23451234, 0x000000d1, 0x00000046, 0x000000d3, 0x000000d4, 0x000000d5, 0x00002468, 0x12345678);
+    modermodem.cpu.register.assert_all_a_reg_long_no_log(0xa0a0a0a0, 0x00060006, 0x000000a2, 0x000000a3, 0x000000a4, 0x000000a5, 0xa6a6a6a6, 0xaaaa8888);
+    modermodem.cpu.register.reg_sr.assert_sr_reg_flags_abcde(
        0x0000
     );
 

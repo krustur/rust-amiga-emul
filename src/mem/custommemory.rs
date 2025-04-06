@@ -1,10 +1,11 @@
-use crate::cpu::{instruction::add, step_log::StepLog, Cpu};
+use crate::cpu::{step_log::StepLog, Cpu};
 
 use super::memory::{Memory, SetMemoryResult};
 use std::{any::Any, fmt};
 
 pub struct CustomMemory {
     pub dmacon: u16, // 096 / 002
+    pub vhpos: u32, // --- / 004-006
     pub intena: u16, // 09A / 01C
     pub intreq: u16, // 09C / 01E
     pub color_rgb4: [u16; 32],
@@ -40,7 +41,11 @@ impl Memory for CustomMemory {
     }
 
     fn get_long(self: &CustomMemory, step_log: &mut StepLog, address: u32) -> u32 {
-        panic!("custom memory get_long: ${:06X}", address);
+        // panic!("custom memory get_long: ${:06X}", address);
+        let hi = self.get_word(step_log, address);
+        let low = self.get_word(step_log, address + 2);
+        let value = Cpu::join_words_to_long(hi, low);
+        value
     }
 
     fn set_long(self: &mut CustomMemory, step_log: &mut StepLog, address: u32, value: u32) {
@@ -56,6 +61,17 @@ impl Memory for CustomMemory {
                 // DMACONR
                 self.read_dmacon_bits(step_log)
             }
+            0xDFF004 => {
+                // VPOSR
+                step_log.add_log("CUSTOM: TODO: Reading VPOSR".to_string());
+                // self.vhpos = self.vhpos + 1;
+                (self.vhpos >> 16) as u16
+            }
+            0xDFF006 => {
+                // VHPOSR
+                step_log.add_log("CUSTOM: TODO: Reading VHPOSR".to_string());
+                (self.vhpos & 0x0000ffff) as u16
+            }
             0xDFF01C => {
                 // INTENAR
                 self.read_intena_bits(step_log)
@@ -66,17 +82,17 @@ impl Memory for CustomMemory {
             }
             0xDFF096 => {
                 // DMACON
-                step_log.add_log(format!("CUSTOM: Reading DMACON, returns $0000"));
+                step_log.add_log("CUSTOM: TODO: Reading DMACON, returns $0000".to_string());
                 0x0000
             }
             0xDFF09A => {
                 // INTENA
-                step_log.add_log(format!("CUSTOM: Reading INTENA, returns $0000"));
+                step_log.add_log("CUSTOM: TODO: Reading INTENA, returns $0000".to_string());
                 0x0000
             }
             0xDFF09C => {
                 // INTREQ
-                step_log.add_log(format!("CUSTOM: Reading INTREQ, returns $0000"));
+                step_log.add_log("CUSTOM: TODO: Reading INTREQ, returns $0000".to_string());
                 0x0000
             }
             // 0xDFF100 => {
@@ -101,17 +117,17 @@ impl Memory for CustomMemory {
         match address {
             0xDFF002 => {
                 // DMACONR
-                step_log.add_log(format!("CUSTOM: Writing DMACONR, nothingness"));
+                step_log.add_log("CUSTOM: TODO: Writing DMACONR, nothingness".to_string());
                 ()
             }
             0xDFF01C => {
                 // INTENAR
-                step_log.add_log(format!("CUSTOM: Writing INTENAR, nothingness"));
+                step_log.add_log("CUSTOM: TODO: Writing INTENAR, nothingness".to_string());
                 ()
             }
             0xDFF01E => {
                 // INTREQR
-                step_log.add_log(format!("CUSTOM: Writing INTREQR, nothingness"));
+                step_log.add_log("CUSTOM: TODO: Writing INTREQR, nothingness".to_string());
                 ()
             }
             0xDFF096 => {
@@ -181,9 +197,10 @@ impl Memory for CustomMemory {
 impl CustomMemory {
     pub fn new() -> CustomMemory {
         CustomMemory {
+            dmacon: 0x0000,
+            vhpos: 0x00000000,
             intena: 0x0000,
             intreq: 0x0000,
-            dmacon: 0x0000,
             color_rgb4: [0x0000; 32],
         }
     }

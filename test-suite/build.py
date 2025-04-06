@@ -259,31 +259,28 @@ class TestCase(object):
 
         # Arrange - common
         file.write(f"    // arrange - common\n")
-        file.write(f"    let stack = RamMemory::from_range(0x01000000, 0x010003ff);\n")
+        file.write(f"    let mut mem = Mem::new();\n")
         file.write(f"    let vectors = RamMemory::from_range(0x00000000, 0x000003ff);\n")
         file.write(f"    let cia_memory = CiaMemory::new();\n")
-        file.write(f"    let mut mem_ranges: Vec<Box<dyn Memory>> = Vec::new();\n")
-        file.write(f"    mem_ranges.push(Box::new(code_memory));\n")
-        file.write(f"    mem_ranges.push(Box::new(stack));\n")
-        file.write(f"    mem_ranges.push(Box::new(vectors));\n")
-        file.write(f"    mem_ranges.push(Box::new(cia_memory));\n")
+        file.write(f"    mem.add_range(Rc::new(RefCell::new(code_memory)));\n")
+        file.write(f"    mem.add_range(Rc::new(RefCell::new(vectors)));\n")
+        file.write(f"    mem.add_range(Rc::new(RefCell::new(cia_memory)));\n")
         for arr_mem in self.arrange_mem:
-            file.write(f"    mem_ranges.push(Box::new(arrange_mem_{arr_mem.address:08x}));\n")
-        file.write(f"    let overlay_hack = Box::new(RamMemory::from_range(0xffffffff, 0xffffffff));\n")
-        file.write(f"    let mem = Mem::new(mem_ranges, overlay_hack);\n")
-        file.write(f"    let mut cpu = Cpu::new(mem);\n")
+            file.write(f"    mem.add_range(Rc::new(RefCell::new(arrange_mem_{arr_mem.address:08x})));\n")
+        file.write(f"    let cpu = Cpu::new(&mem);\n")
+        file.write(f"    let mut modermodem = Modermodem::new(None, cpu, mem, None);\n")
         file.write(f"\n")
 
         # Arrange - regs
         file.write(f"    // arrange - regs\n")
         file.write(
-            f"    cpu.register.set_all_d_reg_long_no_log({self.get_d_reg_string(self.arrange_reg_data.data_registers)});\n")
+            f"    modermodem.cpu.register.set_all_d_reg_long_no_log({self.get_d_reg_string(self.arrange_reg_data.data_registers)});\n")
         file.write(
-            f"    cpu.register.set_all_a_reg_long_no_log({self.get_a_reg_string(self.arrange_reg_address.address_registers)});\n")
-        file.write(f"    cpu.register.reg_pc = ProgramCounter::from_address(0x{self.arrange_code.address:08x});\n")
-        file.write(f"    cpu.register.set_ssp_reg(0x01000400);\n")
+            f"    modermodem.cpu.register.set_all_a_reg_long_no_log({self.get_a_reg_string(self.arrange_reg_address.address_registers)});\n")
+        file.write(f"    modermodem.cpu.register.reg_pc = ProgramCounter::from_address(0x{self.arrange_code.address:08x});\n")
+        # file.write(f"    modermodem.cpu.register.set_ssp_reg(0x01000400);\n")
         # if self.arrange_reg_sr is not None:
-        file.write(f"    cpu.register.reg_sr.set_sr_reg_flags_abcde(\n")
+        file.write(f"    modermodem.cpu.register.reg_sr.set_sr_reg_flags_abcde(\n")
         if len(self.arrange_reg_sr.status_flags) > 0:
             for idx, stats_flag in enumerate(self.arrange_reg_sr.status_flags):
                 if idx == 0:
@@ -306,7 +303,7 @@ class TestCase(object):
             # file.write(f" dc.l ${self.arrange_code.address + len(self.arrange_code.bytes):08x} ; PC\n")
 
         file.write(f"    // act/assert - disassembly\n")
-        file.write(f"    let get_disassembly_result = cpu.get_next_disassembly_no_log();\n")
+        file.write(f"    let get_disassembly_result = modermodem.get_next_disassembly_no_log();\n")
         file.write(f"""    assert_eq!(
         GetDisassemblyResult::from_address_and_address_next(
             0x{self.arrange_code.address:08x},
@@ -320,17 +317,17 @@ class TestCase(object):
 
         # Act
         file.write(f"    // act\n")
-        file.write(f"    cpu.execute_next_instruction();\n")
+        file.write(f"    modermodem.step();\n")
         file.write(f"\n")
 
         # Assert - regs
         file.write(f"    // assert - regs\n")
         file.write(
-            f"    cpu.register.assert_all_d_reg_long_no_log({self.get_d_reg_string(self.assert_reg_data.data_registers)});\n")
+            f"    modermodem.cpu.register.assert_all_d_reg_long_no_log({self.get_d_reg_string(self.assert_reg_data.data_registers)});\n")
         file.write(
-            f"    cpu.register.assert_all_a_reg_long_no_log({self.get_a_reg_string(self.assert_reg_address.address_registers)});\n")
+            f"    modermodem.cpu.register.assert_all_a_reg_long_no_log({self.get_a_reg_string(self.assert_reg_address.address_registers)});\n")
         # if self.assert_reg_sr is not None:
-        file.write(f"    cpu.register.reg_sr.assert_sr_reg_flags_abcde(\n")
+        file.write(f"    modermodem.cpu.register.reg_sr.assert_sr_reg_flags_abcde(\n")
         if len(self.assert_reg_sr.status_flags) > 0:
             for idx, stats_flag in enumerate(self.assert_reg_sr.status_flags):
                 if idx == 0:
@@ -348,7 +345,7 @@ class TestCase(object):
             file.write(f"    // -nothing-\n")
         for ass_mem in self.assert_mem:
              for index, b in enumerate(ass_mem.bytes):
-                 file.write(f"    assert_eq!(0x{b:02x}, cpu.memory.get_byte_no_log(0x{(ass_mem.address + index):08x}));\n")
+                 file.write(f"    assert_eq!(0x{b:02x}, modermodem.mem.get_byte_no_log(0x{(ass_mem.address + index):08x}));\n")
         file.write(f"}}\n")
 
     def write_amiga_test(self, file):
@@ -460,6 +457,8 @@ class TestSet:
         file.write("\n")
         file.write("#![allow(unused_imports)]\n")
         file.write("\n")
+        file.write("use std::cell::RefCell;\n")
+        file.write("use std::rc::Rc;\n")
         file.write("use crate::register::ProgramCounter;\n")
         file.write("use crate::mem::rammemory::RamMemory;\n")
         file.write("use crate::cpu::instruction::GetDisassemblyResult;\n")
@@ -467,6 +466,7 @@ class TestSet:
         file.write("use crate::mem::ciamemory::CiaMemory;\n")
         file.write("use crate::cpu::Cpu;\n")
         file.write("use crate::mem::Mem;\n")
+        file.write("use crate::modermodem::Modermodem;\n")
         file.write("use crate::register::STATUS_REGISTER_MASK_CARRY;\n")
         file.write("use crate::register::STATUS_REGISTER_MASK_EXTEND;\n")
         file.write("use crate::register::STATUS_REGISTER_MASK_NEGATIVE;\n")
@@ -783,6 +783,11 @@ def parse_line(line_number, line_raw) -> ParsedLine:
         line = ParsedLine(line_number=line_number, line_raw=line_raw, address_registers=longs)
     elif get_status_register_flags_line(line_stripped):
         status_flags = get_status_flags(line_stripped)
+        if status_flags is None:
+            print(f"{line_number:5d}: {line_raw}")
+            print(f"Unable to parse content of status flags.")
+            print(
+                f" Expected 5 chars signalling SR flags in correct order, or dash for zero SR flag. Order is ENZOC.")
         line = ParsedLine(line_number=line_number, line_raw=line_raw, status_flags=status_flags)
     elif get_status_register_line(line_stripped):
         words = get_words(line_stripped)
