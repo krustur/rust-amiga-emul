@@ -1051,16 +1051,16 @@ address_register_word_with_extend_clear
 
 .arrange_mem
  ;length,address,ptr
- dc.l $00000004,$00040010,.arrange_mem_00040010
+ dc.l $00000004,$00040110,.arrange_mem_00040110
  dc.l $00000000
 
-.arrange_mem_00040010
+.arrange_mem_00040110
  dc.b $10,$10,$20,$20
 
 .arrange_regs
  ;    D0/A0     D1/A1     D2/A2     D3/A3     D4/A4     D5/A5     D6/A6     D7/A7
  dc.l $00000010,$0000006f,$00001000,$00006fff,$10000000,$6fffffff,$000000d6,$00004344
- dc.l $a0a0a0a0,$000000a1,$000000a2,$00050003,$00050004,$00040012,$00040014,$000000a7
+ dc.l $a0a0a0a0,$000000a1,$000000a2,$00050003,$00050004,$00040112,$00040114,$000000a7
  dc.w $000f ; -NZOC
 
 .arrange_code
@@ -1070,16 +1070,16 @@ address_register_word_with_extend_clear
 
 .assert_mem
  ;length,address,ptr
- dc.l $00000004,$00040010,.assert_mem_00040010
+ dc.l $00000004,$00040110,.assert_mem_00040110
  dc.l $00000000
 
-.assert_mem_00040010
+.assert_mem_00040110
  dc.b $10,$10,$30,$30
 
 .assert_regs
  ;    D0/A0     D1/A1     D2/A2     D3/A3     D4/A4     D5/A5     D6/A6     D7/A7
  dc.l $00000010,$0000006f,$00001000,$00006fff,$10000000,$6fffffff,$000000d6,$00004344
- dc.l $a0a0a0a0,$000000a1,$000000a2,$00050003,$00050004,$00040010,$00040012,$000000a7
+ dc.l $a0a0a0a0,$000000a1,$000000a2,$00050003,$00050004,$00040110,$00040112,$000000a7
  dc.l $00040002 ; PC
  dc.w $0000 ; SR=-----
 
@@ -1103,16 +1103,16 @@ address_register_word_with_extend_set
 
 .arrange_mem
  ;length,address,ptr
- dc.l $00000004,$00040010,.arrange_mem_00040010
+ dc.l $00000004,$00040110,.arrange_mem_00040110
  dc.l $00000000
 
-.arrange_mem_00040010
+.arrange_mem_00040110
  dc.b $10,$10,$20,$20
 
 .arrange_regs
  ;    D0/A0     D1/A1     D2/A2     D3/A3     D4/A4     D5/A5     D6/A6     D7/A7
  dc.l $00000010,$0000006f,$00001000,$00006fff,$10000000,$6fffffff,$000000d6,$00004344
- dc.l $a0a0a0a0,$000000a1,$000000a2,$00050003,$00050004,$00040012,$00040014,$000000a7
+ dc.l $a0a0a0a0,$000000a1,$000000a2,$00050003,$00050004,$00040112,$00040114,$000000a7
  dc.w $001f ; ENZOC
 
 .arrange_code
@@ -1122,16 +1122,16 @@ address_register_word_with_extend_set
 
 .assert_mem
  ;length,address,ptr
- dc.l $00000004,$00040010,.assert_mem_00040010
+ dc.l $00000004,$00040110,.assert_mem_00040110
  dc.l $00000000
 
-.assert_mem_00040010
+.assert_mem_00040110
  dc.b $10,$10,$30,$31
 
 .assert_regs
  ;    D0/A0     D1/A1     D2/A2     D3/A3     D4/A4     D5/A5     D6/A6     D7/A7
  dc.l $00000010,$0000006f,$00001000,$00006fff,$10000000,$6fffffff,$000000d6,$00004344
- dc.l $a0a0a0a0,$000000a1,$000000a2,$00050003,$00050004,$00040010,$00040012,$000000a7
+ dc.l $a0a0a0a0,$000000a1,$000000a2,$00050003,$00050004,$00040110,$00040112,$000000a7
  dc.l $00040002 ; PC
  dc.w $0000 ; SR=-----
 
@@ -1155,16 +1155,16 @@ address_register_long_with_extend_clear
 
 .arrange_mem
  ;length,address,ptr
- dc.l $00000008,$00040010,.arrange_mem_00040010
+ dc.l $00000008,$00040110,.arrange_mem_00040110
  dc.l $00000000
 
-.arrange_mem_00040010
+.arrange_mem_00040110
  dc.b $10,$10,$10,$10,$20,$20,$20,$20
 
 .arrange_regs
  ;    D0/A0     D1/A1     D2/A2     D3/A3     D4/A4     D5/A5     D6/A6     D7/A7
  dc.l $00000010,$0000006f,$00001000,$00006fff,$10000000,$6fffffff,$000000d6,$00004344
- dc.l $00040018,$000000a1,$000000a2,$00050003,$00050004,$00040014,$00040018,$00040014
+ dc.l $00040118,$000000a1,$000000a2,$00050003,$00050004,$00040014,$00040018,$00040114
  dc.w $000e ; -NZO-
 
 .arrange_code
@@ -1174,16 +1174,16 @@ address_register_long_with_extend_clear
 
 .assert_mem
  ;length,address,ptr
- dc.l $00000008,$00040010,.assert_mem_00040010
+ dc.l $00000008,$00040110,.assert_mem_00040110
  dc.l $00000000
 
-.assert_mem_00040010
+.assert_mem_00040110
  dc.b $10,$10,$10,$10,$30,$30,$30,$30
 
 .assert_regs
  ;    D0/A0     D1/A1     D2/A2     D3/A3     D4/A4     D5/A5     D6/A6     D7/A7
  dc.l $00000010,$0000006f,$00001000,$00006fff,$10000000,$6fffffff,$000000d6,$00004344
- dc.l $00040014,$000000a1,$000000a2,$00050003,$00050004,$00040014,$00040018,$00040010
+ dc.l $00040114,$000000a1,$000000a2,$00050003,$00050004,$00040014,$00040018,$00040110
  dc.l $00040002 ; PC
  dc.w $0000 ; SR=-----
 
@@ -1207,16 +1207,16 @@ address_register_long_with_extend_set
 
 .arrange_mem
  ;length,address,ptr
- dc.l $00000008,$00040010,.arrange_mem_00040010
+ dc.l $00000008,$00040110,.arrange_mem_00040110
  dc.l $00000000
 
-.arrange_mem_00040010
+.arrange_mem_00040110
  dc.b $10,$10,$10,$10,$20,$20,$20,$20
 
 .arrange_regs
  ;    D0/A0     D1/A1     D2/A2     D3/A3     D4/A4     D5/A5     D6/A6     D7/A7
  dc.l $00000010,$0000006f,$00001000,$00006fff,$10000000,$6fffffff,$000000d6,$00004344
- dc.l $00040018,$000000a1,$000000a2,$00050003,$00050004,$00040014,$00040018,$00040014
+ dc.l $00040118,$000000a1,$000000a2,$00050003,$00050004,$00040014,$00040018,$00040114
  dc.w $001f ; ENZOC
 
 .arrange_code
@@ -1226,16 +1226,16 @@ address_register_long_with_extend_set
 
 .assert_mem
  ;length,address,ptr
- dc.l $00000008,$00040010,.assert_mem_00040010
+ dc.l $00000008,$00040110,.assert_mem_00040110
  dc.l $00000000
 
-.assert_mem_00040010
+.assert_mem_00040110
  dc.b $10,$10,$10,$10,$30,$30,$30,$31
 
 .assert_regs
  ;    D0/A0     D1/A1     D2/A2     D3/A3     D4/A4     D5/A5     D6/A6     D7/A7
  dc.l $00000010,$0000006f,$00001000,$00006fff,$10000000,$6fffffff,$000000d6,$00004344
- dc.l $00040014,$000000a1,$000000a2,$00050003,$00050004,$00040014,$00040018,$00040010
+ dc.l $00040114,$000000a1,$000000a2,$00050003,$00050004,$00040014,$00040018,$00040110
  dc.l $00040002 ; PC
  dc.w $0000 ; SR=-----
 

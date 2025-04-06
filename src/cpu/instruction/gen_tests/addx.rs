@@ -1309,8 +1309,8 @@ fn address_register_word_with_extend_clear() {
     let code_memory = RamMemory::from_bytes(0x00040000, code);
 
     // arrange - mem
-    let arrange_mem_bytes_00040010 = [0x10, 0x10, 0x20, 0x20].to_vec();
-    let arrange_mem_00040010 = RamMemory::from_bytes(0x00040010, arrange_mem_bytes_00040010);
+    let arrange_mem_bytes_00040110 = [0x10, 0x10, 0x20, 0x20].to_vec();
+    let arrange_mem_00040110 = RamMemory::from_bytes(0x00040110, arrange_mem_bytes_00040110);
 
     // arrange - common
     let mut mem = Mem::new();
@@ -1319,13 +1319,13 @@ fn address_register_word_with_extend_clear() {
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
-    mem.add_range(Rc::new(RefCell::new(arrange_mem_00040010)));
+    mem.add_range(Rc::new(RefCell::new(arrange_mem_00040110)));
     let cpu = Cpu::new(&mem);
     let mut modermodem = Modermodem::new(None, cpu, mem, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001000, 0x00006fff, 0x10000000, 0x6fffffff, 0x000000d6, 0x00004344);
-    modermodem.cpu.register.set_all_a_reg_long_no_log(0xa0a0a0a0, 0x000000a1, 0x000000a2, 0x00050003, 0x00050004, 0x00040012, 0x00040014, 0x000000a7);
+    modermodem.cpu.register.set_all_a_reg_long_no_log(0xa0a0a0a0, 0x000000a1, 0x000000a2, 0x00050003, 0x00050004, 0x00040112, 0x00040114, 0x000000a7);
     modermodem.cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
     modermodem.cpu.register.reg_sr.set_sr_reg_flags_abcde(
        STATUS_REGISTER_MASK_NEGATIVE
@@ -1351,16 +1351,16 @@ fn address_register_word_with_extend_clear() {
 
     // assert - regs
     modermodem.cpu.register.assert_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001000, 0x00006fff, 0x10000000, 0x6fffffff, 0x000000d6, 0x00004344);
-    modermodem.cpu.register.assert_all_a_reg_long_no_log(0xa0a0a0a0, 0x000000a1, 0x000000a2, 0x00050003, 0x00050004, 0x00040010, 0x00040012, 0x000000a7);
+    modermodem.cpu.register.assert_all_a_reg_long_no_log(0xa0a0a0a0, 0x000000a1, 0x000000a2, 0x00050003, 0x00050004, 0x00040110, 0x00040112, 0x000000a7);
     modermodem.cpu.register.reg_sr.assert_sr_reg_flags_abcde(
        0x0000
     );
 
     // assert - mem
-    assert_eq!(0x10, modermodem.mem.get_byte_no_log(0x00040010));
-    assert_eq!(0x10, modermodem.mem.get_byte_no_log(0x00040011));
-    assert_eq!(0x30, modermodem.mem.get_byte_no_log(0x00040012));
-    assert_eq!(0x30, modermodem.mem.get_byte_no_log(0x00040013));
+    assert_eq!(0x10, modermodem.mem.get_byte_no_log(0x00040110));
+    assert_eq!(0x10, modermodem.mem.get_byte_no_log(0x00040111));
+    assert_eq!(0x30, modermodem.mem.get_byte_no_log(0x00040112));
+    assert_eq!(0x30, modermodem.mem.get_byte_no_log(0x00040113));
 }
 
 #[test]
@@ -1371,8 +1371,8 @@ fn address_register_word_with_extend_set() {
     let code_memory = RamMemory::from_bytes(0x00040000, code);
 
     // arrange - mem
-    let arrange_mem_bytes_00040010 = [0x10, 0x10, 0x20, 0x20].to_vec();
-    let arrange_mem_00040010 = RamMemory::from_bytes(0x00040010, arrange_mem_bytes_00040010);
+    let arrange_mem_bytes_00040110 = [0x10, 0x10, 0x20, 0x20].to_vec();
+    let arrange_mem_00040110 = RamMemory::from_bytes(0x00040110, arrange_mem_bytes_00040110);
 
     // arrange - common
     let mut mem = Mem::new();
@@ -1381,13 +1381,13 @@ fn address_register_word_with_extend_set() {
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
-    mem.add_range(Rc::new(RefCell::new(arrange_mem_00040010)));
+    mem.add_range(Rc::new(RefCell::new(arrange_mem_00040110)));
     let cpu = Cpu::new(&mem);
     let mut modermodem = Modermodem::new(None, cpu, mem, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001000, 0x00006fff, 0x10000000, 0x6fffffff, 0x000000d6, 0x00004344);
-    modermodem.cpu.register.set_all_a_reg_long_no_log(0xa0a0a0a0, 0x000000a1, 0x000000a2, 0x00050003, 0x00050004, 0x00040012, 0x00040014, 0x000000a7);
+    modermodem.cpu.register.set_all_a_reg_long_no_log(0xa0a0a0a0, 0x000000a1, 0x000000a2, 0x00050003, 0x00050004, 0x00040112, 0x00040114, 0x000000a7);
     modermodem.cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
     modermodem.cpu.register.reg_sr.set_sr_reg_flags_abcde(
        STATUS_REGISTER_MASK_EXTEND
@@ -1414,16 +1414,16 @@ fn address_register_word_with_extend_set() {
 
     // assert - regs
     modermodem.cpu.register.assert_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001000, 0x00006fff, 0x10000000, 0x6fffffff, 0x000000d6, 0x00004344);
-    modermodem.cpu.register.assert_all_a_reg_long_no_log(0xa0a0a0a0, 0x000000a1, 0x000000a2, 0x00050003, 0x00050004, 0x00040010, 0x00040012, 0x000000a7);
+    modermodem.cpu.register.assert_all_a_reg_long_no_log(0xa0a0a0a0, 0x000000a1, 0x000000a2, 0x00050003, 0x00050004, 0x00040110, 0x00040112, 0x000000a7);
     modermodem.cpu.register.reg_sr.assert_sr_reg_flags_abcde(
        0x0000
     );
 
     // assert - mem
-    assert_eq!(0x10, modermodem.mem.get_byte_no_log(0x00040010));
-    assert_eq!(0x10, modermodem.mem.get_byte_no_log(0x00040011));
-    assert_eq!(0x30, modermodem.mem.get_byte_no_log(0x00040012));
-    assert_eq!(0x31, modermodem.mem.get_byte_no_log(0x00040013));
+    assert_eq!(0x10, modermodem.mem.get_byte_no_log(0x00040110));
+    assert_eq!(0x10, modermodem.mem.get_byte_no_log(0x00040111));
+    assert_eq!(0x30, modermodem.mem.get_byte_no_log(0x00040112));
+    assert_eq!(0x31, modermodem.mem.get_byte_no_log(0x00040113));
 }
 
 #[test]
@@ -1434,8 +1434,8 @@ fn address_register_long_with_extend_clear() {
     let code_memory = RamMemory::from_bytes(0x00040000, code);
 
     // arrange - mem
-    let arrange_mem_bytes_00040010 = [0x10, 0x10, 0x10, 0x10, 0x20, 0x20, 0x20, 0x20].to_vec();
-    let arrange_mem_00040010 = RamMemory::from_bytes(0x00040010, arrange_mem_bytes_00040010);
+    let arrange_mem_bytes_00040110 = [0x10, 0x10, 0x10, 0x10, 0x20, 0x20, 0x20, 0x20].to_vec();
+    let arrange_mem_00040110 = RamMemory::from_bytes(0x00040110, arrange_mem_bytes_00040110);
 
     // arrange - common
     let mut mem = Mem::new();
@@ -1444,13 +1444,13 @@ fn address_register_long_with_extend_clear() {
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
-    mem.add_range(Rc::new(RefCell::new(arrange_mem_00040010)));
+    mem.add_range(Rc::new(RefCell::new(arrange_mem_00040110)));
     let cpu = Cpu::new(&mem);
     let mut modermodem = Modermodem::new(None, cpu, mem, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001000, 0x00006fff, 0x10000000, 0x6fffffff, 0x000000d6, 0x00004344);
-    modermodem.cpu.register.set_all_a_reg_long_no_log(0x00040018, 0x000000a1, 0x000000a2, 0x00050003, 0x00050004, 0x00040014, 0x00040018, 0x00040014);
+    modermodem.cpu.register.set_all_a_reg_long_no_log(0x00040118, 0x000000a1, 0x000000a2, 0x00050003, 0x00050004, 0x00040014, 0x00040018, 0x00040114);
     modermodem.cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
     modermodem.cpu.register.reg_sr.set_sr_reg_flags_abcde(
        STATUS_REGISTER_MASK_NEGATIVE
@@ -1475,20 +1475,20 @@ fn address_register_long_with_extend_clear() {
 
     // assert - regs
     modermodem.cpu.register.assert_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001000, 0x00006fff, 0x10000000, 0x6fffffff, 0x000000d6, 0x00004344);
-    modermodem.cpu.register.assert_all_a_reg_long_no_log(0x00040014, 0x000000a1, 0x000000a2, 0x00050003, 0x00050004, 0x00040014, 0x00040018, 0x00040010);
+    modermodem.cpu.register.assert_all_a_reg_long_no_log(0x00040114, 0x000000a1, 0x000000a2, 0x00050003, 0x00050004, 0x00040014, 0x00040018, 0x00040110);
     modermodem.cpu.register.reg_sr.assert_sr_reg_flags_abcde(
        0x0000
     );
 
     // assert - mem
-    assert_eq!(0x10, modermodem.mem.get_byte_no_log(0x00040010));
-    assert_eq!(0x10, modermodem.mem.get_byte_no_log(0x00040011));
-    assert_eq!(0x10, modermodem.mem.get_byte_no_log(0x00040012));
-    assert_eq!(0x10, modermodem.mem.get_byte_no_log(0x00040013));
-    assert_eq!(0x30, modermodem.mem.get_byte_no_log(0x00040014));
-    assert_eq!(0x30, modermodem.mem.get_byte_no_log(0x00040015));
-    assert_eq!(0x30, modermodem.mem.get_byte_no_log(0x00040016));
-    assert_eq!(0x30, modermodem.mem.get_byte_no_log(0x00040017));
+    assert_eq!(0x10, modermodem.mem.get_byte_no_log(0x00040110));
+    assert_eq!(0x10, modermodem.mem.get_byte_no_log(0x00040111));
+    assert_eq!(0x10, modermodem.mem.get_byte_no_log(0x00040112));
+    assert_eq!(0x10, modermodem.mem.get_byte_no_log(0x00040113));
+    assert_eq!(0x30, modermodem.mem.get_byte_no_log(0x00040114));
+    assert_eq!(0x30, modermodem.mem.get_byte_no_log(0x00040115));
+    assert_eq!(0x30, modermodem.mem.get_byte_no_log(0x00040116));
+    assert_eq!(0x30, modermodem.mem.get_byte_no_log(0x00040117));
 }
 
 #[test]
@@ -1499,8 +1499,8 @@ fn address_register_long_with_extend_set() {
     let code_memory = RamMemory::from_bytes(0x00040000, code);
 
     // arrange - mem
-    let arrange_mem_bytes_00040010 = [0x10, 0x10, 0x10, 0x10, 0x20, 0x20, 0x20, 0x20].to_vec();
-    let arrange_mem_00040010 = RamMemory::from_bytes(0x00040010, arrange_mem_bytes_00040010);
+    let arrange_mem_bytes_00040110 = [0x10, 0x10, 0x10, 0x10, 0x20, 0x20, 0x20, 0x20].to_vec();
+    let arrange_mem_00040110 = RamMemory::from_bytes(0x00040110, arrange_mem_bytes_00040110);
 
     // arrange - common
     let mut mem = Mem::new();
@@ -1509,13 +1509,13 @@ fn address_register_long_with_extend_set() {
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
-    mem.add_range(Rc::new(RefCell::new(arrange_mem_00040010)));
+    mem.add_range(Rc::new(RefCell::new(arrange_mem_00040110)));
     let cpu = Cpu::new(&mem);
     let mut modermodem = Modermodem::new(None, cpu, mem, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001000, 0x00006fff, 0x10000000, 0x6fffffff, 0x000000d6, 0x00004344);
-    modermodem.cpu.register.set_all_a_reg_long_no_log(0x00040018, 0x000000a1, 0x000000a2, 0x00050003, 0x00050004, 0x00040014, 0x00040018, 0x00040014);
+    modermodem.cpu.register.set_all_a_reg_long_no_log(0x00040118, 0x000000a1, 0x000000a2, 0x00050003, 0x00050004, 0x00040014, 0x00040018, 0x00040114);
     modermodem.cpu.register.reg_pc = ProgramCounter::from_address(0x00040000);
     modermodem.cpu.register.reg_sr.set_sr_reg_flags_abcde(
        STATUS_REGISTER_MASK_EXTEND
@@ -1542,18 +1542,18 @@ fn address_register_long_with_extend_set() {
 
     // assert - regs
     modermodem.cpu.register.assert_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001000, 0x00006fff, 0x10000000, 0x6fffffff, 0x000000d6, 0x00004344);
-    modermodem.cpu.register.assert_all_a_reg_long_no_log(0x00040014, 0x000000a1, 0x000000a2, 0x00050003, 0x00050004, 0x00040014, 0x00040018, 0x00040010);
+    modermodem.cpu.register.assert_all_a_reg_long_no_log(0x00040114, 0x000000a1, 0x000000a2, 0x00050003, 0x00050004, 0x00040014, 0x00040018, 0x00040110);
     modermodem.cpu.register.reg_sr.assert_sr_reg_flags_abcde(
        0x0000
     );
 
     // assert - mem
-    assert_eq!(0x10, modermodem.mem.get_byte_no_log(0x00040010));
-    assert_eq!(0x10, modermodem.mem.get_byte_no_log(0x00040011));
-    assert_eq!(0x10, modermodem.mem.get_byte_no_log(0x00040012));
-    assert_eq!(0x10, modermodem.mem.get_byte_no_log(0x00040013));
-    assert_eq!(0x30, modermodem.mem.get_byte_no_log(0x00040014));
-    assert_eq!(0x30, modermodem.mem.get_byte_no_log(0x00040015));
-    assert_eq!(0x30, modermodem.mem.get_byte_no_log(0x00040016));
-    assert_eq!(0x31, modermodem.mem.get_byte_no_log(0x00040017));
+    assert_eq!(0x10, modermodem.mem.get_byte_no_log(0x00040110));
+    assert_eq!(0x10, modermodem.mem.get_byte_no_log(0x00040111));
+    assert_eq!(0x10, modermodem.mem.get_byte_no_log(0x00040112));
+    assert_eq!(0x10, modermodem.mem.get_byte_no_log(0x00040113));
+    assert_eq!(0x30, modermodem.mem.get_byte_no_log(0x00040114));
+    assert_eq!(0x30, modermodem.mem.get_byte_no_log(0x00040115));
+    assert_eq!(0x30, modermodem.mem.get_byte_no_log(0x00040116));
+    assert_eq!(0x31, modermodem.mem.get_byte_no_log(0x00040117));
 }
