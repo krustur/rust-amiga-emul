@@ -275,7 +275,7 @@ impl ProgramCounter {
                 };
 
                 let displacement = Cpu::get_byte_from_word(extension_word);
-                let displacement_long = Cpu::sign_extend_byte(displacement);
+                let displacement_long = Cpu::sign_extend_byte_to_long(displacement);
 
                 let areg_address = reg.get_a_reg_long(ea_register, step_log);
 
@@ -340,7 +340,7 @@ impl ProgramCounter {
                     };
 
                     let displacement = Cpu::get_byte_from_word(extension_word);
-                    let displacement_long = Cpu::sign_extend_byte(displacement);
+                    let displacement_long = Cpu::sign_extend_byte_to_long(displacement);
 
                     let (pc_address, _) = reg.reg_pc.get_address().overflowing_add(2);
 

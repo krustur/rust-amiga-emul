@@ -127,6 +127,20 @@ test_suite
 	dc.l	asl_w_memory_by_1_areg_indirect_with_displacement
 	dc.l	asr_w_memory_by_1_areg_indirect_with_postincrement
 	dc.l	asr_w_memory_by_1_areg_indirect
+	dc.l	ext_w_x_not_affected_still_set
+	dc.l	ext_w_x_not_affected_still_clear
+	dc.l	ext_w_n_set
+	dc.l	ext_w_n_clear
+	dc.l	ext_w_z_set
+	dc.l	ext_w_z_clear
+	dc.l	ext_w_vc_clear
+	dc.l	ext_l_x_not_affected_still_set
+	dc.l	ext_l_x_not_affected_still_clear
+	dc.l	ext_l_n_set
+	dc.l	ext_l_n_clear
+	dc.l	ext_l_z_set
+	dc.l	ext_l_z_clear
+	dc.l	ext_l_vc_clear
 	dc.l	lsl_b_register_by_immediate
 	dc.l	lsl_register_by_immediate_byte_negative
 	dc.l	lsl_register_by_immediate_byte_zero
@@ -140,4 +154,5 @@ test_suite
 	include	"addq.s"
 	include	"addx.s"
 	include	"aslr.s"
+	include	"ext.s"
 	include	"lslr.s"

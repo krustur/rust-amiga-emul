@@ -31,8 +31,6 @@ pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
     match crate::cpu::match_check(instruction, instr_word) {
         true => {
             let exgmode = get_exg_mode(instr_word);
-
-            let opmode = (instr_word >> 3) & 0b11111;
             match exgmode {
                 Some(_) => true,
                 None => false,

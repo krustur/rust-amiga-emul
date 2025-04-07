@@ -27,6 +27,7 @@ pub mod cmpi;
 pub mod cmpm;
 pub mod dbcc;
 pub mod exg;
+pub mod ext;
 pub mod jmp;
 pub mod jsr;
 pub mod lea;

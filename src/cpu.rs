@@ -396,6 +396,14 @@ impl Cpu {
                 instruction::exg::get_disassembly,
             ),
             Instruction::new(
+                String::from("EXT"),
+                0xfe38,
+                0x4800,
+                instruction::ext::match_check,
+                instruction::ext::step,
+                instruction::ext::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("JMP"),
                 0xffc0,
                 0x4ec0,
@@ -691,7 +699,21 @@ impl Cpu {
         cpu
     }
 
-    pub fn sign_extend_byte(value: u8) -> u32 {
+    pub fn sign_extend_byte(value: u8) -> u16 {
+        // TODO: Any better way to do this?
+        let address_bytes = value.to_be_bytes();
+        // if address < 0
+        let fixed_bytes: [u8; 2] = if value >= 0x80 {
+            [0xff, address_bytes[0]]
+        } else {
+            [0x00, address_bytes[0]]
+        };
+        let mut fixed_bytes_slice = &fixed_bytes[0..2];
+        let res = fixed_bytes_slice.read_u16::<BigEndian>().unwrap();
+        res
+    }
+
+    pub fn sign_extend_byte_to_long(value: u8) -> u32 {
         // TODO: Any better way to do this?
         let address_bytes = value.to_be_bytes();
         // if address < 0
@@ -720,7 +742,7 @@ impl Cpu {
     }
 
     pub fn get_address_with_byte_displacement_sign_extended(address: u32, displacement: u8) -> u32 {
-        let displacement = Cpu::sign_extend_byte(displacement);
+        let displacement = Cpu::sign_extend_byte_to_long(displacement);
         let address = address.wrapping_add(displacement);
 
         address
@@ -2011,7 +2033,7 @@ impl Cpu {
         status_register |= match result {
             0x00000000 => STATUS_REGISTER_MASK_ZERO,
             0x80000000..=0xffffffff => STATUS_REGISTER_MASK_NEGATIVE,
-            _ => 0x00000000,
+            _ => 0x0000,
         };
 
         let status_register_result = StatusRegisterResult {
@@ -2400,19 +2422,19 @@ mod tests {
 
     #[test]
     fn sign_extend_byte_positive() {
-        let res = Cpu::sign_extend_byte(45);
+        let res = Cpu::sign_extend_byte_to_long(45);
         assert_eq!(45, res);
     }
 
     #[test]
     fn sign_extend_byte_negative() {
-        let res = Cpu::sign_extend_byte(0xd3); // -45
+        let res = Cpu::sign_extend_byte_to_long(0xd3); // -45
         assert_eq!(0xFFFFFFD3, res);
     }
 
     #[test]
     fn sign_extend_byte_negative2() {
-        let res = Cpu::sign_extend_byte(0xff); // -1
+        let res = Cpu::sign_extend_byte_to_long(0xff); // -1
         assert_eq!(0xFFFFFFFF, res);
     }
 

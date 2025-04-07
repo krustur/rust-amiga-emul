@@ -33,7 +33,7 @@ pub fn step<'a>(
         0x80..=0xff => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
         _ => (),
     }
-    let data = Cpu::sign_extend_byte(data);
+    let data = Cpu::sign_extend_byte_to_long(data);
     let status_register_mask = 0xfff0;
 
     reg.set_d_reg_long(step_log, register, data);
@@ -60,7 +60,7 @@ pub fn get_disassembly<'a>(
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     let register = Cpu::extract_register_index_from_bit_pos(instr_word, 9)?;
     let data = Cpu::get_byte_from_word(instr_word);
-    let data = Cpu::sign_extend_byte(data);
+    let data = Cpu::sign_extend_byte_to_long(data);
     let data_signed = Cpu::get_signed_long_from_long(data);
     let operands_format = format!("#{},D{}", data_signed, register);
     let status_register_mask = 0xfff0;
