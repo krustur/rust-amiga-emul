@@ -50,7 +50,7 @@ impl Memory for RomMemory {
     }
 
     fn set_long(self: &mut RomMemory, step_log: &mut StepLog, address: u32, value: u32) {
-        step_log.add_log(format!("ROM: Trying to set_long: ${:08X}", address));
+        step_log.add_log_string(format!("ROM: Trying to set_long: ${:08X}", address));
     }
 
     fn get_word(self: &RomMemory, step_log: &mut StepLog, address: u32) -> u16 {
@@ -64,7 +64,7 @@ impl Memory for RomMemory {
     }
 
     fn set_word(self: &mut RomMemory, step_log: &mut StepLog, address: u32, value: u16) {
-        step_log.add_log(format!("ROM: Trying to set_word: ${:08X}", address));
+        step_log.add_log_string(format!("ROM: Trying to set_word: ${:08X}", address));
     }
 
     fn get_byte(self: &RomMemory, step_log: &mut StepLog, address: u32) -> u8 {
@@ -80,7 +80,7 @@ impl Memory for RomMemory {
         address: u32,
         value: u8,
     ) -> Option<SetMemoryResult> {
-        step_log.add_log(format!("ROM: Trying to set_byte: ${:08X}", address));
+        step_log.add_log_string(format!("ROM: Trying to set_byte: ${:08X}", address));
         None
     }
 }

@@ -26,6 +26,7 @@ pub mod cmp;
 pub mod cmpi;
 pub mod cmpm;
 pub mod dbcc;
+pub mod divu;
 pub mod exg;
 pub mod ext;
 pub mod jmp;
@@ -560,6 +561,8 @@ pub struct Instruction {
     pub name: String,
     pub mask: u16,
     pub opcode: u16,
+    // TODO: Remove ex_mask and _code. Was used to be able to exclude instruction from beeing
+    //       selected, but has been replace by adding match_checks to instruction code
     pub ex_mask: u16,
     pub ex_code: Vec<u16>,
     pub match_check: fn(instruction: &Instruction, instr_word: u16) -> bool,

@@ -2,9 +2,6 @@
 ; Only Generated test!
 
 
-; ===== register by immediate - byte =====================================
-
-
 :EXT_W_X_NOT_AFFECTED_STILL_SET
 
 arrange_code

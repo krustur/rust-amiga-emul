@@ -421,7 +421,7 @@ impl Register {
 
     pub fn get_d_reg_long(&self, reg_index: usize, step_log: &mut StepLog) -> u32 {
         let value = self.reg_d[reg_index];
-        step_log.add_log_entry(StepLogEntry::ReadRegister {
+        step_log.add_step_log_entry(StepLogEntry::ReadRegister {
             reg_type: RegisterType::Data,
             reg_index,
             value,
@@ -436,7 +436,7 @@ impl Register {
 
     pub fn get_d_reg_word(&self, reg_index: usize, step_log: &mut StepLog) -> u16 {
         let value = self.reg_d[reg_index];
-        step_log.add_log_entry(StepLogEntry::ReadRegister {
+        step_log.add_step_log_entry(StepLogEntry::ReadRegister {
             reg_type: RegisterType::Data,
             reg_index,
             value,
@@ -451,7 +451,7 @@ impl Register {
 
     pub fn get_d_reg_byte(&self, reg_index: usize, step_log: &mut StepLog) -> u8 {
         let value = self.reg_d[reg_index];
-        step_log.add_log_entry(StepLogEntry::ReadRegister {
+        step_log.add_step_log_entry(StepLogEntry::ReadRegister {
             reg_type: RegisterType::Data,
             reg_index,
             value,
@@ -472,7 +472,7 @@ impl Register {
             },
             _ => self.reg_a[reg_index],
         };
-        step_log.add_log_entry(StepLogEntry::ReadRegister {
+        step_log.add_step_log_entry(StepLogEntry::ReadRegister {
             reg_type: RegisterType::Address,
             reg_index,
             value,
@@ -517,7 +517,7 @@ impl Register {
             7 => match self.reg_sr.is_sr_supervisor_set_no_log() {
                 true => {
                     let value = self.reg_ssp + operation_size.size_in_bytes();
-                    step_log.add_log_entry(StepLogEntry::WriteRegister {
+                    step_log.add_step_log_entry(StepLogEntry::WriteRegister {
                         reg_type: RegisterType::Address,
                         reg_index,
                         value,
@@ -526,7 +526,7 @@ impl Register {
                 }
                 false => {
                     let value = self.reg_usp + operation_size.size_in_bytes();
-                    step_log.add_log_entry(StepLogEntry::WriteRegister {
+                    step_log.add_step_log_entry(StepLogEntry::WriteRegister {
                         reg_type: RegisterType::Address,
                         reg_index,
                         value,
@@ -536,7 +536,7 @@ impl Register {
             },
             _ => {
                 let value = self.reg_a[reg_index] + operation_size.size_in_bytes();
-                step_log.add_log_entry(StepLogEntry::WriteRegister {
+                step_log.add_step_log_entry(StepLogEntry::WriteRegister {
                     reg_type: RegisterType::Address,
                     reg_index,
                     value,
@@ -557,7 +557,7 @@ impl Register {
             7 => match self.reg_sr.is_sr_supervisor_set_no_log() {
                 true => {
                     let value = self.reg_ssp - operation_size.size_in_bytes();
-                    step_log.add_log_entry(StepLogEntry::WriteRegister {
+                    step_log.add_step_log_entry(StepLogEntry::WriteRegister {
                         reg_type: RegisterType::Address,
                         reg_index,
                         value,
@@ -566,7 +566,7 @@ impl Register {
                 }
                 false => {
                     let value = self.reg_usp - operation_size.size_in_bytes();
-                    step_log.add_log_entry(StepLogEntry::WriteRegister {
+                    step_log.add_step_log_entry(StepLogEntry::WriteRegister {
                         reg_type: RegisterType::Address,
                         reg_index,
                         value,
@@ -576,7 +576,7 @@ impl Register {
             },
             _ => {
                 let value = self.reg_a[reg_index] - operation_size.size_in_bytes();
-                step_log.add_log_entry(StepLogEntry::WriteRegister {
+                step_log.add_step_log_entry(StepLogEntry::WriteRegister {
                     reg_type: RegisterType::Address,
                     reg_index,
                     value,
@@ -587,7 +587,7 @@ impl Register {
     }
 
     pub fn set_d_reg_long(&mut self, step_log: &mut StepLog, reg_index: usize, value: u32) {
-        step_log.add_log_entry(StepLogEntry::WriteRegister {
+        step_log.add_step_log_entry(StepLogEntry::WriteRegister {
             reg_type: RegisterType::Data,
             reg_index,
             value,
@@ -624,7 +624,7 @@ impl Register {
 
     pub fn set_d_reg_word(&mut self, step_log: &mut StepLog, reg_index: usize, value: u16) {
         let value = Cpu::set_word_in_long(value, self.reg_d[reg_index]);
-        step_log.add_log_entry(StepLogEntry::WriteRegister {
+        step_log.add_step_log_entry(StepLogEntry::WriteRegister {
             reg_type: RegisterType::Data,
             reg_index,
             value,
@@ -638,7 +638,7 @@ impl Register {
 
     pub fn set_d_reg_byte(&mut self, step_log: &mut StepLog, reg_index: usize, value: u8) {
         let value = Cpu::set_byte_in_long(value, self.reg_d[reg_index]);
-        step_log.add_log_entry(StepLogEntry::WriteRegister {
+        step_log.add_step_log_entry(StepLogEntry::WriteRegister {
             reg_type: RegisterType::Data,
             reg_index,
             value,
@@ -651,7 +651,7 @@ impl Register {
     }
 
     pub fn set_a_reg_long(&mut self, step_log: &mut StepLog, reg_index: usize, value: u32) {
-        step_log.add_log_entry(StepLogEntry::WriteRegister {
+        step_log.add_step_log_entry(StepLogEntry::WriteRegister {
             reg_type: RegisterType::Address,
             reg_index,
             value,
@@ -719,7 +719,7 @@ impl Register {
             7 => match self.reg_sr.is_sr_supervisor_set_no_log() {
                 true => {
                     let value = Cpu::set_word_in_long(value, self.reg_ssp);
-                    step_log.add_log_entry(StepLogEntry::WriteRegister {
+                    step_log.add_step_log_entry(StepLogEntry::WriteRegister {
                         reg_type: RegisterType::Address,
                         reg_index,
                         value,
@@ -728,7 +728,7 @@ impl Register {
                 }
                 false => {
                     let value = Cpu::set_word_in_long(value, self.reg_usp);
-                    step_log.add_log_entry(StepLogEntry::WriteRegister {
+                    step_log.add_step_log_entry(StepLogEntry::WriteRegister {
                         reg_type: RegisterType::Address,
                         reg_index,
                         value,
@@ -738,7 +738,7 @@ impl Register {
             },
             _ => {
                 let value = Cpu::set_word_in_long(value, self.reg_a[reg_index]);
-                step_log.add_log_entry(StepLogEntry::WriteRegister {
+                step_log.add_step_log_entry(StepLogEntry::WriteRegister {
                     reg_type: RegisterType::Address,
                     reg_index,
                     value,
@@ -763,7 +763,7 @@ impl Register {
             7 => match self.reg_sr.is_sr_supervisor_set_no_log() {
                 true => {
                     let value = Cpu::set_byte_in_long(value, self.reg_ssp);
-                    step_log.add_log_entry(StepLogEntry::WriteRegister {
+                    step_log.add_step_log_entry(StepLogEntry::WriteRegister {
                         reg_type: RegisterType::Address,
                         reg_index,
                         value,
@@ -772,7 +772,7 @@ impl Register {
                 }
                 false => {
                     let value = Cpu::set_byte_in_long(value, self.reg_usp);
-                    step_log.add_log_entry(StepLogEntry::WriteRegister {
+                    step_log.add_step_log_entry(StepLogEntry::WriteRegister {
                         reg_type: RegisterType::Address,
                         reg_index,
                         value,
@@ -782,7 +782,7 @@ impl Register {
             },
             _ => {
                 let value = Cpu::set_byte_in_long(value, self.reg_a[reg_index]);
-                step_log.add_log_entry(StepLogEntry::WriteRegister {
+                step_log.add_step_log_entry(StepLogEntry::WriteRegister {
                     reg_type: RegisterType::Address,
                     reg_index,
                     value,
@@ -949,12 +949,12 @@ impl StatusRegister {
             | (status_register_result.status_register
             & status_register_result.status_register_mask);
         if new_sr != self.reg_sr {
-            step_log.add_log_entry(StepLogEntry::SrChanged {
+            step_log.add_step_log_entry(StepLogEntry::SrChanged {
                 value: new_sr,
                 value_old: self.reg_sr,
             });
         } else {
-            step_log.add_log_entry(StepLogEntry::SrNotChanged { value: new_sr });
+            step_log.add_step_log_entry(StepLogEntry::SrNotChanged { value: new_sr });
         }
         self.reg_sr = new_sr;
     }
@@ -1030,7 +1030,7 @@ impl StatusRegister {
     pub fn is_sr_supervisor_set(&self, step_log: &mut StepLog) -> bool {
         let value = (self.reg_sr & STATUS_REGISTER_MASK_SUPERVISOR_STATE)
             == STATUS_REGISTER_MASK_SUPERVISOR_STATE;
-        step_log.add_log_entry(StepLogEntry::SrReadSupervisorBit { value });
+        step_log.add_step_log_entry(StepLogEntry::SrReadSupervisorBit { value });
         value
     }
 

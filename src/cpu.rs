@@ -52,11 +52,11 @@ pub struct Cpu {
 }
 
 pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
-    ((instr_word & instruction.mask) == instruction.opcode)
-        && instruction
-            .ex_code
-            .contains(&(instr_word & instruction.ex_mask))
-            == false
+    (instr_word & instruction.mask) == instruction.opcode
+    // && instruction
+    //     .ex_code
+    //     .contains(&(instr_word & instruction.ex_mask))
+    //     == false
 }
 
 pub fn match_check_size000110_from_bit_pos_6(instr_word: u16) -> bool {
@@ -386,6 +386,14 @@ impl Cpu {
                 crate::cpu::match_check,
                 instruction::dbcc::step,
                 instruction::dbcc::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("DIVU"),
+                0xf1c0,
+                0x80c0,
+                instruction::divu::match_check,
+                instruction::divu::step,
+                instruction::divu::get_disassembly,
             ),
             Instruction::new(
                 String::from("EXG"),
@@ -1793,15 +1801,15 @@ impl Cpu {
                             if result & 0x80 == 0x80 {
                                 status_register = (status_register
                                     & (STATUS_REGISTER_MASK_OVERFLOW
-                                    | STATUS_REGISTER_MASK_ZERO
-                                    | STATUS_REGISTER_MASK_NEGATIVE))
+                                        | STATUS_REGISTER_MASK_ZERO
+                                        | STATUS_REGISTER_MASK_NEGATIVE))
                                     | STATUS_REGISTER_MASK_EXTEND
                                     | STATUS_REGISTER_MASK_CARRY;
                             } else {
                                 status_register = status_register
                                     & (STATUS_REGISTER_MASK_OVERFLOW
-                                    | STATUS_REGISTER_MASK_ZERO
-                                    | STATUS_REGISTER_MASK_NEGATIVE);
+                                        | STATUS_REGISTER_MASK_ZERO
+                                        | STATUS_REGISTER_MASK_NEGATIVE);
                             }
                             // Shift left
                             let new_result = result.checked_shl(1).unwrap_or(0);
@@ -1819,15 +1827,15 @@ impl Cpu {
                             if result & 0x01 == 0x01 {
                                 status_register = (status_register
                                     & (STATUS_REGISTER_MASK_OVERFLOW
-                                    | STATUS_REGISTER_MASK_ZERO
-                                    | STATUS_REGISTER_MASK_NEGATIVE))
+                                        | STATUS_REGISTER_MASK_ZERO
+                                        | STATUS_REGISTER_MASK_NEGATIVE))
                                     | STATUS_REGISTER_MASK_EXTEND
                                     | STATUS_REGISTER_MASK_CARRY;
                             } else {
                                 status_register = status_register
                                     & (STATUS_REGISTER_MASK_OVERFLOW
-                                    | STATUS_REGISTER_MASK_ZERO
-                                    | STATUS_REGISTER_MASK_NEGATIVE);
+                                        | STATUS_REGISTER_MASK_ZERO
+                                        | STATUS_REGISTER_MASK_NEGATIVE);
                             }
                             // Shift right
                             let mut new_result = result.checked_shr(1).unwrap_or(0);
@@ -1887,15 +1895,15 @@ impl Cpu {
                             if result & 0x8000 == 0x8000 {
                                 status_register = (status_register
                                     & (STATUS_REGISTER_MASK_OVERFLOW
-                                    | STATUS_REGISTER_MASK_ZERO
-                                    | STATUS_REGISTER_MASK_NEGATIVE))
+                                        | STATUS_REGISTER_MASK_ZERO
+                                        | STATUS_REGISTER_MASK_NEGATIVE))
                                     | STATUS_REGISTER_MASK_EXTEND
                                     | STATUS_REGISTER_MASK_CARRY;
                             } else {
                                 status_register = status_register
                                     & (STATUS_REGISTER_MASK_OVERFLOW
-                                    | STATUS_REGISTER_MASK_ZERO
-                                    | STATUS_REGISTER_MASK_NEGATIVE);
+                                        | STATUS_REGISTER_MASK_ZERO
+                                        | STATUS_REGISTER_MASK_NEGATIVE);
                             }
                             // Shift left
                             let new_result = result.checked_shl(1).unwrap_or(0);
@@ -1913,15 +1921,15 @@ impl Cpu {
                             if result & 0x0001 == 0x0001 {
                                 status_register = (status_register
                                     & (STATUS_REGISTER_MASK_OVERFLOW
-                                    | STATUS_REGISTER_MASK_ZERO
-                                    | STATUS_REGISTER_MASK_NEGATIVE))
+                                        | STATUS_REGISTER_MASK_ZERO
+                                        | STATUS_REGISTER_MASK_NEGATIVE))
                                     | STATUS_REGISTER_MASK_EXTEND
                                     | STATUS_REGISTER_MASK_CARRY;
                             } else {
                                 status_register = status_register
                                     & (STATUS_REGISTER_MASK_OVERFLOW
-                                    | STATUS_REGISTER_MASK_ZERO
-                                    | STATUS_REGISTER_MASK_NEGATIVE);
+                                        | STATUS_REGISTER_MASK_ZERO
+                                        | STATUS_REGISTER_MASK_NEGATIVE);
                             }
                             // Shift right
                             let mut new_result = result.checked_shr(1).unwrap_or(0);
@@ -1981,15 +1989,15 @@ impl Cpu {
                             if result & 0x80000000 == 0x80000000 {
                                 status_register = (status_register
                                     & (STATUS_REGISTER_MASK_OVERFLOW
-                                    | STATUS_REGISTER_MASK_ZERO
-                                    | STATUS_REGISTER_MASK_NEGATIVE))
+                                        | STATUS_REGISTER_MASK_ZERO
+                                        | STATUS_REGISTER_MASK_NEGATIVE))
                                     | STATUS_REGISTER_MASK_EXTEND
                                     | STATUS_REGISTER_MASK_CARRY;
                             } else {
                                 status_register = status_register
                                     & (STATUS_REGISTER_MASK_OVERFLOW
-                                    | STATUS_REGISTER_MASK_ZERO
-                                    | STATUS_REGISTER_MASK_NEGATIVE);
+                                        | STATUS_REGISTER_MASK_ZERO
+                                        | STATUS_REGISTER_MASK_NEGATIVE);
                             }
                             // Shift left
                             let new_result = result.checked_shl(1).unwrap_or(0);
@@ -2007,15 +2015,15 @@ impl Cpu {
                             if result & 0x00000001 == 0x00000001 {
                                 status_register = (status_register
                                     & (STATUS_REGISTER_MASK_OVERFLOW
-                                    | STATUS_REGISTER_MASK_ZERO
-                                    | STATUS_REGISTER_MASK_NEGATIVE))
+                                        | STATUS_REGISTER_MASK_ZERO
+                                        | STATUS_REGISTER_MASK_NEGATIVE))
                                     | STATUS_REGISTER_MASK_EXTEND
                                     | STATUS_REGISTER_MASK_CARRY;
                             } else {
                                 status_register = status_register
                                     & (STATUS_REGISTER_MASK_OVERFLOW
-                                    | STATUS_REGISTER_MASK_ZERO
-                                    | STATUS_REGISTER_MASK_NEGATIVE);
+                                        | STATUS_REGISTER_MASK_ZERO
+                                        | STATUS_REGISTER_MASK_NEGATIVE);
                             }
                             // Shift right
                             let mut new_result = result.checked_shr(1).unwrap_or(0);
@@ -2041,6 +2049,39 @@ impl Cpu {
             status_register_mask,
         };
         (result, status_register_result)
+    }
+
+    pub fn divu_long_by_word(source: u16, dest: u32) -> ResultWithStatusRegister<u32> {
+        let source = source as u32;
+        let quotient_u32 = dest / source;
+        let quotient_u16 = quotient_u32 as u16;
+        let remainder = (dest % source) as u16;
+
+        let mut status_register = 0x0000;
+
+        let result;
+        if quotient_u32 < 0x00010000 {
+            match quotient_u16 {
+                0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+                0x8000..=0xffff => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+                _ => (),
+            }
+            result = Self::join_words_to_long(remainder, quotient_u16);
+        } else {
+            status_register |= STATUS_REGISTER_MASK_OVERFLOW;
+            result = dest;
+        }
+
+        ResultWithStatusRegister {
+            result,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
+        }
     }
 
     pub fn mulu_words(source: u16, dest: u16) -> ResultWithStatusRegister<u32> {

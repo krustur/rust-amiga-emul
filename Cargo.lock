@@ -58,6 +58,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "12b8adadd720df158f4d70dfe7ccc6adb0472d7c55ca83445f6a5ab3e36f8fb6"
 
 [[package]]
+name = "log"
+version = "0.4.27"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
+
+[[package]]
 name = "miniz_oxide"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -130,6 +136,7 @@ name = "rust-amiga-emul"
 version = "0.1.0"
 dependencies = [
  "byteorder",
+ "log",
  "png",
  "rand 0.3.23",
 ]

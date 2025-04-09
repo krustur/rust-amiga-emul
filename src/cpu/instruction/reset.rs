@@ -21,7 +21,9 @@ pub fn step<'a>(
     mem: &mut Mem,
     step_log: &mut StepLog,
 ) -> Result<(), StepError> {
-    todo!("RESET instruction")
+    // todo!("RESET instruction")
+    step_log.add_log_string(String::from("RESET"));
+    Err(StepError::InstructionError{details: String::from("TODO: RESET instruction")})
 }
 
 pub fn get_disassembly<'a>(

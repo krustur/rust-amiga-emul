@@ -40,7 +40,7 @@ impl Memory for UnmappedMemory {
     }
 
     fn get_long(self: &UnmappedMemory, step_log: &mut StepLog, address: u32) -> u32 {
-        step_log.add_log(format!(
+        step_log.add_log_string(format!(
             "   -UNMAPPED: Trying to get_long: ${:08X}",
             address
         ));
@@ -48,14 +48,14 @@ impl Memory for UnmappedMemory {
     }
 
     fn set_long(self: &mut UnmappedMemory, step_log: &mut StepLog, address: u32, value: u32) {
-        step_log.add_log(format!(
+        step_log.add_log_string(format!(
             "   -UNMAPPED: Trying to set_long: ${:08X}",
             address
         ));
     }
 
     fn get_word(self: &UnmappedMemory, step_log: &mut StepLog, address: u32) -> u16 {
-        step_log.add_log(format!(
+        step_log.add_log_string(format!(
             "   -UNMAPPED: Trying to get_word: ${:08X}",
             address
         ));
@@ -63,14 +63,14 @@ impl Memory for UnmappedMemory {
     }
 
     fn set_word(self: &mut UnmappedMemory, step_log: &mut StepLog, address: u32, value: u16) {
-        step_log.add_log(format!(
+        step_log.add_log_string(format!(
             "   -UNMAPPED: Trying to set_word: ${:08X}",
             address
         ));
     }
 
     fn get_byte(self: &UnmappedMemory, step_log: &mut StepLog, address: u32) -> u8 {
-        step_log.add_log(format!(
+        step_log.add_log_string(format!(
             "   -UNMAPPED: Trying to get_byte: ${:08X}",
             address
         ));
@@ -83,7 +83,7 @@ impl Memory for UnmappedMemory {
         address: u32,
         value: u8,
     ) -> Option<SetMemoryResult> {
-        step_log.add_log(format!(
+        step_log.add_log_string(format!(
             "   -UNMAPPED: Trying to set_byte: ${:08X}",
             address
         ));

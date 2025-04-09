@@ -1,6 +1,6 @@
-use std::fmt::Display;
-
+use crate::modermodem::LoggingMode;
 use crate::register::{RegisterType, StatusRegister};
+use std::fmt::Display;
 
 #[derive(Copy, Clone)]
 pub enum StepLogEntry {
@@ -133,21 +133,28 @@ impl StepLog {
         self.log_strings.clear();
     }
 
-    pub fn add_log_entry(&mut self, log_entry: StepLogEntry) {
+    pub fn add_step_log_entry(&mut self, log_entry: StepLogEntry) {
         self.logs[self.log_count] = log_entry;
         self.log_count += 1;
     }
 
-    pub fn add_log(&mut self, log: String) {
+    pub fn add_log_string(&mut self, log: String) {
         self.log_strings.push(log);
     }
 
-    pub fn print_logs(&self) {
-        for i in 0..self.log_count {
-            print!(" > {}", self.logs[i]);
+    pub fn print_logs(&self, logging_mode: &LoggingMode) {
+        if logging_mode.log_disassembly_details() {
+            print!(";");
+            for i in 0..self.log_count {
+                print!(" > {}", self.logs[i]);
+            }
         }
-        println!("");
+        if logging_mode.log_disassembly() {
+            println!();
+        }
+    }
 
+    pub fn print_log_strings(&self) {
         for l in &self.log_strings {
             println!(
                 "                                                            ; {}",

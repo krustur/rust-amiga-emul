@@ -4,6 +4,7 @@ use super::memory::{Memory, SetMemoryResult};
 use std::{any::Any, fmt};
 
 pub struct CiaMemory {
+    pub led: bool,
     pub overlay: bool,
 }
 
@@ -55,11 +56,29 @@ impl Memory for CiaMemory {
     }
 
     fn get_byte(self: &CiaMemory, step_log: &mut StepLog, address: u32) -> u8 {
-        step_log.add_log(format!(
-            "CIA: TODO: get_byte() for CIA memory ${:06X}",
-            address
-        ));
-        0
+        match address {
+            0xBFE001 => {
+                let mut value = 0x00;
+                if self.led {
+                    value |= 0x02;
+                }
+                if self.overlay {
+                    value |= 0x01;
+                }
+                // step_log.add_log_sting(format!(
+                //     "CIA: TODO: get_byte() for CIA memory ${:06X}",
+                //     address
+                // ));
+                value
+            }
+            _ => {
+                step_log.add_log_string(format!(
+                    "CIA: TODO: get_byte() for CIA memory ${:06X}",
+                    address
+                ));
+                0
+            }
+        }
     }
 
     fn set_byte(
@@ -70,26 +89,34 @@ impl Memory for CiaMemory {
     ) -> Option<SetMemoryResult> {
         match address {
             0xBFE001 => {
+                // http://amigadev.elowar.com/read/ADCD_2.1/Hardware_Manual_guide/node018F.html
                 let pra_fir1 = (value & 0x80) == 0x80;
                 let pra_fir0 = (value & 0x40) == 0x40;
-                let pra_rdy = (value & 0x20) == 0x20;
-                let pra_tk0 = (value & 0x10) == 0x10;
-                let pra_wpro = (value & 0x08) == 0x08;
-                let pra_chng = (value & 0x04) == 0x04;
+                let pra_rdy = (value & 0x20) == 0x20; // DSKRDY - Disk ready (active low)
+                let pra_tk0 = (value & 0x10) == 0x10; // DSKTRACK0 - Track zero detect
+                let pra_wpro = (value & 0x08) == 0x08; // DSKPROT - Disk is write protected (active low)
+                let pra_chng = (value & 0x04) == 0x04; // DSKCHANGE - Disk has been removed from the drive.  The signal goes low whenever a disk is removed.
                 let pra_led = (value & 0x02) == 0x02;
                 let pra_ovl = (value & 0x01) == 0x01;
-                self.set_overlay(pra_ovl);
-                step_log.add_log(format!(
-                    "CIA: TODO: set_byte() for CIA memory ${:06X} to {}",
-                    address, value
-                ));
-                Some(SetMemoryResult {
-                    set_overlay: Some(pra_ovl),
-                })
+                self.set_led(pra_led);
+                let overlay_changed = self.set_overlay(pra_ovl);
+                if value > 3 {
+                    step_log.add_log_string(format!(
+                        "CIA: TODO: set_byte() for CIA memory ${:06X} to ${:02X}",
+                        address, value
+                    ));
+                }
+                if let Some(overlay) = overlay_changed {
+                    Some(SetMemoryResult {
+                        set_overlay: Some(overlay),
+                    })
+                } else {
+                    None
+                }
             }
             _ => {
-                step_log.add_log(format!(
-                    "CIA: TODO: set_byte() for CIA memory ${:06X} to {}",
+                step_log.add_log_string(format!(
+                    "CIA: TODO: set_byte() for CIA memory ${:06X} to ${:02X}",
                     address, value
                 ));
                 None
@@ -100,7 +127,10 @@ impl Memory for CiaMemory {
 
 impl CiaMemory {
     pub fn new() -> CiaMemory {
-        CiaMemory { overlay: true }
+        CiaMemory {
+            led: true,
+            overlay: true,
+        }
     }
 
     pub fn get_start_address(&self) -> u32 {
@@ -115,8 +145,19 @@ impl CiaMemory {
         0x10000
     }
 
+    fn set_led(self: &mut CiaMemory, led: bool) {
+        if self.led != led {
+            let on_or_off = match led {
+                true => "OFF",
+                false => "ON",
+            };
+            println!("   -CIA: PRA LED changed to {} [{}]", on_or_off, led);
+            self.led = led;
+        }
+    }
+
     fn set_overlay(self: &mut CiaMemory, ovl: bool) -> Option<bool> {
-        if ovl != self.overlay {
+        if self.overlay != ovl {
             println!("   -CIA: PRA OVL changed to {}", ovl);
             self.overlay = ovl;
             Some(ovl)

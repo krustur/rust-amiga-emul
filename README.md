@@ -27,7 +27,7 @@ There's no ambition to make this a fully functional Amiga emulator.
 <https://wandel.ca/homepage/execdis/exec_disassembly.txt>
 
 68000 total instructions: 80  
-68000 instructions left to do: 23 (non 68000 todo = 34)
+68000 instructions left to do: 22 (non 68000 todo = 34)
 
 | instruction                | 68000 | 68008 | 68010 | 68020 | 68030 | 68040 | 68881/68882 | 68851 | CPU32 |
 |----------------------------|-------|-------|-------|-------|-------|-------|-------------|-------|-------|
@@ -74,7 +74,7 @@ There's no ambition to make this a fully functional Amiga emulator.
 | DBcc                       | X     | X     | X     | X     | X     | X     |             |       | X     |
 | DIVS (todo)                | X     | X     | X     | X     | X     | X     |             |       | X     |
 | DIVSL (todo)               |       |       |       | X     | X     | X     |             |       | X     |
-| DIVU (todo)                | X     | X     | X     | X     | X     | X     |             |       | X     |
+| DIVU                       | X     | X     | X     | X     | X     | X     |             |       | X     |
 | DIVUL (todo)               |       |       |       | X     | X     | X     |             |       | X     |
 | EOR (todo)                 | X     | X     | X     | X     | X     | X     |             |       | X     |
 | EORI (todo)                | X     | X     | X     | X     | X     | X     |             |       | X     |

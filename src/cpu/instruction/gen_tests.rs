@@ -6,6 +6,7 @@ pub mod addi;
 pub mod addq;
 pub mod addx;
 pub mod aslr;
+pub mod divu;
 pub mod ext;
 pub mod jmp;
 pub mod lslr;
