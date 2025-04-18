@@ -183,41 +183,49 @@ pub fn get_disassembly<'a>(
     match opmode {
         ADD_BYTE_DN_AS_DEST => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             String::from("ADD.B"),
             format!("{},D{}", ea_format, register),
         )),
         ADD_WORD_DN_AS_DEST => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             String::from("ADD.W"),
             format!("{},D{}", ea_format, register),
         )),
         ADD_LONG_DN_AS_DEST => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             String::from("ADD.L"),
             format!("{},D{}", ea_format, register),
         )),
         ADD_BYTE_EA_AS_DEST => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             String::from("ADD.B"),
             format!("D{},{}", register, ea_format),
         )),
         ADD_WORD_EA_AS_DEST => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             String::from("ADD.W"),
             format!("D{},{}", register, ea_format),
         )),
         ADD_LONG_EA_AS_DEST => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             String::from("ADD.L"),
             format!("D{},{}", register, ea_format),
         )),
         ADDA_WORD => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             String::from("ADDA.W"),
             format!("{},A{}", ea_format, register),
         )),
         ADDA_LONG => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             String::from("ADDA.L"),
             format!("{},A{}", ea_format, register),
         )),

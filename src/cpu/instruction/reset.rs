@@ -22,8 +22,10 @@ pub fn step<'a>(
     step_log: &mut StepLog,
 ) -> Result<(), StepError> {
     // todo!("RESET instruction")
-    step_log.add_log_string(String::from("RESET"));
+    step_log.add_log_string(String::from("TODO: RESET"));
+    mem.set_overlay_enable(true);
     Err(StepError::InstructionError{details: String::from("TODO: RESET instruction")})
+    // Ok(())
 }
 
 pub fn get_disassembly<'a>(
@@ -35,6 +37,7 @@ pub fn get_disassembly<'a>(
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     Ok(GetDisassemblyResult::from_pc(
         pc,
+        mem,
         String::from("RESET"),
         String::from(""),
     ))

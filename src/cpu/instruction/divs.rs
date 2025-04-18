@@ -17,7 +17,7 @@ use crate::register::{ProgramCounter, Register};
 
 pub fn match_check(instruction: &Instruction, instr_word: u16) -> bool {
     match crate::cpu::match_check(instruction, instr_word) {
-        true => crate::cpu::match_check_ea_only_data_addressing_modes_pos_0(instr_word),
+        true => crate::cpu::match_check_ea_1011111__111_11_ea(instr_word, 3, 0),
         false => false,
     }
 }
@@ -35,7 +35,7 @@ pub fn step<'a>(
         mem,
         step_log,
         |instr_word| {
-            // DIVU for 68000 is always DIVU.W long/word => word+word. DIVU.L for 020+ in own get_disassembly_long function.
+            // DIVS for 68000 is always DIVS.W long/word => word+word. DIVS.L for 020+ in own get_disassembly_long function.
             Ok(OperationSize::Word)
         },
     )?;
@@ -47,7 +47,7 @@ pub fn step<'a>(
         return Err(StepError::IntegerDivideByZero);
     }
     let dest = reg.get_d_reg_long(register, step_log);
-    let result = Cpu::divu_long_by_word(source, dest);
+    let result = Cpu::divs_long_by_word(source, dest);
 
 
     reg.set_d_reg_long(step_log, register, result.result);
@@ -81,7 +81,7 @@ pub fn get_disassembly<'a>(
     Ok(GetDisassemblyResult::from_pc(
         pc,
         mem,
-        String::from("DIVU.W"),
+        String::from("DIVS.W"),
         format!("{},D{}", ea_format, register),
     ))
 }

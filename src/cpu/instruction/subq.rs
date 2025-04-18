@@ -103,16 +103,19 @@ pub fn get_disassembly<'a>(
     match ea_data.operation_size {
         OperationSize::Byte => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             String::from("SUBQ.B"),
             format!("#${:X},{}", data, ea_format),
         )),
         OperationSize::Word => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             String::from("SUBQ.W"),
             format!("#${:X},{}", data, ea_format),
         )),
         OperationSize::Long => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             String::from("SUBQ.L"),
             format!("#${:X},{}", data, ea_format),
         )),

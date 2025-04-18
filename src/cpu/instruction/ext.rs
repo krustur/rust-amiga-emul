@@ -105,11 +105,13 @@ pub fn get_disassembly<'a>(
     match extmode {
         ExtMode::ByteToWord => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             String::from("EXT.W"),
             format!("D{}", register),
         )),
         ExtMode::WordToLong => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             String::from("EXT.L"),
             format!("D{}", register),
         )),

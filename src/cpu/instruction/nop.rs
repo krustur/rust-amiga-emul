@@ -33,6 +33,7 @@ pub fn get_disassembly<'a>(
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     Ok(GetDisassemblyResult::from_pc(
         pc,
+        mem,
         String::from("NOP"),
         String::from(""),
     ))

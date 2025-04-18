@@ -156,31 +156,37 @@ pub fn get_disassembly<'a>(
     match opmode {
         BYTE_WITH_DN_AS_DEST => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             String::from("OR.B"),
             format!("{},D{}", ea_format, register),
         )),
         WORD_WITH_DN_AS_DEST => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             String::from("OR.W"),
             format!("{},D{}", ea_format, register),
         )),
         LONG_WITH_DN_AS_DEST => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             String::from("OR.L"),
             format!("{},D{}", ea_format, register),
         )),
         BYTE_WITH_EA_AS_DEST => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             String::from("OR.B"),
             format!("D{},{}", register, ea_format),
         )),
         WORD_WITH_EA_AS_DEST => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             String::from("OR.W"),
             format!("D{},{}", register, ea_format),
         )),
         LONG_WITH_EA_AS_DEST => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             String::from("OR.L"),
             format!("D{},{}", register, ea_format),
         )),

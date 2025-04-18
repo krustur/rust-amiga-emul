@@ -130,6 +130,7 @@ pub fn get_disassembly<'a>(
 
     Ok(GetDisassemblyResult::from_pc(
         pc,
+        mem,
         format!("ORI.{}", ea_data.operation_size.get_format()),
         format!("{},{}", immediate_data, ea_format),
     ))

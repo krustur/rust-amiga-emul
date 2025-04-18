@@ -68,6 +68,7 @@ pub fn get_disassembly<'a>(
 
     Ok(GetDisassemblyResult::from_pc(
         pc,
+        mem,
         String::from("MOVE.W"),
         format!("{},SR", ea_format.format),
     ))

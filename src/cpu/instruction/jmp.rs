@@ -60,6 +60,7 @@ pub fn get_disassembly<'a>(
     let ea_debug = Cpu::get_ea_format(ea_data.ea_mode, pc, None, mem);
     Ok(GetDisassemblyResult::from_pc(
         pc,
+        mem,
         String::from("JMP"),
         ea_debug.format,
     ))

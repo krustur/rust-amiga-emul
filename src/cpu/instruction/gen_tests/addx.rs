@@ -10,7 +10,7 @@ use crate::mem::rammemory::RamMemory;
 use crate::cpu::instruction::GetDisassemblyResult;
 use crate::mem::memory::Memory;
 use crate::mem::ciamemory::CiaMemory;
-use crate::cpu::Cpu;
+use crate::cpu::{Cpu, CpuSpeed};
 use crate::mem::Mem;
 use crate::modermodem::Modermodem;
 use crate::register::STATUS_REGISTER_MASK_CARRY;
@@ -31,14 +31,14 @@ fn data_register_byte_with_extend_clear() {
     // -nothing-
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x00000020, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00004344);
@@ -88,14 +88,14 @@ fn data_register_byte_with_extend_set() {
     // -nothing-
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x00000020, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00004344);
@@ -142,14 +142,14 @@ fn data_register_byte_with_extend_set_set_carry_extend() {
     // -nothing-
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x000000f0, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00004344);
@@ -197,14 +197,14 @@ fn data_register_byte_with_extend_set_set_carry_extend_leave_zero_cleared_test_b
     // -nothing-
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x0000000f, 0x000000f0, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00004344);
@@ -252,14 +252,14 @@ fn data_register_byte_with_extend_set_set_carry_extend_leave_zero_set_test_both_
     // -nothing-
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x0000000f, 0x000000f0, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00004344);
@@ -309,14 +309,14 @@ fn data_register_byte_with_extend_set_set_overflow_negative() {
     // -nothing-
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000007f, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00004344);
@@ -364,14 +364,14 @@ fn data_register_byte_with_extend_set_set_overflow_negative_test_both_overflow()
     // -nothing-
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00004344);
@@ -419,14 +419,14 @@ fn data_register_word_with_extend_clear() {
     // -nothing-
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001010, 0x00002020, 0x000000d4, 0x000000d5, 0x000000d6, 0x00004344);
@@ -476,14 +476,14 @@ fn data_register_word_with_extend_set() {
     // -nothing-
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001010, 0x00002020, 0x000000d4, 0x000000d5, 0x000000d6, 0x00004344);
@@ -530,14 +530,14 @@ fn data_register_word_with_extend_set_set_carry_extend() {
     // -nothing-
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001010, 0x0000f0f0, 0x000000d4, 0x000000d5, 0x000000d6, 0x00004344);
@@ -585,14 +585,14 @@ fn data_register_word_with_extend_set_set_carry_extend_leave_zero_cleared_test_b
     // -nothing-
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x0000000f, 0x0000fff0, 0x000000d4, 0x000000d5, 0x000000d6, 0x00004344);
@@ -640,14 +640,14 @@ fn data_register_word_with_extend_set_set_carry_extend_leave_zero_set_test_both_
     // -nothing-
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x0000000f, 0x0000fff0, 0x000000d4, 0x000000d5, 0x000000d6, 0x00004344);
@@ -697,14 +697,14 @@ fn data_register_word_with_extend_set_set_overflow_negative() {
     // -nothing-
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001000, 0x00007fff, 0x000000d4, 0x000000d5, 0x000000d6, 0x00004344);
@@ -752,14 +752,14 @@ fn data_register_word_with_extend_set_set_overflow_negative_zero_test_both_overf
     // -nothing-
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001000, 0x00006fff, 0x000000d4, 0x000000d5, 0x000000d6, 0x00004344);
@@ -807,14 +807,14 @@ fn data_register_long_with_extend_clear() {
     // -nothing-
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001000, 0x00006fff, 0x10101010, 0x20202020, 0x000000d6, 0x00004344);
@@ -864,14 +864,14 @@ fn data_register_long_with_extend_set() {
     // -nothing-
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001000, 0x00006fff, 0x10101010, 0x20202020, 0x000000d6, 0x00004344);
@@ -918,14 +918,14 @@ fn data_register_long_with_extend_set_set_carry_extend() {
     // -nothing-
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001000, 0x00006fff, 0x10101010, 0xf0f0f0f0, 0x000000d6, 0x00004344);
@@ -973,14 +973,14 @@ fn data_register_long_with_extend_set_set_carry_extend_leave_zero_cleared_test_b
     // -nothing-
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001000, 0x00006fff, 0x0000000f, 0xfffffff0, 0x000000d6, 0x00004344);
@@ -1028,14 +1028,14 @@ fn data_register_long_with_extend_set_set_carry_extend_leave_zero_cleared_set_bo
     // -nothing-
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001000, 0x00006fff, 0x0000000f, 0xfffffff0, 0x000000d6, 0x00004344);
@@ -1085,14 +1085,14 @@ fn data_register_long_with_extend_set_set_overflow_negative() {
     // -nothing-
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001000, 0x00006fff, 0x10000000, 0x7fffffff, 0x000000d6, 0x00004344);
@@ -1140,14 +1140,14 @@ fn data_register_long_with_extend_set_set_overflow_negative_zero_test_both_overf
     // -nothing-
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001000, 0x00006fff, 0x10000000, 0x6fffffff, 0x000000d6, 0x00004344);
@@ -1196,15 +1196,15 @@ fn address_register_byte_with_extend_clear() {
     let arrange_mem_00050002 = RamMemory::from_bytes(0x00050002, arrange_mem_bytes_00050002);
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     mem.add_range(Rc::new(RefCell::new(arrange_mem_00050002)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001000, 0x00006fff, 0x10000000, 0x6fffffff, 0x000000d6, 0x00004344);
@@ -1256,15 +1256,15 @@ fn address_register_byte_with_extend_set() {
     let arrange_mem_00050002 = RamMemory::from_bytes(0x00050002, arrange_mem_bytes_00050002);
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     mem.add_range(Rc::new(RefCell::new(arrange_mem_00050002)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001000, 0x00006fff, 0x10000000, 0x6fffffff, 0x000000d6, 0x00004344);
@@ -1313,15 +1313,15 @@ fn address_register_word_with_extend_clear() {
     let arrange_mem_00040110 = RamMemory::from_bytes(0x00040110, arrange_mem_bytes_00040110);
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     mem.add_range(Rc::new(RefCell::new(arrange_mem_00040110)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001000, 0x00006fff, 0x10000000, 0x6fffffff, 0x000000d6, 0x00004344);
@@ -1375,15 +1375,15 @@ fn address_register_word_with_extend_set() {
     let arrange_mem_00040110 = RamMemory::from_bytes(0x00040110, arrange_mem_bytes_00040110);
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     mem.add_range(Rc::new(RefCell::new(arrange_mem_00040110)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001000, 0x00006fff, 0x10000000, 0x6fffffff, 0x000000d6, 0x00004344);
@@ -1438,15 +1438,15 @@ fn address_register_long_with_extend_clear() {
     let arrange_mem_00040110 = RamMemory::from_bytes(0x00040110, arrange_mem_bytes_00040110);
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     mem.add_range(Rc::new(RefCell::new(arrange_mem_00040110)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001000, 0x00006fff, 0x10000000, 0x6fffffff, 0x000000d6, 0x00004344);
@@ -1503,15 +1503,15 @@ fn address_register_long_with_extend_set() {
     let arrange_mem_00040110 = RamMemory::from_bytes(0x00040110, arrange_mem_bytes_00040110);
 
     // arrange - common
-    let mut mem = Mem::new();
+    let mut mem = Mem::new(None, None);
     let vectors = RamMemory::from_range(0x00000000, 0x000003ff);
     let cia_memory = CiaMemory::new();
     mem.add_range(Rc::new(RefCell::new(code_memory)));
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     mem.add_range(Rc::new(RefCell::new(arrange_mem_00040110)));
-    let cpu = Cpu::new(&mem);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None);
+    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
+    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000010, 0x0000006f, 0x00001000, 0x00006fff, 0x10000000, 0x6fffffff, 0x000000d6, 0x00004344);

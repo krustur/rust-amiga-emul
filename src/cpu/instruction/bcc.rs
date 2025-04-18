@@ -79,6 +79,7 @@ pub fn get_disassembly<'a>(
             let displacement = pc.fetch_next_word(mem);
             Ok(GetDisassemblyResult::from_pc(
                 pc,
+                mem,
                 format!("B{}.W", conditional_test),
                 format!(
                     "${:04X} [${:08X}]",
@@ -91,6 +92,7 @@ pub fn get_disassembly<'a>(
             let displacement = pc.fetch_next_long(mem);
             Ok(GetDisassemblyResult::from_pc(
                 pc,
+                mem,
                 format!("B{}.L", conditional_test),
                 format!(
                     "${:08X} [${:08X}]",
@@ -101,6 +103,7 @@ pub fn get_disassembly<'a>(
         }
         _ => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             format!("B{}.B", conditional_test),
             format!(
                 "${:02X} [${:08X}]",

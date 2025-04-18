@@ -135,6 +135,7 @@ pub fn get_disassembly<'a>(
 
     Ok(GetDisassemblyResult::from_pc(
         pc,
+        mem,
         format!("CMPM.{}", operation_size.get_format()),
         format!("(A{})+,(A{})+", source_register, dest_register),
     ))

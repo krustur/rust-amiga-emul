@@ -612,14 +612,14 @@ impl Register {
 
     #[cfg(test)]
     pub fn assert_all_d_reg_long_no_log(&mut self, d0: u32, d1: u32, d2: u32, d3: u32, d4: u32, d5: u32, d6: u32, d7: u32) {
-        assert_eq!(d0, self.reg_d[0]);
-        assert_eq!(d1, self.reg_d[1]);
-        assert_eq!(d2, self.reg_d[2]);
-        assert_eq!(d3, self.reg_d[3]);
-        assert_eq!(d4, self.reg_d[4]);
-        assert_eq!(d5, self.reg_d[5]);
-        assert_eq!(d6, self.reg_d[6]);
-        assert_eq!(d7, self.reg_d[7]);
+        assert_eq!(d0, self.reg_d[0], "D0 assert failed: Expected 0x{:08X}, actual 0x{:08X}", d0, self.reg_d[0]);
+        assert_eq!(d1, self.reg_d[1], "D1 assert failed: Expected 0x{:08X}, actual 0x{:08X}", d1, self.reg_d[1]);
+        assert_eq!(d2, self.reg_d[2], "D2 assert failed: Expected 0x{:08X}, actual 0x{:08X}", d2, self.reg_d[2]);
+        assert_eq!(d3, self.reg_d[3], "D3 assert failed: Expected 0x{:08X}, actual 0x{:08X}", d3, self.reg_d[3]);
+        assert_eq!(d4, self.reg_d[4], "D4 assert failed: Expected 0x{:08X}, actual 0x{:08X}", d4, self.reg_d[4]);
+        assert_eq!(d5, self.reg_d[5], "D5 assert failed: Expected 0x{:08X}, actual 0x{:08X}", d5, self.reg_d[5]);
+        assert_eq!(d6, self.reg_d[6], "D6 assert failed: Expected 0x{:08X}, actual 0x{:08X}", d6, self.reg_d[6]);
+        assert_eq!(d7, self.reg_d[7], "D7 assert failed: Expected 0x{:08X}, actual 0x{:08X}", d7, self.reg_d[7]);
     }
 
     pub fn set_d_reg_word(&mut self, step_log: &mut StepLog, reg_index: usize, value: u16) {
@@ -697,13 +697,13 @@ impl Register {
 
     #[cfg(test)]
     pub fn assert_all_a_reg_long_no_log(&mut self, a0: u32, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32, a6: u32, a7: u32) {
-        assert_eq!(a0, self.get_a_reg_long_no_log(0));
-        assert_eq!(a1, self.get_a_reg_long_no_log(1));
-        assert_eq!(a2, self.get_a_reg_long_no_log(2));
-        assert_eq!(a3, self.get_a_reg_long_no_log(3));
-        assert_eq!(a4, self.get_a_reg_long_no_log(4));
-        assert_eq!(a5, self.get_a_reg_long_no_log(5));
-        assert_eq!(a6, self.get_a_reg_long_no_log(6));
+        assert_eq!(a0, self.get_a_reg_long_no_log(0), "D0 assert failed: Expected 0x{:08X}, actual 0x{:08X}", a1, self.reg_a[0]);
+        assert_eq!(a1, self.get_a_reg_long_no_log(1), "D1 assert failed: Expected 0x{:08X}, actual 0x{:08X}", a1, self.reg_a[1]);
+        assert_eq!(a2, self.get_a_reg_long_no_log(2), "D2 assert failed: Expected 0x{:08X}, actual 0x{:08X}", a2, self.reg_a[2]);
+        assert_eq!(a3, self.get_a_reg_long_no_log(3), "D3 assert failed: Expected 0x{:08X}, actual 0x{:08X}", a3, self.reg_a[3]);
+        assert_eq!(a4, self.get_a_reg_long_no_log(4), "D4 assert failed: Expected 0x{:08X}, actual 0x{:08X}", a4, self.reg_a[4]);
+        assert_eq!(a5, self.get_a_reg_long_no_log(5), "D5 assert failed: Expected 0x{:08X}, actual 0x{:08X}", a5, self.reg_a[5]);
+        assert_eq!(a6, self.get_a_reg_long_no_log(6), "D6 assert failed: Expected 0x{:08X}, actual 0x{:08X}", a6, self.reg_a[6]);
         // assert_eq!(a7, self.get_a_reg_long_no_log(7));
         // assert_eq!(a0, self.reg_a[0]);
         // assert_eq!(a1, self.reg_a[1]);

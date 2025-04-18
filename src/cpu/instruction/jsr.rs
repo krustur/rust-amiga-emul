@@ -64,6 +64,7 @@ pub fn get_disassembly<'a>(
     let ea_format = Cpu::get_ea_format(ea_data.ea_mode, pc, Some(ea_data.operation_size), mem);
     Ok(GetDisassemblyResult::from_pc(
         pc,
+        mem,
         String::from("JSR"),
         ea_format.format,
     ))

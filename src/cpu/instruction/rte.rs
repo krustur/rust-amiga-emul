@@ -27,7 +27,6 @@ pub fn step<'a>(
 
             reg.stack_pop_pc(mem, pc, step_log);
             reg.reg_sr.set_value(sr);
-            let hey = pc.get_step_next_pc();
 
             Ok(())
         }
@@ -44,6 +43,7 @@ pub fn get_disassembly<'a>(
 ) -> Result<GetDisassemblyResult, GetDisassemblyResultError> {
     Ok(GetDisassemblyResult::from_pc(
         pc,
+        mem,
         String::from("RTE"),
         String::from(""),
     ))

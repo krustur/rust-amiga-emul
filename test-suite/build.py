@@ -102,9 +102,9 @@ class ParsedLine(object):
             self.source_code_instruction = source_code_instruction
             self.source_code_operands = source_code_operands
         else:
-            print("Bug in the code!")
+            print_err("Bug in the code!")
             traceback.print_stack()
-            sys.exit()
+            sys.exit(1)
 
     @staticmethod
     def status_register_from_flags(flags: list[str]):
@@ -259,7 +259,7 @@ class TestCase(object):
 
         # Arrange - common
         file.write(f"    // arrange - common\n")
-        file.write(f"    let mut mem = Mem::new();\n")
+        file.write(f"    let mut mem = Mem::new(None, None);\n")
         file.write(f"    let vectors = RamMemory::from_range(0x00000000, 0x000003ff);\n")
         file.write(f"    let cia_memory = CiaMemory::new();\n")
         file.write(f"    mem.add_range(Rc::new(RefCell::new(code_memory)));\n")
@@ -267,8 +267,8 @@ class TestCase(object):
         file.write(f"    mem.add_range(Rc::new(RefCell::new(cia_memory)));\n")
         for arr_mem in self.arrange_mem:
             file.write(f"    mem.add_range(Rc::new(RefCell::new(arrange_mem_{arr_mem.address:08x})));\n")
-        file.write(f"    let cpu = Cpu::new(&mem);\n")
-        file.write(f"    let mut modermodem = Modermodem::new(None, cpu, mem, None);\n")
+        file.write(f"    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, {self.arrange_code.address:08x});\n")
+        file.write(f"    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);\n")
         file.write(f"\n")
 
         # Arrange - regs
@@ -464,7 +464,7 @@ class TestSet:
         file.write("use crate::cpu::instruction::GetDisassemblyResult;\n")
         file.write("use crate::mem::memory::Memory;\n")
         file.write("use crate::mem::ciamemory::CiaMemory;\n")
-        file.write("use crate::cpu::Cpu;\n")
+        file.write("use crate::cpu::{Cpu, CpuSpeed};\n")
         file.write("use crate::mem::Mem;\n")
         file.write("use crate::modermodem::Modermodem;\n")
         file.write("use crate::register::STATUS_REGISTER_MASK_CARRY;\n")
@@ -505,6 +505,8 @@ class TestSet:
         # Close Amiga test file
         file.close()
 
+def print_err(message):
+    print("\033[31m" + message + "\033[0m")
 
 def format_bytes_as_hex(bytes: list[int]):
     bytes_hex = []
@@ -544,7 +546,7 @@ if len(sys.argv) != 5:
     print("Example:")
     print(
         f" {sys.argv[0]} tests ..\\src\\cpu\\instruction\\gen_tests ..\\src\\cpu\\instruction\\gen_tests.rs D:\\Amiga\\KrustWB3\\Output\\Dev\\github\\rust-amiga-emul-ami-test-runner")
-    sys.exit()
+    sys.exit(1)
 
 g_path_to_test_specs = sys.argv[1]
 g_output_path_to_rust_tests = sys.argv[2]
@@ -572,6 +574,23 @@ def iterate_test_spec_file_paths(test_spec_file_paths):
         test_cases = get_test_cases(parsed_lines)
         test_set = TestSet(test_spec_file_path=test_spec_file_path, test_cases=test_cases)
         test_sets.append(test_set)
+
+    # Check for duplicate test names
+    seen_test_names = set()
+    duplicate_tests = set()
+    for test_set in test_sets:
+        for test_case in test_set.test_cases:
+            test_name = test_case.test_name
+            if test_name in seen_test_names:
+                # print_err(f"Found test with duplicate name: {test_name}")
+                if test_name not in duplicate_tests:
+                    duplicate_tests.add(test_name)
+            else:
+                seen_test_names.add(test_name)
+    if duplicate_tests:
+        print_err(f"Duplicate test names found: {', '.join(duplicate_tests)}")
+        sys.exit(1)
+
     return test_sets
 
 
@@ -740,9 +759,9 @@ def parse_line(line_number, line_raw) -> ParsedLine:
         keyword_str = keyword_match.group(1)
         keyword = get_keyword(keyword_str)
         if keyword is None:
-            print(f"{line_number:5d}: {line_raw}")
-            print(f"Unknown keyword '{keyword_str}' found at line {line_number}")
-            sys.exit()
+            print_err(f"{line_number:5d}: {line_raw}")
+            print_err(f"Unknown keyword '{keyword_str}' found at line {line_number}")
+            sys.exit(1)
         line = ParsedLine(line_number=line_number, line_raw=line_raw, keyword=keyword)
     elif get_address_line(line_stripped):
         address_line = get_address_line(line_stripped)
@@ -750,63 +769,63 @@ def parse_line(line_number, line_raw) -> ParsedLine:
         address_content = address_line.group(2)
         if address_content is None:
             if address != 0x00000000:
-                print(f"{line_number:5d}: {line_raw}")
-                print(f"Unable to parse content of address 0x{address:08x}.")
-                print(f" Missing content!")
-                print(f" note: Only null termination address $00000000 can be used without content.")
-                sys.exit()
+                print_err(f"{line_number:5d}: {line_raw}")
+                print_err(f"Unable to parse content of address 0x{address:08x}.")
+                print_err(f" Missing content!")
+                print_err(f" note: Only null termination address $00000000 can be used without content.")
+                sys.exit(1)
             line = ParsedLine(line_number=line_number, line_raw=line_raw, address=address)
         elif get_bytes(address_content):
             bytes = get_bytes(address_content)
             line = ParsedLine(line_number=line_number, line_raw=line_raw, address=address, bytes=bytes)
         else:
-            print(f"{line_number:5d}: {line_raw}")
-            print(f"Unable to parse content of address 0x{address:08x}.")
-            print(f" Content was: {address_content}")
-            sys.exit()
+            print_err(f"{line_number:5d}: {line_raw}")
+            print_err(f"Unable to parse content of address 0x{address:08x}.")
+            print_err(f" Content was: {address_content}")
+            sys.exit(1)
     elif get_data_register_line(line_stripped):
         longs = get_longs(line_stripped)
         if len(longs) != 8:
-            print(f"{line_number:5d}: {line_raw}")
-            print(f"Unable to parse content of data registers.")
-            print(
+            print_err(f"{line_number:5d}: {line_raw}")
+            print_err(f"Unable to parse content of data registers.")
+            print_err(
                 f" Expected 8 32-bit integer hexadecimal values (without $ or 0x prefixes). Found {len(longs)} integers: {longs}")
-            sys.exit()
+            sys.exit(1)
         line = ParsedLine(line_number=line_number, line_raw=line_raw, data_registers=longs)
     elif get_address_register_line(line_stripped):
         longs = get_longs(line_stripped)
         if len(longs) != 8:
-            print(f"{line_number:5d}: {line_raw}")
-            print(f"Unable to parse content of address registers.")
-            print(
+            print_err(f"{line_number:5d}: {line_raw}")
+            print_err(f"Unable to parse content of address registers.")
+            print_err(
                 f" Expected 8 32-bit integer hexadecimal values (without $ or 0x prefixes). Found {len(longs)} integers: {longs}")
-            sys.exit()
+            sys.exit(1)
         line = ParsedLine(line_number=line_number, line_raw=line_raw, address_registers=longs)
     elif get_status_register_flags_line(line_stripped):
         status_flags = get_status_flags(line_stripped)
         if status_flags is None:
-            print(f"{line_number:5d}: {line_raw}")
-            print(f"Unable to parse content of status flags.")
-            print(
+            print_err(f"{line_number:5d}: {line_raw}")
+            print_err(f"Unable to parse content of status flags.")
+            print_err(
                 f" Expected 5 chars signalling SR flags in correct order, or dash for zero SR flag. Order is XNZVC.")
         line = ParsedLine(line_number=line_number, line_raw=line_raw, status_flags=status_flags)
     elif get_status_register_line(line_stripped):
         words = get_words(line_stripped)
         if len(words) != 1:
-            print(f"{line_number:5d}: \"{line_raw}\"")
-            print(f"Unable to parse content of status register.")
-            print(
+            print_err(f"{line_number:5d}: \"{line_raw}\"")
+            print_err(f"Unable to parse content of status register.")
+            print_err(
                 f" Expected 1 16-bit integer hexadecimal value (without $ or 0x prefixes). Found {len(words)} integers: {words}")
-            sys.exit()
+            sys.exit(1)
         line = ParsedLine(line_number=line_number, line_raw=line_raw, status_register=words[0])
     elif get_pc_register_line(line_stripped):
         longs = get_longs(line_stripped)
         if len(longs) != 1:
-            print(f"{line_number:5d}: {line_raw}")
-            print(f"Unable to parse content of program counter register.")
-            print(
+            print_err(f"{line_number:5d}: {line_raw}")
+            print_err(f"Unable to parse content of program counter register.")
+            print_err(
                 f" Expected 1 32-bit integer hexadecimal value (without $ or 0x prefixes). Found {len(longs)} integers: {longs}")
-            sys.exit()
+            sys.exit(1)
         line = ParsedLine(line_number=line_number, line_raw=line_raw, program_counter=longs[0])
     elif line_stripped.startswith('>'):
         code_parts = line_stripped[1:].strip().split()
@@ -823,15 +842,15 @@ def parse_line(line_number, line_raw) -> ParsedLine:
                               source_code_instruction=source_code_instruction,
                               source_code_operands=source_code_operands)
         else:
-            print(f"{line_number:5d}: {line_raw}")
-            print("Unable to parse content of code.")
-            print(
+            print_err(f"{line_number:5d}: {line_raw}")
+            print_err("Unable to parse content of code.")
+            print_err(
                 f" Expected 1 or 2 strings for instruction and possibly operands. E.g. NOP or MOVE.B #0,D0")
-            sys.exit()
+            sys.exit(1)
     else:
-        print(f"{line_number:5d}: {line_raw}")
-        print(f"Syntax Error parsing line {line_number}")
-        sys.exit()
+        print_err(f"{line_number:5d}: {line_raw}")
+        print_err(f"Syntax Error parsing line {line_number}")
+        sys.exit(1)
 
     return line
 
@@ -863,9 +882,9 @@ def get_test_cases(parsed_lines: list[ParsedLine]):
                 test_case, current_line = get_test_case(parsed_line.test_name, parsed_lines, current_line, line_count)
                 test_cases.append(test_case)
             case _:
-                print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
-                print(f"Syntax Error: Expected test name line. Found: {parsed_line.line_raw}")
-                sys.exit()
+                print_err(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
+                print_err(f"Syntax Error: Expected test name line. Found: {parsed_line.line_raw}")
+                sys.exit(1)
 
     return test_cases
 
@@ -917,10 +936,10 @@ def get_test_case(test_name: str, parsed_lines: list[ParsedLine], current_line: 
                             test_case.assert_mem.append(parsed_line)
                             pass
                         case _:
-                            print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
-                            print(
+                            print_err(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
+                            print_err(
                                 f"Syntax Error parsing. Found address with bytes, but was in incorrect state {parse_state}.")
-                            sys.exit()
+                            sys.exit(1)
                 case (ParsedLineType.ADDRESS_NULL_TERMINATION, _):
                     match parse_state:
                         case ParseState.ARRANGE_MEM:
@@ -930,112 +949,112 @@ def get_test_case(test_name: str, parsed_lines: list[ParsedLine], current_line: 
                         case ParseState.ARRANGE_AND_ASSERT_MEM:
                             parse_state = ParseState.GLOBAL
                         case _:
-                            print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
-                            print(
+                            print_err(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
+                            print_err(
                                 f"Syntax Error parsing. Found address null-termination, but was in incorrect state {parse_state}.")
-                            sys.exit()
+                            sys.exit(1)
                 case (ParsedLineType.DATA_REGISTERS, ParseState.ARRANGE_REG):
                     if test_case.arrange_reg_data is not None:
-                        print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
-                        print(
+                        print_err(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
+                        print_err(
                             f"Syntax Error parsing. Found multiple rows of data registers for 'arrange_reg'.")
-                        sys.exit()
+                        sys.exit(1)
                     else:
                         test_case.arrange_reg_data = parsed_line
                     # if test_case.is_arrange_reg_done():
                     #     parse_state = ParseState.GLOBAL
                 case (ParsedLineType.DATA_REGISTERS, ParseState.ASSERT_REG):
                     if test_case.assert_reg_data is not None:
-                        print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
-                        print(
+                        print_err(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
+                        print_err(
                             f"Syntax Error parsing. Found multiple rows of data registers for 'assert_reg'.")
-                        sys.exit()
+                        sys.exit(1)
                     else:
                         test_case.assert_reg_data = parsed_line
                     # if test_case.is_assert_reg_done():
                     #     parse_state = ParseState.GLOBAL
                 case (ParsedLineType.DATA_REGISTERS, _):
-                    print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
-                    print(
+                    print_err(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
+                    print_err(
                         f"Syntax Error parsing. Unexpected data registers found outside of 'arrange_reg' or 'assert_reg'.")
-                    sys.exit()
+                    sys.exit(1)
                 case (ParsedLineType.ADDRESS_REGISTERS, ParseState.ARRANGE_REG):
                     if test_case.arrange_reg_address is not None:
-                        print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
-                        print(
+                        print_err(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
+                        print_err(
                             f"Syntax Error parsing. Found multiple rows of address registers for 'arrange_reg'.")
-                        sys.exit()
+                        sys.exit(1)
                     else:
                         test_case.arrange_reg_address = parsed_line
                     # if test_case.is_arrange_reg_done():
                     #     parse_state = ParseState.GLOBAL
                 case (ParsedLineType.ADDRESS_REGISTERS, ParseState.ASSERT_REG):
                     if test_case.assert_reg_address is not None:
-                        print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
-                        print(
+                        print_err(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
+                        print_err(
                             f"Syntax Error parsing. Found multiple rows of address registers for 'assert_reg'.")
-                        sys.exit()
+                        sys.exit(1)
                     else:
                         test_case.assert_reg_address = parsed_line
                     # if test_case.is_assert_reg_done():
                     #     parse_state = ParseState.GLOBAL
                 case (ParsedLineType.ADDRESS_REGISTERS, _):
-                    print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
-                    print(
+                    print_err(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
+                    print_err(
                         f"Syntax Error parsing. Unexpected address registers found outside of 'arrange_reg' or 'assert_reg'.")
-                    sys.exit()
+                    sys.exit(1)
                 case (ParsedLineType.STATUS_REGISTER, ParseState.ARRANGE_REG):
                     if test_case.arrange_reg_sr is not None:
-                        print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
-                        print(
+                        print_err(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
+                        print_err(
                             f"Syntax Error parsing. Found multiple rows of SR or SR_FLAGS for 'arrange_reg'.")
-                        sys.exit()
+                        sys.exit(1)
                     else:
                         test_case.arrange_reg_sr = parsed_line
                 case (ParsedLineType.STATUS_REGISTER, ParseState.ASSERT_REG):
                     if test_case.assert_reg_sr is not None:
-                        print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
-                        print(
+                        print_err(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
+                        print_err(
                             f"Syntax Error parsing. Found multiple rows of SR or SR_FLAGS for 'assert_reg'.")
-                        sys.exit()
+                        sys.exit(1)
                     else:
                         test_case.assert_reg_sr = parsed_line
                 case (ParsedLineType.STATUS_REGISTER, _):
-                    print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
-                    print(
+                    print_err(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
+                    print_err(
                         f"Syntax Error parsing. Unexpected status register found outside of 'arrange_reg' or 'assert_reg'.")
-                    sys.exit()
+                    sys.exit(1)
                 case (ParsedLineType.PROGRAM_COUNTER_REGISTER, ParseState.ASSERT_REG):
                     if test_case.assert_reg_pc is not None:
-                        print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
-                        print(
+                        print_err(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
+                        print_err(
                             f"Syntax Error parsing. Found multiple rows of program counter register for 'assert_reg'.")
-                        sys.exit()
+                        sys.exit(1)
                     else:
                         test_case.assert_reg_pc = parsed_line
                 case (ParsedLineType.PROGRAM_COUNTER_REGISTER, _):
-                    print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
-                    print(
+                    print_err(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
+                    print_err(
                         f"Syntax Error parsing. Unexpected program counter register found outside of 'assert_reg'.")
-                    sys.exit()
+                    sys.exit(1)
                 case (ParsedLineType.SOURCE_CODE, ParseState.ASSERT_CODE):
                     if test_case.assert_code is not None:
-                        print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
-                        print(
+                        print_err(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
+                        print_err(
                             f"Syntax Error parsing. Found multiple rows of source code for 'assert_code'.")
-                        sys.exit()
+                        sys.exit(1)
                     else:
                         test_case.assert_code = parsed_line
                 case (ParsedLineType.SOURCE_CODE, _):
-                    print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
-                    print(f"Syntax Error parsing. Unexpected source code found outside of 'assert_code'.")
-                    sys.exit()
+                    print_err(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
+                    print_err(f"Syntax Error parsing. Unexpected source code found outside of 'assert_code'.")
+                    sys.exit(1)
                 case (_, _):
-                    print(f"State={parse_state} : {parsed_line.line_type}")
-                    print(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
-                    print(
+                    print_err(f"State={parse_state} : {parsed_line.line_type}")
+                    print_err(f"{parsed_line.line_number:5d}: {parsed_line.line_raw}")
+                    print_err(
                         f"Syntax Error parsing. Unexpected LineType and ParseState combo {(parsed_line.line_type, parse_state)}.")
-                    sys.exit()
+                    sys.exit(1)
 
         # if parse_state == ParseState.DONE:
         #     print(f"Test case is done: {test_case.test_name}")

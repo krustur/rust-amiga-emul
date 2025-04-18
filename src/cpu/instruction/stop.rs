@@ -7,9 +7,11 @@ use crate::{
 
 // Instruction State
 // =================
-// step: TODO
-// step cc: TODO
-// get_disassembly: TODO
+// step: DONE
+// step cc: DONE
+// get_disassembly: DONE
+// TODO: A Trace instruction occurs if instruction tracing is enabled. (T0 = 1, T1 = 0) when the
+//       STOP instruction begins executing.
 
 // 020+ step: TODO
 // 020+ get_disassembly: TODO
@@ -21,9 +23,16 @@ pub fn step<'a>(
     mem: &mut Mem,
     step_log: &mut StepLog,
 ) -> Result<(), StepError> {
-    let _ = pc.fetch_next_word(mem);
+    match reg.reg_sr.is_sr_supervisor_set(step_log) {
+        true => {
+            let sr = pc.fetch_next_word(mem);
 
-    Err(StepError::IllegalInstruction)
+            reg.reg_sr.set_value(sr);
+
+            Err(StepError::Stop)
+        }
+        false => Err(StepError::PriviliegeViolation),
+    }
 }
 
 pub fn get_disassembly<'a>(
@@ -36,7 +45,7 @@ pub fn get_disassembly<'a>(
     Ok(GetDisassemblyResult::from_pc(
         pc,
         mem,
-        String::from("MOVEC"),
-        format!("TODO"),
+        String::from("STOP"),
+        String::from(""),
     ))
 }

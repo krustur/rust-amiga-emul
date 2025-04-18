@@ -67,6 +67,7 @@ pub fn get_disassembly<'a>(
 
     let result = Ok(GetDisassemblyResult::from_pc(
         pc,
+        mem,
         format!("DB{:?}", conditional_test),
         format!(
             "D{},${:04X} [${:08X}]",

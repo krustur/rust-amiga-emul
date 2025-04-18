@@ -216,6 +216,7 @@ pub fn get_disassembly<'a>(
             let source_register = Cpu::extract_register_index_from_bit_pos(instr_word, 9)?;
             Ok(GetDisassemblyResult::from_pc(
                 pc,
+                mem,
                 format!(
                     "RO{}.{}",
                     rolr_direction.get_format(),
@@ -232,6 +233,7 @@ pub fn get_disassembly<'a>(
             };
             Ok(GetDisassemblyResult::from_pc(
                 pc,
+                mem,
                 format!(
                     "RO{}.{}",
                     rolr_direction.get_format(),

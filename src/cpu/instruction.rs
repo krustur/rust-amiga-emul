@@ -1,11 +1,11 @@
 use std::fmt::{self, Display};
 
+use super::step_log::StepLog;
+use crate::cpu::Cpu;
 use crate::{
     mem::Mem,
     register::{ProgramCounter, Register, RegisterType},
 };
-
-use super::step_log::StepLog;
 
 pub mod add;
 pub mod addi;
@@ -26,9 +26,12 @@ pub mod cmp;
 pub mod cmpi;
 pub mod cmpm;
 pub mod dbcc;
+pub mod divs;
 pub mod divu;
+pub mod eor;
 pub mod exg;
 pub mod ext;
+pub mod gen_tests;
 pub mod jmp;
 pub mod jsr;
 pub mod lea;
@@ -55,12 +58,12 @@ pub mod rolrreg;
 pub mod rte;
 pub mod rts;
 pub mod scc;
+pub mod stop;
 pub mod sub;
 pub mod subi;
 pub mod subq;
 pub mod subx;
 pub mod swap;
-pub mod gen_tests;
 pub mod tst;
 pub mod unlk;
 
@@ -84,6 +87,9 @@ pub enum StepError {
     // the case when running a program that requires a cpu/fpu that
     // isn't connected
     InstructionError { details: String },
+    // This should not be an StepError, but rather StepResult. Let's
+    // refactor some day
+    Stop,
 }
 
 impl Display for StepError {
@@ -99,6 +105,7 @@ impl Display for StepError {
             }
             StepError::PriviliegeViolation => write!(f, "PriviliegeViolation"),
             StepError::InstructionError { details } => write!(f, "InstructionError: {}", details),
+            StepError::Stop => write!(f, "Stop"),
         }
     }
 }
@@ -128,19 +135,26 @@ pub struct GetDisassemblyResult {
     pub address_next: u32,
     pub name: String,
     pub operands_format: String,
+    pub words: Vec<u16>,
 }
 
 impl GetDisassemblyResult {
     pub fn from_pc(
         pc: &ProgramCounter,
+        mem: &Mem,
         name: String,
         operands_format: String,
     ) -> GetDisassemblyResult {
+        let mut words = vec![];
+        for i in (pc.get_address()..pc.get_address_next()).step_by(2) {
+            words.push(mem.get_word_no_log(i));
+        }
         GetDisassemblyResult {
             address: pc.get_address(),
             address_next: pc.get_address_next(),
             name,
             operands_format,
+            words,
         }
     }
 
@@ -155,6 +169,29 @@ impl GetDisassemblyResult {
             address_next,
             name,
             operands_format,
+            words: vec![],
+        }
+    }
+
+    pub fn print_disassembly(
+        &self,
+        line_feed: bool,
+    ) {
+        let instr_format = format!("{} {}", self.name, self.operands_format);
+        let instr_address = self.address;
+        let next_instr_address = self.address_next;
+        print!("${:08X} ", instr_address);
+        for word in self.words.iter() {
+            print!("{:04X} ", word);
+        }
+        if self.words.len() < 5 {
+            for i in 0..5 - self.words.len() {
+                print!("     ");
+            }
+        }
+        print!("{: <30}", instr_format);
+        if line_feed {
+            println!();
         }
     }
 }

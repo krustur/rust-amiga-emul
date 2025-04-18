@@ -295,7 +295,7 @@ pub fn get_disassembly<'a>(
         MovemDirection::RegisterToMemory => format!("{},{}", reg_format, ea_debug.format,),
     };
 
-    Ok(GetDisassemblyResult::from_pc(pc, name, operands_format))
+    Ok(GetDisassemblyResult::from_pc(pc, mem, name, operands_format))
 }
 
 fn get_reg_list_from_mask(register_list_mask: &mut u16) -> Vec<usize> {

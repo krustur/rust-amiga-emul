@@ -127,6 +127,14 @@ test_suite
 	dc.l	asl_w_memory_by_1_areg_indirect_with_displacement
 	dc.l	asr_w_memory_by_1_areg_indirect_with_postincrement
 	dc.l	asr_w_memory_by_1_areg_indirect
+	dc.l	divs_w__data_register_by_ea__x_unaffected_still_set
+	dc.l	divs_w__data_register_by_ea__x_unaffected_still_clear
+	dc.l	divs_w__data_register_by_ea__n_set
+	dc.l	divs_w__data_register_by_ea__n_clear
+	dc.l	divs_w__data_register_by_ea__z_set
+	dc.l	divs_w__data_register_by_ea__z_clear
+	dc.l	divs_w__data_register_by_ea__v_set
+	dc.l	divs_w__data_register_by_ea__v_clear
 	dc.l	divu_w_x_not_affected_still_set
 	dc.l	divu_w_x_not_affected_still_clear
 	dc.l	divu_w_n_set
@@ -136,6 +144,27 @@ test_suite
 	dc.l	divu_w_v_set
 	dc.l	divu_w_v_not_set
 	dc.l	divu_w_c_not_set
+	dc.l	eor_l__data_register_to_ea__x_unaffected_still_set
+	dc.l	eor_l__data_register_to_ea__x_unaffected_still_clear
+	dc.l	eor_l__data_register_to_ea__n_set
+	dc.l	eor_l__data_register_to_ea__n_clear
+	dc.l	eor_l__data_register_to_ea__z_set
+	dc.l	eor_l__data_register_to_ea__z_clear
+	dc.l	eor_l__data_register_to_ea__vc_clear
+	dc.l	eor_w__data_register_to_ea__x_unaffected_still_set
+	dc.l	eor_w__data_register_to_ea__x_unaffected_still_clear
+	dc.l	eor_w__data_register_to_ea__n_set
+	dc.l	eor_w__data_register_to_ea__n_clear
+	dc.l	eor_w__data_register_to_ea__z_set
+	dc.l	eor_w__data_register_to_ea__z_clear
+	dc.l	eor_w__data_register_to_ea__vc_clear
+	dc.l	eor_b__data_register_to_ea__x_unaffected_still_set
+	dc.l	eor_b__data_register_to_ea__x_unaffected_still_clear
+	dc.l	eor_b__data_register_to_ea__n_set
+	dc.l	eor_b__data_register_to_ea__n_clear
+	dc.l	eor_b__data_register_to_ea__z_set
+	dc.l	eor_b__data_register_to_ea__z_clear
+	dc.l	eor_b__data_register_to_ea__vc_clear
 	dc.l	ext_w_x_not_affected_still_set
 	dc.l	ext_w_x_not_affected_still_clear
 	dc.l	ext_w_n_set
@@ -163,6 +192,8 @@ test_suite
 	include	"addq.s"
 	include	"addx.s"
 	include	"aslr.s"
+	include	"divs.s"
 	include	"divu.s"
+	include	"eor.s"
 	include	"ext.s"
 	include	"lslr.s"

@@ -64,6 +64,7 @@ pub fn get_disassembly<'a>(
     let ea_format = Cpu::get_ea_format(ea_mode, pc, None, mem);
     Ok(GetDisassemblyResult::from_pc(
         pc,
+        mem,
         String::from("LEA"),
         format!("{},A{}", ea_format, register),
     ))

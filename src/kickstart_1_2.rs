@@ -14,7 +14,9 @@ impl Kickstart_1_2 {
         let rom_memory = Rc::new(RefCell::new(
             RomMemory::from_file(0xF80000, file_path).unwrap(),
         ));
-        let rom_overlay = Rc::new(RefCell::new(RomMemory::from_file(0x000000, file_path).unwrap()));
+        let rom_overlay = Rc::new(RefCell::new(
+            RomMemory::from_file(0x000000, file_path).unwrap(),
+        ));
 
         // let mut mem = mem.borrow_mut();
         mem.add_range(rom_memory.clone());
@@ -77,7 +79,10 @@ impl Kickstart for Kickstart_1_2 {
 
             0x00FC0546 => Some(String::from("Determine CPU type and whether FPP is present")),
             0x00FC0592 => Some(String::from("Chip Memory Checking Routine")),
-            0x00FC05B4 => Some(String::from("Error System Reset Routine")),
+            0x00FC05B4 => Some(String::from("Error System Reset Routine. This is the routine which blinks the power light, then resets the computer.  It is called from the startup code if a failure of any sort is detected.  The colour of the screen indicates the type of failure. This is the exception entry point.  All vectors in the Exception Vector Table point here while the ROM kernel is initializing itself.  A yellow screen means an unexpected exception has occurred.")),
+            0x00FC05B8 => Some(String::from("This is the non-exception entry point.  From here on down it's a general purpose routine which can be entered with a coulour number in D0.")),
+            0x00FC05F0 => Some(String::from("Note:  The 'boot' and 'ig' commands from ROM-Wack jump here.")),
+            0x00FC05FC => Some(String::from(" Get the initial PC from the ROM (now mapped at zero due to the reset instruction) and start over.")),
             0x00FC0602 => Some(String::from("Memory Clear Subroutine")),
             0x00FC061A => Some(String::from("$C00000 Expansion RAM Checker")),
             0x00FC0654 => Some(String::from("AddDevice( device ) A1")),
@@ -92,13 +97,13 @@ impl Kickstart for Kickstart_1_2 {
             0x00FC0900 => Some(String::from("ROMTAG Scanner and 'KickMemPtr/KickTagPtr' Processor")),
             0x00FC09DE => Some(String::from("RomTag list to resident module table converter")),
             0x00FC0A14 => Some(String::from("KickTagPtr processor")),
-            // 0x00FC01EE => Some(String::from("XXXXXXXXXX")),
-            // 0x00FC01EE => Some(String::from("XXXXXXXXXX")),
-            // 0x00FC01EE => Some(String::from("XXXXXXXXXX")),
-            // 0x00FC01EE => Some(String::from("XXXXXXXXXX")),
-            // 0x00FC01EE => Some(String::from("XXXXXXXXXX")),
-            // 0x00FC01EE => Some(String::from("XXXXXXXXXX")),
-            // 0x00FC01EE => Some(String::from("XXXXXXXXXX")),
+            0x00FC3054 => Some(String::from("Unrecoverable system crash entry point. This routine blinks the power light slowly 6 times, and checks whether the user presses DEL on a terminal attached to the serial port.  If DEL is received, it jumps to ROM-Wack.  If DEL is not received, it resets the computer.  This may or may not lead to a guru, depending on how locations 0 and $000100 were set up before this was called.  Entry point for when the stack is not working (stack pointer clobbered).  Set the stack pointer to 256K, and build a fake exception stack frame below it. ")),
+            0x00FC305E => Some(String::from("Entry point for when the stack was working.")),
+            0x00FC306E => Some(String::from("Force the CPU into supervisor mode.  If the MOVE.W #$2700,SR instruction bombs the first time, it will work the second time.")),
+            0x00FC307A => Some(String::from("Blink the power light slowly 6 times and look for a DEL character coming in through the serial port at 9600 bps.  If such a character is received, go to the debugger.")),
+            0x00FC30EC => Some(String::from("Guru Alert Routine")),
+            0x00FC310C => Some(String::from("Decide which alert message to use. Point to 'Software Failure' string. (D2=Alert number)")),
+            0x00FC3144 => Some(String::from("Guru RawDoFmt() - check A3 mem")),
             // 0x00FC01EE => Some(String::from("XXXXXXXXXX")),
             // 0x00FC01EE => Some(String::from("XXXXXXXXXX")),
             // 0x00FC01EE => Some(String::from("XXXXXXXXXX")),
@@ -117,7 +122,8 @@ impl Kickstart for Kickstart_1_2 {
             0x00FC0960..=0x00FC0962 => true, // scan for RomTag
             0x00FC150A..=0x00FC1514 => true, // ExecLibrary.MakeLibrary count vectors
             0x00FC157E..=0x00FC15A6 => true, // ExecLibrary.MakeFunctions loop
-            _ => false,
+            0x00FC30F2..=0x00FC30F8 => true, // Guru delay loop
+                _ => false,
         }
     }
 
@@ -131,14 +137,16 @@ impl Kickstart for Kickstart_1_2 {
     fn get_dump_memory_after_step(&self, pc_address: u32) -> Option<(u32, u32)> {
         match pc_address {
             // 0x00F8060C => (true, 0x00f8008d, 0x00f800ad),
-            _ => None
+            0x00FC310C => Some((0x00FC31AA, 0x00FC31CA)),
+            0x00FC3148 => Some((0x00001850, 0x00002050)),
+            _ => None,
         }
     }
 
     fn get_dump_areg_memory_after_step(&self, pc_address: u32) -> Option<(usize, u32)> {
         match pc_address {
             // 0x00F81ACE => (true, 1, 32),
-            _ => None
+            _ => None,
         }
     }
 

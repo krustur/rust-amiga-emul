@@ -46,8 +46,25 @@ impl RotateDirection {
     }
 }
 
+#[allow(non_camel_case_types)]
+pub enum CpuSpeed {
+    PAL_7_093790_MHz,
+    NTSC_7_159090_MHz,
+}
+
+impl CpuSpeed {
+    pub fn get_hz(&self) -> u128 {
+        match self {
+            CpuSpeed::PAL_7_093790_MHz => 7_093_790,
+            CpuSpeed::NTSC_7_159090_MHz => 7_159_090,
+        }
+    }
+}
+
 pub struct Cpu {
+    pub cpu_speed: CpuSpeed,
     pub register: Register,
+    pub stopped: bool,
     instructions: Vec<Instruction>,
 }
 
@@ -199,8 +216,73 @@ pub fn match_check_ea_only_control_or_postincrement_addressing_modes_pos_0(
     }
 }
 
+pub fn match_check_ea_1011111__110_00_ea(
+    instr_word: u16,
+    mode_bit_pos: u8,
+    reg_bit_pos: u8,
+) -> bool {
+    let mode = (instr_word >> mode_bit_pos) & 0b_111;
+    let reg = (instr_word >> reg_bit_pos) & 0b_111;
+    match (mode, reg) {
+        (0b_000, 0b_000..=0b_111) => true, // Dn
+        (0b_001, 0b_000..=0b_111) => false, // An
+        (0b_010, 0b_000..=0b_111) => true, // (An)
+        (0b_011, 0b_000..=0b_111) => true, // (An)+
+        (0b_100, 0b_000..=0b_111) => true, // -(An)
+        (0b_101, 0b_000..=0b_111) => true, // (d16,An)
+        (0b_110, 0b_000..=0b_111) => true, // (d8,An,Xn)
+
+        (0b_111, 0b_000) => true, // (xxx).W
+        (0b_111, 0b_001) => true, // (xxx).L
+        (0b_111, 0b_100) => false, // #<data>
+
+        (0b_111, 0b_010) => false, // (d16,PC)
+        (0b_111, 0b_011) => false, // (d8,PC,Xn)
+
+        (0b_111, 0b_101) => false, // These 3 ea modes don't exist
+        (0b_111, 0b_110) => false,
+        (0b_111, 0b_111) => false,
+
+        // All cases are covered above, but we're dealing with 2 x u8, so the compiler can't
+        // know that.
+        _ => false,
+    }
+}
+
+pub fn match_check_ea_1011111__111_11_ea(
+    instr_word: u16,
+    mode_bit_pos: u8,
+    reg_bit_pos: u8,
+) -> bool {
+    let mode = (instr_word >> mode_bit_pos) & 0b_111;
+    let reg = (instr_word >> reg_bit_pos) & 0b_111;
+    match (mode, reg) {
+        (0b_000, 0b_000..=0b_111) => true, // Dn
+        (0b_001, 0b_000..=0b_111) => false, // An
+        (0b_010, 0b_000..=0b_111) => true, // (An)
+        (0b_011, 0b_000..=0b_111) => true, // (An)+
+        (0b_100, 0b_000..=0b_111) => true, // -(An)
+        (0b_101, 0b_000..=0b_111) => true, // (d16,An)
+        (0b_110, 0b_000..=0b_111) => true, // (d8,An,Xn)
+
+        (0b_111, 0b_000) => true, // (xxx).W
+        (0b_111, 0b_001) => true, // (xxx).L
+        (0b_111, 0b_100) => true, // #<data>
+        (0b_111, 0b_010) => true, // (d16,PC)
+        (0b_111, 0b_011) => true, // (d8,PC,Xn)
+
+        (0b_111, 0b_101) => false, // These 3 ea modes don't exist
+        (0b_111, 0b_110) => false,
+        (0b_111, 0b_111) => false,
+
+        // All cases are covered above, but we're dealing with 2 x u8, so the compiler can't
+        // know that.
+        _ => false,
+    }
+}
+
 impl Cpu {
-    pub fn new(mem: &Mem) -> Cpu {
+    pub fn new(cpu_speed: CpuSpeed, ssp_address: u32,  pc_address: u32) -> Cpu {
         let instructions = vec![
             Instruction::new(
                 String::from("ADD"),
@@ -388,12 +470,28 @@ impl Cpu {
                 instruction::dbcc::get_disassembly,
             ),
             Instruction::new(
+                String::from("DIVS"),
+                0xf1c0,
+                0x81c0,
+                instruction::divs::match_check,
+                instruction::divs::step,
+                instruction::divs::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("DIVU"),
                 0xf1c0,
                 0x80c0,
                 instruction::divu::match_check,
                 instruction::divu::step,
                 instruction::divu::get_disassembly,
+            ),
+            Instruction::new(
+                String::from("EOR"),
+                0xf000,
+                0xb000,
+                instruction::eor::match_check,
+                instruction::eor::step,
+                instruction::eor::get_disassembly,
             ),
             Instruction::new(
                 String::from("EXG"),
@@ -638,6 +736,14 @@ impl Cpu {
                 instruction::scc::get_disassembly,
             ),
             Instruction::new(
+                String::from("STOP"),
+                0xffff,
+                0x4e72,
+                crate::cpu::match_check,
+                instruction::stop::step,
+                instruction::stop::get_disassembly,
+            ),
+            Instruction::new(
                 String::from("SUB"),
                 0xf000,
                 0x9000,
@@ -694,14 +800,14 @@ impl Cpu {
                 instruction::unlk::get_disassembly,
             ),
         ];
-        let reg_ssp = mem.get_long_no_log(0x0);
-        let pc_address = mem.get_long_no_log(0x4);
         let reg_pc = ProgramCounter::from_address(pc_address);
         let mut register = Register::new();
-        register.set_ssp_reg(reg_ssp);
+        register.set_ssp_reg(ssp_address);
         register.reg_pc = reg_pc;
         let cpu = Cpu {
+            cpu_speed,
             register,
+            stopped: false,
             instructions,
         };
         cpu
@@ -1102,10 +1208,6 @@ impl Cpu {
         }
     }
 
-    pub fn join_words_to_long(hi: u16, low: u16) -> u32 {
-        ((hi as u32) << 16) | (low as u32)
-    }
-
     pub fn add_longs(source: u32, dest: u32) -> ResultWithStatusRegister<u32> {
         let source_signed = Cpu::get_signed_long_from_long(source);
         let dest_signed = Cpu::get_signed_long_from_long(dest);
@@ -1200,6 +1302,72 @@ impl Cpu {
         match result {
             0 => status_register |= STATUS_REGISTER_MASK_ZERO,
             0x80..=0xff => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+            _ => (),
+        }
+
+        ResultWithStatusRegister {
+            result,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
+        }
+    }
+
+    pub fn eor_bytes(source: u8, dest: u8) -> ResultWithStatusRegister<u8> {
+        let result = source ^ dest;
+
+        let mut status_register = 0x0000;
+        match result {
+            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            0x80..=0xff => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+            _ => (),
+        }
+
+        ResultWithStatusRegister {
+            result,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
+        }
+    }
+
+    pub fn eor_words(source: u16, dest: u16) -> ResultWithStatusRegister<u16> {
+        let result = source ^ dest;
+
+        let mut status_register = 0x0000;
+        match result {
+            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            0x8000..=0xffff => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+            _ => (),
+        }
+
+        ResultWithStatusRegister {
+            result,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
+        }
+    }
+
+    pub fn eor_longs(source: u32, dest: u32) -> ResultWithStatusRegister<u32> {
+        let result = source ^ dest;
+
+        let mut status_register = 0x0000;
+        match result {
+            0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+            0x80000000..=0xffffffff => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
             _ => (),
         }
 
@@ -1323,6 +1491,10 @@ impl Cpu {
                     | STATUS_REGISTER_MASK_NEGATIVE,
             },
         }
+    }
+
+    pub fn join_words_to_long(hi: u16, low: u16) -> u32 {
+        ((hi as u32) << 16) | (low as u32)
     }
 
     pub fn sub_bytes(source: u8, dest: u8) -> ResultWithStatusRegister<u8> {
@@ -2051,6 +2223,40 @@ impl Cpu {
         (result, status_register_result)
     }
 
+    pub fn divs_long_by_word(source: u16, dest: u32) -> ResultWithStatusRegister<u32> {
+        let source = Cpu::sign_extend_word(source) as i32;
+        let dest_signed = dest as i32;
+        let quotient_i32 = (dest_signed / source) as i32;
+        let quotient_u16 = quotient_i32 as u16;
+        let remainder = (dest_signed % source) as u16;
+
+        let mut status_register = 0x0000;
+
+        let result;
+        if quotient_i32 < 0x00010000 {
+            match quotient_u16 {
+                0 => status_register |= STATUS_REGISTER_MASK_ZERO,
+                0x8000..=0xffff => status_register |= STATUS_REGISTER_MASK_NEGATIVE,
+                _ => (),
+            }
+            result = Self::join_words_to_long(remainder, quotient_u16);
+        } else {
+            status_register |= STATUS_REGISTER_MASK_OVERFLOW;
+            result = dest;
+        }
+
+        ResultWithStatusRegister {
+            result,
+            status_register_result: StatusRegisterResult {
+                status_register,
+                status_register_mask: STATUS_REGISTER_MASK_CARRY
+                    | STATUS_REGISTER_MASK_OVERFLOW
+                    | STATUS_REGISTER_MASK_ZERO
+                    | STATUS_REGISTER_MASK_NEGATIVE,
+            },
+        }
+    }
+
     pub fn divu_long_by_word(source: u16, dest: u32) -> ResultWithStatusRegister<u32> {
         let source = source as u32;
         let quotient_u32 = dest / source;
@@ -2305,13 +2511,16 @@ impl Cpu {
         mem: &mut Mem,
         step_log: &mut StepLog,
     ) {
+        if self.stopped == true {
+            return;
+        }
         let mut pc = self.register.reg_pc.clone();
         let instr_word = pc.fetch_next_word(mem);
 
         let instruction_pos = self
             .instructions
             .iter()
-            .position(|x| (x.match_check)(x, instr_word));
+            .position(|x| match_check(x, instr_word) && (x.match_check)(x, instr_word));
         match instruction_pos {
             None => {
                 panic!(
@@ -2335,6 +2544,11 @@ impl Cpu {
                         }
                         StepError::PriviliegeViolation => {
                             self.exception(&mut pc, mem, step_log, 8);
+                            self.register.reg_pc = pc.get_step_next_pc();
+                        }
+                        StepError::Stop => {
+                            println!("STOP:ing CPU instruction excecution");
+                            self.stopped = true;
                             self.register.reg_pc = pc.get_step_next_pc();
                         }
                         _ => {
@@ -2380,9 +2594,9 @@ impl Cpu {
         let instruction_pos = self
             .instructions
             .iter()
-            .position(|x| (x.match_check)(x, instr_word));
+            .position(|x| match_check(x, instr_word) && (x.match_check)(x, instr_word));
 
-        match instruction_pos {
+        let result = match instruction_pos {
             Some(instruction_pos) => {
                 let instruction = &self.instructions[instruction_pos];
 
@@ -2398,6 +2612,7 @@ impl Cpu {
                     Ok(result) => result,
                     Err(error) => GetDisassemblyResult::from_pc(
                         pc,
+                        mem,
                         String::from("DC.W"),
                         format!(
                             "#${:04X} ; Error when getting disassembly from instruction: {}",
@@ -2408,53 +2623,13 @@ impl Cpu {
             }
             None => GetDisassemblyResult::from_pc(
                 pc,
+                mem,
                 String::from("DC.W"),
                 format!("#${:04X}", instr_word),
             ),
-        }
+        };
+        result
     }
-
-    pub fn print_disassembly(
-        self: &Cpu,
-        mem: &Mem,
-        disassembly_result: &GetDisassemblyResult,
-        line_feed: bool,
-    ) {
-        let instr_format = format!(
-            "{} {}",
-            disassembly_result.name, disassembly_result.operands_format
-        );
-        let instr_address = disassembly_result.address;
-        let next_instr_address = disassembly_result.address_next;
-        print!("${:08X} ", instr_address);
-        for i in (instr_address..instr_address + 8).step_by(2) {
-            if i < next_instr_address {
-                let op_mem = mem.get_word_no_log(i);
-                print!("{:04X} ", op_mem);
-            } else {
-                print!("     ");
-            }
-        }
-        print!("{: <30}", instr_format);
-        if line_feed {
-            println!();
-        }
-    }
-
-    // fn get_instruction(self: &mut Cpu, instr_addr: u32, instr_word: u16) -> &Instruction {
-    //     let instruction_pos = self
-    //         .instructions
-    //         .iter()
-    //         .position(|x| (instr_word & x.mask) == x.opcode);
-    //     let instruction = match instruction_pos {
-    //         None => panic!(
-    //             "{:#010x} Unidentified instruction {:#06X}",
-    //             instr_addr, instr_word
-    //         ),
-    //         Some(instruction_pos) => &self.instructions[instruction_pos],
-    //     };
-    //     instruction
-    // }
 }
 
 #[cfg(test)]

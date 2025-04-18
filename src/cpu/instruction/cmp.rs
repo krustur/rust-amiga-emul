@@ -171,6 +171,7 @@ pub fn get_disassembly<'a>(
 
     Ok(GetDisassemblyResult::from_pc(
         pc,
+        mem,
         format!("{}.{}", instruction_name, operation_size.get_format()),
         format!("{},{}{}", ea_format, register_type.get_format(), register),
     ))

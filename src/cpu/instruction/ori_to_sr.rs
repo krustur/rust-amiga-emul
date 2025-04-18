@@ -47,6 +47,7 @@ pub fn get_disassembly<'a>(
 
     Ok(GetDisassemblyResult::from_pc(
         pc,
+        mem,
         format!("ORI.W"),
         format!("{},SR", immediate_data),
     ))

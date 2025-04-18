@@ -51,6 +51,7 @@ pub fn get_disassembly<'a>(
 
     Ok(GetDisassemblyResult::from_pc(
         pc,
+        mem,
         String::from("UNLK"),
         format!("A{}", register,),
     ))

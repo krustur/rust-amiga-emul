@@ -162,6 +162,7 @@ pub fn get_disassembly<'a>(
     match register_type {
         RegisterType::Data => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             format!("SUBX.{}", operation_size.get_format(),),
             format!(
                 "{}{},{}{}",
@@ -173,6 +174,7 @@ pub fn get_disassembly<'a>(
         )),
         RegisterType::Address => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             format!("SUBX.{}", operation_size.get_format(),),
             format!(
                 "-({}{}),-({}{})",

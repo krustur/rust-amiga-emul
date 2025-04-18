@@ -88,16 +88,19 @@ pub fn get_disassembly<'a>(
     match exgmode {
         ExgMode::AddressRegisters => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             String::from("EXG"),
             format!("A{},A{}", register_x, register_y),
         )),
         ExgMode::DataRegisters => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             String::from("EXG"),
             format!("D{},D{}", register_x, register_y),
         )),
         ExgMode::DataRegisterAndAddressRegister => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             String::from("EXG"),
             format!("D{},A{}", register_x, register_y),
         )),

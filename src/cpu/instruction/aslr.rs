@@ -176,6 +176,7 @@ pub fn get_disassembly<'a>(
                     let source_register = Cpu::extract_register_index_from_bit_pos(instr_word, 9)?;
                     Ok(GetDisassemblyResult::from_pc(
                         pc,
+                        mem,
                         format!(
                             "AS{}.{}",
                             direction.get_format(),
@@ -192,6 +193,7 @@ pub fn get_disassembly<'a>(
                     };
                     Ok(GetDisassemblyResult::from_pc(
                         pc,
+                        mem,
                         format!(
                             "AS{}.{}",
                             direction.get_format(),
@@ -213,6 +215,7 @@ pub fn get_disassembly<'a>(
             let ea_format = Cpu::get_ea_format(ea_data.ea_mode, pc, None, mem);
             Ok(GetDisassemblyResult::from_pc(
                 pc,
+                mem,
                 format!(
                     "AS{}.{}",
                     direction.get_format(),

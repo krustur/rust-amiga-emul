@@ -1,4 +1,6 @@
 use self::memory::Memory;
+use crate::mem::ciamemory::CiaMemory;
+use crate::mem::custommemory::CustomMemory;
 use crate::{
     cpu::step_log::{StepLog, StepLogEntry},
     mem::unmappedmemory::UnmappedMemory,
@@ -17,11 +19,16 @@ pub struct Mem {
     ranges: Vec<Rc<RefCell<dyn Memory>>>,
     default_range: Rc<RefCell<dyn Memory>>,
     overlay_memory: Rc<RefCell<dyn Memory>>,
-    pub overlay: bool,
+    custom_memory: Option<Rc<RefCell<CustomMemory>>>,
+    cia_memory: Option<Rc<RefCell<CiaMemory>>>,
+    overlay: bool,
 }
 
 impl Mem {
-    pub fn new() -> Self {
+    pub fn new(
+        custom_memory: Option<Rc<RefCell<CustomMemory>>>,
+        cia_memory: Option<Rc<RefCell<CiaMemory>>>,
+    ) -> Self {
         let ranges: Vec<Rc<RefCell<dyn Memory>>> = Vec::new();
         let default_range = Rc::new(RefCell::new(UnmappedMemory::new(0x00000000, 0xffffffff)));
         let overlay_memory = Rc::new(RefCell::new(UnmappedMemory::new(0x00000000, 0x00000000)));
@@ -29,6 +36,8 @@ impl Mem {
             ranges,
             default_range,
             overlay_memory,
+            custom_memory,
+            cia_memory,
             overlay: false,
         }
     }
@@ -44,7 +53,13 @@ impl Mem {
         self.validate_ranges();
     }
 
+    pub fn set_overlay_enable(&mut self, enable: bool) {
+        self.overlay = enable;
+        println!("   -Overlay enabled changed to {}", enable);
+    }
+
     fn validate_ranges(&self) {
+        // TODO: Validate not overlapping Custom registers
         for (pos, range) in self.ranges.iter().enumerate() {
             let range = range.borrow();
             // println!("MemRange: {}", range);
@@ -109,7 +124,19 @@ impl Mem {
             address >= x.borrow().get_start_address() && address <= x.borrow().get_end_address()
         });
         match pos {
-            None => self.default_range.clone(),
+            None => {
+                if let Some(custom_memory) = &self.custom_memory {
+                    if CustomMemory::is_custom_memory(address) {
+                        return custom_memory.clone();
+                    }
+                }
+                if let Some(cia_memory) = &self.cia_memory {
+                    if CiaMemory::is_cia_memory(address) {
+                        return cia_memory.clone();
+                    }
+                }
+                self.default_range.clone()
+            }
             Some(pos) => self.ranges[pos].clone(),
         }
     }
@@ -132,7 +159,19 @@ impl Mem {
             address >= x.borrow().get_start_address() && address <= x.borrow().get_end_address()
         });
         match pos {
-            None => self.default_range.clone(),
+            None => {
+                if let Some(custom_memory) = &self.custom_memory {
+                    if CustomMemory::is_custom_memory(address) {
+                        return custom_memory.clone();
+                    }
+                }
+                if let Some(cia_memory) = &self.cia_memory {
+                    if CiaMemory::is_cia_memory(address) {
+                        return cia_memory.clone();
+                    }
+                }
+                self.default_range.clone()
+            }
             Some(pos) => self.ranges[pos].clone(),
         }
     }
@@ -238,13 +277,11 @@ impl Mem {
     pub fn set_byte(self: &mut Mem, step_log: &mut StepLog, address: u32, value: u8) {
         let range = self.get_memory_mut(address);
         step_log.add_step_log_entry(StepLogEntry::WriteMemByte { address, value });
-        let set_byte_result = range
-            .borrow_mut()
-            .set_byte(step_log, address, value);
+        let set_byte_result = range.borrow_mut().set_byte(step_log, address, value);
         match set_byte_result {
             Some(r) => {
                 if let Some(overlay) = r.set_overlay {
-                    self.overlay = overlay;
+                    self.set_overlay_enable(overlay);
                 }
             }
             None => (),
@@ -267,22 +304,33 @@ impl Mem {
     }
 
     pub fn print_hex_dump(self: &mut Mem, start_address: u32, end_address: u32) {
-        let mut col_cnt = 0;
-        let mut address = start_address;
-        while address <= end_address {
-            if col_cnt == 0 {
-                print!(" ${:08X}", address);
+        let mut row_address = start_address;
+        while row_address <= end_address {
+            // Print address
+            print!(" ${:08X} ", row_address);
+            // Print hex values
+            for i in 0..=16 {
+                if (row_address + i) <= end_address {
+                    print!("{:02x} ", self.get_byte_no_log(row_address + i));
+                } else {
+                    print!("   ");
+                }
             }
-            print!(" {:02x}", self.get_byte_no_log(address));
-            col_cnt = col_cnt + 1;
-            if col_cnt == 16 {
-                col_cnt = 0;
-                println!();
+            for i in 0..=16 {
+                if (row_address + i) <= end_address {
+                    let byte = self.get_byte_no_log(row_address + i);
+                    if byte.is_ascii_graphic() || byte == b' ' {
+                        // Print the byte as an ASCII character
+                        print!("{}", byte as char);
+                    } else {
+                        // Replace non-printable characters with a placeholder
+                        print!(".");
+                    }
+                } else {
+                    print!("   ");
+                }
             }
-            address = address + 1;
-        }
-
-        if col_cnt != 0 {
+            row_address += 16;
             println!();
         }
     }

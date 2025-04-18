@@ -5,7 +5,7 @@ use std::{any::Any, fmt};
 
 pub struct CustomMemory {
     pub dmacon: u16, // 096 / 002
-    pub vhpos: u32, // --- / 004-006
+    pub vhpos: u32,  // --- / 004-006
     pub intena: u16, // 09A / 01C
     pub intreq: u16, // 09C / 01E
     pub color_rgb4: [u16; 32],
@@ -41,6 +41,7 @@ impl Memory for CustomMemory {
     }
 
     fn get_long(self: &CustomMemory, step_log: &mut StepLog, address: u32) -> u32 {
+        let address = Self::remap_memory(address);
         // panic!("custom memory get_long: ${:06X}", address);
         let hi = self.get_word(step_log, address);
         let low = self.get_word(step_log, address + 2);
@@ -49,6 +50,7 @@ impl Memory for CustomMemory {
     }
 
     fn set_long(self: &mut CustomMemory, step_log: &mut StepLog, address: u32, value: u32) {
+        let address = Self::remap_memory(address);
         let hi = Cpu::get_word_from_long(value >> 16);
         self.set_word(step_log, address, hi);
         let low = Cpu::get_word_from_long(value);
@@ -56,6 +58,7 @@ impl Memory for CustomMemory {
     }
 
     fn get_word(self: &CustomMemory, step_log: &mut StepLog, address: u32) -> u16 {
+        let address = Self::remap_memory(address);
         match address {
             0xDFF002 => {
                 // DMACONR
@@ -113,6 +116,7 @@ impl Memory for CustomMemory {
     }
 
     fn set_word(self: &mut CustomMemory, step_log: &mut StepLog, address: u32, value: u16) {
+        let address = Self::remap_memory(address);
         match address {
             0xDFF002 => {
                 // DMACONR
@@ -180,6 +184,7 @@ impl Memory for CustomMemory {
     }
 
     fn get_byte(self: &CustomMemory, step_log: &mut StepLog, address: u32) -> u8 {
+        let address = Self::remap_memory(address);
         panic!("custom memory get_byte: ${:06X}", address);
     }
 
@@ -189,6 +194,7 @@ impl Memory for CustomMemory {
         address: u32,
         value: u8,
     ) -> Option<SetMemoryResult> {
+        let address = Self::remap_memory(address);
         panic!("custom memory set_byte: ${:06X}", address);
     }
 }
@@ -202,6 +208,22 @@ impl CustomMemory {
             intreq: 0x0000,
             color_rgb4: [0x0000; 32],
         }
+    }
+
+    pub fn is_custom_memory(address: u32) -> bool {
+        match address {
+            0x00c00000..=0x00deffff => true,
+            0x00dff000..=0x00dfffff => true,
+            _ => false,
+        }
+    }
+
+    fn remap_memory(address: u32) -> u32 {
+        let remapped = 0x00dff000 + (address & 0x000001ff);
+        if remapped != address {
+            println!("                                                            ; Remapping CUSTOM memory from ${:06X} to ${:06X}", address, remapped);
+        }
+        remapped
     }
 
     pub fn get_start_address(&self) -> u32 {
@@ -237,7 +259,7 @@ impl CustomMemory {
         let bits = bits & 0x7fff;
         let dmacon = self.dmacon | bits;
         step_log.add_log_string(format!(
-            "CUSTOM: Changing DMACON to ${:04X}. [from: ${:04X}, bits set was ${:04X}",
+            "CUSTOM: Changing DMACON to ${:04X}. [from: ${:04X}, bits set was ${:04X}]",
             dmacon, self.dmacon, bits
         ));
         self.dmacon = dmacon;
@@ -247,7 +269,7 @@ impl CustomMemory {
         let bits = bits & 0x7fff;
         let dmacon = self.dmacon & !bits;
         step_log.add_log_string(format!(
-            "CUSTOM: Changing DMACON to ${:04X}. [from: ${:04X}, bits cleared was ${:04X}",
+            "CUSTOM: Changing DMACON to ${:04X}. [from: ${:04X}, bits cleared was ${:04X}]",
             dmacon, self.dmacon, bits
         ));
         self.dmacon = dmacon;
@@ -263,8 +285,11 @@ impl CustomMemory {
         let bits = bits & 0x7fff;
         let intena = self.intena | bits;
         step_log.add_log_string(format!(
-            "CUSTOM: Changing INTENA to ${:04X}. [from: ${:04X}, bits set was ${:04X}",
-            intena, self.intena, bits
+            "CUSTOM: Changing INTENA to ${:04X}. [{}] [from: ${:04X}, bits set was ${:04X}]",
+            intena,
+            Self::bit_field_to_string(intena, Self::intena_bit_names()),
+            self.intena,
+            bits
         ));
         self.intena = intena;
     }
@@ -273,15 +298,22 @@ impl CustomMemory {
         let bits = bits & 0x7fff;
         let intena = self.intena & !bits;
         step_log.add_log_string(format!(
-            "CUSTOM: Changing INTENA to ${:04X}. [from: ${:04X}, bits cleared was ${:04X}",
-            intena, self.intena, bits
+            "CUSTOM: Changing INTENA to ${:04X}. [{}] [from: ${:04X}, bits cleared was ${:04X}]",
+            intena,
+            Self::bit_field_to_string(intena, Self::intena_bit_names()),
+            self.intena,
+            bits
         ));
         self.intena = intena;
     }
 
     pub fn read_intena_bits(&self, step_log: &mut StepLog) -> u16 {
         let result = self.intena & 0x7fff;
-        step_log.add_log_string(format!("CUSTOM: Reading INTENAR, returns ${:04X}", result));
+        step_log.add_log_string(format!(
+            "CUSTOM: Reading INTENAR, returns ${:04X} [{}]",
+            result,
+            Self::bit_field_to_string(result, Self::intena_bit_names())
+        ));
         result
     }
 
@@ -309,5 +341,49 @@ impl CustomMemory {
         let result = self.intreq & 0x7fff;
         step_log.add_log_string(format!("CUSTOM: Reading INTREQR, returns ${:04X}", result));
         result
+    }
+
+
+    // 14    INTEN       Master interrupt (enable only,
+    //                                     no request)
+    // 13    EXTER   6   External interrupt
+    // 12    DSKSYN  5   Disk sync register ( DSKSYNC )
+    // matches disk data
+    // 11    RBF     5   Serial port receive buffer full
+    // 10    AUD3    4   Audio channel 3 block finished
+    // 09    AUD2    4   Audio channel 2 block finished
+    // 08    AUD1    4   Audio channel 1 block finished
+    // 07    AUD0    4   Audio channel 0 block finished
+    // 06    BLIT    3   Blitter finished
+    // 05    VERTB   3   Start of vertical blank
+    // 04    COPER   3   Copper
+    // 03    PORTS   2   I/O ports and timers
+    // 02    SOFT    1   Reserved for software-initiated
+    // interrupt
+    // 01    DSKBLK  1   Disk block finished
+    // 00    TBE     1   Serial port transmit buffer empty
+    fn intena_bit_names() -> &'static [&'static str] {
+        static RESULT: [&str; 16] = [
+            "TBE", "DSKBLK", "SOFT", "PORTS", "COPER",
+            "VERTB", "BLIT", "AUD0", "AUD1", "AUD2",
+            "AUD3", "RBF", "DSKSYN", "EXTER", "INTEN", "SET/CLR",
+        ];
+        &RESULT
+    }
+
+    // TODO: Move elsewhere
+    fn bit_field_to_string(bit_field: u16, bit_names: &[&str]) -> String {
+        bit_names
+            .iter()
+            .enumerate()
+            .filter_map(|(i, &name)| {
+                if bit_field & (1 << i) != 0 {
+                    Some(name)
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>()
+            .join("|")
     }
 }

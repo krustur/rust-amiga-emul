@@ -82,6 +82,7 @@ pub fn get_disassembly<'a>(
 
     Ok(GetDisassemblyResult::from_pc(
         pc,
+        mem,
         String::from(format!("CLR.{}", ea_data.operation_size.get_format())),
         ea_format.format,
     ))

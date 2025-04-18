@@ -54,11 +54,13 @@ pub fn get_disassembly<'a>(
     match instr_word & 0x0008 {
         0x0008 => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             String::from("MOVE.L"),
             format!("USP,A{}", register),
         )),
         _ => Ok(GetDisassemblyResult::from_pc(
             pc,
+            mem,
             String::from("MOVE.L"),
             format!("A{},USP", register),
         )),

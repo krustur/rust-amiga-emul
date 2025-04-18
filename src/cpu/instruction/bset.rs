@@ -123,6 +123,7 @@ pub fn get_disassembly_dynamic<'a>(
     let dreg = Cpu::extract_register_index_from_bit_pos(ea_data.instr_word, 9)?;
     Ok(GetDisassemblyResult::from_pc(
         pc,
+        mem,
         String::from(format!("BSET.{}", ea_data.operation_size.get_format())),
         format!("D{},{}", dreg, ea_format.format),
     ))
@@ -229,6 +230,7 @@ pub fn get_disassembly_static<'a>(
 
     Ok(GetDisassemblyResult::from_pc(
         pc,
+        mem,
         String::from(format!("BSET.{}", ea_data.operation_size.get_format())),
         format!("#${:02X},{}", bit_number, ea_format.format),
     ))

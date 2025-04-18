@@ -76,6 +76,7 @@ pub fn get_disassembly<'a>(
 
     Ok(GetDisassemblyResult::from_pc(
         pc,
+        mem,
         String::from("LINK"),
         format!(
             "A{},#${:04X} [{}]",
@@ -98,6 +99,7 @@ pub fn get_disassembly_long<'a>(
 
     Ok(GetDisassemblyResult::from_pc(
         pc,
+        mem,
         String::from("LINK"),
         format!(
             "A{},#${:08X} [{}]",
