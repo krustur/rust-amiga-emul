@@ -112,7 +112,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("BRA.B"),
-                String::from("$02 [$00C00004]")
+                String::from("$02 [$00C00004]"),
+                vec![0x6002]
             ),
             debug_result
         );
@@ -143,7 +144,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("BRA.B"),
-                String::from("$FA [$00BFFFFC]")
+                String::from("$FA [$00BFFFFC]"),
+                vec![0x60fa]
             ),
             debug_result
         );
@@ -164,7 +166,7 @@ mod tests {
     #[test]
     fn bra_word_positive() {
         // arrange
-        let code = [0x60, 0x00, 0x00, 0x08].to_vec(); // BRA.B $08
+        let code = [0x60, 0x00, 0x00, 0x08].to_vec(); // BRA.B $0008
         let mut mm = crate::tests::instr_test_setup(code, None);
         mm.cpu.register.reg_sr.set_sr_reg_flags_abcde(
             STATUS_REGISTER_MASK_CARRY
@@ -181,7 +183,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("BRA.W"),
-                String::from("$0008 [$00C0000A]")
+                String::from("$0008 [$00C0000A]"),
+                vec![0x6000, 0x0008]
             ),
             debug_result
         );
@@ -213,7 +216,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("BRA.W"),
-                String::from("$FFF8 [$00BFFFFA]")
+                String::from("$FFF8 [$00BFFFFA]"),
+                vec![0x6000, 0xfff8]
             ),
             debug_result
         );
@@ -244,7 +248,8 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("BRA.L"),
-                String::from("$0000000C [$00C0000E]")
+                String::from("$0000000C [$00C0000E]"),
+                vec![0x60ff, 0x0000, 0x000c]
             ),
             debug_result
         );
@@ -276,7 +281,8 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("BRA.L"),
-                String::from("$FFFFFFF6 [$00BFFFF8]")
+                String::from("$FFFFFFF6 [$00BFFFF8]"),
+                vec![0x60ff, 0xffff, 0xfff6]
             ),
             debug_result
         );

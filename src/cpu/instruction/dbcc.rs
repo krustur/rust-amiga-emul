@@ -102,7 +102,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("DBCC"),
-                String::from("D0,$0004 [$00C00006]")
+                String::from("D0,$0004 [$00C00006]"),
+                vec![0x54c8, 0x0004]
             ),
             debug_result
         );
@@ -129,7 +130,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("DBCC"),
-                String::from("D1,$0004 [$00C00006]")
+                String::from("D1,$0004 [$00C00006]"),
+                vec![0x54c9, 0x0004]
             ),
             debug_result
         );
@@ -155,7 +157,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("DBCC"),
-                String::from("D2,$0004 [$00C00006]")
+                String::from("D2,$0004 [$00C00006]"),
+                vec![0x54ca, 0x0004]
             ),
             debug_result
         );

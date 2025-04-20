@@ -84,7 +84,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("UNLK"),
-                String::from("A5")
+                String::from("A5"),
+                vec![0x4e5d]
             ),
             debug_result
         );
@@ -123,7 +124,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("UNLK"),
-                String::from("A0")
+                String::from("A0"),
+                vec![0x4e58]
             ),
             debug_result
         );

@@ -278,7 +278,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ROL.B"),
-                String::from("#$06,D0")
+                String::from("#$06,D0"),
+                vec![0xed18]
             ),
             debug_result
         );
@@ -565,7 +566,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ROL.L"),
-                String::from("#$01,D6")
+                String::from("#$01,D6"),
+                vec![0xe39e]
             ),
             debug_result
         );
@@ -601,7 +603,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ROL.L"),
-                String::from("#$06,D0")
+                String::from("#$06,D0"),
+                vec![0xed98]
             ),
             debug_result
         );
@@ -637,7 +640,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ROL.L"),
-                String::from("#$06,D0")
+                String::from("#$06,D0"),
+                vec![0xed98]
             ),
             debug_result
         );
@@ -672,7 +676,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ROL.L"),
-                String::from("#$01,D7")
+                String::from("#$01,D7"),
+                vec![0xe39f]
             ),
             debug_result
         );

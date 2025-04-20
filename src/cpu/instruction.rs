@@ -1,7 +1,6 @@
 use std::fmt::{self, Display};
 
 use super::step_log::StepLog;
-use crate::cpu::Cpu;
 use crate::{
     mem::Mem,
     register::{ProgramCounter, Register, RegisterType},
@@ -163,13 +162,14 @@ impl GetDisassemblyResult {
         address_next: u32,
         name: String,
         operands_format: String,
+        words: Vec<u16>,
     ) -> GetDisassemblyResult {
         GetDisassemblyResult {
             address,
             address_next,
             name,
             operands_format,
-            words: vec![],
+            words,
         }
     }
 

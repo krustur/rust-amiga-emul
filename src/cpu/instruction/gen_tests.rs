@@ -10,6 +10,5 @@ pub mod divs;
 pub mod divu;
 pub mod eor;
 pub mod ext;
-pub mod jmp;
 pub mod lslr;
 

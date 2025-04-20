@@ -91,7 +91,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SWAP"),
-                String::from("D0")
+                String::from("D0"),
+                vec![0x4840]
             ),
             debug_result
         );
@@ -121,7 +122,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SWAP"),
-                String::from("D0")
+                String::from("D0"),
+                vec![0x4840]
             ),
             debug_result
         );
@@ -151,7 +153,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SWAP"),
-                String::from("D0")
+                String::from("D0"),
+                vec![0x4840]
             ),
             debug_result
         );

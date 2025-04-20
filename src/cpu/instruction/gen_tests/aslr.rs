@@ -38,7 +38,7 @@ fn asl_b_register_by_immediate_cx_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000005, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x000000d7);
@@ -57,6 +57,7 @@ fn asl_b_register_by_immediate_cx_set() {
             0x00040002,
             String::from("ASL.B"),
             String::from("#$06,D0"),
+            vec![0xED00]
             ),
             get_disassembly_result
         );
@@ -95,7 +96,7 @@ fn asl_b_register_by_immediate_cx_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000001, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x000000d7);
@@ -117,6 +118,7 @@ fn asl_b_register_by_immediate_cx_clear() {
             0x00040002,
             String::from("ASL.B"),
             String::from("#$06,D0"),
+            vec![0xED00]
             ),
             get_disassembly_result
         );
@@ -153,7 +155,7 @@ fn asl_b_register_by_immediate_n_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000002, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x000000d7);
@@ -173,6 +175,7 @@ fn asl_b_register_by_immediate_n_set() {
             0x00040002,
             String::from("ASL.B"),
             String::from("#$06,D0"),
+            vec![0xED00]
             ),
             get_disassembly_result
         );
@@ -210,7 +213,7 @@ fn asl_b_register_by_immediate_n_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00000005);
@@ -232,6 +235,7 @@ fn asl_b_register_by_immediate_n_clear() {
             0x00040002,
             String::from("ASL.B"),
             String::from("#$02,D7"),
+            vec![0xE507]
             ),
             get_disassembly_result
         );
@@ -268,7 +272,7 @@ fn asl_b_register_by_immediate_z_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x000000c0);
@@ -286,6 +290,7 @@ fn asl_b_register_by_immediate_z_set() {
             0x00040002,
             String::from("ASL.B"),
             String::from("#$02,D7"),
+            vec![0xE507]
             ),
             get_disassembly_result
         );
@@ -325,7 +330,7 @@ fn asl_b_register_by_immediate_z_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00000001);
@@ -347,6 +352,7 @@ fn asl_b_register_by_immediate_z_clear() {
             0x00040002,
             String::from("ASL.B"),
             String::from("#$02,D7"),
+            vec![0xE507]
             ),
             get_disassembly_result
         );
@@ -383,7 +389,7 @@ fn asl_b_register_by_immediate_v_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00000040);
@@ -403,6 +409,7 @@ fn asl_b_register_by_immediate_v_set() {
             0x00040002,
             String::from("ASL.B"),
             String::from("#$03,D7"),
+            vec![0xE707]
             ),
             get_disassembly_result
         );
@@ -440,7 +447,7 @@ fn asl_b_register_by_immediate_v_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00000008);
@@ -462,6 +469,7 @@ fn asl_b_register_by_immediate_v_clear() {
             0x00040002,
             String::from("ASL.B"),
             String::from("#$03,D7"),
+            vec![0xE707]
             ),
             get_disassembly_result
         );
@@ -498,7 +506,7 @@ fn asr_b_register_by_immediate_cx_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000000c);
@@ -518,6 +526,7 @@ fn asr_b_register_by_immediate_cx_set() {
             0x00040002,
             String::from("ASR.B"),
             String::from("#$03,D7"),
+            vec![0xE607]
             ),
             get_disassembly_result
         );
@@ -555,7 +564,7 @@ fn asr_b_register_by_immediate_cx_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00000078);
@@ -577,6 +586,7 @@ fn asr_b_register_by_immediate_cx_clear() {
             0x00040002,
             String::from("ASR.B"),
             String::from("#$03,D7"),
+            vec![0xE607]
             ),
             get_disassembly_result
         );
@@ -613,7 +623,7 @@ fn asr_b_register_by_immediate_n_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x000000c0);
@@ -634,6 +644,7 @@ fn asr_b_register_by_immediate_n_set() {
             0x00040002,
             String::from("ASR.B"),
             String::from("#$03,D7"),
+            vec![0xE607]
             ),
             get_disassembly_result
         );
@@ -670,7 +681,7 @@ fn asr_b_register_by_immediate_n_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00000070);
@@ -692,6 +703,7 @@ fn asr_b_register_by_immediate_n_clear() {
             0x00040002,
             String::from("ASR.B"),
             String::from("#$03,D7"),
+            vec![0xE607]
             ),
             get_disassembly_result
         );
@@ -728,7 +740,7 @@ fn asr_b_register_by_immediate_z_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00000007);
@@ -747,6 +759,7 @@ fn asr_b_register_by_immediate_z_set() {
             0x00040002,
             String::from("ASR.B"),
             String::from("#$03,D7"),
+            vec![0xE607]
             ),
             get_disassembly_result
         );
@@ -785,7 +798,7 @@ fn asr_b_register_by_immediate_z_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00000008);
@@ -807,6 +820,7 @@ fn asr_b_register_by_immediate_z_clear() {
             0x00040002,
             String::from("ASR.B"),
             String::from("#$03,D7"),
+            vec![0xE607]
             ),
             get_disassembly_result
         );
@@ -843,7 +857,7 @@ fn asr_b_register_by_immediate_v_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00000018);
@@ -865,6 +879,7 @@ fn asr_b_register_by_immediate_v_clear() {
             0x00040002,
             String::from("ASR.B"),
             String::from("#$03,D7"),
+            vec![0xE607]
             ),
             get_disassembly_result
         );
@@ -901,7 +916,7 @@ fn asl_w_register_by_immediate_cx_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000505, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x000000d7);
@@ -920,6 +935,7 @@ fn asl_w_register_by_immediate_cx_set() {
             0x00040002,
             String::from("ASL.W"),
             String::from("#$06,D0"),
+            vec![0xED40]
             ),
             get_disassembly_result
         );
@@ -958,7 +974,7 @@ fn asl_w_register_by_immediate_cx_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000101, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x000000d7);
@@ -980,6 +996,7 @@ fn asl_w_register_by_immediate_cx_clear() {
             0x00040002,
             String::from("ASL.W"),
             String::from("#$06,D0"),
+            vec![0xED40]
             ),
             get_disassembly_result
         );
@@ -1016,7 +1033,7 @@ fn asl_w_register_by_immediate_n_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000202, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x000000d7);
@@ -1036,6 +1053,7 @@ fn asl_w_register_by_immediate_n_set() {
             0x00040002,
             String::from("ASL.W"),
             String::from("#$06,D0"),
+            vec![0xED40]
             ),
             get_disassembly_result
         );
@@ -1073,7 +1091,7 @@ fn asl_w_register_by_immediate_n_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00000505);
@@ -1095,6 +1113,7 @@ fn asl_w_register_by_immediate_n_clear() {
             0x00040002,
             String::from("ASL.W"),
             String::from("#$02,D7"),
+            vec![0xE547]
             ),
             get_disassembly_result
         );
@@ -1131,7 +1150,7 @@ fn asl_w_register_by_immediate_z_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000c000);
@@ -1149,6 +1168,7 @@ fn asl_w_register_by_immediate_z_set() {
             0x00040002,
             String::from("ASL.W"),
             String::from("#$02,D7"),
+            vec![0xE547]
             ),
             get_disassembly_result
         );
@@ -1188,7 +1208,7 @@ fn asl_w_register_by_immediate_z_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00000101);
@@ -1210,6 +1230,7 @@ fn asl_w_register_by_immediate_z_clear() {
             0x00040002,
             String::from("ASL.W"),
             String::from("#$02,D7"),
+            vec![0xE547]
             ),
             get_disassembly_result
         );
@@ -1246,7 +1267,7 @@ fn asl_w_register_by_immediate_v_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00004000);
@@ -1266,6 +1287,7 @@ fn asl_w_register_by_immediate_v_set() {
             0x00040002,
             String::from("ASL.W"),
             String::from("#$03,D7"),
+            vec![0xE747]
             ),
             get_disassembly_result
         );
@@ -1303,7 +1325,7 @@ fn asl_w_register_by_immediate_v_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00000808);
@@ -1325,6 +1347,7 @@ fn asl_w_register_by_immediate_v_clear() {
             0x00040002,
             String::from("ASL.W"),
             String::from("#$03,D7"),
+            vec![0xE747]
             ),
             get_disassembly_result
         );
@@ -1361,7 +1384,7 @@ fn asr_w_register_by_immediate_cx_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00000c0c);
@@ -1381,6 +1404,7 @@ fn asr_w_register_by_immediate_cx_set() {
             0x00040002,
             String::from("ASR.W"),
             String::from("#$03,D7"),
+            vec![0xE647]
             ),
             get_disassembly_result
         );
@@ -1418,7 +1442,7 @@ fn asr_w_register_by_immediate_cx_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00007878);
@@ -1440,6 +1464,7 @@ fn asr_w_register_by_immediate_cx_clear() {
             0x00040002,
             String::from("ASR.W"),
             String::from("#$03,D7"),
+            vec![0xE647]
             ),
             get_disassembly_result
         );
@@ -1476,7 +1501,7 @@ fn asr_w_register_by_immediate_n_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000c0c0);
@@ -1497,6 +1522,7 @@ fn asr_w_register_by_immediate_n_set() {
             0x00040002,
             String::from("ASR.W"),
             String::from("#$03,D7"),
+            vec![0xE647]
             ),
             get_disassembly_result
         );
@@ -1533,7 +1559,7 @@ fn asr_w_register_by_immediate_n_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00007070);
@@ -1555,6 +1581,7 @@ fn asr_w_register_by_immediate_n_clear() {
             0x00040002,
             String::from("ASR.W"),
             String::from("#$03,D7"),
+            vec![0xE647]
             ),
             get_disassembly_result
         );
@@ -1591,7 +1618,7 @@ fn asr_w_register_by_immediate_z_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00000007);
@@ -1610,6 +1637,7 @@ fn asr_w_register_by_immediate_z_set() {
             0x00040002,
             String::from("ASR.W"),
             String::from("#$03,D7"),
+            vec![0xE647]
             ),
             get_disassembly_result
         );
@@ -1648,7 +1676,7 @@ fn asr_w_register_by_immediate_z_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00000808);
@@ -1670,6 +1698,7 @@ fn asr_w_register_by_immediate_z_clear() {
             0x00040002,
             String::from("ASR.W"),
             String::from("#$03,D7"),
+            vec![0xE647]
             ),
             get_disassembly_result
         );
@@ -1706,7 +1735,7 @@ fn asr_w_register_by_immediate_v_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00001818);
@@ -1728,6 +1757,7 @@ fn asr_w_register_by_immediate_v_clear() {
             0x00040002,
             String::from("ASR.W"),
             String::from("#$03,D7"),
+            vec![0xE647]
             ),
             get_disassembly_result
         );
@@ -1764,7 +1794,7 @@ fn asl_l_register_by_immediate_cx_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x05050505, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x000000d7);
@@ -1783,6 +1813,7 @@ fn asl_l_register_by_immediate_cx_set() {
             0x00040002,
             String::from("ASL.L"),
             String::from("#$06,D0"),
+            vec![0xED80]
             ),
             get_disassembly_result
         );
@@ -1821,7 +1852,7 @@ fn asl_l_register_by_immediate_cx_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x01010101, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x000000d7);
@@ -1843,6 +1874,7 @@ fn asl_l_register_by_immediate_cx_clear() {
             0x00040002,
             String::from("ASL.L"),
             String::from("#$06,D0"),
+            vec![0xED80]
             ),
             get_disassembly_result
         );
@@ -1879,7 +1911,7 @@ fn asl_l_register_by_immediate_n_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x02020202, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x000000d7);
@@ -1899,6 +1931,7 @@ fn asl_l_register_by_immediate_n_set() {
             0x00040002,
             String::from("ASL.L"),
             String::from("#$06,D0"),
+            vec![0xED80]
             ),
             get_disassembly_result
         );
@@ -1936,7 +1969,7 @@ fn asl_l_register_by_immediate_n_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x05050505);
@@ -1958,6 +1991,7 @@ fn asl_l_register_by_immediate_n_clear() {
             0x00040002,
             String::from("ASL.L"),
             String::from("#$02,D7"),
+            vec![0xE587]
             ),
             get_disassembly_result
         );
@@ -1994,7 +2028,7 @@ fn asl_l_register_by_immediate_z_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0xc0000000);
@@ -2012,6 +2046,7 @@ fn asl_l_register_by_immediate_z_set() {
             0x00040002,
             String::from("ASL.L"),
             String::from("#$02,D7"),
+            vec![0xE587]
             ),
             get_disassembly_result
         );
@@ -2051,7 +2086,7 @@ fn asl_l_register_by_immediate_z_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x01010101);
@@ -2073,6 +2108,7 @@ fn asl_l_register_by_immediate_z_clear() {
             0x00040002,
             String::from("ASL.L"),
             String::from("#$02,D7"),
+            vec![0xE587]
             ),
             get_disassembly_result
         );
@@ -2109,7 +2145,7 @@ fn asl_l_register_by_immediate_v_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x40000000);
@@ -2129,6 +2165,7 @@ fn asl_l_register_by_immediate_v_set() {
             0x00040002,
             String::from("ASL.L"),
             String::from("#$03,D7"),
+            vec![0xE787]
             ),
             get_disassembly_result
         );
@@ -2166,7 +2203,7 @@ fn asl_l_register_by_immediate_v_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x08080808);
@@ -2188,6 +2225,7 @@ fn asl_l_register_by_immediate_v_clear() {
             0x00040002,
             String::from("ASL.L"),
             String::from("#$03,D7"),
+            vec![0xE787]
             ),
             get_disassembly_result
         );
@@ -2224,7 +2262,7 @@ fn asr_l_register_by_immediate_cx_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0c0c0c0c);
@@ -2244,6 +2282,7 @@ fn asr_l_register_by_immediate_cx_set() {
             0x00040002,
             String::from("ASR.L"),
             String::from("#$03,D7"),
+            vec![0xE687]
             ),
             get_disassembly_result
         );
@@ -2281,7 +2320,7 @@ fn asr_l_register_by_immediate_cx_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x78787878);
@@ -2303,6 +2342,7 @@ fn asr_l_register_by_immediate_cx_clear() {
             0x00040002,
             String::from("ASR.L"),
             String::from("#$03,D7"),
+            vec![0xE687]
             ),
             get_disassembly_result
         );
@@ -2339,7 +2379,7 @@ fn asr_l_register_by_immediate_n_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0xc0c0c0c0);
@@ -2360,6 +2400,7 @@ fn asr_l_register_by_immediate_n_set() {
             0x00040002,
             String::from("ASR.L"),
             String::from("#$03,D7"),
+            vec![0xE687]
             ),
             get_disassembly_result
         );
@@ -2396,7 +2437,7 @@ fn asr_l_register_by_immediate_n_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x70707070);
@@ -2418,6 +2459,7 @@ fn asr_l_register_by_immediate_n_clear() {
             0x00040002,
             String::from("ASR.L"),
             String::from("#$03,D7"),
+            vec![0xE687]
             ),
             get_disassembly_result
         );
@@ -2454,7 +2496,7 @@ fn asr_l_register_by_immediate_z_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00000007);
@@ -2473,6 +2515,7 @@ fn asr_l_register_by_immediate_z_set() {
             0x00040002,
             String::from("ASR.L"),
             String::from("#$03,D7"),
+            vec![0xE687]
             ),
             get_disassembly_result
         );
@@ -2511,7 +2554,7 @@ fn asr_l_register_by_immediate_z_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x08080808);
@@ -2533,6 +2576,7 @@ fn asr_l_register_by_immediate_z_clear() {
             0x00040002,
             String::from("ASR.L"),
             String::from("#$03,D7"),
+            vec![0xE687]
             ),
             get_disassembly_result
         );
@@ -2569,7 +2613,7 @@ fn asr_l_register_by_immediate_v_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000080, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x18181818);
@@ -2591,6 +2635,7 @@ fn asr_l_register_by_immediate_v_clear() {
             0x00040002,
             String::from("ASR.L"),
             String::from("#$03,D7"),
+            vec![0xE687]
             ),
             get_disassembly_result
         );
@@ -2627,7 +2672,7 @@ fn asl_b_register_by_register_cx_shift_0_c_clear_x_unaffected_still_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0xffffffc0, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x000000d7);
@@ -2648,6 +2693,7 @@ fn asl_b_register_by_register_cx_shift_0_c_clear_x_unaffected_still_set() {
             0x00040002,
             String::from("ASL.B"),
             String::from("D0,D5"),
+            vec![0xE125]
             ),
             get_disassembly_result
         );
@@ -2685,7 +2731,7 @@ fn asl_b_register_by_register_cx_shift_0_c_clear_x_unaffected_still_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0xffffffc0, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x000000d7);
@@ -2705,6 +2751,7 @@ fn asl_b_register_by_register_cx_shift_0_c_clear_x_unaffected_still_clear() {
             0x00040002,
             String::from("ASL.B"),
             String::from("D0,D5"),
+            vec![0xE125]
             ),
             get_disassembly_result
         );
@@ -2741,7 +2788,7 @@ fn asr_b_register_by_register_cx_shift_0_c_clear_x_unaffected_still_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000000, 0xffffffc0, 0x000000d2, 0x000000d3, 0x00000014, 0x000000d5, 0x000000d6, 0x000000d7);
@@ -2763,6 +2810,7 @@ fn asr_b_register_by_register_cx_shift_0_c_clear_x_unaffected_still_set() {
             0x00040002,
             String::from("ASR.B"),
             String::from("D1,D4"),
+            vec![0xE224]
             ),
             get_disassembly_result
         );
@@ -2799,7 +2847,7 @@ fn asr_b_register_by_register_cx_shift_0_c_clear_x_unaffected_still_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000000, 0xffffffc0, 0x000000d2, 0x000000d3, 0x00000014, 0x000000d5, 0x000000d6, 0x000000d7);
@@ -2820,6 +2868,7 @@ fn asr_b_register_by_register_cx_shift_0_c_clear_x_unaffected_still_clear() {
             0x00040002,
             String::from("ASR.B"),
             String::from("D1,D4"),
+            vec![0xE224]
             ),
             get_disassembly_result
         );
@@ -2856,7 +2905,7 @@ fn asl_w_register_by_register_cx_shift_0_c_clear_x_unaffected_still_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0xffffffc0, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x0000d5d5, 0x000000d6, 0x000000d7);
@@ -2877,6 +2926,7 @@ fn asl_w_register_by_register_cx_shift_0_c_clear_x_unaffected_still_set() {
             0x00040002,
             String::from("ASL.W"),
             String::from("D0,D5"),
+            vec![0xE165]
             ),
             get_disassembly_result
         );
@@ -2914,7 +2964,7 @@ fn asl_w_register_by_register_cx_shift_0_c_clear_x_unaffected_still_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0xffffffc0, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x0000d5d5, 0x000000d6, 0x000000d7);
@@ -2934,6 +2984,7 @@ fn asl_w_register_by_register_cx_shift_0_c_clear_x_unaffected_still_clear() {
             0x00040002,
             String::from("ASL.W"),
             String::from("D0,D5"),
+            vec![0xE165]
             ),
             get_disassembly_result
         );
@@ -2970,7 +3021,7 @@ fn asr_w_register_by_register_cx_shift_0_c_clear_x_unaffected_still_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000000, 0xffffffc0, 0x000000d2, 0x000000d3, 0x000014d4, 0x000000d5, 0x000000d6, 0x000000d7);
@@ -2992,6 +3043,7 @@ fn asr_w_register_by_register_cx_shift_0_c_clear_x_unaffected_still_set() {
             0x00040002,
             String::from("ASR.W"),
             String::from("D1,D4"),
+            vec![0xE264]
             ),
             get_disassembly_result
         );
@@ -3028,7 +3080,7 @@ fn asr_w_register_by_register_cx_shift_0_c_clear_x_unaffected_still_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000000, 0xffffffc0, 0x000000d2, 0x000000d3, 0x000014d4, 0x000000d5, 0x000000d6, 0x000000d7);
@@ -3049,6 +3101,7 @@ fn asr_w_register_by_register_cx_shift_0_c_clear_x_unaffected_still_clear() {
             0x00040002,
             String::from("ASR.W"),
             String::from("D1,D4"),
+            vec![0xE264]
             ),
             get_disassembly_result
         );
@@ -3085,7 +3138,7 @@ fn asl_l_register_by_register_cx_shift_0_c_clear_x_unaffected_still_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0xffffffc0, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0xd5d5d5d5, 0x000000d6, 0x000000d7);
@@ -3106,6 +3159,7 @@ fn asl_l_register_by_register_cx_shift_0_c_clear_x_unaffected_still_set() {
             0x00040002,
             String::from("ASL.L"),
             String::from("D0,D5"),
+            vec![0xE1A5]
             ),
             get_disassembly_result
         );
@@ -3143,7 +3197,7 @@ fn asl_l_register_by_register_cx_shift_0_c_clear_x_unaffected_still_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0xffffffc0, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0xd5d5d5d5, 0x000000d6, 0x000000d7);
@@ -3163,6 +3217,7 @@ fn asl_l_register_by_register_cx_shift_0_c_clear_x_unaffected_still_clear() {
             0x00040002,
             String::from("ASL.L"),
             String::from("D0,D5"),
+            vec![0xE1A5]
             ),
             get_disassembly_result
         );
@@ -3199,7 +3254,7 @@ fn asr_l_register_by_register_cx_shift_0_c_clear_x_unaffected_still_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000000, 0xffffffc0, 0x000000d2, 0x000000d3, 0x14d4d4d4, 0x000000d5, 0x000000d6, 0x000000d7);
@@ -3221,6 +3276,7 @@ fn asr_l_register_by_register_cx_shift_0_c_clear_x_unaffected_still_set() {
             0x00040002,
             String::from("ASR.L"),
             String::from("D1,D4"),
+            vec![0xE2A4]
             ),
             get_disassembly_result
         );
@@ -3257,7 +3313,7 @@ fn asr_l_register_by_register_cx_shift_0_c_clear_x_unaffected_still_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000000, 0xffffffc0, 0x000000d2, 0x000000d3, 0x14d4d4d4, 0x000000d5, 0x000000d6, 0x000000d7);
@@ -3278,6 +3334,7 @@ fn asr_l_register_by_register_cx_shift_0_c_clear_x_unaffected_still_clear() {
             0x00040002,
             String::from("ASR.L"),
             String::from("D1,D4"),
+            vec![0xE2A4]
             ),
             get_disassembly_result
         );
@@ -3314,7 +3371,7 @@ fn asl_b_register_by_register_big_shift() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0xffffff3f, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000ff, 0x000000d6, 0x000000d7);
@@ -3334,6 +3391,7 @@ fn asl_b_register_by_register_big_shift() {
             0x00040002,
             String::from("ASL.B"),
             String::from("D0,D5"),
+            vec![0xE125]
             ),
             get_disassembly_result
         );
@@ -3371,7 +3429,7 @@ fn asr_b_register_by_register_big_shift() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000000, 0xffffff3f, 0x000000d2, 0x000000d3, 0x00000080, 0x000000d5, 0x000000d6, 0x000000d7);
@@ -3390,6 +3448,7 @@ fn asr_b_register_by_register_big_shift() {
             0x00040002,
             String::from("ASR.B"),
             String::from("D1,D4"),
+            vec![0xE224]
             ),
             get_disassembly_result
         );
@@ -3428,7 +3487,7 @@ fn asl_w_register_by_register_big_shift() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0xffffff3f, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x0000ffff, 0x000000d6, 0x000000d7);
@@ -3448,6 +3507,7 @@ fn asl_w_register_by_register_big_shift() {
             0x00040002,
             String::from("ASL.W"),
             String::from("D0,D5"),
+            vec![0xE165]
             ),
             get_disassembly_result
         );
@@ -3485,7 +3545,7 @@ fn asr_w_register_by_register_big_shift() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000000, 0xffffff3f, 0x000000d2, 0x000000d3, 0x00008000, 0x000000d5, 0x000000d6, 0x000000d7);
@@ -3504,6 +3564,7 @@ fn asr_w_register_by_register_big_shift() {
             0x00040002,
             String::from("ASR.W"),
             String::from("D1,D4"),
+            vec![0xE264]
             ),
             get_disassembly_result
         );
@@ -3542,7 +3603,7 @@ fn asl_l_register_by_register_big_shift() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0xffffff3f, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0xffffffff, 0x000000d6, 0x000000d7);
@@ -3562,6 +3623,7 @@ fn asl_l_register_by_register_big_shift() {
             0x00040002,
             String::from("ASL.L"),
             String::from("D0,D5"),
+            vec![0xE1A5]
             ),
             get_disassembly_result
         );
@@ -3599,7 +3661,7 @@ fn asr_l_register_by_register_big_shift() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000000, 0xffffff3f, 0x000000d2, 0x000000d3, 0x80000000, 0x000000d5, 0x000000d6, 0x000000d7);
@@ -3618,6 +3680,7 @@ fn asr_l_register_by_register_big_shift() {
             0x00040002,
             String::from("ASR.L"),
             String::from("D1,D4"),
+            vec![0xE2A4]
             ),
             get_disassembly_result
         );
@@ -3658,7 +3721,7 @@ fn asl_w_memory_by_1_areg_indirect_with_predecrement() {
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     mem.add_range(Rc::new(RefCell::new(arrange_mem_00050110)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000000, 0xffffff3f, 0x000000d2, 0x000000d3, 0x80000000, 0x000000d5, 0x000000d6, 0x000000d7);
@@ -3680,6 +3743,7 @@ fn asl_w_memory_by_1_areg_indirect_with_predecrement() {
             0x00040002,
             String::from("ASL.W"),
             String::from("-(A0)"),
+            vec![0xE1E0]
             ),
             get_disassembly_result
         );
@@ -3719,7 +3783,7 @@ fn asl_w_memory_by_1_areg_indirect_with_displacement() {
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     mem.add_range(Rc::new(RefCell::new(arrange_mem_00050110)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000000, 0xffffff3f, 0x000000d2, 0x000000d3, 0x80000000, 0x000000d5, 0x000000d6, 0x000000d7);
@@ -3738,6 +3802,7 @@ fn asl_w_memory_by_1_areg_indirect_with_displacement() {
             0x00040004,
             String::from("ASL.W"),
             String::from("($0040,A0)"),
+            vec![0xE1E8,0x0040]
             ),
             get_disassembly_result
         );
@@ -3779,7 +3844,7 @@ fn asr_w_memory_by_1_areg_indirect_with_postincrement() {
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     mem.add_range(Rc::new(RefCell::new(arrange_mem_00050110)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000000, 0xffffff3f, 0x000000d2, 0x000000d3, 0x80000000, 0x000000d5, 0x000000d6, 0x000000d7);
@@ -3801,6 +3866,7 @@ fn asr_w_memory_by_1_areg_indirect_with_postincrement() {
             0x00040002,
             String::from("ASR.W"),
             String::from("(A6)+"),
+            vec![0xE0DE]
             ),
             get_disassembly_result
         );
@@ -3840,7 +3906,7 @@ fn asr_w_memory_by_1_areg_indirect() {
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     mem.add_range(Rc::new(RefCell::new(arrange_mem_00050110)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000000, 0xffffff3f, 0x000000d2, 0x000000d3, 0x80000000, 0x000000d5, 0x000000d6, 0x000000d7);
@@ -3859,6 +3925,7 @@ fn asr_w_memory_by_1_areg_indirect() {
             0x00040002,
             String::from("ASR.W"),
             String::from("(A5)"),
+            vec![0xE0D5]
             ),
             get_disassembly_result
         );

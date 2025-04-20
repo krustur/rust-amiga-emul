@@ -38,7 +38,7 @@ fn addi_byte_immediate_data_to_data_register_direct() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x000000d0, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00004321);
@@ -60,6 +60,7 @@ fn addi_byte_immediate_data_to_data_register_direct() {
             0x00040004,
             String::from("ADDI.B"),
             String::from("#$23,D7"),
+            vec![0x0607,0x0023]
             ),
             get_disassembly_result
         );
@@ -98,7 +99,7 @@ fn addi_byte_immediate_data_to_absolute_short() {
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     mem.add_range(Rc::new(RefCell::new(arrange_mem_00004000)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x000000d0, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x0000d7d7);
@@ -120,6 +121,7 @@ fn addi_byte_immediate_data_to_absolute_short() {
             0x00040006,
             String::from("ADDI.B"),
             String::from("#$38,($4000).W"),
+            vec![0x0638,0x0038,0x4000]
             ),
             get_disassembly_result
         );
@@ -157,7 +159,7 @@ fn addi_word_immediate_data_to_data_register_direct() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x000000d0, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0x00004321);
@@ -179,6 +181,7 @@ fn addi_word_immediate_data_to_data_register_direct() {
             0x00040004,
             String::from("ADDI.W"),
             String::from("#$1234,D7"),
+            vec![0x0647,0x1234]
             ),
             get_disassembly_result
         );
@@ -217,7 +220,7 @@ fn addi_word_immediate_data_to_absolute_long() {
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     mem.add_range(Rc::new(RefCell::new(arrange_mem_00040000)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00030000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x000000d0, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0xdddd5555);
@@ -239,6 +242,7 @@ fn addi_word_immediate_data_to_absolute_long() {
             0x00030008,
             String::from("ADDI.W"),
             String::from("#$3878,($00040000).L"),
+            vec![0x0679,0x3878,0x0004,0x0000]
             ),
             get_disassembly_result
         );
@@ -276,7 +280,7 @@ fn addi_long_immediate_data_to_data_register_direct() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00030000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x10101010, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0xdddd5555);
@@ -298,6 +302,7 @@ fn addi_long_immediate_data_to_data_register_direct() {
             0x00030006,
             String::from("ADDI.L"),
             String::from("#$76857685,D0"),
+            vec![0x0680,0x7685,0x7685]
             ),
             get_disassembly_result
         );
@@ -337,7 +342,7 @@ fn addi_long_immediate_data_to_absolute_long() {
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     mem.add_range(Rc::new(RefCell::new(arrange_mem_00040000)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00030000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x86958695, 0x000000d1, 0x000000d2, 0x000000d3, 0x000000d4, 0x000000d5, 0x000000d6, 0xdddd5555);
@@ -359,6 +364,7 @@ fn addi_long_immediate_data_to_absolute_long() {
             0x0003000a,
             String::from("ADDI.L"),
             String::from("#$38784545,($00040000).L"),
+            vec![0x06B9,0x3878,0x4545,0x0004,0x0000]
             ),
             get_disassembly_result
         );

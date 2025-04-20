@@ -98,7 +98,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("PEA"),
-                String::from("($0018,PC)")
+                String::from("($0018,PC)"),
+                vec![0x487a, 0x0018]
             ),
             debug_result
         );
@@ -127,7 +128,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("PEA"),
-                String::from("($4000).W")
+                String::from("($4000).W"),
+                vec![0x4878, 0x4000]
             ),
             debug_result
         );

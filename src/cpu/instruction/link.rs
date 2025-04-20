@@ -135,7 +135,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("LINK"),
-                String::from("A5,#$FFF2 [-14]")
+                String::from("A5,#$FFF2 [-14]"),
+                vec![0x4e55, 0xfff2]
             ),
             debug_result
         );
@@ -173,7 +174,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("LINK"),
-                String::from("A5,#$0102 [258]")
+                String::from("A5,#$0102 [258]"),
+                vec![0x4e55, 0x0102]
             ),
             debug_result
         );
@@ -205,7 +207,8 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("LINK"),
-                String::from("A1,#$FFFFFFF2 [-14]")
+                String::from("A1,#$FFFFFFF2 [-14]"),
+                vec![0x4809, 0xffff, 0xfff2]
             ),
             debug_result
         );
@@ -243,7 +246,8 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("LINK"),
-                String::from("A1,#$00000102 [258]")
+                String::from("A1,#$00000102 [258]"),
+                vec![0x4809, 0x0000, 0x0102]
             ),
             debug_result
         );

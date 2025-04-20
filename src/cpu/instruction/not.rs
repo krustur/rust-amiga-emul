@@ -128,7 +128,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("NOT.B"),
-                String::from("D7")
+                String::from("D7"),
+                vec![0x4607]
             ),
             debug_result
         );
@@ -162,7 +163,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("NOT.B"),
-                String::from("D7")
+                String::from("D7"),
+                vec![0x4607]
             ),
             debug_result
         );
@@ -197,7 +199,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("NOT.B"),
-                String::from("D7")
+                String::from("D7"),
+                vec![0x4607]
             ),
             debug_result
         );
@@ -234,7 +237,8 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("NOT.W"),
-                String::from("($00C00006).L")
+                String::from("($00C00006).L"),
+                vec![0x4679, 0x00c0, 0x0006]
             ),
             debug_result
         );
@@ -268,7 +272,8 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("NOT.W"),
-                String::from("($00C00006).L")
+                String::from("($00C00006).L"),
+                vec![0x4679, 0x00c0, 0x0006]
             ),
             debug_result
         );
@@ -303,7 +308,8 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("NOT.W"),
-                String::from("($00C00006).L")
+                String::from("($00C00006).L"),
+                vec![0x4679, 0x00c0, 0x0006]
             ),
             debug_result
         );
@@ -341,7 +347,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("NOT.L"),
-                String::from("(A0)")
+                String::from("(A0)"),
+                vec![0x4690]
             ),
             debug_result
         );
@@ -376,7 +383,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("NOT.L"),
-                String::from("(A0)")
+                String::from("(A0)"),
+                vec![0x4690]
             ),
             debug_result
         );
@@ -412,7 +420,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("NOT.L"),
-                String::from("(A0)")
+                String::from("(A0)"),
+                vec![0x4690]
             ),
             debug_result
         );

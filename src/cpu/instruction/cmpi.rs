@@ -171,7 +171,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("CMPI.B"),
-                String::from("#$FF,D0")
+                String::from("#$FF,D0"),
+                vec![0x0c00, 0x00ff]
             ),
             debug_result
         );
@@ -203,7 +204,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("CMPI.B"),
-                String::from("#$50,D0")
+                String::from("#$50,D0"),
+                vec![0x0c00, 0x0050]
             ),
             debug_result
         );
@@ -235,7 +237,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("CMPI.W"),
-                String::from("#$50FF,D0")
+                String::from("#$50FF,D0"),
+                vec![0x0c40, 0x50ff]
             ),
             debug_result
         );
@@ -267,7 +270,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("CMPI.W"),
-                String::from("#$5050,D0")
+                String::from("#$5050,D0"),
+                vec![0x0c40, 0x5050]
             ),
             debug_result
         );
@@ -301,7 +305,8 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("CMPI.L"),
-                String::from("#$555550FF,D0")
+                String::from("#$555550FF,D0"),
+                vec![0x0c80, 0x5555, 0x50ff]
             ),
             debug_result
         );
@@ -333,7 +338,8 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("CMPI.L"),
-                String::from("#$55555050,D0")
+                String::from("#$55555050,D0"),
+                vec![0x0c80, 0x5555, 0x5050]
             ),
             debug_result
         );
@@ -367,7 +373,8 @@ mod tests {
                 0xC00000,
                 0xC00008,
                 String::from("CMPI.L"),
-                String::from("#$4C4F574D,($0400).W")
+                String::from("#$4C4F574D,($0400).W"),
+                vec![0x0cb8, 0x4c4f, 0x574d, 0x0400]
             ),
             debug_result
         );

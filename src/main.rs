@@ -8,30 +8,33 @@
 // TODO: [ ] Interrupts: CIA timers
 // TODO: [ ] Then Bugfix SUBX
 // TODO: [ ] Prefix _all_ tests with instruction name and size
+// TODO: [ ] Missing tests for ROLR-instructions
+// TODO: [ ] Missing tests for Scc-instruction
 
 use std::cell::RefCell;
 use std::rc::Rc;
 
 
-use crate::{mem::custommemory::CustomMemory};
+use crate::mem::custommemory::CustomMemory;
 use {
     cpu::Cpu,
     mem::{ciamemory::CiaMemory, rammemory::RamMemory, Mem},
 };
 
-use crate::kickstart_1_2::Kickstart_1_2;
+use crate::kickstart_debug_1_2::KickstartDebug_1_2;
 
 use crate::modermodem::Modermodem;
 
 mod cpu;
 mod kickstart;
-mod kickstart_1_2;
-mod kickstart_3_1_4;
+mod kickstart_debug_1_2;
+mod kickstart_debug_3_1_4;
 mod mem;
 mod modermodem;
 mod register;
-use std::time::Instant;
+use crate::cpu::step_log::{DisassemblyLogMode, StepLog};
 use crate::cpu::CpuSpeed;
+use crate::kickstart::Kickstart;
 
 // static ROM_FILE_PATH: &str = "D:\\Amiga\\ROM\\Kickstart 3.1.rom";
 // static ROM_FILE_PATH: &str = "C:\\WS\\Amiga\\Kickstart v3.1 rev 40.68 (1993)(Commodore)(A1200).rom";
@@ -59,7 +62,8 @@ fn main() {
     let cia_memory = Rc::new(RefCell::new(CiaMemory::new()));
     let mut mem = Mem::new(Some(custom_memory.clone()), Some(cia_memory.clone()));
 
-    let kickstart = Rc::new(RefCell::new(Kickstart_1_2::new(ROM_FILE_PATH_1_2, &mut mem)));
+    let kickstart = Rc::new(RefCell::new(Kickstart::new(ROM_FILE_PATH_1_2, &mut mem)));
+    let kickstart_debug = KickstartDebug_1_2::new();
     
     // Hack "CDTV & CD32 Extended ROM / A4000 Diagnostics ROM" as RAM
     // ROM code checks for $1111 at 0F00000 ()
@@ -89,11 +93,13 @@ fn main() {
 
     let cpu = Cpu::new(CpuSpeed::PAL_7_093790_MHz, ssp_address, pc_address);
     println!("Beginning of ROM");
-    // mem.borrow().print_hex_dump(0xf80000, 0xf801ff);
+    mem.print_hex_dump(0xf80000, 0xf801ff);
+
     println!("Checksum:");
-    // mem.borrow().print_hex_dump(0xffffe8, 0xffffeb);
+    mem.print_hex_dump(0xffffe8, 0xffffeb);
+
     println!("Chip memory-string:");
-    // mem.borrow().print_hex_dump(0x00F803AE, 0x00F803B9);
+    mem.print_hex_dump(0x00F803AE, 0x00F803B9);
 
     cpu.register.print_registers();
 
@@ -108,22 +114,14 @@ fn main() {
 
     // NTSC has 262/263 scan lines
     // PAL has 312/313 scan lines
-    // let mut exec_base: u32 = 0xffffffff;
-    // let mut step_log = StepLog::new();
-    // step_log.add_log(StepLogEntry::ReadRegisterLong{register_type: RegisterType::Data, register_index:1, value: 0xdddddd11});
-    // step_log.add_log(StepLogEntry::WriteRegisterLong{register_type:RegisterType::Address,register_index:2, value:  0xaaaaaa22});
-    // step_log.print_logs();
-    // step_log.reset_log();
-    // step_log.add_log(StepLogEntry::WriteRegisterLong{register_type:RegisterType::Address,register_index:7, value:  0xaaaaaa77});
-    // step_log.print_logs();
 
-    let mut modermodem = Modermodem::new(Some(kickstart), cpu, mem, Some(custom_memory), Some(cia_memory));
+    let step_log = StepLog::new(DisassemblyLogMode::DisassemblyWithKickstartDebugAndDetails, Box::new(kickstart_debug));
+    let mut modermodem = Modermodem::new(kickstart, step_log, cpu, mem, custom_memory, cia_memory);
 
-    let disasm = modermodem.get_disassembly_no_log(0x00FE930E, 0x00FE9336);
-    for d in disasm {
-        d.print_disassembly(true);
+    let disassembly = modermodem.get_disassembly_no_log(0x00FE930E, 0x00FE9336);
+    for disassembly_row in disassembly {
+        disassembly_row.print_disassembly(true);
     }
-
 
     loop {
         modermodem.step();
@@ -134,17 +132,15 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use std::cell::RefCell;
-    use std::rc::Rc;
-    use crate::{cpu, mem};
     use crate::cpu::CpuSpeed;
     use crate::mem::ciamemory::CiaMemory;
     use crate::mem::rammemory::RamMemory;
     use crate::modermodem::Modermodem;
-    use crate::register::ProgramCounter;
+    use crate::{cpu, mem};
+    use std::cell::RefCell;
+    use std::rc::Rc;
 
     pub(crate) fn instr_test_setup(code: Vec<u8>, mem_ranges: Option<Vec<RamMemory>>) -> Modermodem {
-        // let mut mem_ranges_internal: Vec<Box<dyn Memory>> = Vec::new();
         let mut mem = mem::Mem::new(None, None);
         let code = RamMemory::from_bytes(0x00C00000, code);
         let stack = RamMemory::from_range(0x01000000, 0x010003ff);
@@ -159,11 +155,8 @@ mod tests {
                 mem.add_range(Rc::new(RefCell::new(mem_range)));
             }
         }
-        // mem.add_range(Rc::new(RefCell::new(RamMemory::from_range(0xffffffff, 0xffffffff))));
-        let mut cpu = cpu::Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x01000400, 0xC00000);
-        // cpu.register.reg_pc = ProgramCounter::from_address(0xC00000);
-        // cpu.register.set_ssp_reg(0x01000400);
-        let modermodem = Modermodem::new(None, cpu, mem, None, None);
+        let cpu = cpu::Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x01000400, 0xC00000);
+        let modermodem = Modermodem::bare(cpu, mem);
         modermodem
     }
 }

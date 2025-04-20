@@ -153,7 +153,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBQ.B"),
-                String::from("#$5,(A0)+")
+                String::from("#$5,(A0)+"),
+                vec![0x5b18]
             ),
             debug_result
         );
@@ -189,7 +190,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBQ.B"),
-                String::from("#$5,(A0)+")
+                String::from("#$5,(A0)+"),
+                vec![0x5b18]
             ),
             debug_result
         );
@@ -225,7 +227,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBQ.W"),
-                String::from("#$8,(A3)+")
+                String::from("#$8,(A3)+"),
+                vec![0x515b]
             ),
             debug_result
         );
@@ -261,7 +264,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBQ.W"),
-                String::from("#$3,(A3)+")
+                String::from("#$3,(A3)+"),
+                vec![0x575b]
             ),
             debug_result
         );
@@ -296,7 +300,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBQ.W"),
-                String::from("#$3,(A3)+")
+                String::from("#$3,(A3)+"),
+                vec![0x575b]
             ),
             debug_result
         );
@@ -332,7 +337,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBQ.L"),
-                String::from("#$1,(A5)+")
+                String::from("#$1,(A5)+"),
+                vec![0x539d]
             ),
             debug_result
         );
@@ -368,7 +374,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBQ.L"),
-                String::from("#$8,(A5)+")
+                String::from("#$8,(A5)+"),
+                vec![0x519d]
             ),
             debug_result
         );
@@ -397,7 +404,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBQ.W"),
-                String::from("#$8,A0")
+                String::from("#$8,A0"),
+                vec![0x5148]
             ),
             debug_result
         );
@@ -426,7 +434,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBQ.L"),
-                String::from("#$8,A1")
+                String::from("#$8,A1"),
+                vec![0x5189]
             ),
             debug_result
         );

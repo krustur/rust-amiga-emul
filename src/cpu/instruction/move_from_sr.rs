@@ -98,7 +98,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("MOVE.W"),
-                String::from("SR,D0")
+                String::from("SR,D0"),
+                vec![0x40c0]
             ),
             debug_result
         );
@@ -127,7 +128,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("MOVE.W"),
-                String::from("SR,D7")
+                String::from("SR,D7"),
+                vec![0x40c7]
             ),
             debug_result
         );
@@ -162,7 +164,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("MOVE.W"),
-                String::from("SR,D7")
+                String::from("SR,D7"),
+                vec![0x40c7]
             ),
             debug_result
         );

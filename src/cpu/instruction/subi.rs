@@ -166,7 +166,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("SUBI.B"),
-                String::from("#$23,D7")
+                String::from("#$23,D7"),
+                vec![0x0407, 0x0023]
             ),
             debug_result
         );
@@ -203,7 +204,8 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("SUBI.B"),
-                String::from("#$38,($6000).W")
+                String::from("#$38,($6000).W"),
+                vec![0x0438, 0x0038, 0x6000]
             ),
             debug_result
         );
@@ -238,7 +240,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("SUBI.W"),
-                String::from("#$1234,D7")
+                String::from("#$1234,D7"),
+                vec![0x0447, 0x1234]
             ),
             debug_result
         );
@@ -275,7 +278,8 @@ mod tests {
                 0xC00000,
                 0xC00008,
                 String::from("SUBI.W"),
-                String::from("#$3878,($00060000).L")
+                String::from("#$3878,($00060000).L"),
+                vec![0x0479, 0x3878, 0x0006, 0x0000]
             ),
             debug_result
         );
@@ -310,7 +314,8 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("SUBI.L"),
-                String::from("#$10101010,D0")
+                String::from("#$10101010,D0"),
+                vec![0x0480, 0x1010, 0x1010]
             ),
             debug_result
         );
@@ -347,7 +352,8 @@ mod tests {
                 0xC00000,
                 0xC0000a,
                 String::from("SUBI.L"),
-                String::from("#$38784545,($00040000).L")
+                String::from("#$38784545,($00040000).L"),
+                vec![0x04b9, 0x3878, 0x4545, 0x0004, 0x0000]
             ),
             debug_result
         );

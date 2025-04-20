@@ -89,7 +89,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("JSR"),
-                String::from("(A0)")
+                String::from("(A0)"),
+                vec![0x4e90]
             ),
             debug_result
         );
@@ -116,7 +117,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("JSR"),
-                String::from("($FD84,A6)")
+                String::from("($FD84,A6)"),
+                vec![0x4eae, 0xfd84]
             ),
             debug_result
         );

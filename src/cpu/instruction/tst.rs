@@ -151,7 +151,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("TST.B"),
-                String::from("D7")
+                String::from("D7"),
+                vec![0x4a07]
             ),
             debug_result
         );
@@ -187,7 +188,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("TST.B"),
-                String::from("D7")
+                String::from("D7"),
+                vec![0x4a07]
             ),
             debug_result
         );
@@ -223,7 +225,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("TST.B"),
-                String::from("D7")
+                String::from("D7"),
+                vec![0x4a07]
             ),
             debug_result
         );
@@ -261,7 +264,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("TST.W"),
-                String::from("D6")
+                String::from("D6"),
+                vec![0x4a46]
             ),
             debug_result
         );
@@ -297,7 +301,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("TST.W"),
-                String::from("D6")
+                String::from("D6"),
+                vec![0x4a46]
             ),
             debug_result
         );
@@ -333,7 +338,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("TST.W"),
-                String::from("D6")
+                String::from("D6"),
+                vec![0x4a46]
             ),
             debug_result
         );
@@ -371,7 +377,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("TST.L"),
-                String::from("D5")
+                String::from("D5"),
+                vec![0x4a85]
             ),
             debug_result
         );
@@ -407,7 +414,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("TST.L"),
-                String::from("D5")
+                String::from("D5"),
+                vec![0x4a85]
             ),
             debug_result
         );
@@ -443,7 +451,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("TST.L"),
-                String::from("D5")
+                String::from("D5"),
+                vec![0x4a85]
             ),
             debug_result
         );

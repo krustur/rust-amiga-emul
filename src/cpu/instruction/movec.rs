@@ -23,6 +23,8 @@ pub fn step<'a>(
 ) -> Result<(), StepError> {
     let _ = pc.fetch_next_word(mem);
 
+    // This instruction is called by Amiga OS to check if the MC68010 instruction set is available.
+    // We imlement it is as IllegalInstruction to enable MC68000 emulation only.
     Err(StepError::IllegalInstruction)
 }
 

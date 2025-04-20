@@ -1,36 +1,18 @@
-use crate::kickstart::Kickstart;
-use crate::mem::rommemory::RomMemory;
-use crate::mem::Mem;
-use std::cell::RefCell;
-use std::rc::Rc;
+use crate::kickstart::KickstartDebug;
 
 #[allow(non_camel_case_types)]
-pub struct Kickstart_1_2 {
-    rom_memory: Rc<RefCell<RomMemory>>,
+pub struct KickstartDebug_1_2 {
 }
 
-impl Kickstart_1_2 {
-    pub fn new(file_path: &str, mem: &mut Mem) -> Self {
-        let rom_memory = Rc::new(RefCell::new(
-            RomMemory::from_file(0xF80000, file_path).unwrap(),
-        ));
-        let rom_overlay = Rc::new(RefCell::new(
-            RomMemory::from_file(0x000000, file_path).unwrap(),
-        ));
-
-        // let mut mem = mem.borrow_mut();
-        mem.add_range(rom_memory.clone());
-        mem.set_overlay(rom_overlay);
-        Self { rom_memory }
+impl KickstartDebug_1_2 {
+    pub fn new() -> KickstartDebug_1_2 {
+        Self {
+        }
     }
 }
 
-impl Kickstart for Kickstart_1_2 {
-    // fn get_rom_memory_range(&self) -> Rc<RefCell<dyn Memory>> {
-    //     self.rom_memory.clone()
-    // }
-
-    fn get_comment(&self, pc_address: u32) -> Option<String> {
+impl KickstartDebug for KickstartDebug_1_2 {
+    fn get_address_comment(&self, pc_address: u32) -> Option<String> {
         match pc_address {
             0x00FC00D2 => Some(String::from("We start running here")),
             0x00FC00E2 => Some(String::from("If the ROM is also visible at F00000, or if there is another ROM there, jump there")),
@@ -115,7 +97,7 @@ impl Kickstart for Kickstart_1_2 {
         }
     }
 
-    fn get_no_print_disassembly_before_step(&self, pc_address: u32) -> bool {
+    fn disable_print_disassembly_for_address(&self, pc_address: u32) -> bool {
         match pc_address {
             0x00FC00DE..=0x00FC00E0 => true, // Start delay loop
             0x00FC060E..=0x00FC0614 => true, // Memory clear loop
@@ -127,14 +109,14 @@ impl Kickstart for Kickstart_1_2 {
         }
     }
 
-    fn get_print_registers_after_step(&self, pc_address: u32) -> bool {
+    fn should_print_registers_after_step(&self, pc_address: u32) -> bool {
         match pc_address {
             0x00FC0240 => true, // We continue here after we've figured out where the chip memory ends
             _ => false,
         }
     }
 
-    fn get_dump_memory_after_step(&self, pc_address: u32) -> Option<(u32, u32)> {
+    fn should_dump_memory_after_step(&self, pc_address: u32) -> Option<(u32, u32)> {
         match pc_address {
             // 0x00F8060C => (true, 0x00f8008d, 0x00f800ad),
             0x00FC310C => Some((0x00FC31AA, 0x00FC31CA)),
@@ -143,14 +125,14 @@ impl Kickstart for Kickstart_1_2 {
         }
     }
 
-    fn get_dump_areg_memory_after_step(&self, pc_address: u32) -> Option<(usize, u32)> {
+    fn should_dump_areg_memory_after_step(&self, pc_address: u32) -> Option<(usize, u32)> {
         match pc_address {
             // 0x00F81ACE => (true, 1, 32),
             _ => None,
         }
     }
 
-    fn get_print_disassembly_after_step(&self, pc_address: u32) -> Option<(u32, u32)> {
+    fn should_dump_disassembly_after_step(&self, pc_address: u32) -> Option<(u32, u32)> {
         match pc_address {
             // 0x00F82A32 => (true, 0x00004dcc, 0x0000515C),
             _ => None,

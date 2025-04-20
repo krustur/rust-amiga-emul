@@ -241,6 +241,7 @@ class TestCase(object):
         # Arrange - code
         file.write(f"    // arrange - code\n")
         arrange_code_bytes_hex = format_bytes_as_hex(self.arrange_code.bytes)
+        arrange_code_words_hex = format_bytes_as_hex_words(self.arrange_code.bytes)
         assert_code_comment = get_assert_code_comment(self.assert_code)
         file.write(f"    // {assert_code_comment}\n")
         file.write(f"    let code = [{arrange_code_bytes_hex}].to_vec();\n")
@@ -268,7 +269,7 @@ class TestCase(object):
         for arr_mem in self.arrange_mem:
             file.write(f"    mem.add_range(Rc::new(RefCell::new(arrange_mem_{arr_mem.address:08x})));\n")
         file.write(f"    let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, {self.arrange_code.address:08x});\n")
-        file.write(f"    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);\n")
+        file.write(f"    let mut modermodem = Modermodem::bare(cpu, mem);\n")
         file.write(f"\n")
 
         # Arrange - regs
@@ -310,6 +311,7 @@ class TestCase(object):
             0x{assert_pc:08x},
             String::from("{self.assert_code.source_code_instruction}"),
             String::from("{self.assert_code.source_code_operands}"),
+            vec![{arrange_code_words_hex}]
             ),
             get_disassembly_result
         );\n""")
@@ -514,6 +516,14 @@ def format_bytes_as_hex(bytes: list[int]):
         byte_hex = f"0x{format(byte, '02X')}"
         bytes_hex.append(byte_hex)
     bytes_hex_str = ', '.join(bytes_hex)
+    return bytes_hex_str
+
+def format_bytes_as_hex_words(bytes: list[int]):
+    bytes_hex = []
+    for byte_a, byte_b in zip(bytes[::2], bytes[1::2]):
+        byte_hex = f"0x{format(byte_a, '02X')}{format(byte_b, '02X')}"
+        bytes_hex.append(byte_hex)
+    bytes_hex_str = ','.join(bytes_hex)
     return bytes_hex_str
 
 def format_bytes_as_hex_amiga(bytes: list[int]):
@@ -1096,8 +1106,9 @@ def write_rust_mod_file(output_path_to_rust_test_mod_file: str, test_sets: list[
 
     # Write rust test file body
     for test_set in test_sets:
-        rust_test_file_name = os.path.splitext(os.path.basename(test_set.test_spec_file_path))[0]
-        file.write("pub mod " + rust_test_file_name + ";\n")
+        if len(test_set.test_cases) > 0:
+            rust_test_file_name = os.path.splitext(os.path.basename(test_set.test_spec_file_path))[0]
+            file.write("pub mod " + rust_test_file_name + ";\n")
     file.write("\n")
 
     # Close rust test file

@@ -226,7 +226,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("AND.B"),
-                String::from("(A0),D0")
+                String::from("(A0),D0"),
+                vec![0xc010]
             ),
             debug_result
         );
@@ -257,7 +258,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("AND.B"),
-                String::from("(A0),D0")
+                String::from("(A0),D0"),
+                vec![0xc010]
             ),
             debug_result
         );
@@ -288,7 +290,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("AND.B"),
-                String::from("(A0),D0")
+                String::from("(A0),D0"),
+                vec![0xc010]
             ),
             debug_result
         );
@@ -325,7 +328,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("AND.W"),
-                String::from("(A0),D0")
+                String::from("(A0),D0"),
+                vec![0xc050]
             ),
             debug_result
         );
@@ -356,7 +360,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("AND.W"),
-                String::from("(A0),D0")
+                String::from("(A0),D0"),
+                vec![0xc050]
             ),
             debug_result
         );
@@ -393,7 +398,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("AND.W"),
-                String::from("(A0),D0")
+                String::from("(A0),D0"),
+                vec![0xc050]
             ),
             debug_result
         );
@@ -430,7 +436,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("AND.L"),
-                String::from("(A0),D0")
+                String::from("(A0),D0"),
+                vec![0xc090]
             ),
             debug_result
         );
@@ -461,7 +468,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("AND.L"),
-                String::from("(A0),D0")
+                String::from("(A0),D0"),
+                vec![0xc090]
             ),
             debug_result
         );
@@ -498,7 +506,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("AND.L"),
-                String::from("(A0),D0")
+                String::from("(A0),D0"),
+                vec![0xc090]
             ),
             debug_result
         );
@@ -535,7 +544,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("AND.B"),
-                String::from("D0,(A0)")
+                String::from("D0,(A0)"),
+                vec![0xc110]
             ),
             debug_result
         );
@@ -566,7 +576,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("AND.B"),
-                String::from("D0,(A0)")
+                String::from("D0,(A0)"),
+                vec![0xc110]
             ),
             debug_result
         );
@@ -597,7 +608,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("AND.B"),
-                String::from("D0,(A0)")
+                String::from("D0,(A0)"),
+                vec![0xc110]
             ),
             debug_result
         );
@@ -634,7 +646,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("AND.W"),
-                String::from("D0,(A0)")
+                String::from("D0,(A0)"),
+                vec![0xc150]
             ),
             debug_result
         );
@@ -665,7 +678,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("AND.W"),
-                String::from("D0,(A0)")
+                String::from("D0,(A0)"),
+                vec![0xc150]
             ),
             debug_result
         );
@@ -702,7 +716,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("AND.W"),
-                String::from("D0,(A0)")
+                String::from("D0,(A0)"),
+                vec![0xc150]
             ),
             debug_result
         );
@@ -739,7 +754,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("AND.L"),
-                String::from("D0,(A0)")
+                String::from("D0,(A0)"),
+                vec![0xc190]
             ),
             debug_result
         );
@@ -770,7 +786,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("AND.L"),
-                String::from("D0,(A0)")
+                String::from("D0,(A0)"),
+                vec![0xc190]
             ),
             debug_result
         );
@@ -807,7 +824,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("AND.L"),
-                String::from("D0,(A0)")
+                String::from("D0,(A0)"),
+                vec![0xc190]
             ),
             debug_result
         );

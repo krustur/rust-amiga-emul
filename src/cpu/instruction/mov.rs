@@ -175,7 +175,8 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("MOVE.B"),
-                String::from("D0,($00090000).L")
+                String::from("D0,($00090000).L"),
+                vec![0x13c0, 0x0009, 0x0000]
             ),
             debug_result
         );
@@ -211,7 +212,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("MOVE.W"),
-                String::from("A0,D0")
+                String::from("A0,D0"),
+                vec![0x3008]
             ),
             debug_result
         );
@@ -251,7 +253,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("MOVEA.W"),
-                String::from("(A0),A1")
+                String::from("(A0),A1"),
+                vec![0x3250]
             ),
             debug_result
         );
@@ -288,7 +291,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("MOVE.B"),
-                String::from("(A1)+,(A2)")
+                String::from("(A1)+,(A2)"),
+                vec![0x1499]
             ),
             debug_result
         );
@@ -338,7 +342,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("MOVE.L"),
-                String::from("-(A2),(A3)+")
+                String::from("-(A2),(A3)+"),
+                vec![0x26e2]
             ),
             debug_result
         );
@@ -394,7 +399,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("MOVE.L"),
-                String::from("($7FF0,A3),-(A4)")
+                String::from("($7FF0,A3),-(A4)"),
+                vec![0x292b, 0x7ff0]
             ),
             debug_result
         );
@@ -455,7 +461,8 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("MOVE.L"),
-                String::from("($80,A4,D0.L*8),($8010,A5)")
+                String::from("($80,A4,D0.L*8),($8010,A5)"),
+                vec![0x2b74, 0x0e80, 0x8010]
             ),
             debug_result
         );
@@ -492,7 +499,8 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("MOVE.B"),
-                String::from("($9000).W,($7C,A6,D7.W)")
+                String::from("($9000).W,($7C,A6,D7.W)"),
+                vec![0x1db8, 0x9000, 0x707c]
             ),
             debug_result
         );
@@ -532,7 +540,8 @@ mod tests {
                 0xC00000,
                 0xC00008,
                 String::from("MOVE.B"),
-                String::from("($00C00008).L,($9000).W")
+                String::from("($00C00008).L,($9000).W"),
+                vec![0x11f9, 0x00c0, 0x0008, 0x9000]
             ),
             debug_result
         );
@@ -574,7 +583,8 @@ mod tests {
                 0xD00000,
                 0xD00008,
                 String::from("MOVE.W"),
-                String::from("($8000,PC),($00D00008).L")
+                String::from("($8000,PC),($00D00008).L"),
+                vec![0x33fa, 0x8000, 0x00d0, 0x0008]
             ),
             debug_result
         );
@@ -611,7 +621,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("MOVE.L"),
-                String::from("($80,PC,D5.L*4),D7")
+                String::from("($80,PC,D5.L*4),D7"),
+                vec![0x2e3b, 0x5c80]
             ),
             debug_result
         );
@@ -644,7 +655,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("MOVEA.W"),
-                String::from("#$0008,A0")
+                String::from("#$0008,A0"),
+                vec![0x307c, 0x0008]
             ),
             debug_result
         );

@@ -109,7 +109,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("BSR.B"),
-                String::from("$02 [$00C00004]")
+                String::from("$02 [$00C00004]"),
+                vec![0x6102]
             ),
             debug_result
         );
@@ -137,7 +138,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("BSR.B"),
-                String::from("$FC [$00BFFFFE]")
+                String::from("$FC [$00BFFFFE]"),
+                vec![0x61fc]
             ),
             debug_result
         );
@@ -167,7 +169,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("BSR.W"),
-                String::from("$0004 [$00C00006]")
+                String::from("$0004 [$00C00006]"),
+                vec![0x6100, 0x0004]
             ),
             debug_result
         );
@@ -195,7 +198,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("BSR.W"),
-                String::from("$FFFC [$00BFFFFE]")
+                String::from("$FFFC [$00BFFFFE]"),
+                vec![0x6100, 0xfffc]
             ),
             debug_result
         );
@@ -225,7 +229,8 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("BSR.L"),
-                String::from("$00000006 [$00C00008]")
+                String::from("$00000006 [$00C00008]"),
+                vec![0x61ff, 0x0000, 0x0006]
             ),
             debug_result
         );
@@ -253,7 +258,8 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("BSR.L"),
-                String::from("$FFFFFFFC [$00BFFFFE]")
+                String::from("$FFFFFFFC [$00BFFFFE]"),
+                vec![0x61ff, 0xffff, 0xfffc]
             ),
             debug_result
         );

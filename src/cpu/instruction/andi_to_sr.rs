@@ -77,7 +77,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("ANDI.W"),
-                String::from("#$0000,SR")
+                String::from("#$0000,SR"),
+                vec![0x027c, 0x0000]
             ),
             debug_result
         );
@@ -106,7 +107,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("ANDI.W"),
-                String::from("#$FFFF,SR")
+                String::from("#$FFFF,SR"),
+                vec![0x027c, 0xffff]
             ),
             debug_result
         );
@@ -142,7 +144,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("ANDI.W"),
-                String::from("#$0000,SR")
+                String::from("#$0000,SR"),
+                vec![0x027c, 0x0000]
             ),
             debug_result
         );

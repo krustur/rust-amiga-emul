@@ -140,7 +140,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("BCC.B"),
-                String::from("$06 [$00C00008]")
+                String::from("$06 [$00C00008]"),
+                vec![0x6406]
             ),
             debug_result
         );
@@ -165,7 +166,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("BCC.B"),
-                String::from("$06 [$00C00008]")
+                String::from("$06 [$00C00008]"),
+                vec![0x6406]
             ),
             debug_result
         );
@@ -190,7 +192,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("BEQ.B"),
-                String::from("$FA [$00BFFFFC]")
+                String::from("$FA [$00BFFFFC]"),
+                vec![0x67fa]
             ),
             debug_result
         );
@@ -217,7 +220,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("BEQ.W"),
-                String::from("$FFFA [$00BFFFFC]")
+                String::from("$FFFA [$00BFFFFC]"),
+                vec![0x6700, 0xfffa]
             ),
             debug_result
         );
@@ -242,7 +246,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("BEQ.W"),
-                String::from("$0060 [$00C00062]")
+                String::from("$0060 [$00C00062]"),
+                vec![0x6700, 0x0060]
             ),
             debug_result
         );
@@ -265,7 +270,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("BEQ.W"),
-                String::from("$FFFA [$00BFFFFC]")
+                String::from("$FFFA [$00BFFFFC]"),
+                vec![0x6700, 0xfffa]
             ),
             debug_result
         );
@@ -292,7 +298,8 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("BGT.L"),
-                String::from("$FFFFFFFA [$00BFFFFC]")
+                String::from("$FFFFFFFA [$00BFFFFC]"),
+                vec![0x6eff, 0xffff, 0xfffa]
             ),
             debug_result
         );
@@ -315,7 +322,8 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("BGT.L"),
-                String::from("$00008000 [$00C08002]")
+                String::from("$00008000 [$00C08002]"),
+                vec![0x6eff, 0x0000, 0x8000]
             ),
             debug_result
         );
@@ -340,7 +348,8 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("BGT.L"),
-                String::from("$00008000 [$00C08002]")
+                String::from("$00008000 [$00C08002]"),
+                vec![0x6eff, 0x0000, 0x8000]
             ),
             debug_result
         );

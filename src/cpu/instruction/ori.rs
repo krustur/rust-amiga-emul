@@ -167,7 +167,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("ORI.B"),
-                String::from("#$55,D0")
+                String::from("#$55,D0"),
+                vec![0x0000, 0x0055]
             ),
             debug_result
         );
@@ -203,7 +204,8 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("ORI.B"),
-                String::from("#$80,($4000).W")
+                String::from("#$80,($4000).W"),
+                vec![0x0038, 0x0080, 0x4000]
             ),
             debug_result
         );
@@ -238,7 +240,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("ORI.W"),
-                String::from("#$6655,D0")
+                String::from("#$6655,D0"),
+                vec![0x0040, 0x6655]
             ),
             debug_result
         );
@@ -274,7 +277,8 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("ORI.W"),
-                String::from("#$8080,($7000).W")
+                String::from("#$8080,($7000).W"),
+                vec![0x0078, 0x8080, 0x7000]
             ),
             debug_result
         );
@@ -309,7 +313,8 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("ORI.L"),
-                String::from("#$11336655,D0")
+                String::from("#$11336655,D0"),
+                vec![0x0080, 0x1133, 0x6655]
             ),
             debug_result
         );
@@ -345,7 +350,8 @@ mod tests {
                 0xC00000,
                 0xC00008,
                 String::from("ORI.L"),
-                String::from("#$F0208080,($7000).W")
+                String::from("#$F0208080,($7000).W"),
+                vec![0x00b8, 0xf020, 0x8080, 0x7000]
             ),
             debug_result
         );

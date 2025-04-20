@@ -69,7 +69,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("RTS"),
-                String::from("")
+                String::from(""),
+                vec![0x4e75]
             ),
             debug_result
         );
@@ -110,7 +111,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("RTS"),
-                String::from("")
+                String::from(""),
+                vec![0x4e75]
             ),
             debug_result
         );

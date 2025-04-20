@@ -40,7 +40,7 @@ fn eor_l__data_register_to_ea__x_unaffected_still_set() {
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     mem.add_range(Rc::new(RefCell::new(arrange_mem_00034440)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x12121212, 0x34343434, 0x56565656, 0x78787878, 0x90909090, 0xabababab, 0xcdcdcdcd, 0xefefefef);
@@ -60,6 +60,7 @@ fn eor_l__data_register_to_ea__x_unaffected_still_set() {
             0x00040004,
             String::from("EOR.L"),
             String::from("D1,($0100,A1)"),
+            vec![0xB3A9,0x0100]
             ),
             get_disassembly_result
         );
@@ -101,7 +102,7 @@ fn eor_l__data_register_to_ea__x_unaffected_still_clear() {
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     mem.add_range(Rc::new(RefCell::new(arrange_mem_00034440)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x12121212, 0x34343434, 0x56565656, 0x78787878, 0x90909090, 0xabababab, 0xcdcdcdcd, 0xefefefef);
@@ -120,6 +121,7 @@ fn eor_l__data_register_to_ea__x_unaffected_still_clear() {
             0x00040004,
             String::from("EOR.L"),
             String::from("D1,($0100,A1)"),
+            vec![0xB3A9,0x0100]
             ),
             get_disassembly_result
         );
@@ -159,7 +161,7 @@ fn eor_l__data_register_to_ea__n_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x12121212, 0x34343434, 0x56565656, 0x78787878, 0x90909090, 0x80808080, 0x40404040, 0xefefefef);
@@ -177,6 +179,7 @@ fn eor_l__data_register_to_ea__n_set() {
             0x00040002,
             String::from("EOR.L"),
             String::from("D5,D6"),
+            vec![0xBB86]
             ),
             get_disassembly_result
         );
@@ -213,7 +216,7 @@ fn eor_l__data_register_to_ea__n_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x12121212, 0x34343434, 0x56565656, 0x78787878, 0x90909090, 0x03030303, 0x42424242, 0xefefefef);
@@ -231,6 +234,7 @@ fn eor_l__data_register_to_ea__n_clear() {
             0x00040002,
             String::from("EOR.L"),
             String::from("D5,D6"),
+            vec![0xBB86]
             ),
             get_disassembly_result
         );
@@ -267,7 +271,7 @@ fn eor_l__data_register_to_ea__z_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x12121212, 0x90909090, 0x56565656, 0x78787878, 0x90909090, 0x03030303, 0x42424242, 0xefefefef);
@@ -287,6 +291,7 @@ fn eor_l__data_register_to_ea__z_set() {
             0x00040002,
             String::from("EOR.L"),
             String::from("D4,D1"),
+            vec![0xB981]
             ),
             get_disassembly_result
         );
@@ -323,7 +328,7 @@ fn eor_l__data_register_to_ea__z_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x12121212, 0x91909090, 0x56565656, 0x78787878, 0x90909090, 0x03030303, 0x42424242, 0xefefefef);
@@ -344,6 +349,7 @@ fn eor_l__data_register_to_ea__z_clear() {
             0x00040002,
             String::from("EOR.L"),
             String::from("D4,D1"),
+            vec![0xB981]
             ),
             get_disassembly_result
         );
@@ -380,7 +386,7 @@ fn eor_l__data_register_to_ea__vc_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x12121212, 0x91909090, 0x56565656, 0x78787878, 0x90009001, 0x03030303, 0x42424242, 0xefefefef);
@@ -399,6 +405,7 @@ fn eor_l__data_register_to_ea__vc_clear() {
             0x00040002,
             String::from("EOR.L"),
             String::from("D4,D1"),
+            vec![0xB981]
             ),
             get_disassembly_result
         );
@@ -435,7 +442,7 @@ fn eor_w__data_register_to_ea__x_unaffected_still_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x12121212, 0x34343434, 0x56565656, 0x78787878, 0x90909090, 0xabababab, 0xcdcdcdcd, 0xefefefef);
@@ -457,6 +464,7 @@ fn eor_w__data_register_to_ea__x_unaffected_still_set() {
             0x00040002,
             String::from("EOR.W"),
             String::from("D7,D6"),
+            vec![0xBF46]
             ),
             get_disassembly_result
         );
@@ -493,7 +501,7 @@ fn eor_w__data_register_to_ea__x_unaffected_still_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x12121212, 0x34343434, 0x56565656, 0x78787878, 0x90909090, 0xabababab, 0xcdcdcdcd, 0xefefefef);
@@ -514,6 +522,7 @@ fn eor_w__data_register_to_ea__x_unaffected_still_clear() {
             0x00040002,
             String::from("EOR.W"),
             String::from("D7,D6"),
+            vec![0xBF46]
             ),
             get_disassembly_result
         );
@@ -550,7 +559,7 @@ fn eor_w__data_register_to_ea__n_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x12121212, 0x34343434, 0x56565656, 0x78787878, 0x90909090, 0xabab000c, 0xcdcdc00c, 0xefefefef);
@@ -570,6 +579,7 @@ fn eor_w__data_register_to_ea__n_set() {
             0x00040002,
             String::from("EOR.W"),
             String::from("D5,D6"),
+            vec![0xBB46]
             ),
             get_disassembly_result
         );
@@ -606,7 +616,7 @@ fn eor_w__data_register_to_ea__n_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x12121212, 0x34343434, 0x56565656, 0x78787878, 0x90909090, 0xabab800c, 0xcdcdc00c, 0xefefefef);
@@ -627,6 +637,7 @@ fn eor_w__data_register_to_ea__n_clear() {
             0x00040002,
             String::from("EOR.W"),
             String::from("D5,D6"),
+            vec![0xBB46]
             ),
             get_disassembly_result
         );
@@ -663,7 +674,7 @@ fn eor_w__data_register_to_ea__z_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x12121212, 0x34343434, 0x56565656, 0x78787878, 0x90909090, 0xababc00c, 0xcdcdc00c, 0xefefefef);
@@ -681,6 +692,7 @@ fn eor_w__data_register_to_ea__z_set() {
             0x00040002,
             String::from("EOR.W"),
             String::from("D5,D6"),
+            vec![0xBB46]
             ),
             get_disassembly_result
         );
@@ -717,7 +729,7 @@ fn eor_w__data_register_to_ea__z_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x12121212, 0x34343434, 0x56565656, 0x78787878, 0x90909090, 0xabab8004, 0xcdcdc00c, 0xefefefef);
@@ -738,6 +750,7 @@ fn eor_w__data_register_to_ea__z_clear() {
             0x00040002,
             String::from("EOR.W"),
             String::from("D5,D6"),
+            vec![0xBB46]
             ),
             get_disassembly_result
         );
@@ -774,7 +787,7 @@ fn eor_w__data_register_to_ea__vc_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x12121212, 0x34343434, 0x56565656, 0x78787878, 0x90909090, 0xababffff, 0xcdcdc33c, 0xefefefef);
@@ -795,6 +808,7 @@ fn eor_w__data_register_to_ea__vc_clear() {
             0x00040002,
             String::from("EOR.W"),
             String::from("D5,D6"),
+            vec![0xBB46]
             ),
             get_disassembly_result
         );
@@ -831,7 +845,7 @@ fn eor_b__data_register_to_ea__x_unaffected_still_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x12121212, 0x34343434, 0x56565656, 0x78787878, 0x90909090, 0xababc080, 0xcdcdc040, 0xefefefef);
@@ -849,6 +863,7 @@ fn eor_b__data_register_to_ea__x_unaffected_still_set() {
             0x00040002,
             String::from("EOR.B"),
             String::from("D3,D0"),
+            vec![0xB700]
             ),
             get_disassembly_result
         );
@@ -885,7 +900,7 @@ fn eor_b__data_register_to_ea__x_unaffected_still_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x12121212, 0x34343434, 0x56565656, 0x78787878, 0x90909090, 0xababc080, 0xcdcdc040, 0xefefefef);
@@ -903,6 +918,7 @@ fn eor_b__data_register_to_ea__x_unaffected_still_clear() {
             0x00040002,
             String::from("EOR.B"),
             String::from("D3,D0"),
+            vec![0xB700]
             ),
             get_disassembly_result
         );
@@ -939,7 +955,7 @@ fn eor_b__data_register_to_ea__n_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x12121212, 0x34343434, 0x56565656, 0x78787878, 0x90909090, 0xababc080, 0xcdcdc040, 0xefefefef);
@@ -957,6 +973,7 @@ fn eor_b__data_register_to_ea__n_set() {
             0x00040002,
             String::from("EOR.B"),
             String::from("D5,D6"),
+            vec![0xBB06]
             ),
             get_disassembly_result
         );
@@ -993,7 +1010,7 @@ fn eor_b__data_register_to_ea__n_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x12121212, 0x34343434, 0x56565656, 0x78787878, 0x90909090, 0xababc080, 0xcdcdc0c0, 0xefefefef);
@@ -1011,6 +1028,7 @@ fn eor_b__data_register_to_ea__n_clear() {
             0x00040002,
             String::from("EOR.B"),
             String::from("D5,D6"),
+            vec![0xBB06]
             ),
             get_disassembly_result
         );
@@ -1047,7 +1065,7 @@ fn eor_b__data_register_to_ea__z_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x12121212, 0x34343434, 0x56565656, 0x78787812, 0x90909090, 0xababc080, 0xcdcdc040, 0xefefefef);
@@ -1065,6 +1083,7 @@ fn eor_b__data_register_to_ea__z_set() {
             0x00040002,
             String::from("EOR.B"),
             String::from("D3,D0"),
+            vec![0xB700]
             ),
             get_disassembly_result
         );
@@ -1101,7 +1120,7 @@ fn eor_b__data_register_to_ea__z_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x12121232, 0x34343434, 0x56565656, 0x78787813, 0x90909090, 0xababc080, 0xcdcdc040, 0xefefefef);
@@ -1119,6 +1138,7 @@ fn eor_b__data_register_to_ea__z_clear() {
             0x00040002,
             String::from("EOR.B"),
             String::from("D3,D0"),
+            vec![0xB700]
             ),
             get_disassembly_result
         );
@@ -1155,7 +1175,7 @@ fn eor_b__data_register_to_ea__vc_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x12121212, 0x34343434, 0x56565656, 0x78787878, 0x90909090, 0xababc080, 0xcdcdc040, 0xefefefef);
@@ -1175,6 +1195,7 @@ fn eor_b__data_register_to_ea__vc_clear() {
             0x00040002,
             String::from("EOR.B"),
             String::from("D5,D6"),
+            vec![0xBB06]
             ),
             get_disassembly_result
         );

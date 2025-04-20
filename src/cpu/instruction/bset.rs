@@ -270,7 +270,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("BSET.L"),
-                String::from("#$00,D1")
+                String::from("#$00,D1"),
+                vec![0x08c1, 0x0000]
             ),
             debug_result
         );
@@ -300,7 +301,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("BSET.L"),
-                String::from("#$21,D2")
+                String::from("#$21,D2"),
+                vec![0x08c2, 0x0021]
             ),
             debug_result
         );
@@ -337,7 +339,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("BSET.L"),
-                String::from("D0,D3")
+                String::from("D0,D3"),
+                vec![0x01c3]
             ),
             debug_result
         );
@@ -368,7 +371,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("BSET.L"),
-                String::from("D7,D6")
+                String::from("D7,D6"),
+                vec![0x0fc6]
             ),
             debug_result
         );
@@ -406,7 +410,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("BSET.B"),
-                String::from("#$08,(A0)")
+                String::from("#$08,(A0)"),
+                vec![0x08d0, 0x0008]
             ),
             debug_result
         );
@@ -436,7 +441,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("BSET.B"),
-                String::from("#$09,(A0)")
+                String::from("#$09,(A0)"),
+                vec![0x08d0, 0x0009]
             ),
             debug_result
         );
@@ -472,7 +478,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("BSET.B"),
-                String::from("D5,(A0)")
+                String::from("D5,(A0)"),
+                vec![0x0bd0]
             ),
             debug_result
         );
@@ -503,7 +510,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("BSET.B"),
-                String::from("D5,(A0)")
+                String::from("D5,(A0)"),
+                vec![0x0bd0]
             ),
             debug_result
         );

@@ -119,7 +119,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("CLR.B"),
-                String::from("($000A,A3)")
+                String::from("($000A,A3)"),
+                vec![0x422b, 0x000a]
             ),
             debug_result
         );
@@ -150,7 +151,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("CLR.W"),
-                String::from("($000A,A3)")
+                String::from("($000A,A3)"),
+                vec![0x426b, 0x000a]
             ),
             debug_result
         );
@@ -181,7 +183,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("CLR.L"),
-                String::from("($000A,A3)")
+                String::from("($000A,A3)"),
+                vec![0x42ab, 0x000a]
             ),
             debug_result
         );

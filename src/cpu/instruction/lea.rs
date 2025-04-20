@@ -101,7 +101,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("LEA"),
-                String::from("($0500).W,A0")
+                String::from("($0500).W,A0"),
+                vec![0x41f8, 0x0500]
             ),
             debug_result
         );
@@ -133,7 +134,8 @@ mod tests {
                 0xC00000,
                 0xC00006,
                 String::from("LEA"),
-                String::from("($00F80000).L,A1")
+                String::from("($00F80000).L,A1"),
+                vec![0x43f9, 0x00f8, 0x0000]
             ),
             debug_result
         );

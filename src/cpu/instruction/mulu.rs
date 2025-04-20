@@ -112,7 +112,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("MULU.W"),
-                String::from("#$1234,D0")
+                String::from("#$1234,D0"),
+                vec![0xc0fc, 0x1234]
             ),
             debug_result
         );
@@ -147,7 +148,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("MULU.W"),
-                String::from("#$1234,D0")
+                String::from("#$1234,D0"),
+                vec![0xc0fc, 0x1234]
             ),
             debug_result
         );
@@ -181,7 +183,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("MULU.W"),
-                String::from("#$F000,D0")
+                String::from("#$F000,D0"),
+                vec![0xc0fc, 0xf000]
             ),
             debug_result
         );

@@ -98,7 +98,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("MOVE.L"),
-                String::from("USP,A6")
+                String::from("USP,A6"),
+                vec![0x4e6e]
             ),
             debug_result
         );
@@ -133,7 +134,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("MOVE.L"),
-                String::from("A1,USP")
+                String::from("A1,USP"),
+                vec![0x4e61]
             ),
             debug_result
         );
@@ -168,7 +170,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("MOVE.L"),
-                String::from("A1,USP")
+                String::from("A1,USP"),
+                vec![0x4e61]
             ),
             debug_result
         );

@@ -138,7 +138,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("EXG"),
-                String::from("A5,A6")
+                String::from("A5,A6"),
+                vec![0xcb4e]
             ),
             debug_result
         );
@@ -175,7 +176,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("EXG"),
-                String::from("D0,D7")
+                String::from("D0,D7"),
+                vec![0xc147]
             ),
             debug_result
         );
@@ -212,7 +214,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("EXG"),
-                String::from("D3,A6")
+                String::from("D3,A6"),
+                vec![0xc78e]
             ),
             debug_result
         );

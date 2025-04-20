@@ -95,7 +95,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("JMP"),
-                String::from("($0004).W")
+                String::from("($0004).W"),
+                vec![0x4ef8, 0x0004]
             ),
             debug_result
         );
@@ -130,7 +131,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("JMP"),
-                String::from("(A4)")
+                String::from("(A4)"),
+                vec![0x4ed4]
             ),
             debug_result
         );

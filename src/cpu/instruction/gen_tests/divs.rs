@@ -38,7 +38,7 @@ fn divs_w__data_register_by_ea__x_unaffected_still_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000002, 0x00008000, 0x555555d2, 0x000000d3, 0x000000d4, 0x00000100, 0x000000d6, 0x000000d7);
@@ -60,6 +60,7 @@ fn divs_w__data_register_by_ea__x_unaffected_still_set() {
             0x00040002,
             String::from("DIVS.W"),
             String::from("D0,D1"),
+            vec![0x83C0]
             ),
             get_disassembly_result
         );
@@ -96,7 +97,7 @@ fn divs_w__data_register_by_ea__x_unaffected_still_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000002, 0x0fff8000, 0x555555d2, 0x000000d3, 0x000000d4, 0x00000100, 0x000000d6, 0x000000d7);
@@ -117,6 +118,7 @@ fn divs_w__data_register_by_ea__x_unaffected_still_clear() {
             0x00040002,
             String::from("DIVS.W"),
             String::from("D0,D1"),
+            vec![0x83C0]
             ),
             get_disassembly_result
         );
@@ -153,7 +155,7 @@ fn divs_w__data_register_by_ea__n_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x0000ff6a, 0x000001c2, 0x555555d2, 0x000000d3, 0x000000d4, 0x00000100, 0x000000d6, 0x000000d7);
@@ -173,6 +175,7 @@ fn divs_w__data_register_by_ea__n_set() {
             0x00040002,
             String::from("DIVS.W"),
             String::from("D0,D1"),
+            vec![0x83C0]
             ),
             get_disassembly_result
         );
@@ -209,7 +212,7 @@ fn divs_w__data_register_by_ea__n_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x0000ff6a, 0xffffff6a, 0x555555d2, 0x000000d3, 0x000000d4, 0x00000100, 0x000000d6, 0x000000d7);
@@ -230,6 +233,7 @@ fn divs_w__data_register_by_ea__n_clear() {
             0x00040002,
             String::from("DIVS.W"),
             String::from("D0,D1"),
+            vec![0x83C0]
             ),
             get_disassembly_result
         );
@@ -266,7 +270,7 @@ fn divs_w__data_register_by_ea__z_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x0000ff6a, 0xd1d1d1d1, 0x555555d2, 0x000000d3, 0x000000d4, 0x00000100, 0x000000d6, 0x00000000);
@@ -286,6 +290,7 @@ fn divs_w__data_register_by_ea__z_set() {
             0x00040004,
             String::from("DIVS.W"),
             String::from("#$1234,D7"),
+            vec![0x8FFC,0x1234]
             ),
             get_disassembly_result
         );
@@ -322,7 +327,7 @@ fn divs_w__data_register_by_ea__z_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x0000ff6a, 0xd1d1d1d1, 0x555555d2, 0x000000d3, 0x000000d4, 0x00000100, 0x000000d6, 0x00005678);
@@ -343,6 +348,7 @@ fn divs_w__data_register_by_ea__z_clear() {
             0x00040004,
             String::from("DIVS.W"),
             String::from("#$1234,D7"),
+            vec![0x8FFC,0x1234]
             ),
             get_disassembly_result
         );
@@ -379,7 +385,7 @@ fn divs_w__data_register_by_ea__v_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x0000ff6a, 0xd1d1d1d1, 0x555555d2, 0x000000d3, 0x000000d4, 0x00000100, 0x000000d6, 0x56780000);
@@ -400,6 +406,7 @@ fn divs_w__data_register_by_ea__v_set() {
             0x00040004,
             String::from("DIVS.W"),
             String::from("#$1234,D7"),
+            vec![0x8FFC,0x1234]
             ),
             get_disassembly_result
         );
@@ -437,7 +444,7 @@ fn divs_w__data_register_by_ea__v_clear() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x0000ff6a, 0xd1d1d1d1, 0x555555d2, 0x000000d3, 0x000000d4, 0x00000100, 0x000000d6, 0x00056780);
@@ -459,6 +466,7 @@ fn divs_w__data_register_by_ea__v_clear() {
             0x00040004,
             String::from("DIVS.W"),
             String::from("#$8234,D7"),
+            vec![0x8FFC,0x8234]
             ),
             get_disassembly_result
         );

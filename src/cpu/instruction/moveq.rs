@@ -109,7 +109,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("MOVEQ"),
-                String::from("#29,D0")
+                String::from("#29,D0"),
+                vec![0x701d]
             ),
             debug_result
         );
@@ -141,7 +142,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("MOVEQ"),
-                String::from("#-1,D1")
+                String::from("#-1,D1"),
+                vec![0x72ff]
             ),
             debug_result
         );
@@ -172,7 +174,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("MOVEQ"),
-                String::from("#0,D2")
+                String::from("#0,D2"),
+                vec![0x7400]
             ),
             debug_result
         );

@@ -398,6 +398,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.B"),
                 String::from("#$06,D0"),
+                vec![0xed08]
             ),
             debug_result
         );
@@ -434,6 +435,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.B"),
                 String::from("#$06,D0"),
+                vec![0xed08]
             ),
             debug_result
         );
@@ -470,6 +472,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.B"),
                 String::from("#$06,D0"),
+                vec![0xed08]
             ),
             debug_result
         );
@@ -506,6 +509,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.B"),
                 String::from("#$01,D7"),
+                vec![0xe30f]
             ),
             debug_result
         );
@@ -542,6 +546,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.W"),
                 String::from("#$01,D6"),
+                vec![0xe34e]
             ),
             debug_result
         );
@@ -578,6 +583,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.W"),
                 String::from("#$06,D0"),
+                vec![0xed48]
             ),
             debug_result
         );
@@ -614,6 +620,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.W"),
                 String::from("#$06,D0"),
+                vec![0xed48]
             ),
             debug_result
         );
@@ -650,6 +657,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.W"),
                 String::from("#$01,D7"),
+                vec![0xe34f]
             ),
             debug_result
         );
@@ -686,6 +694,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.L"),
                 String::from("#$01,D6"),
+                vec![0xe38e]
             ),
             debug_result
         );
@@ -722,6 +731,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.L"),
                 String::from("#$06,D0"),
+                vec![0xed88]
             ),
             debug_result
         );
@@ -758,6 +768,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.L"),
                 String::from("#$06,D0"),
+                vec![0xed88]
             ),
             debug_result
         );
@@ -794,6 +805,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.L"),
                 String::from("#$01,D7"),
+                vec![0xe38f]
             ),
             debug_result
         );
@@ -830,6 +842,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.B"),
                 String::from("#$02,D2"),
+                vec![0xe40a]
             ),
             debug_result
         );
@@ -866,6 +879,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.B"),
                 String::from("#$02,D2"),
+                vec![0xe40a]
             ),
             debug_result
         );
@@ -902,6 +916,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.B"),
                 String::from("#$01,D2"),
+                vec![0xe20a]
             ),
             debug_result
         );
@@ -938,6 +953,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.W"),
                 String::from("#$01,D3"),
+                vec![0xe24b]
             ),
             debug_result
         );
@@ -974,6 +990,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.W"),
                 String::from("#$08,D3"),
+                vec![0xe04b]
             ),
             debug_result
         );
@@ -1010,6 +1027,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.W"),
                 String::from("#$02,D3"),
+                vec![0xe44b]
             ),
             debug_result
         );
@@ -1046,6 +1064,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.L"),
                 String::from("#$02,D4"),
+                vec![0xe48c]
             ),
             debug_result
         );
@@ -1082,6 +1101,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.L"),
                 String::from("#$08,D4"),
+                vec![0xe08c]
             ),
             debug_result
         );
@@ -1118,6 +1138,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.L"),
                 String::from("#$08,D4"),
+                vec![0xe08c]
             ),
             debug_result
         );
@@ -1157,6 +1178,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.B"),
                 String::from("D7,D0"),
+                vec![0xef28]
             ),
             debug_result
         );
@@ -1194,6 +1216,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.B"),
                 String::from("D7,D0"),
+                vec![0xef28]
             ),
             debug_result
         );
@@ -1231,6 +1254,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.B"),
                 String::from("D7,D0"),
+                vec![0xef28]
             ),
             debug_result
         );
@@ -1268,6 +1292,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.B"),
                 String::from("D7,D0"),
+                vec![0xef28]
             ),
             debug_result
         );
@@ -1304,6 +1329,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.B"),
                 String::from("D7,D0"),
+                vec![0xef28]
             ),
             debug_result
         );
@@ -1341,6 +1367,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.B"),
                 String::from("D7,D0"),
+                vec![0xef28]
             ),
             debug_result
         );
@@ -1378,6 +1405,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.B"),
                 String::from("D7,D0"),
+                vec![0xef28]
             ),
             debug_result
         );
@@ -1415,6 +1443,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.B"),
                 String::from("D7,D0"),
+                vec![0xef28]
             ),
             debug_result
         );
@@ -1452,6 +1481,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.W"),
                 String::from("D6,D1"),
+                vec![0xed69]
             ),
             debug_result
         );
@@ -1489,6 +1519,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.W"),
                 String::from("D6,D1"),
+                vec![0xed69]
             ),
             debug_result
         );
@@ -1526,6 +1557,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.W"),
                 String::from("D6,D1"),
+                vec![0xed69]
             ),
             debug_result
         );
@@ -1563,6 +1595,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.W"),
                 String::from("D6,D1"),
+                vec![0xed69]
             ),
             debug_result
         );
@@ -1599,6 +1632,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.W"),
                 String::from("D6,D1"),
+                vec![0xed69]
             ),
             debug_result
         );
@@ -1636,6 +1670,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.W"),
                 String::from("D6,D1"),
+                vec![0xed69]
             ),
             debug_result
         );
@@ -1673,6 +1708,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.W"),
                 String::from("D6,D1"),
+                vec![0xed69]
             ),
             debug_result
         );
@@ -1710,6 +1746,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.W"),
                 String::from("D6,D1"),
+                vec![0xed69]
             ),
             debug_result
         );
@@ -1747,6 +1784,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.L"),
                 String::from("D5,D2"),
+                vec![0xebaa]
             ),
             debug_result
         );
@@ -1784,6 +1822,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.L"),
                 String::from("D5,D2"),
+                vec![0xebaa]
             ),
             debug_result
         );
@@ -1821,6 +1860,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.L"),
                 String::from("D5,D2"),
+                vec![0xebaa]
             ),
             debug_result
         );
@@ -1858,6 +1898,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.L"),
                 String::from("D5,D2"),
+                vec![0xebaa]
             ),
             debug_result
         );
@@ -1894,6 +1935,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.L"),
                 String::from("D5,D2"),
+                vec![0xebaa]
             ),
             debug_result
         );
@@ -1931,6 +1973,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.L"),
                 String::from("D5,D2"),
+                vec![0xebaa]
             ),
             debug_result
         );
@@ -1968,6 +2011,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.L"),
                 String::from("D5,D2"),
+                vec![0xebaa]
             ),
             debug_result
         );
@@ -2005,6 +2049,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.L"),
                 String::from("D5,D2"),
+                vec![0xebaa]
             ),
             debug_result
         );
@@ -2042,6 +2087,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.B"),
                 String::from("D7,D0"),
+                vec![0xee28]
             ),
             debug_result
         );
@@ -2079,6 +2125,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.B"),
                 String::from("D7,D0"),
+                vec![0xee28]
             ),
             debug_result
         );
@@ -2116,6 +2163,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.B"),
                 String::from("D7,D0"),
+                vec![0xee28]
             ),
             debug_result
         );
@@ -2152,6 +2200,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.B"),
                 String::from("D7,D0"),
+                vec![0xee28]
             ),
             debug_result
         );
@@ -2189,6 +2238,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.B"),
                 String::from("D7,D0"),
+                vec![0xee28]
             ),
             debug_result
         );
@@ -2226,6 +2276,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.B"),
                 String::from("D7,D0"),
+                vec![0xee28]
             ),
             debug_result
         );
@@ -2263,6 +2314,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.B"),
                 String::from("D7,D0"),
+                vec![0xee28]
             ),
             debug_result
         );
@@ -2300,6 +2352,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.W"),
                 String::from("D6,D1"),
+                vec![0xec69]
             ),
             debug_result
         );
@@ -2337,6 +2390,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.W"),
                 String::from("D6,D1"),
+                vec![0xec69]
             ),
             debug_result
         );
@@ -2374,6 +2428,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.W"),
                 String::from("D6,D1"),
+                vec![0xec69]
             ),
             debug_result
         );
@@ -2410,6 +2465,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.W"),
                 String::from("D6,D1"),
+                vec![0xec69]
             ),
             debug_result
         );
@@ -2447,6 +2503,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.W"),
                 String::from("D6,D1"),
+                vec![0xec69]
             ),
             debug_result
         );
@@ -2484,6 +2541,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.W"),
                 String::from("D6,D1"),
+                vec![0xec69]
             ),
             debug_result
         );
@@ -2521,6 +2579,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.W"),
                 String::from("D6,D1"),
+                vec![0xec69]
             ),
             debug_result
         );
@@ -2558,6 +2617,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.L"),
                 String::from("D5,D2"),
+                vec![0xeaaa]
             ),
             debug_result
         );
@@ -2595,6 +2655,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.L"),
                 String::from("D5,D2"),
+                vec![0xeaaa]
             ),
             debug_result
         );
@@ -2632,6 +2693,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.L"),
                 String::from("D5,D2"),
+                vec![0xeaaa]
             ),
             debug_result
         );
@@ -2668,6 +2730,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.L"),
                 String::from("D5,D2"),
+                vec![0xeaaa]
             ),
             debug_result
         );
@@ -2705,6 +2768,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.L"),
                 String::from("D5,D2"),
+                vec![0xeaaa]
             ),
             debug_result
         );
@@ -2742,6 +2806,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.L"),
                 String::from("D5,D2"),
+                vec![0xeaaa]
             ),
             debug_result
         );
@@ -2779,6 +2844,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.L"),
                 String::from("D5,D2"),
+                vec![0xeaaa]
             ),
             debug_result
         );
@@ -2817,6 +2883,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.W"),
                 String::from("#$01,-(A0)"),
+                vec![0xe3e0]
             ),
             debug_result
         );
@@ -2854,6 +2921,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.W"),
                 String::from("#$01,-(A0)"),
+                vec![0xe3e0]
             ),
             debug_result
         );
@@ -2891,6 +2959,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.W"),
                 String::from("#$01,-(A0)"),
+                vec![0xe3e0]
             ),
             debug_result
         );
@@ -2928,6 +2997,7 @@ mod tests {
                 0xC00002,
                 String::from("LSL.W"),
                 String::from("#$01,-(A0)"),
+                vec![0xe3e0]
             ),
             debug_result
         );
@@ -2965,6 +3035,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.W"),
                 String::from("#$01,(A6)+"),
+                vec![0xe2de]
             ),
             debug_result
         );
@@ -3002,6 +3073,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.W"),
                 String::from("#$01,(A6)+"),
+                vec![0xe2de]
             ),
             debug_result
         );
@@ -3039,6 +3111,7 @@ mod tests {
                 0xC00002,
                 String::from("LSR.W"),
                 String::from("#$01,(A6)+"),
+                vec![0xe2de]
             ),
             debug_result
         );

@@ -219,7 +219,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.B"),
-                String::from("D0,D1")
+                String::from("D0,D1"),
+                vec![0x9300]
             ),
             debug_result
         );
@@ -251,7 +252,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.B"),
-                String::from("D0,D1")
+                String::from("D0,D1"),
+                vec![0x9300]
             ),
             debug_result
         );
@@ -283,7 +285,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.B"),
-                String::from("D0,D1")
+                String::from("D0,D1"),
+                vec![0x9300]
             ),
             debug_result
         );
@@ -315,7 +318,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.B"),
-                String::from("D0,D1")
+                String::from("D0,D1"),
+                vec![0x9300]
             ),
             debug_result
         );
@@ -347,7 +351,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.B"),
-                String::from("D0,D1")
+                String::from("D0,D1"),
+                vec![0x9300]
             ),
             debug_result
         );
@@ -379,7 +384,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.B"),
-                String::from("D0,D1")
+                String::from("D0,D1"),
+                vec![0x9300]
             ),
             debug_result
         );
@@ -411,7 +417,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.B"),
-                String::from("D0,D1")
+                String::from("D0,D1"),
+                vec![0x9300]
             ),
             debug_result
         );
@@ -443,7 +450,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.B"),
-                String::from("D0,D1")
+                String::from("D0,D1"),
+                vec![0x9300]
             ),
             debug_result
         );
@@ -480,7 +488,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.W"),
-                String::from("D2,D3")
+                String::from("D2,D3"),
+                vec![0x9742]
             ),
             debug_result
         );
@@ -512,7 +521,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.W"),
-                String::from("D2,D3")
+                String::from("D2,D3"),
+                vec![0x9742]
             ),
             debug_result
         );
@@ -544,7 +554,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.W"),
-                String::from("D2,D3")
+                String::from("D2,D3"),
+                vec![0x9742]
             ),
             debug_result
         );
@@ -576,7 +587,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.W"),
-                String::from("D2,D3")
+                String::from("D2,D3"),
+                vec![0x9742]
             ),
             debug_result
         );
@@ -608,7 +620,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.W"),
-                String::from("D2,D3")
+                String::from("D2,D3"),
+                vec![0x9742]
             ),
             debug_result
         );
@@ -640,7 +653,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.W"),
-                String::from("D2,D3")
+                String::from("D2,D3"),
+                vec![0x9742]
             ),
             debug_result
         );
@@ -672,7 +686,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.W"),
-                String::from("D2,D3")
+                String::from("D2,D3"),
+                vec![0x9742]
             ),
             debug_result
         );
@@ -704,7 +719,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.W"),
-                String::from("D2,D3")
+                String::from("D2,D3"),
+                vec![0x9742]
             ),
             debug_result
         );
@@ -741,7 +757,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.L"),
-                String::from("D4,D5")
+                String::from("D4,D5"),
+                vec![0x9b84]
             ),
             debug_result
         );
@@ -773,7 +790,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.L"),
-                String::from("D4,D5")
+                String::from("D4,D5"),
+                vec![0x9b84]
             ),
             debug_result
         );
@@ -805,7 +823,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.L"),
-                String::from("D4,D5")
+                String::from("D4,D5"),
+                vec![0x9b84]
             ),
             debug_result
         );
@@ -837,7 +856,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.L"),
-                String::from("D4,D5")
+                String::from("D4,D5"),
+                vec![0x9b84]
             ),
             debug_result
         );
@@ -869,7 +889,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.L"),
-                String::from("D4,D5")
+                String::from("D4,D5"),
+                vec![0x9b84]
             ),
             debug_result
         );
@@ -901,7 +922,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.L"),
-                String::from("D4,D5")
+                String::from("D4,D5"),
+                vec![0x9b84]
             ),
             debug_result
         );
@@ -933,7 +955,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.L"),
-                String::from("D4,D5")
+                String::from("D4,D5"),
+                vec![0x9b84]
             ),
             debug_result
         );
@@ -965,7 +988,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.L"),
-                String::from("D4,D5")
+                String::from("D4,D5"),
+                vec![0x9b84]
             ),
             debug_result
         );
@@ -1003,7 +1027,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.B"),
-                String::from("-(A3),-(A4)")
+                String::from("-(A3),-(A4)"),
+                vec![0x990b]
             ),
             debug_result
         );
@@ -1042,7 +1067,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.B"),
-                String::from("-(A3),-(A4)")
+                String::from("-(A3),-(A4)"),
+                vec![0x990b]
             ),
             debug_result
         );
@@ -1080,7 +1106,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.W"),
-                String::from("-(A5),-(A6)")
+                String::from("-(A5),-(A6)"),
+                vec![0x9d4d]
             ),
             debug_result
         );
@@ -1119,7 +1146,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.W"),
-                String::from("-(A5),-(A6)")
+                String::from("-(A5),-(A6)"),
+                vec![0x9d4d]
             ),
             debug_result
         );
@@ -1160,7 +1188,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.L"),
-                String::from("-(A7),-(A0)")
+                String::from("-(A7),-(A0)"),
+                vec![0x918f]
             ),
             debug_result
         );
@@ -1202,7 +1231,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("SUBX.L"),
-                String::from("-(A7),-(A0)")
+                String::from("-(A7),-(A0)"),
+                vec![0x918f]
             ),
             debug_result
         );

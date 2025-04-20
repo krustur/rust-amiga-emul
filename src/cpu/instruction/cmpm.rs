@@ -164,7 +164,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("CMPM.B"),
-                String::from("(A7)+,(A6)+")
+                String::from("(A7)+,(A6)+"),
+                vec![0xbd0f]
             ),
             debug_result
         );
@@ -199,7 +200,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("CMPM.B"),
-                String::from("(A7)+,(A6)+")
+                String::from("(A7)+,(A6)+"),
+                vec![0xbd0f]
             ),
             debug_result
         );
@@ -234,7 +236,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("CMPM.B"),
-                String::from("(A5)+,(A0)+")
+                String::from("(A5)+,(A0)+"),
+                vec![0xb10d]
             ),
             debug_result
         );
@@ -268,7 +271,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("CMPM.B"),
-                String::from("(A5)+,(A5)+")
+                String::from("(A5)+,(A5)+"),
+                vec![0xbb0d]
             ),
             debug_result
         );
@@ -304,7 +308,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("CMPM.W"),
-                String::from("(A5)+,(A0)+")
+                String::from("(A5)+,(A0)+"),
+                vec![0xb14d]
             ),
             debug_result
         );
@@ -339,7 +344,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("CMPM.W"),
-                String::from("(A0)+,(A5)+")
+                String::from("(A0)+,(A5)+"),
+                vec![0xbb48]
             ),
             debug_result
         );
@@ -374,7 +380,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("CMPM.W"),
-                String::from("(A1)+,(A4)+")
+                String::from("(A1)+,(A4)+"),
+                vec![0xb949]
             ),
             debug_result
         );
@@ -408,7 +415,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("CMPM.W"),
-                String::from("(A6)+,(A6)+")
+                String::from("(A6)+,(A6)+"),
+                vec![0xbd4e]
             ),
             debug_result
         );
@@ -447,7 +455,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("CMPM.L"),
-                String::from("(A2)+,(A3)+")
+                String::from("(A2)+,(A3)+"),
+                vec![0xb78a]
             ),
             debug_result
         );
@@ -485,7 +494,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("CMPM.L"),
-                String::from("(A2)+,(A3)+")
+                String::from("(A2)+,(A3)+"),
+                vec![0xb78a]
             ),
             debug_result
         );
@@ -523,7 +533,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("CMPM.L"),
-                String::from("(A2)+,(A3)+")
+                String::from("(A2)+,(A3)+"),
+                vec![0xb78a]
             ),
             debug_result
         );
@@ -560,7 +571,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("CMPM.L"),
-                String::from("(A7)+,(A7)+")
+                String::from("(A7)+,(A7)+"),
+                vec![0xbf8f]
             ),
             debug_result
         );

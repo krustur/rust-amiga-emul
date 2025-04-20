@@ -3,7 +3,6 @@ use crate::{cpu::instruction::*, mem::Mem};
 use byteorder::{BigEndian, ReadBytesExt};
 use core::panic;
 use std::convert::TryInto;
-
 use self::ea::EffectiveAddressDebug;
 use self::step_log::StepLog;
 
@@ -2502,8 +2501,7 @@ impl Cpu {
     }
 
     pub fn execute_next_instruction(self: &mut Cpu, mem: &mut Mem) {
-        let mut step_log = StepLog::new();
-        self.execute_next_instruction_step_log(mem, &mut step_log)
+        self.execute_next_instruction_step_log(mem, &mut StepLog::none())
     }
 
     pub fn execute_next_instruction_step_log(
@@ -2570,7 +2568,7 @@ impl Cpu {
     }
 
     pub fn get_next_disassembly_no_log(self: &mut Cpu, mem: &mut Mem) -> GetDisassemblyResult {
-        self.get_next_disassembly(mem, &mut StepLog::new())
+        self.get_next_disassembly(mem, &mut StepLog::none())
     }
 
     pub fn get_next_disassembly(
@@ -3449,7 +3447,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("DC.W"),
-                String::from("#$4954")
+                String::from("#$4954"),
+                vec![0x4954]
             ),
             debug_result
         );

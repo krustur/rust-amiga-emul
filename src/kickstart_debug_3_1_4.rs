@@ -1,30 +1,11 @@
-use crate::kickstart::Kickstart;
-use crate::mem::rommemory::RomMemory;
-use crate::mem::Mem;
-use std::cell::RefCell;
-use std::rc::Rc;
+use crate::kickstart::KickstartDebug;
 
 #[allow(non_camel_case_types)]
-pub struct Kickstart_3_1_4 {
-    rom_memory: Rc<RefCell<RomMemory>>,
+pub struct KickstartDebug_3_1_4 {
 }
 
-impl Kickstart_3_1_4 {
-    pub fn new(file_path: &str, mem: Rc<RefCell<Mem>>) -> Self {
-        let rom_memory = Rc::new(RefCell::new(
-            RomMemory::from_file(0xF80000, file_path).unwrap(),
-        ));
-        let rom_overlay = Rc::new(RefCell::new(RomMemory::from_file(0x000000, file_path).unwrap()));
-
-        let mut mem = mem.borrow_mut();
-        mem.add_range(rom_memory.clone());
-        mem.set_overlay(rom_overlay);
-        Self { rom_memory }
-    }
-}
-
-impl Kickstart for Kickstart_3_1_4 {
-    fn get_comment(&self, pc_address: u32) -> Option<String> {
+impl KickstartDebug for KickstartDebug_3_1_4 {
+    fn get_address_comment(&self, pc_address: u32) -> Option<String> {
         match pc_address {
             0x00F800D2 => Some(String::from("Stack Pointer = $400")),
             0x00F800D6 => Some(String::from("Calculate check sum to D5")),
@@ -390,7 +371,7 @@ impl Kickstart for Kickstart_3_1_4 {
         }
     }
 
-    fn get_no_print_disassembly_before_step(&self, pc_address: u32) -> bool {
+    fn disable_print_disassembly_for_address(&self, pc_address: u32) -> bool {
         match pc_address {
             0x00F800E2..=0x00F800E8 => true, // calculate check sum
             0x00F80F2E..=0x00F80F30 => true, // scan for RomTag
@@ -404,7 +385,7 @@ impl Kickstart for Kickstart_3_1_4 {
         }
     }
 
-    fn get_print_registers_after_step(&self, pc_address: u32) -> bool {
+    fn should_print_registers_after_step(&self, pc_address: u32) -> bool {
         match pc_address {
             0x00F81ACE => true, // ExecLibrary.FindName entry
 
@@ -422,7 +403,7 @@ impl Kickstart for Kickstart_3_1_4 {
         }
     }
 
-    fn get_dump_memory_after_step(&self, pc_address: u32) -> Option<(u32, u32)> {
+    fn should_dump_memory_after_step(&self, pc_address: u32) -> Option<(u32, u32)> {
         match pc_address {
             // 0x00F8060C => (true, 0x00f8008d, 0x00f800ad),
             // 0x00F82002 => (true, 0x0000515C, 0x0000516C),
@@ -437,14 +418,14 @@ impl Kickstart for Kickstart_3_1_4 {
         }
     }
 
-    fn get_dump_areg_memory_after_step(&self, pc_address: u32) -> Option<(usize, u32)> {
+    fn should_dump_areg_memory_after_step(&self, pc_address: u32) -> Option<(usize, u32)> {
         match pc_address {
             0x00F81ACE => Some((1, 32)),
             _ => None
         }
     }
 
-    fn get_print_disassembly_after_step(&self, pc_address: u32) -> Option<(u32, u32)> {
+    fn should_dump_disassembly_after_step(&self, pc_address: u32) -> Option<(u32, u32)> {
         match pc_address {
             // 0x00F82A32 => (true, 0x00004dcc, 0x0000515C),
             // 0x00FC087E => (true, (0x0000D09C-270)-42, 0x0000D09C-6), // Library mapping! => 0x00F8420E

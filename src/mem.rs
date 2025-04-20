@@ -194,7 +194,7 @@ impl Mem {
             panic!();
         }
         let range = self.get_memory(address);
-        let result = range.borrow().get_long(&mut StepLog::new(), address);
+        let result = range.borrow().get_long(&mut StepLog::none(), address);
         result
     }
 
@@ -214,7 +214,7 @@ impl Mem {
         let range = self.get_memory_mut(address);
         let result = range
             .borrow_mut()
-            .set_long(&mut StepLog::new(), address, value);
+            .set_long(&mut StepLog::none(), address, value);
     }
 
     pub fn get_word(self: &Mem, step_log: &mut StepLog, address: u32) -> u16 {
@@ -235,7 +235,7 @@ impl Mem {
             panic!();
         }
         let range = self.get_memory(address);
-        let result = range.borrow().get_word(&mut StepLog::new(), address);
+        let result = range.borrow().get_word(&mut StepLog::none(), address);
         result
     }
 
@@ -255,7 +255,7 @@ impl Mem {
         let range = self.get_memory_mut(address);
         let result = range
             .borrow_mut()
-            .set_word(&mut StepLog::new(), address, value);
+            .set_word(&mut StepLog::none(), address, value);
     }
 
     pub fn get_byte(self: &Mem, step_log: &mut StepLog, address: u32) -> u8 {
@@ -270,7 +270,7 @@ impl Mem {
 
     pub fn get_byte_no_log(self: &Mem, address: u32) -> u8 {
         let range = self.get_memory(address);
-        let result = range.borrow().get_byte(&mut StepLog::new(), address);
+        let result = range.borrow().get_byte(&mut StepLog::none(), address);
         result
     }
 
@@ -292,7 +292,7 @@ impl Mem {
         let range = self.get_memory_mut(address);
         let set_byte_result = range
             .borrow_mut()
-            .set_byte(&mut StepLog::new(), address, value);
+            .set_byte(&mut StepLog::none(), address, value);
         match set_byte_result {
             Some(r) => {
                 if let Some(overlay) = r.set_overlay {

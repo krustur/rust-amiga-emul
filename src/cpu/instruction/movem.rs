@@ -422,7 +422,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("MOVEM.L"),
-                String::from("D0-D7,-(A7)")
+                String::from("D0-D7,-(A7)"),
+                vec![0x48e7, 0xff00]
             ),
             debug_result
         );
@@ -462,7 +463,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("MOVEM.L"),
-                String::from("D0/D7/A0/A6,-(A7)")
+                String::from("D0/D7/A0/A6,-(A7)"),
+                vec![0x48e7, 0x8182]
             ),
             debug_result
         );
@@ -510,7 +512,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("MOVEM.L"),
-                String::from("(A7)+,D1-D6/A1-A6")
+                String::from("(A7)+,D1-D6/A1-A6"),
+                vec![0x4cdf, 0x7e7e]
             ),
             debug_result
         );
@@ -554,7 +557,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("MOVEM.L"),
-                String::from("(A7)+,D0-D1/D3-D4/D6-D7/A0-A1/A3-A4/A6")
+                String::from("(A7)+,D0-D1/D3-D4/D6-D7/A0-A1/A3-A4/A6"),
+                vec![0x4cdf, 0x5bdb]
             ),
             debug_result
         );
@@ -605,7 +609,8 @@ mod tests {
                 0xC00000,
                 0xC00008,
                 String::from("MOVEM.L"),
-                String::from("D1-D2/A2-A3,($00C00008).L")
+                String::from("D1-D2/A2-A3,($00C00008).L"),
+                vec![0x48f9, 0x0c06, 0x00c0, 0x0008]
             ),
             debug_result
         );
@@ -648,7 +653,8 @@ mod tests {
                 0xC00000,
                 0xC00008,
                 String::from("MOVEM.L"),
-                String::from("($00C00008).L,D3-D4/A4-A5")
+                String::from("($00C00008).L,D3-D4/A4-A5"),
+                vec![0x4cf9, 0x3018, 0x00c0, 0x0008]
             ),
             debug_result
         );
@@ -694,7 +700,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("MOVEM.W"),
-                String::from("D0-D7,-(A7)")
+                String::from("D0-D7,-(A7)"),
+                vec![0x48a7, 0xff00]
             ),
             debug_result
         );
@@ -734,7 +741,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("MOVEM.W"),
-                String::from("D0/D7/A0/A6,-(A7)")
+                String::from("D0/D7/A0/A6,-(A7)"),
+                vec![0x48a7, 0x8182]
             ),
             debug_result
         );
@@ -786,7 +794,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("MOVEM.W"),
-                String::from("(A7)+,D1-D6/A1-A6")
+                String::from("(A7)+,D1-D6/A1-A6"),
+                vec![0x4c9f, 0x7e7e]
             ),
             debug_result
         );
@@ -838,7 +847,8 @@ mod tests {
                 0xC00000,
                 0xC00004,
                 String::from("MOVEM.W"),
-                String::from("(A7)+,D0-D1/D3-D4/D6-D7/A0-A1/A3-A4/A6")
+                String::from("(A7)+,D0-D1/D3-D4/D6-D7/A0-A1/A3-A4/A6"),
+                vec![0x4c9f, 0x5bdb]
             ),
             debug_result
         );
@@ -889,7 +899,8 @@ mod tests {
                 0xC00000,
                 0xC00008,
                 String::from("MOVEM.W"),
-                String::from("D1-D2/A5-A6,($00C00008).L")
+                String::from("D1-D2/A5-A6,($00C00008).L"),
+                vec![0x48b9, 0x6006, 0x00c0, 0x0008]
             ),
             debug_result
         );
@@ -935,7 +946,8 @@ mod tests {
                 0xC00000,
                 0xC00008,
                 String::from("MOVEM.W"),
-                String::from("($00C00008).L,D3-D4/A0-A1")
+                String::from("($00C00008).L,D3-D4/A0-A1"),
+                vec![0x4cb9, 0x0318, 0x00c0, 0x0008]
             ),
             debug_result
         );

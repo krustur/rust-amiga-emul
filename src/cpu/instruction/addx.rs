@@ -192,7 +192,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.B"),
-                String::from("D0,D1")
+                String::from("D0,D1"),
+                vec![0xd300]
             ),
             debug_result
         );
@@ -224,7 +225,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.B"),
-                String::from("D0,D1")
+                String::from("D0,D1"),
+                vec![0xd300]
             ),
             debug_result
         );
@@ -256,7 +258,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.B"),
-                String::from("D0,D1")
+                String::from("D0,D1"),
+                vec![0xd300]
             ),
             debug_result
         );
@@ -288,7 +291,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.B"),
-                String::from("D0,D1")
+                String::from("D0,D1"),
+                vec![0xd300]
             ),
             debug_result
         );
@@ -320,7 +324,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.B"),
-                String::from("D0,D1")
+                String::from("D0,D1"),
+                vec![0xd300]
             ),
             debug_result
         );
@@ -352,7 +357,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.B"),
-                String::from("D0,D1")
+                String::from("D0,D1"),
+                vec![0xd300]
             ),
             debug_result
         );
@@ -384,7 +390,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.B"),
-                String::from("D0,D1")
+                String::from("D0,D1"),
+                vec![0xd300]
             ),
             debug_result
         );
@@ -421,7 +428,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.W"),
-                String::from("D2,D3")
+                String::from("D2,D3"),
+                vec![0xd742]
             ),
             debug_result
         );
@@ -453,7 +461,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.W"),
-                String::from("D2,D3")
+                String::from("D2,D3"),
+                vec![0xd742]
             ),
             debug_result
         );
@@ -485,7 +494,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.W"),
-                String::from("D2,D3")
+                String::from("D2,D3"),
+                vec![0xd742]
             ),
             debug_result
         );
@@ -517,7 +527,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.W"),
-                String::from("D2,D3")
+                String::from("D2,D3"),
+                vec![0xd742]
             ),
             debug_result
         );
@@ -549,7 +560,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.W"),
-                String::from("D2,D3")
+                String::from("D2,D3"),
+                vec![0xd742]
             ),
             debug_result
         );
@@ -581,7 +593,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.W"),
-                String::from("D2,D3")
+                String::from("D2,D3"),
+                vec![0xd742]
             ),
             debug_result
         );
@@ -613,7 +626,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.W"),
-                String::from("D2,D3")
+                String::from("D2,D3"),
+                vec![0xd742]
             ),
             debug_result
         );
@@ -650,7 +664,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.L"),
-                String::from("D4,D5")
+                String::from("D4,D5"),
+                vec![0xdb84]
             ),
             debug_result
         );
@@ -682,7 +697,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.L"),
-                String::from("D4,D5")
+                String::from("D4,D5"),
+                vec![0xdb84]
             ),
             debug_result
         );
@@ -714,7 +730,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.L"),
-                String::from("D4,D5")
+                String::from("D4,D5"),
+                vec![0xdb84]
             ),
             debug_result
         );
@@ -746,7 +763,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.L"),
-                String::from("D4,D5")
+                String::from("D4,D5"),
+                vec![0xdb84]
             ),
             debug_result
         );
@@ -778,7 +796,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.L"),
-                String::from("D4,D5")
+                String::from("D4,D5"),
+                vec![0xdb84]
             ),
             debug_result
         );
@@ -810,7 +829,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.L"),
-                String::from("D4,D5")
+                String::from("D4,D5"),
+                vec![0xdb84]
             ),
             debug_result
         );
@@ -842,7 +862,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.L"),
-                String::from("D4,D5")
+                String::from("D4,D5"),
+                vec![0xdb84]
             ),
             debug_result
         );
@@ -880,7 +901,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.B"),
-                String::from("-(A3),-(A4)")
+                String::from("-(A3),-(A4)"),
+                vec![0xd90b]
             ),
             debug_result
         );
@@ -919,7 +941,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.B"),
-                String::from("-(A3),-(A4)")
+                String::from("-(A3),-(A4)"),
+                vec![0xd90b]
             ),
             debug_result
         );
@@ -956,7 +979,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.W"),
-                String::from("-(A5),-(A6)")
+                String::from("-(A5),-(A6)"),
+                vec![0xdd4d]
             ),
             debug_result
         );
@@ -995,7 +1019,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.W"),
-                String::from("-(A5),-(A6)")
+                String::from("-(A5),-(A6)"),
+                vec![0xdd4d]
             ),
             debug_result
         );
@@ -1035,7 +1060,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.L"),
-                String::from("-(A7),-(A0)")
+                String::from("-(A7),-(A0)"),
+                vec![0xd18f]
             ),
             debug_result
         );
@@ -1077,7 +1103,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("ADDX.L"),
-                String::from("-(A7),-(A0)")
+                String::from("-(A7),-(A0)"),
+                vec![0xd18f]
             ),
             debug_result
         );

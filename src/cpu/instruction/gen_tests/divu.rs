@@ -40,7 +40,7 @@ fn divu_w_x_not_affected_still_set() {
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     mem.add_range(Rc::new(RefCell::new(arrange_mem_00030000)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000040, 0x000000d1, 0x555555d2, 0x000000d3, 0x000000d4, 0x00000100, 0x000000d6, 0x000000d7);
@@ -62,6 +62,7 @@ fn divu_w_x_not_affected_still_set() {
             0x00040002,
             String::from("DIVU.W"),
             String::from("(A5),D5"),
+            vec![0x8AD5]
             ),
             get_disassembly_result
         );
@@ -100,7 +101,7 @@ fn divu_w_x_not_affected_still_clear() {
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     mem.add_range(Rc::new(RefCell::new(arrange_mem_00030000)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000040, 0x000000d1, 0x555555d2, 0x000000d3, 0x000000d4, 0x00000100, 0x000000d6, 0x000000d7);
@@ -121,6 +122,7 @@ fn divu_w_x_not_affected_still_clear() {
             0x00040002,
             String::from("DIVU.W"),
             String::from("(A5),D5"),
+            vec![0x8AD5]
             ),
             get_disassembly_result
         );
@@ -157,7 +159,7 @@ fn divu_w_n_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000040, 0x000000d1, 0x555555d2, 0x000000d3, 0x000000d4, 0x00010000, 0x000000d6, 0x000000d7);
@@ -177,6 +179,7 @@ fn divu_w_n_set() {
             0x00040004,
             String::from("DIVU.W"),
             String::from("#$0002,D5"),
+            vec![0x8AFC,0x0002]
             ),
             get_disassembly_result
         );
@@ -213,7 +216,7 @@ fn divu_w_n_not_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000040, 0x000000d1, 0x555555d2, 0x000000d3, 0x000000d4, 0x0000ffff, 0x000000d6, 0x000000d7);
@@ -234,6 +237,7 @@ fn divu_w_n_not_set() {
             0x00040004,
             String::from("DIVU.W"),
             String::from("#$0002,D5"),
+            vec![0x8AFC,0x0002]
             ),
             get_disassembly_result
         );
@@ -270,7 +274,7 @@ fn divu_w_z_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000040, 0x000000d1, 0x555555d2, 0x000000d3, 0x000000d4, 0x00000000, 0x000000d6, 0x000000d7);
@@ -290,6 +294,7 @@ fn divu_w_z_set() {
             0x00040004,
             String::from("DIVU.W"),
             String::from("#$0002,D5"),
+            vec![0x8AFC,0x0002]
             ),
             get_disassembly_result
         );
@@ -326,7 +331,7 @@ fn divu_w_z_not_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000040, 0x000000d1, 0x555555d2, 0x000000d3, 0x000000d4, 0x00000003, 0x000000d6, 0x000000d7);
@@ -347,6 +352,7 @@ fn divu_w_z_not_set() {
             0x00040004,
             String::from("DIVU.W"),
             String::from("#$0002,D5"),
+            vec![0x8AFC,0x0002]
             ),
             get_disassembly_result
         );
@@ -383,7 +389,7 @@ fn divu_w_v_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000040, 0x000000d1, 0x555555d2, 0x00400000, 0x000000d4, 0x00000000, 0x000000d6, 0x000000d7);
@@ -401,6 +407,7 @@ fn divu_w_v_set() {
             0x00040002,
             String::from("DIVU.W"),
             String::from("D0,D3"),
+            vec![0x86C0]
             ),
             get_disassembly_result
         );
@@ -437,7 +444,7 @@ fn divu_w_v_not_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000041, 0x000000d1, 0x555555d2, 0x00400000, 0x000000d4, 0x00010001, 0x000000d6, 0x000000d7);
@@ -457,6 +464,7 @@ fn divu_w_v_not_set() {
             0x00040002,
             String::from("DIVU.W"),
             String::from("D0,D3"),
+            vec![0x86C0]
             ),
             get_disassembly_result
         );
@@ -493,7 +501,7 @@ fn divu_w_c_not_set() {
     mem.add_range(Rc::new(RefCell::new(vectors)));
     mem.add_range(Rc::new(RefCell::new(cia_memory)));
     let cpu = Cpu::new(CpuSpeed::NTSC_7_159090_MHz, 0x00000000, 00040000);
-    let mut modermodem = Modermodem::new(None, cpu, mem, None, None);
+    let mut modermodem = Modermodem::bare(cpu, mem);
 
     // arrange - regs
     modermodem.cpu.register.set_all_d_reg_long_no_log(0x00000041, 0x000000d1, 0x555555d2, 0x00400000, 0x000000d4, 0x00010001, 0x000000d6, 0x00000001);
@@ -515,6 +523,7 @@ fn divu_w_c_not_set() {
             0x00040002,
             String::from("DIVU.W"),
             String::from("D7,D7"),
+            vec![0x8EC7]
             ),
             get_disassembly_result
         );

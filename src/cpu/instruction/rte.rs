@@ -84,7 +84,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("RTE"),
-                String::from("")
+                String::from(""),
+                vec![0x4e73]
             ),
             debug_result
         );
@@ -122,7 +123,8 @@ mod tests {
                 0xC00000,
                 0xC00002,
                 String::from("RTE"),
-                String::from("")
+                String::from(""),
+                vec![0x4e73]
             ),
             debug_result
         );
