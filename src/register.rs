@@ -11,6 +11,7 @@ use crate::{
     },
     mem::Mem,
 };
+use crate::aint::AInt;
 
 pub const STATUS_REGISTER_MASK_CARRY: u16 = 0b0000000000000001;
 pub const STATUS_REGISTER_MASK_OVERFLOW: u16 = 0b0000000000000010;
@@ -419,6 +420,18 @@ impl Register {
         register
     }
 
+    pub fn get_d_reg<T>(&self, reg_index: usize, step_log: &mut StepLog) -> T
+    where T: AInt
+    {
+        let value = self.reg_d[reg_index];
+        step_log.add_step_log_entry(StepLogEntry::ReadRegister {
+            reg_type: RegisterType::Data,
+            reg_index,
+            value,
+        });
+        T::get_from_long(value)
+    }
+
     pub fn get_d_reg_long(&self, reg_index: usize, step_log: &mut StepLog) -> u32 {
         let value = self.reg_d[reg_index];
         step_log.add_step_log_entry(StepLogEntry::ReadRegister {
@@ -426,11 +439,6 @@ impl Register {
             reg_index,
             value,
         });
-        value
-    }
-
-    pub fn get_d_reg_long_no_log(&self, reg_index: usize) -> u32 {
-        let value = self.reg_d[reg_index];
         value
     }
 
@@ -444,11 +452,6 @@ impl Register {
         Cpu::get_word_from_long(value)
     }
 
-    pub fn get_d_reg_word_no_log(&self, reg_index: usize) -> u16 {
-        let value = self.reg_d[reg_index];
-        Cpu::get_word_from_long(value)
-    }
-
     pub fn get_d_reg_byte(&self, reg_index: usize, step_log: &mut StepLog) -> u8 {
         let value = self.reg_d[reg_index];
         step_log.add_step_log_entry(StepLogEntry::ReadRegister {
@@ -457,6 +460,16 @@ impl Register {
             value,
         });
         Cpu::get_byte_from_long(value)
+    }
+
+    pub fn get_d_reg_long_no_log(&self, reg_index: usize) -> u32 {
+        let value = self.reg_d[reg_index];
+        value
+    }
+
+    pub fn get_d_reg_word_no_log(&self, reg_index: usize) -> u16 {
+        let value = self.reg_d[reg_index];
+        Cpu::get_word_from_long(value)
     }
 
     pub fn get_d_reg_byte_no_log(&self, reg_index: usize) -> u8 {
@@ -634,6 +647,18 @@ impl Register {
 
     pub fn set_d_reg_word_no_log(&mut self, reg_index: usize, value: u16) {
         self.reg_d[reg_index] = Cpu::set_word_in_long(value, self.reg_d[reg_index]);
+    }
+
+    pub fn set_d_reg<T>(&mut self, step_log: &mut StepLog, reg_index: usize, value: T)
+    where T: AInt
+    {
+        let value = value.set_in_long(self.reg_d[reg_index]);
+        step_log.add_step_log_entry(StepLogEntry::WriteRegister {
+            reg_type: RegisterType::Data,
+            reg_index,
+            value,
+        });
+        self.reg_d[reg_index] = value;
     }
 
     pub fn set_d_reg_byte(&mut self, step_log: &mut StepLog, reg_index: usize, value: u8) {

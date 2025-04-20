@@ -155,6 +155,7 @@ impl Display for StepLogEntry {
 pub struct StepLog {
     disassembly_log_mode: DisassemblyLogMode,
     kickstart_debug: Box<dyn KickstartDebug>,
+    cpu_stopped: bool,
     address: u32,
     address_comment: Option<String>,
     disassembly: Option<GetDisassemblyResult>,
@@ -168,6 +169,7 @@ impl StepLog {
         StepLog {
             disassembly_log_mode: DisassemblyLogMode::None,
             kickstart_debug: Box::new(NoKickstartDebug::new()),
+            cpu_stopped: false,
             address: 0x00000000,
             address_comment: None,
             disassembly: None,
@@ -184,6 +186,7 @@ impl StepLog {
         StepLog {
             disassembly_log_mode,
             kickstart_debug,
+            cpu_stopped: false,
             address: 0x00000000,
             address_comment: None,
             disassembly: None,
@@ -201,10 +204,12 @@ impl StepLog {
     pub fn log_disassembly(&mut self, cpu: &mut Cpu, mem: &mut Mem) {
         if cpu.stopped == false && self.disassembly_log_mode.log_disassembly() {
             let address = cpu.register.reg_pc.get_address();
+            self.cpu_stopped = cpu.stopped;
             self.address = address;
             self.address_comment = self.kickstart_debug.get_address_comment(address);
             self.disassembly = Some(cpu.get_next_disassembly(mem, self));
         } else {
+            self.cpu_stopped = cpu.stopped;
             self.address = 0x00000000;
             self.address_comment = None;
             self.disassembly = None;
@@ -221,7 +226,7 @@ impl StepLog {
     }
 
     pub fn print(&self, cpu: &mut Cpu, mem: &mut Mem) {
-        if self.disassembly_log_mode.log_disassembly()
+        if self.cpu_stopped == false && self.disassembly_log_mode.log_disassembly()
             && !self
                 .kickstart_debug
                 .disable_print_disassembly_for_address(self.address)
@@ -240,7 +245,7 @@ impl StepLog {
 
         self.print_log_strings();
 
-        if self.disassembly_log_mode.log_disassembly_details() {
+        if self.cpu_stopped == false && self.disassembly_log_mode.log_disassembly_details() {
             if self.kickstart_debug.should_print_registers_after_step(self.address) {
                 cpu.register.print_registers();
             }

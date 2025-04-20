@@ -2,7 +2,7 @@
 #![allow(unused_must_use)]
 #![allow(unused_variables)]
 
-// TODO: [ ] Clean up the step log code!
+// TODO: [X] Clean up the step log code!
 // TODO: [ ] Generics everything, maybe typed byte/word/long?
 // TODO: [ ] Interrupts: VHPOS
 // TODO: [ ] Interrupts: CIA timers
@@ -32,6 +32,8 @@ mod kickstart_debug_3_1_4;
 mod mem;
 mod modermodem;
 mod register;
+mod aint;
+
 use crate::cpu::step_log::{DisassemblyLogMode, StepLog};
 use crate::cpu::CpuSpeed;
 use crate::kickstart::Kickstart;

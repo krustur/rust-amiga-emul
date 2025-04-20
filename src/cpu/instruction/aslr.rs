@@ -1,8 +1,9 @@
+use crate::aint::AInt;
 use super::{
     GetDisassemblyResult, GetDisassemblyResultError, Instruction, OperationSize, StepError,
 };
 use crate::cpu::step_log::StepLog;
-use crate::cpu::{Cpu, RotateDirection};
+use crate::cpu::{Cpu, RotateDirection, StatusRegisterResult};
 use crate::mem::Mem;
 use crate::register::{
     ProgramCounter, Register
@@ -87,28 +88,20 @@ pub fn step<'a>(
                     shift_count
                 }
             };
+
+            fn do_register_shift<T>(dest_register: usize, direction: RotateDirection, shift_count: u32, reg: &mut Register, step_log: &mut StepLog) -> StatusRegisterResult
+            where T: AInt {
+                let value = reg.get_d_reg::<T>(dest_register, step_log);
+                let (result, status_register_result) =
+                    Cpu::shift_arithmetic(value, direction, shift_count);
+                reg.set_d_reg(step_log, dest_register, result);
+                status_register_result
+            }
+
             match operation_size {
-                OperationSize::Byte => {
-                    let value = reg.get_d_reg_byte(dest_register, step_log);
-                    let (result, status_register_result) =
-                        Cpu::shift_byte_arithmetic(value, direction, shift_count);
-                    reg.set_d_reg_byte(step_log, dest_register, result);
-                    status_register_result
-                }
-                OperationSize::Word => {
-                    let value = reg.get_d_reg_word(dest_register, step_log);
-                    let (result, status_register_result) =
-                        Cpu::shift_word_arithmetic(value, direction, shift_count);
-                    reg.set_d_reg_word(step_log, dest_register, result);
-                    status_register_result
-                }
-                OperationSize::Long => {
-                    let value = reg.get_d_reg_long(dest_register, step_log);
-                    let (result, status_register_result) =
-                        Cpu::shift_long_arithmetic(value, direction, shift_count);
-                    reg.set_d_reg_long(step_log, dest_register, result);
-                    status_register_result
-                }
+                OperationSize::Byte => do_register_shift::<u8>(dest_register, direction, shift_count, reg, step_log),
+                OperationSize::Word => do_register_shift::<u16>(dest_register, direction, shift_count, reg, step_log),
+                OperationSize::Long => do_register_shift::<u32>(dest_register, direction, shift_count, reg, step_log),
             }
         }
         AslrType::Memory => {
@@ -122,16 +115,12 @@ pub fn step<'a>(
 
             let value = ea_data.get_value_word(pc, reg, mem, step_log, false);
             let (result, status_register_result) =
-                Cpu::shift_word_arithmetic(value, direction, 1);
+                Cpu::shift_arithmetic(value, direction, 1);
             ea_data.set_value_word(pc, reg, mem, step_log, result, true);
             status_register_result
         }
     };
 
-    // println!(
-    //     "status_register_result: ${:04X}-${:04X}",
-    //     status_register_result.status_register, status_register_result.status_register_mask
-    // );
     reg.reg_sr
         .merge_status_register(step_log, status_register_result);
 

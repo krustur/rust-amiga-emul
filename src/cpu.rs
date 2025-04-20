@@ -3,6 +3,7 @@ use crate::{cpu::instruction::*, mem::Mem};
 use byteorder::{BigEndian, ReadBytesExt};
 use core::panic;
 use std::convert::TryInto;
+use crate::aint::AInt;
 use self::ea::EffectiveAddressDebug;
 use self::step_log::StepLog;
 
@@ -1940,11 +1941,11 @@ impl Cpu {
         }
     }
 
-    pub fn shift_byte_arithmetic(
-        value: u8,
+    pub fn shift_arithmetic<T: AInt>(
+        value: T,
         direction: RotateDirection,
         shift_count: u32,
-    ) -> (u8, StatusRegisterResult) {
+    ) -> (T, StatusRegisterResult) {
         if shift_count > 63 {
             std::panic!("arithmetic_shift_byte: shift count is larger than 63");
         }
@@ -1966,10 +1967,10 @@ impl Cpu {
                 let mut result = value;
                 match direction {
                     RotateDirection::Left => {
-                        for i in 0..shift_count {
+                        for _ in 0..shift_count {
                             // X -- Set according to the last bit shifted out of the operand; unaffacted for a count of zero
                             // C -- Set according to the last bit shifted out of the operand; cleared for a count of zero
-                            if result & 0x80 == 0x80 {
+                            if result.is_msb_set() {
                                 status_register = (status_register
                                     & (STATUS_REGISTER_MASK_OVERFLOW
                                         | STATUS_REGISTER_MASK_ZERO
@@ -1983,19 +1984,19 @@ impl Cpu {
                                         | STATUS_REGISTER_MASK_NEGATIVE);
                             }
                             // Shift left
-                            let new_result = result.checked_shl(1).unwrap_or(0);
+                            let new_result = result.checked_shift_left(1).unwrap_or(T::zero());
                             // V -- Set if the most significant bit is changed at any time during the shift operation; cleared otherwise
-                            if new_result & 0x80 != result & 0x80 {
+                            if new_result.is_msb_set() != result.is_msb_set() {
                                 status_register |= STATUS_REGISTER_MASK_OVERFLOW;
                             }
                             result = new_result;
                         }
                     }
                     RotateDirection::Right => {
-                        for i in 0..shift_count {
+                        for _ in 0..shift_count {
                             // X -- Set according to the last bit shifted out of the operand; unaffacted for a count of zero
                             // C -- Set according to the last bit shifted out of the operand; cleared for a count of zero
-                            if result & 0x01 == 0x01 {
+                            if result.is_lsb_set() {
                                 status_register = (status_register
                                     & (STATUS_REGISTER_MASK_OVERFLOW
                                         | STATUS_REGISTER_MASK_ZERO
@@ -2009,9 +2010,9 @@ impl Cpu {
                                         | STATUS_REGISTER_MASK_NEGATIVE);
                             }
                             // Shift right
-                            let mut new_result = result.checked_shr(1).unwrap_or(0);
+                            let mut new_result = result.checked_shift_right(1).unwrap_or(T::zero());
                             // Keep original sign
-                            new_result |= value & 0x80;
+                            new_result = new_result.bit_or(value.get_msb_mask());
                             // V -- Set if the most significant bit is changed at any time during the shift operation; cleared otherwise
                             //      Will never change when shifting right as MSB is retained through an arithmetic shift
                             result = new_result;
@@ -2021,199 +2022,11 @@ impl Cpu {
                 result
             }
         };
-        status_register |= match result {
-            0x00 => STATUS_REGISTER_MASK_ZERO,
-            0x80..=0xff => STATUS_REGISTER_MASK_NEGATIVE,
-            _ => 0x00,
-        };
-
-        let status_register_result = StatusRegisterResult {
-            status_register,
-            status_register_mask,
-        };
-        (result, status_register_result)
-    }
-
-    pub fn shift_word_arithmetic(
-        value: u16,
-        direction: RotateDirection,
-        shift_count: u32,
-    ) -> (u16, StatusRegisterResult) {
-        if shift_count > 63 {
-            std::panic!("arithmetic_shift_byte: shift count is larger than 63");
+        if result.is_zero() {
+            status_register |= STATUS_REGISTER_MASK_ZERO;
+        } else if result.is_msb_set() {
+            status_register |= STATUS_REGISTER_MASK_NEGATIVE;
         }
-
-        // X -- Set according to the last bit shifted out of the operand; unaffacted for a count of zero
-        // N -- Set if the most significant bit of the result is set; cleared otherwise
-        // Z -- Set if the reuslt is zero; cleared otherwise
-        // V -- Set if the most significant bit is changed at any time during the shift operation; cleared otherwise
-        // C -- Set according to the last bit shifted out of the operand; cleared for a count of zero
-        let mut status_register = 0x0000;
-        let mut status_register_mask = STATUS_REGISTER_MASK_NEGATIVE
-            | STATUS_REGISTER_MASK_ZERO
-            | STATUS_REGISTER_MASK_OVERFLOW
-            | STATUS_REGISTER_MASK_CARRY;
-        let result = match shift_count {
-            0 => value,
-            shift_count => {
-                status_register_mask |= STATUS_REGISTER_MASK_EXTEND;
-                let mut result = value;
-                match direction {
-                    RotateDirection::Left => {
-                        for i in 0..shift_count {
-                            // X -- Set according to the last bit shifted out of the operand; unaffacted for a count of zero
-                            // C -- Set according to the last bit shifted out of the operand; cleared for a count of zero
-                            if result & 0x8000 == 0x8000 {
-                                status_register = (status_register
-                                    & (STATUS_REGISTER_MASK_OVERFLOW
-                                        | STATUS_REGISTER_MASK_ZERO
-                                        | STATUS_REGISTER_MASK_NEGATIVE))
-                                    | STATUS_REGISTER_MASK_EXTEND
-                                    | STATUS_REGISTER_MASK_CARRY;
-                            } else {
-                                status_register = status_register
-                                    & (STATUS_REGISTER_MASK_OVERFLOW
-                                        | STATUS_REGISTER_MASK_ZERO
-                                        | STATUS_REGISTER_MASK_NEGATIVE);
-                            }
-                            // Shift left
-                            let new_result = result.checked_shl(1).unwrap_or(0);
-                            // V -- Set if the most significant bit is changed at any time during the shift operation; cleared otherwise
-                            if new_result & 0x8000 != result & 0x8000 {
-                                status_register |= STATUS_REGISTER_MASK_OVERFLOW;
-                            }
-                            result = new_result;
-                        }
-                    }
-                    RotateDirection::Right => {
-                        for i in 0..shift_count {
-                            // X -- Set according to the last bit shifted out of the operand; unaffacted for a count of zero
-                            // C -- Set according to the last bit shifted out of the operand; cleared for a count of zero
-                            if result & 0x0001 == 0x0001 {
-                                status_register = (status_register
-                                    & (STATUS_REGISTER_MASK_OVERFLOW
-                                        | STATUS_REGISTER_MASK_ZERO
-                                        | STATUS_REGISTER_MASK_NEGATIVE))
-                                    | STATUS_REGISTER_MASK_EXTEND
-                                    | STATUS_REGISTER_MASK_CARRY;
-                            } else {
-                                status_register = status_register
-                                    & (STATUS_REGISTER_MASK_OVERFLOW
-                                        | STATUS_REGISTER_MASK_ZERO
-                                        | STATUS_REGISTER_MASK_NEGATIVE);
-                            }
-                            // Shift right
-                            let mut new_result = result.checked_shr(1).unwrap_or(0);
-                            // Keep original sign
-                            new_result |= value & 0x8000;
-                            // V -- Set if the most significant bit is changed at any time during the shift operation; cleared otherwise
-                            //      Will never change when shifting right as MSB is retained through an arithmetic shift
-                            result = new_result;
-                        }
-                    }
-                }
-                result
-            }
-        };
-        status_register |= match result {
-            0x0000 => STATUS_REGISTER_MASK_ZERO,
-            0x8000..=0xffff => STATUS_REGISTER_MASK_NEGATIVE,
-            _ => 0x0000,
-        };
-
-        let status_register_result = StatusRegisterResult {
-            status_register,
-            status_register_mask,
-        };
-        (result, status_register_result)
-    }
-
-    pub fn shift_long_arithmetic(
-        value: u32,
-        direction: RotateDirection,
-        shift_count: u32,
-    ) -> (u32, StatusRegisterResult) {
-        if shift_count > 63 {
-            std::panic!("arithmetic_shift_byte: shift count is larger than 63");
-        }
-
-        // X -- Set according to the last bit shifted out of the operand; unaffacted for a count of zero
-        // N -- Set if the most significant bit of the result is set; cleared otherwise
-        // Z -- Set if the reuslt is zero; cleared otherwise
-        // V -- Set if the most significant bit is changed at any time during the shift operation; cleared otherwise
-        // C -- Set according to the last bit shifted out of the operand; cleared for a count of zero
-        let mut status_register = 0x0000;
-        let mut status_register_mask = STATUS_REGISTER_MASK_NEGATIVE
-            | STATUS_REGISTER_MASK_ZERO
-            | STATUS_REGISTER_MASK_OVERFLOW
-            | STATUS_REGISTER_MASK_CARRY;
-        let result = match shift_count {
-            0 => value,
-            shift_count => {
-                status_register_mask |= STATUS_REGISTER_MASK_EXTEND;
-                let mut result = value;
-                match direction {
-                    RotateDirection::Left => {
-                        for i in 0..shift_count {
-                            // X -- Set according to the last bit shifted out of the operand; unaffacted for a count of zero
-                            // C -- Set according to the last bit shifted out of the operand; cleared for a count of zero
-                            if result & 0x80000000 == 0x80000000 {
-                                status_register = (status_register
-                                    & (STATUS_REGISTER_MASK_OVERFLOW
-                                        | STATUS_REGISTER_MASK_ZERO
-                                        | STATUS_REGISTER_MASK_NEGATIVE))
-                                    | STATUS_REGISTER_MASK_EXTEND
-                                    | STATUS_REGISTER_MASK_CARRY;
-                            } else {
-                                status_register = status_register
-                                    & (STATUS_REGISTER_MASK_OVERFLOW
-                                        | STATUS_REGISTER_MASK_ZERO
-                                        | STATUS_REGISTER_MASK_NEGATIVE);
-                            }
-                            // Shift left
-                            let new_result = result.checked_shl(1).unwrap_or(0);
-                            // V -- Set if the most significant bit is changed at any time during the shift operation; cleared otherwise
-                            if new_result & 0x80000000 != result & 0x80000000 {
-                                status_register |= STATUS_REGISTER_MASK_OVERFLOW;
-                            }
-                            result = new_result;
-                        }
-                    }
-                    RotateDirection::Right => {
-                        for i in 0..shift_count {
-                            // X -- Set according to the last bit shifted out of the operand; unaffacted for a count of zero
-                            // C -- Set according to the last bit shifted out of the operand; cleared for a count of zero
-                            if result & 0x00000001 == 0x00000001 {
-                                status_register = (status_register
-                                    & (STATUS_REGISTER_MASK_OVERFLOW
-                                        | STATUS_REGISTER_MASK_ZERO
-                                        | STATUS_REGISTER_MASK_NEGATIVE))
-                                    | STATUS_REGISTER_MASK_EXTEND
-                                    | STATUS_REGISTER_MASK_CARRY;
-                            } else {
-                                status_register = status_register
-                                    & (STATUS_REGISTER_MASK_OVERFLOW
-                                        | STATUS_REGISTER_MASK_ZERO
-                                        | STATUS_REGISTER_MASK_NEGATIVE);
-                            }
-                            // Shift right
-                            let mut new_result = result.checked_shr(1).unwrap_or(0);
-                            // Keep original sign
-                            new_result |= value & 0x80000000;
-                            // V -- Set if the most significant bit is changed at any time during the shift operation; cleared otherwise
-                            //      Will never change when shifting right as MSB is retained through an arithmetic shift
-                            result = new_result;
-                        }
-                    }
-                }
-                result
-            }
-        };
-        status_register |= match result {
-            0x00000000 => STATUS_REGISTER_MASK_ZERO,
-            0x80000000..=0xffffffff => STATUS_REGISTER_MASK_NEGATIVE,
-            _ => 0x0000,
-        };
 
         let status_register_result = StatusRegisterResult {
             status_register,
